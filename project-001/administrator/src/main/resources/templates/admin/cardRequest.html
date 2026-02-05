@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{components/head :: head('Admin Dashboard - Manage Card Request')}"></head>
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
+
+  <header th:replace="~{components/header :: header}"></header>
+  
+  <!-- Left side column. contains the logo and sidebar -->
+  <aside th:replace="~{components/aside :: aside}"></aside>
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        Dashboard
+        <small>Control panel</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Card Requests</li>
+      </ol>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="main-wrapper">
+            <div class="header-flex">
+                <div>
+                    <h1>Virtual Card Requests</h1>
+                    <p style="color: var(--text-muted);">Review and approve new card applications and issuance.</p>
+                </div>
+                <div class="provider-status">
+                    <div class="dot"></div>
+                    <span>Mastercard API: <strong>Operational</strong></span>
+                </div>
+            </div>
+
+            <div class="card-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Pending Requests</span>
+                    <span class="stat-value">24</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Active Virtual Cards</span>
+                    <span class="stat-value">1,842</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Card Issuance Rev. (MTD)</span>
+                    <span class="stat-value" style="color: var(--success);">$9,210.00</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Total Spend (24h)</span>
+                    <span class="stat-value">$42,500.00</span>
+                </div>
+            </div>
+             <div class="policy-note">
+                <i class="fa-solid fa-circle-info" style="color: var(--primary-blue); font-size: 1.5rem;"></i>
+                <div>
+                    <h4 style="color: var(--primary-blue);">Admin Policy Note</h4>
+                    <p style="font-size: 0.85rem; color: #1e40af;">New card issuance fees ($2.50) are automatically deducted from the user's main wallet upon approval. Ensure the <strong>KYC Level 2</strong> status is verified before manual approval.</p>
+                </div>
+            </div>
+            
+            <div class="table-section">
+                <div class="table-header">
+                    <h3 style="font-size: 1.5rem;">Application Queue</h3>
+                    <select style="padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 1.2rem;">
+                        <option>All Currencies</option>
+                        <option>USD Cards</option>
+                        <option>NGN Cards</option>
+                        <option>EUR Cards</option>
+                    </select>
+                </div>
+                <div class="table-responsive">
+                    <table class="card-table">
+                        <thead>
+                            <tr>
+                                <th>S/N</th>
+                                <th>User Details</th>
+                                <th>Card Type</th>
+                                <th>Funding Source</th>
+                                <th>Requested On</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1.</td>
+                                <td>
+                                    <strong>Adewale Thompson</strong><br>
+                                    <small style="color: var(--text-muted);">ID: #USR-9920</small>
+                                </td>
+                                <td>
+                                    <div class="card-mini-preview"></div>
+                                    <div style="display: inline-block; vertical-align: middle;" class="card-request-td">
+                                        <strong>USD Virtual</strong><br>
+                                        <small>Shopping Card</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: 600;">$150.00</span><br>
+                                    <small style="color: var(--success);">Available in Wallet</small>
+                                </td>
+                                <td>Dec 26, 2025<br><small>08:42 AM</small></td>
+                                <td><span class="status-pill status-pending">Pending Review</span></td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="btn-approve" onclick="processCard('Approve')">Approve</button>
+                                        <button class="btn-decline" onclick="processCard('Decline')">Decline</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2.</td>
+                                <td>
+                                    <strong>Sarah Jenkins</strong><br>
+                                    <small style="color: var(--text-muted);">ID: #USR-9841</small>
+                                </td>
+                                <td>
+                                    <div class="card-mini-preview" style="background: linear-gradient(135deg, #2563eb, #60a5fa);"></div>
+                                    <div style="display: inline-block; vertical-align: middle;" class="card-request-td">
+                                        <strong>EUR Virtual</strong><br>
+                                        <small>Corporate Travel</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: 600;">€2,000.00</span><br>
+                                    <small style="color: var(--success);">Available in Wallet</small>
+                                </td>
+                                <td>Dec 25, 2025<br><small>11:15 PM</small></td>
+                                <td><span class="status-pill status-pending">Pending Review</span></td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="btn-approve" onclick="processCard('Approve')">Approve</button>
+                                        <button class="btn-decline" onclick="processCard('Decline')">Decline</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3.</td>
+                                <td>
+                                    <strong>Obinna Okezie</strong><br>
+                                    <small style="color: var(--text-muted);">ID: #USR-9722</small>
+                                </td>
+                                <td>
+                                    <div class="card-mini-preview" style="background: linear-gradient(135deg, #059669, #34d399);"></div>
+                                    <div style="display: inline-block; vertical-align: middle;" class="card-request-td">
+                                        <strong>NGN Virtual</strong><br>
+                                        <small>Bills & Utility</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="font-weight: 600;">₦500,000.00</span><br>
+                                    <small style="color: var(--danger);">Insufficient Balance</small>
+                                </td>
+                                <td>Dec 25, 2025<br><small>09:20 PM</small></td>
+                                <td><span class="status-pill" style="background: #fee2e2; color: var(--danger);">Auto-Flagged</span></td>
+                                <td>
+                                    <button class="btn-decline" style="width: 100%;" onclick="processCard('Decline')">Reject Request</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+     
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+  <footer class="main-footer">
+    <div class="pull-right hidden-xs">
+      <b>Version</b> 2.4.0
+    </div>
+    <strong>Copyright &copy; 2014-2018 <a target="_blank" href="https://www.templateshub.net">Templates Hub</a>.</strong> All rights
+    reserved.
+  </footer>
+
+  <!-- Control Sidebar -->
+  <aside class="control-sidebar control-sidebar-dark">
+    <!-- Create the tabs -->
+    <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
+      <li><a href="#control-sidebar-home-tab" data-toggle="tab"><i class="fa fa-home"></i></a></li>
+      <li><a href="#control-sidebar-settings-tab" data-toggle="tab"><i class="fa fa-gears"></i></a></li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content">
+      <!-- Home tab content -->
+      <div class="tab-pane" id="control-sidebar-home-tab">
+        <h3 class="control-sidebar-heading">Recent Activity</h3>
+        <ul class="control-sidebar-menu">
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-birthday-cake bg-red"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Langdon's Birthday</h4>
+
+                <p>Will be 23 on April 24th</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-user bg-yellow"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Frodo Updated His Profile</h4>
+
+                <p>New phone +1(800)555-1234</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-envelope-o bg-light-blue"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Nora Joined Mailing List</h4>
+
+                <p>nora@example.com</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-file-code-o bg-green"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Cron Job 254 Executed</h4>
+
+                <p>Execution time 5 seconds</p>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <!-- /.control-sidebar-menu -->
+
+        <h3 class="control-sidebar-heading">Tasks Progress</h3>
+        <ul class="control-sidebar-menu">
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Custom Template Design
+                <span class="label label-danger pull-right">70%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-danger" style="width: 70%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Update Resume
+                <span class="label label-success pull-right">95%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-success" style="width: 95%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Laravel Integration
+                <span class="label label-warning pull-right">50%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-warning" style="width: 50%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Back End Framework
+                <span class="label label-primary pull-right">68%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-primary" style="width: 68%"></div>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <!-- /.control-sidebar-menu -->
+
+      </div>
+      <!-- /.tab-pane -->
+      <!-- Stats tab content -->
+      <div class="tab-pane" id="control-sidebar-stats-tab">Stats Tab Content</div>
+      <!-- /.tab-pane -->
+      <!-- Settings tab content -->
+      <div class="tab-pane" id="control-sidebar-settings-tab">
+        <form method="post">
+          <h3 class="control-sidebar-heading">General Settings</h3>
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Report panel usage
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+
+            <p>
+              Some information about this general settings option
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Allow mail redirect
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+
+            <p>
+              Other sets of options are available
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Expose author name in posts
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+
+            <p>
+              Allow the user to show his name in blog posts
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <h3 class="control-sidebar-heading">Chat Settings</h3>
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Show me as online
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Turn off notifications
+              <input type="checkbox" class="pull-right">
+            </label>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Delete chat history
+              <a href="javascript:void(0)" class="text-red pull-right"><i class="fa fa-trash-o"></i></a>
+            </label>
+          </div>
+          <!-- /.form-group -->
+        </form>
+      </div>
+      <!-- /.tab-pane -->
+    </div>
+  </aside>
+  
+  <div class="control-sidebar-bg"></div>
+</div>
+<!-- wrapper -->
+ <div th:replace="~{components/footer :: footer}"></div>
+ <script src="/js/dashboard/cardRequest.js"></script>
+</body>
+</html>

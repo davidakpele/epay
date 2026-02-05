@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Status Notification</title>
+</head>
+<body style="margin: 0; padding: 20px; background-color: #f2f4f7; font-family: Arial, Helvetica, sans-serif;">
+
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#f2f4f7">
+        <tr>
+            <td align="center">
+                
+                <!-- Greeting -->
+                <table width="600" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                    <tr>
+                        <td bgcolor="#ffffff" style="padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                            <h2 style="color: #667eea; margin: 0 0 10px 0; font-size: 18px;">
+                                Dear <span th:text="${firstName}"></span>,
+                            </h2>
+                            
+                            <!-- Important Account Notice -->
+                            <div style="background: #fef2f2; border-left: 4px solid #b91c1c; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                                <h3 style="color: #b91c1c; margin: 0 0 10px 0; font-size: 16px;">Important Account Notice</h3>
+                                <p style="color: #374151; margin: 0 0 8px 0; font-size: 14px; line-height: 1.5;">
+                                   <span th:text="${message}"></span> Our system has identified your account as being on our restricted list. As a result, your account has been temporarily suspended, and you will not be able to perform any transactions at this time.
+                                </p>
+                            </div>
+                            
+                            <p style="color: #374151; margin: 0 0 8px 0; font-size: 14px; line-height: 1.5;">
+                                This action was taken in accordance with our platform's security policies and terms of service.
+                            </p>
+                            
+                            <!-- Next Steps -->
+                            <div style="background: #f0f9ff; border-left: 4px solid #0f4c81; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                                <h3 style="color: #667eea; margin: 0 0 10px 0; font-size: 16px;">Next Steps</h3>
+                                <p style="color: #374151; margin: 0; font-size: 14px; line-height: 1.5;">
+                                    To resolve this issue and restore access to your account, please contact our Consumer Service team. They will guide you through the verification process and help resolve this matter.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Account Status Section -->
+                <table width="600" border="0" cellpadding="0" cellspacing="0" bgcolor="#ffffff" 
+                       style="border-radius: 8px; box-shadow: 0 2px 10px linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                  
+                    <!-- Header -->
+                    <tr>
+                        <td bgcolor="#764ba2" style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <table width="100%">
+                                <tr>
+                                    <td>
+                                        <h1 style="font-size: 18px; margin: 0; font-weight: bold;">Payrix</h1>
+                                        <p style="font-size: 12px; margin: 0;">Security & Compliance Department</p>
+                                    </td>
+                                    <td align="right">
+                                        <div style="font-size: 12px;">
+                                            <div><strong>Date:</strong> <span th:text="${currentDate}"></span></div>
+                                            <div><strong>Reference No:</strong> <span><span th:text="${referenceId}"></span></span></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Status Title -->
+                    <tr>
+                        <td style="padding: 20px;">
+                            <table width="100%">
+                                <tr>
+                                    <td>
+                                        <h2 style="font-size: 16px; margin: 0; color: #0f1724;">Account Status Update</h2>
+                                    </td>
+                                    <td align="right">
+                                        <span style="background: #fee2e2; color: #b91c1c; padding: 6px 10px; border-radius: 12px; font-weight: 600; font-size: 12px;">
+                                            RESTRICTED
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Account Details -->
+                    <tr>
+                        <td style="padding: 0 20px;">
+                            <table width="100%">
+                                <tr>
+                                    <td width="50%" style="padding: 5px;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280;">Account Holder</div>
+                                            <div style="font-size: 13px; font-weight: 600;"><span th:text="${fullName}"></span></div>
+                                        </div>
+                                    </td>
+                                    <td width="50%" style="padding: 5px;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280;">Account Status</div>
+                                            <div style="font-size: 13px; font-weight: 600;">Blacklisted</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="50%" style="padding: 5px;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280;">Restriction Date</div>
+                                            <div style="font-size: 13px; font-weight: 600;">Nov 17, 2025</div>
+                                        </div>
+                                    </td>
+                                    <td width="50%" style="padding: 5px;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280;">Restriction Type</div>
+                                            <div style="font-size: 13px; font-weight: 600;">Full Account</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Contact Information -->
+                    <tr>
+                        <td style="padding: 20px;">
+                            <table width="100%">
+                                <tr>
+                                    <td bgcolor="#f8fafc" style="border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px;">
+                                        <div style="font-size: 14px; color: #0f4c81; font-weight: 600; margin-bottom: 12px; text-align: center;">
+                                            Contact Consumer Service
+                                        </div>
+                                        <table width="100%" style="border-collapse: collapse;">
+                                            <tr>
+                                                <td width="33%" style="text-align: center; padding: 8px;">
+                                                    <div style="font-size: 11px; color: #6b7280;">Email</div>
+                                                    <div style="font-size: 13px; font-weight: 600;">support@payrix.com</div>
+                                                </td>
+                                                <td width="33%" style="text-align: center; padding: 8px; border-left: 1px dashed #e2e8f0; border-right: 1px dashed #e2e8f0;">
+                                                    <div style="font-size: 11px; color: #6b7280;">Phone</div>
+                                                    <div style="font-size: 13px; font-weight: 600;">+234 800 303 300</div>
+                                                </td>
+                                                <td width="33%" style="text-align: center; padding: 8px;">
+                                                    <div style="font-size: 11px; color: #6b7280;">Hours</div>
+                                                    <div style="font-size: 13px; font-weight: 600;">Mon-Fri, 9AM-6PM</div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <div style="text-align: center; margin-top: 12px;">
+                                            <a href="mailto:support@payrix.com" style="background: #667eea; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">
+                                                Contact Support Now
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td bgcolor="#fbfdff" style="border-top: 1px solid #eef2ff; padding: 15px 20px;">
+                            <table width="100%">
+                                <tr>
+                                    <td width="60%">
+                                        <div style="font-size: 11px; color: #6b7280;">
+                                            <strong style="color: #0b3a66;">Need Immediate Assistance?</strong><br>
+                                            Call +234 800 000 000 or email support@payrix.com
+                                        </div>
+                                    </td>
+                                    <td width="40%" align="center" style="font-size: 11px; color: #6b7280;">
+                                        This is an automated notification. Please do not reply to this email.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

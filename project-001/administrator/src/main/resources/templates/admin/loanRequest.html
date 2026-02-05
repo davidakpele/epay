@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{components/head :: head('Admin Dashboard - Manage Loan Request')}"></head>
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
+
+  <header th:replace="~{components/header :: header}"></header>
+  
+  <!-- Left side column. contains the logo and sidebar -->
+  <aside th:replace="~{components/aside :: aside}"></aside>
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        Dashboard
+        <small>Control panel</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Loan Request</li>
+      </ol>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+         
+    <div class="main-wrapper">
+        <div class="header-flex">
+            <div>
+                <h1>Loan Request Manager</h1>
+                <p style="color: var(--text-muted);">Approve credit applications and monitor platform debt exposure.</p>
+            </div>
+            <div class="pool-card">
+                <span style="font-size: 1.5rem; font-weight: 600;">Loan Liquidity Pool:</span>
+                <span style="color: var(--success); font-weight: 800; margin-left: 10px;">$2,450,000.00</span>
+            </div>
+        </div>
+
+        <div class="loan-stats">
+            <div class="stat-card">
+                <span class="stat-label">Pending Apps</span>
+                <span class="stat-value">18</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Active Loans</span>
+                <span class="stat-value">412</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Total Out-standing</span>
+                <span class="stat-value">$890,400.00</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Proj. Interest Rev.</span>
+                <span class="stat-value" style="color: var(--success);">+$62,150.00</span>
+            </div>
+        </div>
+        <div class="policy-box">
+            <i class="fa-solid fa-circle-exclamation" style="color: var(--warning); font-size: 2rem;"></i>
+            <div>
+                <h4 style="color: #92400e;">Disbursement Policy</h4>
+                <p style="font-size: 1.2rem; color: #92400e; opacity: 0.9;">Upon approval, funds are instantly moved from the <strong>Loan Liquidity Pool</strong> to the user's primary fiat wallet. Interest is calculated upfront. Only <strong>L3 Verified</strong> users are eligible for loans above $5,000.</p>
+            </div>
+        </div>
+        <div class="table-section">
+            <div class="table-header">
+                <h3 style="font-size: 1.5rem;">Pending Approval Queue</h3>
+                <select style="padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 1.5rem;">
+                    <option>Sort by: Newest</option>
+                    <option>Sort by: Risk Level</option>
+                    <option>Sort by: Amount</option>
+                </select>
+            </div>
+            <div class="table-container">
+                <table class="loan-table">
+                    <thead>
+                        <tr>
+                            <th>Borrower</th>
+                            <th>Amount & Duration</th>
+                            <th>Purpose</th>
+                            <th>Credit Score</th>
+                            <th>Risk Assessment</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-init">AT</div>
+                                    <div><strong>Adewale Thompson</strong><br><small>KYC Level 3 • USD Wallet</small></div>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-weight:700;">$2,500.00</span><br>
+                                <span style="color: var(--primary-blue); font-weight:600; font-size:1.2rem;">6 Months @ 4% Flat</span>
+                            </td>
+                            <td><small>Business Expansion</small></td>
+                            <td><strong style="color: var(--success);">780</strong></td>
+                            <td><span class="risk-pill risk-safe">Safe / High Trust</span></td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn-approve" onclick="processLoan('Approve', 'Adewale')">Approve</button>
+                                    <button class="btn-reject" onclick="processLoan('Reject', 'Adewale')">Reject</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-init" style="background: #6366f1;">SJ</div>
+                                    <div><strong>Sarah Jenkins</strong><br><small>KYC Level 3 • EUR Wallet</small></div>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-weight:700;">€5,000.00</span><br>
+                                <span style="color: var(--primary-blue); font-weight:600; font-size:0.8rem;">12 Months @ 5.5%</span>
+                            </td>
+                            <td><small>Travel / Personal</small></td>
+                            <td><strong style="color: var(--warning);">620</strong></td>
+                            <td><span class="risk-pill risk-warning">Moderate Risk</span></td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn-approve" onclick="processLoan('Approve', 'Sarah')">Approve</button>
+                                    <button class="btn-reject" onclick="processLoan('Reject', 'Sarah')">Reject</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-init" style="background: #10b981;">OO</div>
+                                    <div><strong>Obinna Okezie</strong><br><small>KYC Level 2 • NGN Wallet</small></div>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-weight:700;">₦2,000,000.00</span><br>
+                                <span style="color: var(--primary-blue); font-weight:600; font-size:0.8rem;">3 Months @ 10% Flat</span>
+                            </td>
+                            <td><small>Working Capital</small></td>
+                            <td><strong style="color: var(--danger);">410</strong></td>
+                            <td><span class="risk-pill risk-danger">High Risk (Defaults)</span></td>
+                            <td>
+                                <button class="btn-reject" style="width: 100%;" onclick="processLoan('Reject', 'Obinna')">Decline Request</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+     
+    </div>
+
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+  <footer class="main-footer">
+    <div class="pull-right hidden-xs">
+      <b>Version</b> 2.4.0
+    </div>
+    <strong>Copyright &copy; 2014-2018 <a target="_blank" href="https://www.templateshub.net">Templates Hub</a>.</strong> All rights
+    reserved.
+  </footer>
+
+  <!-- Control Sidebar -->
+  <aside class="control-sidebar control-sidebar-dark">
+    <!-- Create the tabs -->
+    <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
+      <li><a href="#control-sidebar-home-tab" data-toggle="tab"><i class="fa fa-home"></i></a></li>
+      <li><a href="#control-sidebar-settings-tab" data-toggle="tab"><i class="fa fa-gears"></i></a></li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content">
+      <!-- Home tab content -->
+      <div class="tab-pane" id="control-sidebar-home-tab">
+        <h3 class="control-sidebar-heading">Recent Activity</h3>
+        <ul class="control-sidebar-menu">
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-birthday-cake bg-red"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Langdon's Birthday</h4>
+
+                <p>Will be 23 on April 24th</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-user bg-yellow"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Frodo Updated His Profile</h4>
+
+                <p>New phone +1(800)555-1234</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-envelope-o bg-light-blue"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Nora Joined Mailing List</h4>
+
+                <p>nora@example.com</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-file-code-o bg-green"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Cron Job 254 Executed</h4>
+
+                <p>Execution time 5 seconds</p>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <!-- /.control-sidebar-menu -->
+
+        <h3 class="control-sidebar-heading">Tasks Progress</h3>
+        <ul class="control-sidebar-menu">
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Custom Template Design
+                <span class="label label-danger pull-right">70%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-danger" style="width: 70%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Update Resume
+                <span class="label label-success pull-right">95%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-success" style="width: 95%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Laravel Integration
+                <span class="label label-warning pull-right">50%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-warning" style="width: 50%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Back End Framework
+                <span class="label label-primary pull-right">68%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-primary" style="width: 68%"></div>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <!-- /.control-sidebar-menu -->
+
+      </div>
+      <!-- /.tab-pane -->
+      <!-- Stats tab content -->
+      <div class="tab-pane" id="control-sidebar-stats-tab">Stats Tab Content</div>
+      <!-- /.tab-pane -->
+      <!-- Settings tab content -->
+      <div class="tab-pane" id="control-sidebar-settings-tab">
+        <form method="post">
+          <h3 class="control-sidebar-heading">General Settings</h3>
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Report panel usage
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+
+            <p>
+              Some information about this general settings option
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Allow mail redirect
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+
+            <p>
+              Other sets of options are available
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Expose author name in posts
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+
+            <p>
+              Allow the user to show his name in blog posts
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <h3 class="control-sidebar-heading">Chat Settings</h3>
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Show me as online
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Turn off notifications
+              <input type="checkbox" class="pull-right">
+            </label>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Delete chat history
+              <a href="javascript:void(0)" class="text-red pull-right"><i class="fa fa-trash-o"></i></a>
+            </label>
+          </div>
+          <!-- /.form-group -->
+        </form>
+      </div>
+      <!-- /.tab-pane -->
+    </div>
+  </aside>
+  
+  <div class="control-sidebar-bg"></div>
+</div>
+<!-- wrapper -->
+ <div th:replace="~{components/footer :: footer}"></div>
+  <script src="/js/dashboard/loanRequest.js"></script>
+</body>
+</html>

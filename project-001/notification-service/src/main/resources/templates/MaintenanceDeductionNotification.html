@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Service Deduction Receipt</title>
+</head>
+<body style="margin: 0; padding: 20px; background-color: #f2f4f7; font-family: Arial, Helvetica, sans-serif;">
+
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#f2f4f7">
+        <tr>
+            <td align="center">
+                
+                <!-- Greeting -->
+                <table width="600" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                    <tr>
+                        <td bgcolor="#ffffff" style="padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                            <h2 style="color: #667eea; margin: 0 0 10px 0; font-size: 18px;">
+                                Hello <span th:text="${userFirstName}">User</span>,
+                            </h2>
+                            <p style="color: #374151; margin: 0 0 8px 0; font-size: 14px; line-height: 1.5;">
+                                This is to inform you that a maintenance fee has been deducted from your wallet.
+                            </p>
+                            <p style="color: #374151; margin: 0 0 8px 0; font-size: 14px; line-height: 1.5;">
+                                The deduction ensures continued access to our platform’s features, performance improvements, and account services.
+                            </p>
+                            <p style="color: #374151; margin: 0; font-size: 14px;">
+                                If you have questions regarding this deduction, please contact our support team.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Receipt Section -->
+                <table width="600" border="0" cellpadding="0" cellspacing="0" bgcolor="#ffffff" 
+                       style="border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    
+                    <!-- Header -->
+
+                     <tr>
+                        <td bgcolor="#764ba2" style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <table width="100%">
+                                <tr>
+                                    <td>
+                                        <h1 style="font-size: 18px; margin: 0; font-weight: bold;">Payrix</h1>
+                                        <p style="font-size: 12px; margin: 0;">Security & Compliance Department</p>
+                                    </td>
+                                    <td align="right">
+                                        <div style="font-size: 12px;">
+                                            <div><strong>Date:</strong> <span th:text="${timestamp}">Oct 31, 2025</span></div>
+                                            <div><strong>Receipt No:</strong> <span th:text="${receiptNo}">RCT-20251031-001</span></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+
+                    <!-- Summary Title -->
+                    <tr>
+                        <td style="padding: 20px;">
+                            <table width="100%">
+                                <tr>
+                                    <td>
+                                        <h2 style="font-size: 16px; margin: 0; color: #0f1724;">Maintenance Fee Deduction</h2>
+                                    </td>
+                                    <td align="right">
+                                        <span style="background: #2a901fb8; color: #fff; padding: 6px 10px; border-radius: 20px; font-weight: 600; font-size: 12px;">
+                                            SUCCESSFUL
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Transaction Details -->
+                    <tr>
+                        <td style="padding: 0 20px;">
+                            <table width="100%">
+                                <tr>
+                                    <td width="50%" style="padding: 5px;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280;">Account Holder</div>
+                                            <div style="font-size: 13px; font-weight: 600;" th:text="${username}">John Doe</div>
+                                        </div>
+                                    </td>
+                                    <td width="50%" style="padding: 5px;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280;">Transaction Type</div>
+                                            <div style="font-size: 13px; font-weight: 600;">Maintenance Fee</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="50%" style="padding: 5px;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280;">Reason</div>
+                                            <div style="font-size: 13px; font-weight: 600;" th:text="${reason}">Monthly Service Fee</div>
+                                        </div>
+                                    </td>
+                                    <td width="50%" style="padding: 5px;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280;">Currency</div>
+                                            <div style="font-size: 13px; font-weight: 600;" th:text="${currency}">NGN</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Amount Breakdown -->
+                    <tr>
+                        <td style="padding: 20px;">
+                            <table width="100%">
+                                <tr>
+                                    <td bgcolor="#fbfdff" style="border: 1px solid #e6eefc; padding: 16px; border-radius: 8px;">
+                                        <div style="font-size: 11px; color: #6b7280;">Fee Amount</div>
+                                        <div style="font-size: 24px; font-weight: 800; color: #b91c1c;">
+                                            -<span th:text="${currencySymbol}"></span><span th:text="${feeAmount}">500.00</span>
+                                        </div>
+                                        <br />
+                                        <table width="100%" style="border-collapse: collapse;">
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px dashed #eef2ff;">Previous Balance</td>
+                                                <td align="right" style="padding: 8px 0; border-bottom: 1px dashed #eef2ff;">
+                                                    <span th:text="${currencySymbol}"></span><span th:text="${previousBalance}">10,000.00</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px dashed #eef2ff;">Total Amount Spent</td>
+                                                <td align="right" style="padding: 8px 0; border-bottom: 1px dashed #eef2ff;">
+                                                    <span th:text="${currencySymbol}"></span><span th:text="${totalAmountSpent}">500.00</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0;"><strong>New Balance</strong></td>
+                                                <td align="right" style="padding: 8px 0;">
+                                                    <strong><span th:text="${currencySymbol}"></span><span th:text="${availableBalance}">9,500.00</span></strong>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td bgcolor="#fbfdff" style="border-top: 1px solid #eef2ff; padding: 15px 20px;">
+                            <table width="100%">
+                                <tr>
+                                    <td width="60%">
+                                        <div style="font-size: 11px; color: #6b7280;">
+                                            <strong style="color: #0b3a66;">Need Help?</strong><br>
+                                            Call +234 800 000 000 or email service@acme-bank.example
+                                        </div>
+                                    </td>
+                                    <td width="40%" align="center" style="font-size: 11px; color: #6b7280;">
+                                        This is an automated receipt. No signature required.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

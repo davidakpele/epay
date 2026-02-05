@@ -1,0 +1,75 @@
+server:
+  port: 8755
+
+spring:
+  application:
+    name: escrow-service
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:postgresql://postgres:5432/pesco_db
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: false 
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      connection-timeout: 20000
+      pool-name: HikariPool
+      max-lifetime: 1200000 
+      leak-detection-threshold: 60000  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        connection:
+          provider_disables_autocommit: true
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+    
+file:
+  upload-dir: src/main/resources/static/image
+
+web:
+  resources:
+    static-locations: classpath:/static/
+
+
+history-service:
+  base-url: http://history-service:8080
+
+authentication-service:
+  base-url: http://authentication-service:8080
+
+notification-service:
+  base-url: http://notification-service:8079
+
+wallet-service:
+  base-url: http://wallet-service:8035
+
+logging:
+  level:
+    com.mouad.movieservice: DEBUG
+    org.springframework.web: DEBUG
+  
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans

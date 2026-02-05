@@ -1,0 +1,401 @@
+.loadingContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #c41e3a 0%, #8b0000 50%, #5a0000 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+/* Animated background circles */
+.bgCircle1,
+.bgCircle2,
+.bgCircle3 {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: floatCircle 20s ease-in-out infinite;
+}
+
+.bgCircle1 {
+  width: 400px;
+  height: 400px;
+  top: -10%;
+  left: -10%;
+  animation-delay: 0s;
+}
+
+.bgCircle2 {
+  width: 600px;
+  height: 600px;
+  bottom: -20%;
+  right: -15%;
+  animation-delay: 7s;
+}
+
+.bgCircle3 {
+  width: 300px;
+  height: 300px;
+  top: 50%;
+  right: 10%;
+  animation-delay: 14s;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  animation: contentFadeIn 1s ease-out;
+}
+
+/* Logo Wrapper with rotating ring */
+.logoWrapper {
+  position: relative;
+  margin-bottom: 2rem;
+  animation: logoEntrance 1.2s ease-out;
+}
+
+.logoRing {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: rotateRing 2s linear infinite;
+}
+
+.logo {
+  position: relative;
+  z-index: 2;
+  animation: logoPulse 2s ease-in-out infinite;
+}
+
+.logoShape {
+  display: flex;
+  gap: 4px;
+  width: 80px;
+  height: 80px;
+  filter: drop-shadow(0 4px 12px rgba(255, 255, 255, 0.3));
+}
+
+.logoLeft,
+.logoRight {
+  width: 38px;
+  height: 80px;
+  background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
+  clip-path: polygon(0 0, 100% 20%, 100% 100%, 0 80%);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.logoRight {
+  clip-path: polygon(0 20%, 100% 0, 100% 80%, 0 100%);
+  animation-delay: 0.5s;
+}
+
+/* Brand Name */
+.brandName {
+  font-size: 4rem;
+  font-weight: 200;
+  letter-spacing: 0.15em;
+  color: white;
+  margin: 0;
+  text-shadow: 0 2px 20px rgba(255, 255, 255, 0.3);
+  animation: brandFadeIn 1s ease-out 0.3s both;
+}
+
+.brandName::first-letter {
+  text-transform: lowercase;
+}
+
+/* Tagline */
+.tagline {
+  font-size: 1.2rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0.5rem 0 0.25rem 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: brandFadeIn 1s ease-out 0.5s both;
+}
+
+/* Status Text */
+.statusText {
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 2rem 0;
+  letter-spacing: 0.05em;
+  animation: brandFadeIn 1s ease-out 0.7s both;
+}
+
+/* Progress Container */
+.progressContainer {
+  position: relative;
+  width: 320px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  overflow: hidden;
+  animation: brandFadeIn 1s ease-out 0.9s both;
+}
+
+.progressBar {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.6) 0%, 
+    #ffffff 50%, 
+    rgba(255, 255, 255, 0.6) 100%);
+  border-radius: 10px;
+  animation: progressSlide 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+}
+
+.progressGlow {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.4) 50%, 
+    transparent 100%);
+  animation: glowSlide 2.5s ease-in-out infinite;
+}
+
+/* Animated Dots */
+.dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 1.5rem;
+  animation: brandFadeIn 1s ease-out 1.1s both;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: dotBounce 1.4s ease-in-out infinite;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Animations */
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes logoEntrance {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-180deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes rotateRing {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes logoPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes brandFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progressSlide {
+  0% {
+    width: 0%;
+    left: 0%;
+  }
+  50% {
+    width: 70%;
+    left: 0%;
+  }
+  100% {
+    width: 0%;
+    left: 100%;
+  }
+}
+
+@keyframes glowSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes dotBounce {
+  0%, 80%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  40% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+@keyframes floatCircle {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.1);
+    opacity: 0.3;
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+    opacity: 0.6;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .brandName {
+    font-size: 3rem;
+  }
+
+  .tagline {
+    font-size: 1rem;
+  }
+
+  .statusText {
+    font-size: 0.85rem;
+  }
+
+  .progressContainer {
+    width: 280px;
+  }
+
+  .logoShape {
+    width: 70px;
+    height: 70px;
+  }
+
+  .logoLeft,
+  .logoRight {
+    width: 33px;
+    height: 70px;
+  }
+
+  .logoRing {
+    width: 110px;
+    height: 110px;
+  }
+
+  .bgCircle1 {
+    width: 300px;
+    height: 300px;
+  }
+
+  .bgCircle2 {
+    width: 400px;
+    height: 400px;
+  }
+
+  .bgCircle3 {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brandName {
+    font-size: 2.5rem;
+    letter-spacing: 0.1em;
+  }
+
+  .tagline {
+    font-size: 0.9rem;
+  }
+
+  .statusText {
+    font-size: 0.8rem;
+  }
+
+  .progressContainer {
+    width: 240px;
+  }
+
+  .logoShape {
+    width: 60px;
+    height: 60px;
+  }
+
+  .logoLeft,
+  .logoRight {
+    width: 28px;
+    height: 60px;
+  }
+
+  .logoRing {
+    width: 100px;
+    height: 100px;
+  }
+
+  .bgCircle1,
+  .bgCircle2,
+  .bgCircle3 {
+    display: none;
+  }
+}

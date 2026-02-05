@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Statement - <span th:text="${bankName}">PESCO BANK</span></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .bank-logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .bank-slogan {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 25px;
+            color: #2c3e50;
+        }
+        
+        .customer-name {
+            font-weight: bold;
+            color: #1a3a8f;
+        }
+        
+        .message {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            color: #555;
+        }
+        
+        .receipt-section {
+            background: #f8f9fa;
+            border-left: 4px solid #764ba2;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .receipt-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a3a8f;
+            margin-bottom: 15px;
+        }
+        
+        .bank-info {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .attachment-notice {
+            background: #e8f4fd;
+            border: 1px solid #b6d7f8;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .attachment-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #1a3a8f;
+        }
+        
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        .contact-info {
+            font-size: 14px;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        
+        .disclaimer {
+            font-size: 12px;
+            opacity: 0.7;
+            line-height: 1.5;
+            margin-top: 15px;
+        }
+        
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 25px 0;
+        }
+        
+        .statement-period {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+            color: #856404;
+        }
+        
+        @media (max-width: 600px) {
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="bank-logo" th:text="${bankName}">PESCO BANK</div>
+            <div class="bank-slogan">Secure Banking for Your Future</div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <div class="greeting">
+                Dear <span class="customer-name" th:text="${username}">Customer</span>,
+            </div>
+            
+            <div class="message">
+                Thank you for using <span th:text="${bankName}">PESCO BANK</span>.<br><br>
+                Please find attached your e-statement as requested.
+            </div>
+            
+            <div class="statement-period">
+                Statement Period: <span th:text="${period}">Period</span>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <!-- Receipt Section -->
+            <div class="receipt-section">
+                <div class="receipt-title">Transaction Receipt</div>
+                <div class="bank-info">
+                    <span th:text="${bankAddress}">123 Financial District, Cityville</span><br>
+                    Tel: <span th:text="${bankPhone}">(555) 123-4567</span><br>
+                    Email: <span th:text="${bankEmail}">support@pescobank.com</span><br>
+                    Website: www.pescobank.com
+                </div>
+            </div>
+            
+            <!-- Attachment Notice -->
+            <div class="attachment-notice">
+                <div class="attachment-icon">📎</div>
+                <div><strong>Your account statement is attached</strong></div>
+                <div style="font-size: 14px; margin-top: 8px; color: #666;">
+                    File: bank-statement.pdf
+                </div>
+            </div>
+            
+            <div class="message">
+                If you have any questions about your statement or need further assistance, 
+                please don't hesitate to contact our customer service team.
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="contact-info">
+                <span th:text="${bankName}">PESCO BANK</span> Customer Service<br>
+                Available 24/7 | Phone: <span th:text="${bankPhone}">(555) 123-4567</span>
+            </div>
+            <div class="disclaimer">
+                This email and any attachments are confidential and intended solely for the use of the individual to whom they are addressed. 
+                If you are not the intended recipient, please notify us immediately and delete this email.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

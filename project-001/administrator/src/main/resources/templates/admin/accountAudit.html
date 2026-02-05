@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{components/head :: head('Admin Dashboard - Manage System Audit Logs')}"></head>
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
+
+  <header th:replace="~{components/header :: header}"></header>
+  
+  <!-- Left side column. contains the logo and sidebar -->
+  <aside th:replace="~{components/aside :: aside}"></aside>
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        System Audit Logs
+        <small>Immutable history of all administrative and system-level actions.</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">System Audit Logs</li>
+      </ol>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="main-wrapper">
+            <div class="log-header">
+                <button class="filter-input" style="background: var(--white); cursor: pointer;"><i class="fa-solid fa-download"></i> Export Logs (.CSV)</button>
+            </div>
+            <div class="table-section">
+                <div class="filter-strip">
+                    <input type="text" class="filter-input" placeholder="Search by Admin or User ID..." style="width: 250px;">
+                    <select class="filter-input">
+                        <option>All Event Types</option>
+                        <option>Security / Login</option>
+                        <option>Financial Adjustment</option>
+                        <option>System Update</option>
+                    </select>
+                    <input type="date" class="filter-input">
+                  
+                </div>
+
+                <div class="table-responsive">
+                    <table class="card-table">
+                        <thead>
+                            <tr>
+                                <th>S/N</th>
+                                <th style="width: 180px;">Timestamp</th>
+                                <th style="width: 150px;">Actor</th>
+                                <th>Action Description</th>
+                                <th style="width: 150px;">IP Address</th>
+                                <th style="width: 100px;">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1.</td>
+                                <td>Dec 26, 2025<br><small style="color: var(--text-muted);">05:42:10 AM</small></td>
+                                <td>
+                                    <div class="admin-actor">
+                                        <div class="actor-avatar" style="background: #ddd6fe; color: var(--purple);">JS</div>
+                                        <strong>John_Super</strong>
+                                    </div>
+                                    <small style="color: var(--text-muted);">ID: #ADM-001</small>
+                                </td>
+                                <td>
+                                    <span class="event-tag event-finance">BALANCE_ADJUSTMENT</span><br>
+                                    Manually increased <strong>USD Wallet</strong> for user <strong>#USR-9920</strong> by <strong>$1,500.00</strong>.
+                                    <br><small>Reason: Resolution for stuck wire transfer.</small>
+                                </td>
+                                <td><span class="ip-address">192.168.1.44</span><br><small>Lagos, NG</small></td>
+                                <td>
+                                    <span class="btn-toggle-json" onclick="toggleJson(this)">View Data</span>
+                                    <div class="json-payload">{"prev_bal": 100.00, "new_bal": 1600.00, "ticket_ref": "FIN-442"}</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2.</td>
+                                <td>Dec 26, 2025<br><small style="color: var(--text-muted);">05:30:45 AM</small></td>
+                                <td>
+                                    <div class="admin-actor">
+                                        <div class="actor-avatar" style="background: #fee2e2; color: var(--danger);">SA</div>
+                                        <strong>System_Auto</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="event-tag event-security">ACCOUNT_SUSPENSION</span><br>
+                                    Account <strong>#USR-8812</strong> suspended due to multiple failed 2FA attempts.
+                                </td>
+                                <td><span class="ip-address">Internal Worker</span></td>
+                                <td>
+                                    <span class="btn-toggle-json" onclick="toggleJson(this)">View Data</span>
+                                    <div class="json-payload">{"trigger": "BRUTE_FORCE", "attempts": 5, "geo_lock": "RU"}</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3.</td>
+                                <td>Dec 26, 2025<br><small style="color: var(--text-muted);">04:15:22 AM</small></td>
+                                <td>
+                                    <div class="admin-actor">
+                                        <div class="actor-avatar" style="background: #e0e7ff; color: var(--primary-blue);">MM</div>
+                                        <strong>Mark_Ops</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="event-tag event-update">FEE_CONFIG_CHANGE</span><br>
+                                    Updated <strong>Card Issuance Fee</strong> from <strong>$2.00</strong> to <strong>$2.50</strong>.
+                                </td>
+                                <td><span class="ip-address">102.89.34.11</span><br><small>London, UK</small></td>
+                                <td>
+                                    <span class="btn-toggle-json" onclick="toggleJson(this)">View Data</span>
+                                    <div class="json-payload">{"field": "virtual_card_fee", "old": 2.00, "new": 2.50}</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>4.</td>
+                                <td>Dec 26, 2025<br><small style="color: var(--text-muted);">03:00:01 AM</small></td>
+                                <td>
+                                    <div class="admin-actor">
+                                        <div class="actor-avatar">S</div>
+                                        <strong>System</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="event-tag event-system">DAILY_RECONCILIATION</span><br>
+                                    Automated sync completed for all 4 fiat float accounts.
+                                </td>
+                                <td><span class="ip-address">Cron-Job</span></td>
+                                <td>
+                                    <span class="btn-toggle-json" onclick="toggleJson(this)">View Data</span>
+                                    <div class="json-payload">{"status": "success", "synced_accounts": ["USD", "NGN", "EUR", "AUD"]}</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <button class="filter-input" style="background: transparent; color: var(--primary-blue); font-weight: 700; border: none; cursor: pointer;">Load 50 More Logs...</button>
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+  <footer class="main-footer">
+    <div class="pull-right hidden-xs">
+      <b>Version</b> 2.4.0
+    </div>
+    <strong>Copyright &copy; 2014-2018 <a target="_blank" href="https://www.templateshub.net">Templates Hub</a>.</strong> All rights
+    reserved.
+  </footer>
+
+  <!-- Control Sidebar -->
+  <aside class="control-sidebar control-sidebar-dark">
+    <!-- Create the tabs -->
+    <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
+      <li><a href="#control-sidebar-home-tab" data-toggle="tab"><i class="fa fa-home"></i></a></li>
+      <li><a href="#control-sidebar-settings-tab" data-toggle="tab"><i class="fa fa-gears"></i></a></li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content">
+      <!-- Home tab content -->
+      <div class="tab-pane" id="control-sidebar-home-tab">
+        <h3 class="control-sidebar-heading">Recent Activity</h3>
+        <ul class="control-sidebar-menu">
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-birthday-cake bg-red"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Langdon's Birthday</h4>
+
+                <p>Will be 23 on April 24th</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-user bg-yellow"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Frodo Updated His Profile</h4>
+
+                <p>New phone +1(800)555-1234</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-envelope-o bg-light-blue"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Nora Joined Mailing List</h4>
+
+                <p>nora@example.com</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-file-code-o bg-green"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Cron Job 254 Executed</h4>
+
+                <p>Execution time 5 seconds</p>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <!-- /.control-sidebar-menu -->
+
+        <h3 class="control-sidebar-heading">Tasks Progress</h3>
+        <ul class="control-sidebar-menu">
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Custom Template Design
+                <span class="label label-danger pull-right">70%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-danger" style="width: 70%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Update Resume
+                <span class="label label-success pull-right">95%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-success" style="width: 95%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Laravel Integration
+                <span class="label label-warning pull-right">50%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-warning" style="width: 50%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Back End Framework
+                <span class="label label-primary pull-right">68%</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-primary" style="width: 68%"></div>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <!-- /.control-sidebar-menu -->
+
+      </div>
+      <!-- /.tab-pane -->
+      <!-- Stats tab content -->
+      <div class="tab-pane" id="control-sidebar-stats-tab">Stats Tab Content</div>
+      <!-- /.tab-pane -->
+      <!-- Settings tab content -->
+      <div class="tab-pane" id="control-sidebar-settings-tab">
+        <form method="post">
+          <h3 class="control-sidebar-heading">General Settings</h3>
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Report panel usage
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+
+            <p>
+              Some information about this general settings option
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Allow mail redirect
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+
+            <p>
+              Other sets of options are available
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Expose author name in posts
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+
+            <p>
+              Allow the user to show his name in blog posts
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <h3 class="control-sidebar-heading">Chat Settings</h3>
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Show me as online
+              <input type="checkbox" class="pull-right" checked>
+            </label>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Turn off notifications
+              <input type="checkbox" class="pull-right">
+            </label>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              Delete chat history
+              <a href="javascript:void(0)" class="text-red pull-right"><i class="fa fa-trash-o"></i></a>
+            </label>
+          </div>
+          <!-- /.form-group -->
+        </form>
+      </div>
+      <!-- /.tab-pane -->
+    </div>
+  </aside>
+  
+  <div class="control-sidebar-bg"></div>
+</div>
+<!-- wrapper -->
+ <div th:replace="~{components/footer :: footer}"></div>
+  <script src="/js/dashboard/accountAudit.js"></script>
+</body>
+</html>

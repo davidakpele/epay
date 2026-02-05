@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit Receipt</title>
+</head>
+<body style="margin: 0; padding: 20px; background-color: #f2f4f7; font-family: Arial, Helvetica, sans-serif;">
+    <!-- Main Container -->
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#f2f4f7">
+        <tr>
+            <td align="center">
+                <!-- Greeting Section -->
+                <table width="600" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                    <tr>
+                        <td bgcolor="#ffffff" style="padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                            <h2 style="color: #0f4c81; margin: 0 0 10px 0; font-size: 18px;">Hello <span th:text="${accountHolder}"></span>,</h2>
+                            <p style="color: #374151; margin: 0 0 8px 0; font-size: 14px; line-height: 1.5;">
+                                Your deposit has been successfully processed. Below is your official receipt for this transaction.
+                            </p>
+                            <p style="color: #374151; margin: 0; font-size: 14px; line-height: 1.5;">
+                                Thank you for banking with us!
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Receipt Section -->
+                <table width="600" border="0" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td bgcolor="#764ba2" style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td width="80" style="padding-right: 15px; vertical-align: top;">
+                                        <div style="width: 70px; height: 70px; background: #c441ef71; border-radius: 8px; display: block; text-align: center; line-height: 70px; font-weight: bold; font-size: 20px; color: white;">
+                                            BNK
+                                        </div>
+                                    </td>
+                                    <td style="vertical-align: top;">
+                                        <h1 style="font-size: 18px; margin: 0 0 5px 0; color: white; font-weight: bold;">Payrix</h1>
+                                    </td>
+                                    <td width="150" align="right" style="vertical-align: top;">
+                                        <div style="font-size: 12px; color: white;">
+                                            <div style="margin-bottom: 3px;"><strong>Receipt No:</strong> <span th:text="${receiptNo}">RCT-20251010-0042</span></div>
+                                            <div style="margin-bottom: 3px;"><strong>Date:</strong> <span th:text="${transactionDate}">Oct 10, 2025</span></div>
+                                            <div style="margin-bottom: 3px;"><strong>Time:</strong> <span th:text="${transactionTime}">14:01</span></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Title Section -->
+                    <tr>
+                        <td style="padding: 20px;">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td>
+                                        <h2 style="font-size: 16px; margin: 0; color: #0f1724; font-weight: bold;">Deposit Receipt</h2>
+                                    </td>
+                                    <td align="right" width="120">
+                                        <span style="background: #e6f4ff; color: #764ba2; padding: 6px 10px; border-radius: 12px; font-weight: 600; font-size: 12px; display: inline-block;">
+                                            PAID — CONFIRMED
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Transaction Details Grid -->
+                    <tr>
+                        <td style="padding: 0 20px;">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td width="50%" style="padding: 0 5px 10px 0;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">Depositor Name</div>
+                                            <div style="font-size: 13px; font-weight: 600; color: #111827;" th:text="${accountHolder}">User</div>
+                                        </div>
+                                    </td>
+                                    <td width="50%" style="padding: 0 0 10px 5px;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">Transaction Type</div>
+                                            <div style="font-size: 13px; font-weight: 600; color: #111827;">Cash Deposit</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="50%" style="padding: 0 5px 0 0;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">Teller / Officer</div>
+                                            <div style="font-size: 13px; font-weight: 600; color: #111827;" th:text="${terminalNumber}">Teller 007</div>
+                                        </div>
+                                    </td>
+                                    <td width="50%" style="padding: 0 0 0 5px;">
+                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
+                                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">Branch</div>
+                                            <div style="font-size: 13px; font-weight: 600; color: #111827;">Downtown Branch</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Amount Section -->
+                    <tr>
+                        <td style="padding: 20px;">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td bgcolor="#fbfdff" style="border: 1px solid #e6eefc; padding: 16px; border-radius: 8px;">
+                                        <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">Amount Deposited</div>
+                                        <div style="font-size: 24px; font-weight: 800; color: #764ba2; margin-bottom: 8px;"><span th:text="${currencySymbol}"></span><span th:text="${amount}">150,000.00</span></div>
+                                        <div style="font-size: 12px; color: #374151; margin-bottom: 15px;" th:text="${amountInWords}">One Hundred Fifty Thousand Naira Only</div>
+                                        
+                                        <!-- Transaction Table -->
+                                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px dashed #eef2ff;">
+                                                    <strong style="font-size: 12px; color: #475569;">Description</strong>
+                                                </td>
+                                                <td align="right" style="padding: 8px 0; border-bottom: 1px dashed #eef2ff;">
+                                                    <strong style="font-size: 12px; color: #475569;">Amount</strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px dashed #eef2ff; font-size: 12px;">Deposit</td>
+                                                <td align="right" style="padding: 8px 0; border-bottom: 1px dashed #eef2ff; font-size: 12px; font-weight: 600; color: #0b3a66;"><span th:text="${currencySymbol}"></span><span th:text="${amount}">150,000.00</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px dashed #eef2ff; font-size: 12px;">Previous Balance</td>
+                                                <td align="right" style="padding: 8px 0; border-bottom: 1px dashed #eef2ff; font-size: 12px; font-weight: 600; color: #0b3a66;"><span th:text="${currencySymbol}"></span><span th:text="${previousBalance}">25,400.00</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; font-size: 12px;"><strong>New Balance</strong></td>
+                                                <td align="right" style="padding: 8px 0; font-size: 12px; font-weight: 600; color: #0b3a66;"><strong><span th:text="${currencySymbol}"></span><span th:text="${availableBalance}">175,400.00</span></strong></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td bgcolor="#fbfdff" style="border-top: 1px solid #eef2ff; padding: 15px 20px;">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td width="60%">
+                                        <div style="font-size: 11px; color: #6b7280;">
+                                            <div style="font-weight: 700; color: #0b3a66; margin-bottom: 3px;">Need help?</div>
+                                            <div>Call +234 800 000 000 or email service@acme-bank.example</div>
+                                        </div>
+                                    </td>
+                                    <td width="40%" align="center">
+                                        <div style="font-size: 11px; color: #6b7280;">
+                                            This is a system-generated receipt and does not require a physical signature.
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -1,0 +1,115 @@
+server:
+  port: 8035
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
+    whitelabel:
+      enabled: false
+spring:
+  application:
+    name: wallet-service
+  data:
+    redis:
+      host: redis
+      port: 6379
+  web:
+    resources:
+      add-mappings: false
+  main:
+    allow-bean-definition-overriding: true
+  security:
+      filter:
+        dispatcher-types: REQUEST,ERROR,ASYNC
+  datasource:
+    url: jdbc:postgresql://postgres:5432/pesco_db
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: false 
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      connection-timeout: 20000
+      pool-name: HikariPool
+      max-lifetime: 1200000 
+      leak-detection-threshold: 60000  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        connection:
+          provider_disables_autocommit: true
+
+jwt:
+  secret-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnBaWj2t3CwC6kxlhHYxKs2eirgl0kYohe6MZaNKS7XbS1zWlM2xZlaY9fUZbn9jlGGaKWci2gaGBU45JXAqzlpQbuWiMYavcfG19kB1dBNy6vOH++uJSEPNud7EwaBpdY9YENMkKKcEkTAZNXhifGGcSlAaBQ9NZmYdG5bTBiht1TsQk19GLOcS9DftjlAk7EadAVnfJBLLnVgZxBDTMP5L4LW1EMAS8y8Lwp98LWu7T3OfejnUMbH2AWd5FXYDZI1TXHhVMLVmM08ZZr0HpoLevjwCgv7CMhtvm7q6wIDAQABlcBCilFEQT0SWEZcCQhGx2UaCZcxPx4bYBfrGM0DVKDJycK2UL4dDJqAkZ8r4IBQxSa3S2wlTVlnVVzvzP5sfzPtLUournmEY2N3ZGVnQ1BtWEF0anZ0aDNLNHJhaHh9IkFVaj0PXA
+  expiration-minutes: 30
+  refresh-expiration-days: 7
+  issuer: "Unified Dynamic Systems"
+  audience: "UD49-Stations-app"
+  clock-skew-seconds: 30
+  algorithm: "HS256"
+  token-prefix: "Bearer"
+  authorization-header: "Authorization"
+  enable-token-blacklist: true
+  blacklist-cleanup-interval-minutes: 60
+  max-blacklist-size: 10000
+  cookie-name: "jwt-token"
+  http-only-cookie: true
+  secure-cookie: true
+  same-site-cookie: "Strict"
+  cors-allowed-origins: "http://localhost:3000,http://localhost:8000"
+  enable-multi-factor-support: false
+  max-tokens-per-user: 5
+  log-token-issuance: false
+  enable-token-rotation: true
+  rotation-grace-period-minutes: 5
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+authentication-service:
+  base-url: http://authentication-service:8187
+
+history-service:
+  base-url: http://history-service:8390
+
+notification-service:
+  base-url: http://notification-service:8079
+  
+grpc:
+  server:
+    port: 9090
+    security:
+      enabled: false
+      
+logging:
+  level:
+    com.mouad.movieservice: DEBUG
+    org.springframework.web: DEBUG
+    com.example.demo: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+spring.sql.init.mode: never
+  
+management:
+  tracing:
+    enabled: false
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
+      enabled: false

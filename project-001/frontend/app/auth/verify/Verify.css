@@ -1,0 +1,407 @@
+/* Add these styles to your existing Login.css */
+.auth-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M30 10l-5 25h10l-7 35 25-45h-10l7-15z' fill='%23e9ecef' fill-opacity='0.4'/%3E%3C/svg%3E");
+  padding: 20px;
+  font-family: "Karla", sans-serif;
+}
+
+.login-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 450px;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.logo-container {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.logo-image {
+  height: 40px;
+  width: auto;
+  margin: 0 auto;
+}
+
+.form-header-text {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.form-header-text h2 {
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.signup-link-text {
+  color: #555;
+  text-align: center;
+  margin-top: 24px;
+  font-size: 13px;
+  font-family: "Karla", sans-serif;
+  color: #6c757d;
+}
+
+.signup-link-text a {
+  color: #d43f12;
+  text-decoration: underline;
+  font-size: 13px;
+  font-family: "Karla", sans-serif;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 8px;
+    line-height: 0.5;
+    font-weight: 400;
+    font-family: "Karla", sans-serif;
+}
+
+.input-container {
+  position: relative;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 12px;
+  transition: border-color 0.2s;
+  outline: none;
+  color: #555;
+  font-family: "Karla", sans-serif !important;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  border-color: var(--bg-input-border);
+}
+
+.form-control.is-invalid {
+  border-color: #fd5353 !important;
+  padding-right: calc(1.5em + .75rem);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23fd5353'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23fd5353' stroke='none'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(.375em + .1875rem) center;
+  background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  transition: right 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.form-control.is-invalid + .password-toggle {
+  right: 25px;
+  color: #b88383;
+}
+
+.btn-login {
+    width: 100%;
+    background-color: var(--bg-main);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 400;
+    font-family: "Karla", sans-serif;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-login:hover {
+  background-color: var(--bg-main);
+}
+
+.btn-login:disabled {
+  background-color: #a3c180;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.forgot-password-container {
+    text-align: end;
+    margin-top: 20px;
+    font-family: "Karla", sans-serif;
+}
+
+.forgot-password-link {
+  font-size: 0.85rem;
+  color: #d43f12;
+  text-decoration:underline;
+  font-weight: 500;
+}
+
+.password-error, .username-error {
+  color: #fd5353;
+  font-size: 0.75rem;
+  margin-top: 5px;
+}
+.toastrs {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+}
+
+.toastr {
+  display: flex;
+  align-items: center;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 300px;
+  animation: slideInFade 0.3s ease forwards;
+}
+
+.toastr--warning .toast-icon {
+  background-color: #ff8c00;
+  color: white;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.toastr--success .toast-icon {
+  background-color: #b91c1c;
+  color: white;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.toast-message {
+  padding: 0 20px;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+@keyframes slideInFade {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.toast-exit {
+  animation: slideOutFade 0.3s ease forwards;
+}
+
+@keyframes slideOutFade {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 992px) {
+    .form-header-text h2 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .signup-link-text {
+      font-size: 0.7rem;
+    }
+    
+}
+
+@media (max-width: 992px) {
+  .login-card {
+    margin-top: -50px;
+  }
+}
+.verification-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+}
+
+.code-inputs {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.code-input {
+  width: 60px;
+  height: 60px;
+  text-align: center;
+  font-size: 24px;
+  border: 2px solid #ddd;
+  color: #555;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.2s;
+  font-family: "Karla", sans-serif;
+  background: white;
+}
+
+.code-input:focus {
+  border-color: var(--bg-main);
+  box-shadow: 0 0 0 3px rgba(212, 63, 18, 0.1);
+}
+
+.code-input:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.verification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.btn-resend {
+  background: transparent;
+  color: #d43f12;
+  border: 1px solid #d43f12;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  font-family: "Karla", sans-serif;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-resend:hover:not(:disabled) {
+  background: rgba(212, 63, 18, 0.1);
+}
+
+.btn-resend:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(212, 63, 18, 0.3);
+  border-top-color: #d43f12;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.back-to-login {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.back-to-login button {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: "Karla", sans-serif;
+}
+
+.back-to-login button:hover {
+  color: #d43f12;
+  text-decoration: underline;
+}
+
+/* Paste hint */
+.code-input::placeholder {
+  font-size: 14px;
+  color: #aaa;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .code-input {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  .code-inputs {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .code-input {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
+  
+  .code-inputs {
+    gap: 8px;
+  }
+  
+  .verification-actions {
+    gap: 10px;
+  }
+}

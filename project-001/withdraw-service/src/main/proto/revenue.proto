@@ -1,0 +1,160 @@
+syntax = "proto3";
+package revenue;
+option java_multiple_files = true;
+option java_package = "pesco.revenue_service.grpc";
+option java_outer_classname = "RevenueProto";
+import "google/protobuf/timestamp.proto";
+
+service RevenueService {
+  rpc GetRevenue(GetRevenueRequest) returns (RevenueResponse);
+  rpc UpdateRevenueBalance(CreateRevenueRequest) returns (RevenueResponse);
+  rpc CreateRevenue(CreateRevenueRequest) returns (RevenueResponse);
+  rpc ListRevenue(ListRevenueRequest) returns (ListRevenueResponse);
+  rpc GetRevenueByCurrency(GetRevenueByCurrencyRequest) returns (RevenueBalanceResponse);
+  rpc TransferOut(TransferOutRequest) returns (TransferOutResponse);
+  rpc CreateTransferPin(CreateTransferPinRequest) returns (CreateTransferPinResponse);
+  rpc CreateRevenueTransaction(CreateRevenueTransactionRequest) returns (RevenueTransactionResponse);
+  rpc GetRevenueTransaction(GetRevenueTransactionRequest) returns (RevenueTransactionResponse);
+  rpc UpdateRevenueTransaction(UpdateRevenueTransactionRequest) returns (RevenueTransactionResponse);
+  rpc DeleteRevenueTransaction(DeleteRevenueTransactionRequest) returns (DeleteRevenueTransactionResponse);
+  rpc ListRevenueTransactions(ListRevenueTransactionsRequest) returns (ListRevenueTransactionsResponse);
+}
+
+enum CurrencyType {
+    USD = 0;
+    EUR = 1;
+    NGN = 2;
+    GBP = 3;
+    JPY = 4;
+    AUD = 5;
+    CAD = 6;
+    CHF = 7;
+    CNY = 8;
+    INR = 9;
+}
+
+message CurrencyBalance {
+    string currency_code = 1;
+    string currency_symbol = 2;
+    string balance = 3; 
+}
+
+message GetRevenueRequest {
+  int64 id = 1;
+}
+
+message RevenueResponse {
+  int64 id = 1;
+  repeated CurrencyBalance balances = 2;
+  google.protobuf.Timestamp created_on = 3;
+  google.protobuf.Timestamp updated_on = 4;
+}
+
+
+message CreateRevenueRequest {
+  string amount = 1;
+  CurrencyType currency = 2;
+}
+
+message ListRevenueRequest {
+  int32 page = 1;
+  int32 size = 2;
+}
+
+message ListRevenueResponse {
+  repeated RevenueResponse revenues = 1;
+  int32 total_pages = 2;
+  int32 current_page = 3;
+}
+
+message GetRevenueByCurrencyRequest {
+  CurrencyType currency = 1;
+}
+
+message RevenueBalanceResponse {
+  int64 id = 1;
+  string currency_code = 2;
+  string symbol = 3;
+  string balance = 4;
+}
+
+message TransferOutRequest {
+  int64 id = 1;
+  string amount = 2;
+  CurrencyType currency = 3;
+}
+
+message TransferOutResponse {
+  string status = 1;
+  string message = 2;
+  string new_balance = 3;
+}
+
+message CreateTransferPinRequest {
+  string token = 1;
+  string pin = 2;
+}
+
+message CreateTransferPinResponse {
+  string message = 1;
+  string details = 2;
+  int32 status_code = 3;
+}
+
+message CreateRevenueTransactionRequest {
+  int64 revenue_id = 1;
+  TransactionType transaction_type = 2;
+  string amount = 3;
+  CurrencyType currency = 4;
+}
+
+message RevenueTransactionResponse {
+  int64 id = 1;
+  int64 revenue_id = 2;
+  TransactionType transaction_type = 3;
+  string amount = 4;
+  CurrencyType currency = 5;
+  google.protobuf.Timestamp created_on = 6;
+}
+
+message GetRevenueTransactionRequest {
+  int64 id = 1;
+}
+
+message UpdateRevenueTransactionRequest {
+  int64 id = 1;
+  TransactionType transaction_type = 2;
+  string amount = 3;
+  CurrencyType currency = 4;
+}
+
+message DeleteRevenueTransactionRequest {
+  int64 id = 1;
+}
+
+message DeleteRevenueTransactionResponse {
+  string message = 1;
+  string details = 2;
+  int32 status_code = 3;
+}
+
+message ListRevenueTransactionsRequest {
+  int64 revenue_id = 1;
+  int32 page = 2;
+  int32 size = 3;
+}
+
+message ListRevenueTransactionsResponse {
+  repeated RevenueTransactionResponse transactions = 1;
+  int32 total_pages = 2;
+  int32 current_page = 3;
+}
+
+enum TransactionType {
+    DEPOSIT = 0;
+    WITHDRAW = 1;
+    TRANSFER = 2;
+    CREDITED = 3;
+    DEBITED  = 4;
+}
+

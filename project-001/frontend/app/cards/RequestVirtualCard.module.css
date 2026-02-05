@@ -1,0 +1,462 @@
+.pageWrapper {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.header {
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #718096;
+  margin: 0;
+}
+
+.section {
+  margin-bottom: 40px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 20px 0;
+}
+
+/* Wallet Selection */
+.walletGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.walletCard {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.walletCard:hover {
+  border-color: #cbd5e0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.walletCard.active {
+  border-color: #c8372d;
+  background: #fff5f5;
+}
+
+.walletFlag {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.walletInfo {
+  flex: 1;
+}
+
+.walletCurrency {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.walletName {
+  font-size: 14px;
+  color: #718096;
+}
+
+.walletBalance {
+  font-size: 18px;
+  font-weight: 600;
+  color: #c8372d;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Provider Selection */
+.providerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.providerCard {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.providerCard:hover {
+  border-color: #cbd5e0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.providerCard.active {
+  border-color: #c8372d;
+  background: #fff5f5;
+}
+
+.providerBadge {
+  flex-shrink: 0;
+  width: 80px;
+  height: 50px;
+  background: #f7fafc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visaLogo {
+  font-size: 22px;
+  font-weight: 900;
+  color: #1434CB;
+  font-style: italic;
+  letter-spacing: 1px;
+}
+
+.mastercardLogo {
+  position: relative;
+  width: 40px;
+  height: 28px;
+}
+
+.mcCircle1,
+.mcCircle2 {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  top: 4px;
+}
+
+.mcCircle1 {
+  left: 0;
+  background: #EB001B;
+}
+
+.mcCircle2 {
+  right: 0;
+  background: #FF5F00;
+  mix-blend-mode: multiply;
+}
+
+.providerInfo {
+  flex: 1;
+}
+
+.providerName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.providerFee {
+  font-size: 14px;
+  color: #718096;
+}
+
+/* Card Preview */
+.cardPreview {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.atmCard {
+  width: 100%;
+  max-width: 420px;
+  height: 260px;
+  border-radius: 16px;
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.atmCard.visa {
+  background: linear-gradient(135deg, #1434CB 0%, #0A1E6B 100%);
+}
+
+.atmCard.mastercard {
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+}
+
+.cardChip {
+  width: 50px;
+  height: 40px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  border-radius: 8px;
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.cardChip::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  background: linear-gradient(45deg, #C9A060 0%, #FFE5A0 50%, #C9A060 100%);
+  border-radius: 4px;
+}
+
+.cardChip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 24px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.1) 2px,
+    rgba(0,0,0,0.1) 4px
+  );
+}
+
+.cardNumber {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 30px;
+  font-size: 22px;
+  font-weight: 500;
+  color: white;
+  letter-spacing: 2px;
+  font-family: 'Courier New', monospace;
+}
+
+.cardDetails {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 20px;
+}
+
+.cardHolder,
+.cardExpiry {
+  flex: 1;
+}
+
+.cardLabel {
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.cardValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 1px;
+}
+
+.cardLogo {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+}
+
+.visaLogoLarge {
+  font-size: 48px;
+  font-weight: 900;
+  color: white;
+  font-style: italic;
+  letter-spacing: 2px;
+}
+
+.mastercardLogoLarge {
+  position: relative;
+  width: 70px;
+  height: 44px;
+}
+
+.mcCircleLarge1,
+.mcCircleLarge2 {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  top: 2px;
+}
+
+.mcCircleLarge1 {
+  left: 0;
+  background: #EB001B;
+}
+
+.mcCircleLarge2 {
+  right: 0;
+  background: #FF5F00;
+  mix-blend-mode: multiply;
+}
+
+/* Card Information Grid */
+.cardInfo {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.infoLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.infoValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Submit Button */
+.submitButton {
+  width: 100%;
+  padding: 16px;
+  background: #c8372d;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #a82e26;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(200, 55, 45, 0.4);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 16px;
+  }
+
+  .header {
+    margin-bottom: 32px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .walletGrid,
+  .providerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cardPreview {
+    padding: 24px;
+  }
+
+  .atmCard {
+    max-width: 100%;
+    height: 220px;
+    padding: 24px;
+  }
+
+  .cardNumber {
+    font-size: 18px;
+    gap: 12px;
+  }
+
+  .cardDetails {
+    gap: 24px;
+  }
+
+  .cardValue {
+    font-size: 14px;
+  }
+
+  .visaLogoLarge {
+    font-size: 36px;
+  }
+
+  .mastercardLogoLarge {
+    width: 56px;
+    height: 36px;
+  }
+
+  .mcCircleLarge1,
+  .mcCircleLarge2 {
+    width: 32px;
+    height: 32px;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

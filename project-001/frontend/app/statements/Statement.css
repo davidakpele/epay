@@ -1,0 +1,1713 @@
+.statement-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.statement-select-box {
+  width: 100%;
+  min-height: 0.5rem;
+  border-radius: 8px;
+  border: 1.5px solid ;
+  color: #606061;
+  background: #e2e8f029;
+  border-color: #e2e8f0;
+  padding: 0.4rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  outline: none;
+  font-family: inherit;
+  font-size:15px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.statement-select-box:hover {
+  color: #606061;
+  background: #e2e8f029;
+  border-color: #e2e8f0;
+}
+
+.statement-filter{
+  display: none;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #606061;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10001;
+  font-family: "Karla", sans-serif !important;
+}
+
+.modal-content {
+  background: #fff;
+  width: 20rem;
+  height: 30rem;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; 
+}
+
+.modal-header h3 {
+  font-size: 15px;
+  margin: 0 0 16px 0;
+  color: #333;
+  font-family: "Karla", sans-serif !important;
+}
+
+.search-container {
+  position: relative;
+  background: transparent;
+  z-index: 10;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.search-icon-inside {
+  position: absolute;
+  left: 12px;
+  top: 8px;
+  color: #adb5bd;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 8px 8px 8px 36px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #444;
+    font-family: "Karla", sans-serif;
+    box-sizing: border-box; 
+    outline: none;
+}
+.country-list {
+  display: block;
+  flex: 1;
+  overflow-y: auto; 
+  padding-right: 8px;
+}
+
+.country-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #f8f9fa;
+  cursor: pointer;
+  font-size: 12px;
+  color: #444;
+  font-family: "Karla", sans-serif !important;
+}
+
+.radio-outer {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.radio-outer.checked {
+  border-color: var(--bg-main);
+}
+
+.radio-inner {
+  width: 10px;
+  height: 10px;
+  background: var(--bg-main);
+  border-radius: 50%;
+  display: none;
+}
+
+.radio-outer.checked .radio-inner {
+  display: block;
+}
+
+.country-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.country-list::-webkit-scrollbar-track {
+  background: var(--bg-main); 
+  border-radius: 10px;
+}
+
+.country-list::-webkit-scrollbar-thumb {
+  background: var(--bg-main); 
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.country-list.is-scrolling::-webkit-scrollbar-thumb,
+.country-list::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-main)
+}
+
+.no-results {
+  text-align: center;
+  padding: 20px;
+  color: var(--bg-main); 
+  font-size: 14px;
+}
+
+.country-list {
+  display: block;
+  flex: 1;
+  overflow-y: auto; 
+  padding-right: 4px; 
+}
+/* Ultra-thin scrollbar */
+.country-list::-webkit-scrollbar {
+  width: 3px; 
+}
+
+.country-list::-webkit-scrollbar-track {
+  background: var(--bg-main); 
+  border-radius: 3px; 
+}
+
+.country-list::-webkit-scrollbar-thumb {
+  background: var(--bg-main); 
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+.country-list.is-scrolling::-webkit-scrollbar-thumb,
+.country-list::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-main);
+  width: 4px;
+}
+
+.country-list {
+  scrollbar-width: thin; 
+  scrollbar-color: #ea2020 #f9f9f9; 
+}
+
+.country-list {
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+/* Custom Date Input Styling */
+input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  background-color: white;
+  color: #333;
+  font-family: "Karla", sans-serif;
+  padding-right: 2.5rem;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit {
+  color: #333;
+}
+
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: #333;
+}
+
+/* Red focus states for consistency */
+input[type="date"]:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2) !important;
+  outline: none;
+}
+
+/* Red button styles */
+.red-button {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.red-button:hover {
+  background-color: #b91c1c;
+}
+
+.red-button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+.items-center{
+  justify-items: center;
+}
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e1e5e9;
+}
+.active-filter-tag {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #bbdefb;
+}
+
+/* New */
+
+/* Account History Styles */
+.account-history {
+  width: 100%;
+  padding: 2rem;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+.account-history.dark {
+  background: #1a1d2e;
+}
+
+/* Header */
+.ah-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.ah-header-content {
+  flex: 1;
+}
+
+.ah-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1d2e;
+  margin: 0 0 0.5rem 0;
+  border-bottom: 3px solid #c41e3a;
+  display: inline-block;
+  padding-bottom: 0.25rem;
+}
+
+.account-history.dark .ah-title {
+  color: #ffffff;
+}
+
+.ah-subtitle {
+  font-size: 1rem;
+  color: #64748b;
+  margin: 0.5rem 0 0 0;
+}
+
+.ah-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: white;
+  color: #1a1d2e;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ah-back-btn:hover {
+  border-color: #c41e3a;
+  color: #c41e3a;
+  transform: translateY(-2px);
+}
+
+.account-history.dark .ah-back-btn {
+  background: #252a3d;
+  color: white;
+  border-color: #334155;
+}
+
+/* Account Info Card */
+.ah-account-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.account-history.dark .ah-account-card {
+  background: #252a3d;
+}
+
+.ah-account-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.ah-account-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1d2e;
+  margin: 0 0 0.5rem 0;
+}
+
+.account-history.dark .ah-account-name {
+  color: white;
+}
+
+.ah-account-number {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.ah-balance-info {
+  text-align: right;
+}
+
+.ah-balance-amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1d2e;
+  margin: 0 0 0.5rem 0;
+}
+
+.account-history.dark .ah-balance-amount {
+  color: white;
+}
+
+.ah-balance-label {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Filter Section */
+.ah-filter-section {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.account-history.dark .ah-filter-section {
+  background: #252a3d;
+}
+
+.ah-filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.ah-filter-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1d2e;
+  margin: 0;
+}
+
+.account-history.dark .ah-filter-title {
+  color: white;
+}
+
+.ah-clear-btn {
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  color: #c41e3a;
+  border: 2px solid #c41e3a;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ah-clear-btn:hover {
+  background: #c41e3a;
+  color: white;
+}
+
+.ah-filters-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ah-filter-row-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* Second Row - 2 columns */
+.ah-filter-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.ah-filter-row {
+  display: grid;
+  /* grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.ah-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ah-filter-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.account-history.dark .ah-filter-label {
+  color: #cbd5e1;
+}
+
+.ah-filter-select,
+.ah-filter-input {
+  padding: 0.875rem 1rem;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #1a1d2e;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.ah-filter-select:focus,
+.ah-filter-input:focus {
+  outline: none;
+  border-color: #c41e3a;
+  background: white;
+}
+
+.account-history.dark .ah-filter-select,
+.account-history.dark .ah-filter-input {
+  background: #1a1d2e;
+  border-color: #334155;
+  color: white;
+}
+
+.ah-date-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ah-date-input svg {
+  position: absolute;
+  left: 1rem;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.ah-date-input .ah-filter-input {
+  padding-left: 2.75rem;
+}
+
+.ah-filter-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.ah-search-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: #c41e3a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 28px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ah-search-btn:hover {
+  background: #a01830;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+}
+
+/* Table Section */
+.ah-table-section {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.account-history.dark .ah-table-section {
+  background: #252a3d;
+}
+
+.ah-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+  gap: 1rem;
+}
+
+.account-history.dark .ah-table-header {
+  border-bottom-color: #334155;
+}
+
+.ah-table-info {
+  flex: 1;
+}
+
+.ah-action-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.ah-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: white;
+  color: #1a1d2e;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.ah-download-btn:hover {
+  border-color: #c41e3a;
+  color: #c41e3a;
+  transform: translateY(-2px);
+}
+
+.account-history.dark .ah-download-btn {
+  background: #1a1d2e;
+  color: white;
+  border-color: #334155;
+}
+
+
+.ah-table-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1d2e;
+  margin: 0 0 0.25rem 0;
+  border-bottom: 3px solid #c41e3a;
+  display: inline-block;
+  padding-bottom: 0.25rem;
+}
+
+.account-history.dark .ah-table-title {
+  color: white;
+}
+
+.ah-table-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0.5rem 0 0 0;
+}
+
+.ah-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: white;
+  color: #1a1d2e;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ah-download-btn:hover {
+  border-color: #c41e3a;
+  color: #c41e3a;
+}
+
+.account-history.dark .ah-download-btn {
+  background: #1a1d2e;
+  color: white;
+  border-color: #334155;
+}
+
+/* Table */
+.ah-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.account-history.dark .ah-table-container {
+  border-color: #334155;
+}
+
+.ah-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ah-table thead {
+  background: #f8fafc;
+}
+
+.account-history.dark .ah-table thead {
+  background: #1a1d2e;
+}
+
+.ah-table th {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.account-history.dark .ah-table th {
+  border-bottom-color: #334155;
+}
+
+.ah-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.ah-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.account-history.dark .ah-table tbody tr:hover {
+  background: #1e2337;
+}
+
+.ah-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1a1d2e;
+}
+
+.account-history.dark .ah-table td {
+  border-bottom-color: #334155;
+  color: white;
+}
+
+.ah-transaction-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ah-transaction-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ah-transaction-icon.credit {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.ah-transaction-icon.debit {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.ah-transaction-description {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
+.ah-transaction-reference {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.ah-type-badge {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.account-history.dark .ah-type-badge {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.ah-amount {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ah-amount.credit {
+  color: #059669;
+}
+
+.ah-amount.debit {
+  color: #dc2626;
+}
+
+.ah-status-badge {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-completed {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.status-pending {
+  background: rgba(234, 179, 8, 0.1);
+  color: #ca8a04;
+}
+
+.status-failed {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.ah-date {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.ah-view-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #c41e3a;
+  border: 2px solid #c41e3a;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.ah-view-btn:hover {
+  background: #c41e3a;
+  color: white;
+}
+
+/* Empty States */
+.ah-empty-state {
+  padding: 3rem;
+  text-align: center;
+}
+
+.ah-empty-state p {
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.ah-empty-message {
+  background: white;
+  border-radius: 20px;
+  justify-items: center;
+
+  padding: 4rem 2rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.account-history.dark .ah-empty-message {
+  background: #252a3d;
+}
+
+.ah-empty-message svg {
+  color: #cbd5e1;
+  margin-bottom: 1rem;
+}
+
+.ah-empty-message h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1d2e;
+  margin: 0 0 0.5rem 0;
+}
+
+.account-history.dark .ah-empty-message h3 {
+  color: white;
+}
+
+.ah-empty-message p {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .ah-filter-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ah-empty-message {
+    margin-bottom: 50px;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .account-history {
+    padding: 1rem;
+  }
+
+  .ah-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ah-back-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ah-title {
+    font-size: 1.5rem;
+  }
+
+  .ah-account-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ah-balance-info {
+    text-align: left;
+    width: 100%;
+  }
+
+  .ah-balance-amount {
+    font-size: 1.5rem;
+  }
+
+  .ah-filter-section {
+    padding: 1.5rem;
+  }
+
+  .ah-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ah-table-section {
+    padding: 1rem;
+  }
+
+  .ah-table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .ah-action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .ah-download-btn {
+    justify-content: center;
+    width: 100%;
+  }
+  .ah-download-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ah-table {
+    font-size: 0.875rem;
+  }
+
+  .ah-table th,
+  .ah-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .ah-transaction-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .ah-view-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-history {
+    padding: 0.75rem;
+  }
+
+  .ah-title {
+    font-size: 1.25rem;
+  }
+
+  .ah-action-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .ah-account-card,
+  .ah-filter-section,
+  .ah-table-section {
+    padding: 1rem;
+  }
+
+  .ah-balance-amount {
+    font-size: 1.25rem;
+  }
+
+  /* Make table scrollable on very small screens */
+  .ah-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ah-table {
+    min-width: 800px;
+  }
+}
+
+/* Statement Select Field */
+.statement-container {
+  width: 100%;
+}
+
+.statement-selectField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #1a1d2e;
+  cursor: pointer;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: all 0.3s ease;
+}
+.statement-selectField:hover {
+  border-color: #c41e3a;
+  background: white;
+}
+
+.account-history.dark .statement-selectField {
+  background: #1a1d2e;
+  border-color: #334155;
+  color: white;
+}
+
+.statement-selectedText {
+  flex: 1;
+}
+
+.statement-arrow {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.statement-selectField:hover .statement-arrow {
+  transform: translateY(2px);
+}
+
+/* Filter Actions */
+.ah-filter-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.ah-search-btn {
+  width: 65%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: #c41e3a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.apply-custom-btn{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.85rem 0.2rem;
+  background: #c41e3a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.apply-custom-btn,
+.ah-search-btn:hover {
+  background: #a01830;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+}
+.duration-selectTextView{
+  max-width: 370px;
+}
+
+.active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e1e5e9;
+}
+.active-filters {
+    color: #3b82f6;
+    font-weight: 500;
+}
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.active-filters {
+  animation: fadeInSlide 0.3s ease-out;
+}
+
+.active-filter-tag {
+  animation: fadeInSlide 0.3s ease-out;
+}
+/* Responsive Design */
+@media (max-width: 1000px) {
+  .ah-filter-row-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ah-filter-row-3, .ah-filter-row-2 {
+    grid-template-columns: 1fr;
+  }
+  .ah-table-section{
+    margin-bottom:90px;
+  }
+  
+  .ah-filter-row-2 {
+    grid-template-columns: 1fr;
+  }
+  .duration-selectTextView{
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .ah-search-btn{
+    margin:0;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .ah-filter-row-3,
+  .ah-filter-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+/* Statement.css - Updated with Scrollable Table */
+
+/* ============================================================================
+   TRANSACTION HISTORY TABLE STYLES - WITH SCROLL
+   ============================================================================ */
+
+/* Table Section Container */
+.ah-table-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+/* Table Header */
+.ah-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ah-table-info {
+  flex: 1;
+  min-width: 200px;
+}
+
+.ah-table-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.ah-table-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.ah-action-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ah-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ah-download-btn:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+/* ============================================================================
+   SCROLLABLE TABLE CONTAINER - NEW
+   ============================================================================ */
+
+.ah-table-container {
+  max-height: 600px; /* Adjust this value based on your needs */
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Custom Scrollbar Styling */
+.ah-table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ah-table-container::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.ah-table-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.ah-table-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* For Firefox */
+.ah-table-container {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+/* ============================================================================
+   TABLE STYLES
+   ============================================================================ */
+
+.ah-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  min-width: 900px; /* Ensures horizontal scroll on small screens */
+}
+
+/* Sticky Table Header */
+.ah-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f9fafb;
+}
+
+.ah-table thead tr {
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.ah-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #f9fafb;
+}
+
+.ah-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+}
+
+.ah-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.ah-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.ah-table td {
+  padding: 16px;
+  font-size: 14px;
+  color: #111827;
+  vertical-align: middle;
+}
+
+/* ============================================================================
+   TRANSACTION CELL STYLES
+   ============================================================================ */
+
+.ah-transaction-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ah-transaction-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ah-transaction-icon.credit {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.ah-transaction-icon.debit {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.ah-transaction-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.ah-transaction-description {
+  font-weight: 500;
+  color: #111827;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ah-transaction-reference {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ============================================================================
+   TYPE BADGE
+   ============================================================================ */
+
+.ah-type-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #f3f4f6;
+  color: #374151;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   AMOUNT STYLES - UPDATED COLORS (NO RED TICK)
+   ============================================================================ */
+
+.ah-amount {
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.ah-amount.credit {
+  color: #16a34a; /* Green for credits */
+}
+
+.ah-amount.debit {
+  color: #dc2626; /* Keep red for debits - no tick icon */
+}
+
+/* ============================================================================
+   STATUS BADGE STYLES
+   ============================================================================ */
+
+.ah-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-completed {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-failed {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+/* ============================================================================
+   DATE STYLES
+   ============================================================================ */
+
+.ah-date {
+  color: #6b7280;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   VIEW BUTTON
+   ============================================================================ */
+
+.ah-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.ah-view-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+.ah-empty-state {
+  text-align: center;
+  padding: 60px 20px !important;
+}
+
+.ah-empty-state p {
+  color: #6b7280;
+  font-size: 15px;
+  margin: 0;
+}
+
+
+@media (max-width: 768px) {
+  .ah-table-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ah-action-buttons {
+    width: 100%;
+  }
+
+  .ah-download-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .ah-table-container {
+    max-height: 500px; 
+  }
+
+  .ah-table th,
+  .ah-table td {
+    padding: 12px;
+  }
+
+  .ah-transaction-description {
+    font-size: 13px;
+  }
+
+  .ah-transaction-reference {
+    font-size: 11px;
+  }
+}
+.dark .ah-table-section {
+  background: #1f2937;
+}
+
+.dark .ah-table-header {
+  border-bottom-color: #374151;
+}
+
+.dark .ah-table-title {
+  color: #f9fafb;
+}
+
+.dark .ah-table-subtitle {
+  color: #9ca3af;
+}
+
+.dark .ah-download-btn {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.dark .ah-download-btn:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+.dark .ah-table {
+  background: #1f2937;
+}
+
+.dark .ah-table thead {
+  background: #111827;
+}
+
+.dark .ah-table th {
+  color: #9ca3af;
+  background: #111827;
+}
+
+.dark .ah-table tbody tr {
+  border-bottom-color: #374151;
+}
+
+.dark .ah-table tbody tr:hover {
+  background-color: #111827;
+}
+
+.dark .ah-table td {
+  color: #e5e7eb;
+}
+
+.dark .ah-transaction-description {
+  color: #f9fafb;
+}
+
+.dark .ah-type-badge {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
+.dark .ah-view-btn {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.dark .ah-view-btn:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+  color: #f9fafb;
+}
+
+.dark .ah-table-container::-webkit-scrollbar-track {
+  background: #111827;
+}
+
+.dark .ah-table-container::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark .ah-table-container::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+.scroll-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.95), transparent);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.ah-table-container.has-more-content .scroll-indicator {
+  opacity: 1;
+}
+
+.scroll-indicator-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.ah-table tbody {
+  counter-reset: row-number;
+}
+
+.ah-table tbody tr {
+  counter-increment: row-number;
+}
+
+/* Uncomment if you want row numbers */
+/*
+.ah-table tbody tr td:first-child::before {
+  content: counter(row-number);
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  background: #f3f4f6;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-right: 12px;
+}
+*/

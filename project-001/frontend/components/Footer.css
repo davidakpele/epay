@@ -1,0 +1,150 @@
+.main-footer {
+  padding: 10px 30px 4px;
+  border-top: 1px solid var(--border-color);
+  background: linear-gradient(135deg, #c3290b 0%, #ef4444 100%);
+  margin-top: 0px;
+  display: block; 
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.footer-content {
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 40px;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.logo-icon-small {
+  background: #c3290b;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.footer-logo h2 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.footer-logo h2.color-light { color: var(--text-primary); }
+.footer-logo h2.color-dark { color: #ffffff; }
+
+.footer-desc {
+  opacity: .95;
+    gap: 8px;
+    font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 300px;
+}
+
+.social-links {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.social-links a {
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.social-links a:hover {
+  color: #c3290b;
+}
+
+.footer-links-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr;
+  gap: 30px;
+}
+
+.footer-section h4 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.footer-section h4.color-light { color: var(--text-primary); }
+.footer-section h4.color-dark { color: #ffffff; }
+
+.footer-section a {
+  display: block;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  margin-bottom: 12px;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.footer-section a:hover {
+  color: #c3290b;
+  transform: translateX(5px);
+}
+
+.newsletter p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 15px;
+}
+
+.newsletter-input-box {
+  display: flex;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.newsletter-input-box input {
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.subscribe-btn {
+  background: #c3290b;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-bottom {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.footer-bottom p {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1000px) {
+  .main-footer {
+    display: none !important;
+  }
+}

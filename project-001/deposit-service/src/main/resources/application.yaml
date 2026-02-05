@@ -1,0 +1,56 @@
+server:
+  port: 8020
+
+spring:
+  application:
+    name: deposit-service
+
+jwt:
+  secret-key: lcBCilFEQT0SWEZcCQhGx2UaCZcxPx4bYBfrGM0DVKDJycK2UL4dDJqAkZ8r4IBQxSa3S2wlTVlnVVzvzP5sfzPtLUournmEY2N3ZGVnQ1BtWEF0anZ0aDNLNHJhaHh9IkFVaj0PXA==
+
+flutterwave:
+  public-key: FLWPUBK_TEST-9f86808391a0bef01975c332a2782e5a-X
+  secret-key: FLWSECK_TEST-1eee27f63b4dc12394dbf5c7badaa39e-X
+  url: https://api.flutterwave.com/v3
+
+paystack:
+  api:
+    url: https://api.paystack.co
+    key: sk_test_aaa8ff310f15a0ad5f23950a584f8942cbdf02aa
+  
+history-service:
+  base-url:  http://history-service:8390
+
+wallet-service:
+  base-url: http://wallet-service:8035
+
+wallet-websocket:
+  url: ws://wallet-service:8035
+
+auth-service:
+  base-url:  http://authentication-service:8080
+
+banklist-service:
+  base-url:  http://banklist-service:8040
+
+notification-service:
+  base-url:  http://notification-service:8079
+
+grpc: 
+  client:
+    wallet-service:
+      address: static://wallet-service:9090  
+      negotiationType: plaintext
+
+logging:
+  level:
+    com.mouad.movieservice: DEBUG
+    org.springframework.web: DEBUG
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans

@@ -1,0 +1,237 @@
+.news-container {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  margin-top: 24px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
+}
+
+.dark .news-container {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+.news-container h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+}
+
+.news-container h3.color-light { color: var(--text-primary); }
+.news-container h3.color-dark { color: #fff; }
+
+.news-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.news-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg-input);
+  transition: transform 0.2s;
+}
+
+.news-card:hover {
+  transform: translateY(-2px);
+}
+
+.news-info h4 { font-size: 14px; margin: 0; font-weight: 600; }
+.news-info p { font-size: 12px; margin: 4px 0 0 0; color: var(--text-secondary); line-height: 1.4; }
+
+.dark .news-card {
+  background: #0f172a;
+  color: #fff;
+}
+
+.news-card:hover {
+  transform: translateY(-3px);
+  border-color: #c3290b;
+}
+
+.news-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: white;
+  border-radius: 10px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dark .news-icon {
+  background: #1e293b;
+}
+
+.news-info {
+  flex: 1;
+}
+
+/* Light Theme Text Logic */
+.news-info.color-light h4 {
+  font-size: 14px;
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.news-info.color-light p {
+  font-size: 12px;
+  margin: 5px 0 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Dark Theme Text Logic */
+.news-info.color-dark h4, 
+.news-info.color-dark p {
+  color: #fff;
+}
+
+.news-info.color-dark h4 {
+  font-size: 14px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.news-info.color-dark p {
+  font-size: 12px;
+  margin: 5px 0 0 0;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+/* Modal Styling */
+.news-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.news-modal-content {
+  background: white;
+  width: 100%;
+  max-width: 450px;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dark .news-modal-content {
+  background: #1e293b;
+  color: white;
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.news-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: var(--bg-input);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.news-modal-header {
+  padding: 30px 25px 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.news-modal-icon-wrapper {
+  width: 60px;
+  height: 60px;
+  background: var(--bg-input);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.news-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #c3290b;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.news-modal-header h4 {
+  margin: 0;
+  font-size: 15px;
+  font-family: "Karla", sans-serif;
+}
+
+.news-modal-body {
+  padding: 0 25px 30px;
+}
+
+.news-date {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.news-description {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #475569;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
+}
+
+.dark .news-description {
+  color: #cbd5e1;
+}
+
+.news-modal-footer {
+  margin-top: 25px;
+}
+
+.news-action-btn {
+  width: 100%;
+  padding: 14px;
+  background: #c3290b;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.news-action-btn:hover {
+  opacity: 0.9;
+}
+

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Profile Image</title>
+    <style>
+        img {
+            margin-top: 20px;
+            max-width: 250px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<h3>Upload Profile Image</h3>
+
+<input type="file" id="file" accept="image/*">
+<button onclick="upload()">Upload</button>
+
+<br><br>
+
+<img id="profileImage" alt="Profile Image" />
+
+<script>
+async function upload() {
+    const fileInput = document.getElementById('file');
+    const file = fileInput.files[0];
+    if (!file) {
+        alert("Select a file");
+        return;
+    }
+
+    // Optional: preview selected file before upload
+    const preview = document.getElementById("profileImage");
+    preview.src = URL.createObjectURL(file);
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const userId = 1001; // replace with dynamic userId if needed
+
+    const response = await fetch(
+        `http://localhost:8187/user/upload-profile-image/${userId}`,
+        {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJVRDQ5LVN0YXRpb25zLWFwcCIsInJvbGVzIjpbIlVTRVIiXSwiaXNzIjoiVW5pZmllZCBEeW5hbWljIFN5c3RlbXMiLCJ1c2VySWQiOjEwMDEsInN1YiI6ImtpbSIsImlhdCI6MTc2ODI5NzIzNCwiZXhwIjoxNzY4Mjk5MDM0LCJuYmYiOjE3NjgyOTcyMzR9.lNgy7YXjkYVZBw7ggrSq1VThPY3g3r7lsNdW8lKcbnw" 
+            },
+            body: formData
+        }
+    );
+
+    if (!response.ok) {
+        alert("Upload failed");
+        return;
+    }
+
+    const data = await response.json();
+    console.log(data);
+
+    if (data.status === "success") {
+        // Display uploaded image from backend
+        preview.src = data.imageUrl; // e.g., /image/1001.jpg
+    }
+}
+</script>
+
+</body>
+</html>

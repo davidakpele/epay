@@ -1,0 +1,510 @@
+services:
+  # Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: banking-postgres
+    environment:
+      POSTGRES_DB: pesco_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - banking-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: banking-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: banking_db
+      MYSQL_USER: banking_user
+      MYSQL_PASSWORD: banking_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - banking-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h localhost ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: always
+    networks:
+      - banking-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - banking-network
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+    networks:
+      - banking-network
+
+  # ===========================
+  # NGINX Gateway Service
+  # ===========================
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-gateway
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:uid=101,gid=101,mode=1777
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - CHOWN
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./security-firewalls/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./security-firewalls/conf.d:/etc/nginx/conf.d:ro
+      - ./security-firewalls/html:/usr/share/nginx/html:ro
+      - nginx_logs:/var/log/nginx:rw
+      - nginx_cache:/var/cache/nginx:rw
+      - nginx_run:/var/run:rw
+    depends_on:
+      - authentication-service
+      - wallet-service
+      - deposit-service
+      - withdraw-service
+      - history-service
+      - revenue-service
+      - bank-collection-service
+      - beneficiary-service
+      - blacklist-service
+      - notification-service
+      - escrow-service
+      - maintenance-service
+      - frontend
+    
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    environment:
+      - TZ=UTC
+      - NGINX_ENTRYPOINT_QUIET_LOGS=1
+    
+    networks:
+      - banking-network
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 128M
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=nginx"
+ 
+  # Spring Boot Services
+  authentication-service:
+    build: ./authentication-service
+    container_name: authentication-service
+    ports:
+      - "8187:8187"
+    volumes:
+      - ./uploads/auth:/var/www/uploads/images
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - FILE_UPLOAD_DIR=/var/www/uploads/images
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - rabbitmq
+      - notification-service
+      - wallet-service
+      - redis
+    networks:
+    - banking-network
+
+
+  withdraw-service:
+    build: ./withdraw-service
+    container_name: withdraw-service
+    ports:
+      - "8068:8068"
+    depends_on:
+      - history-service
+      - wallet-service
+      - blacklist-service
+      - bank-collection-service
+      - beneficiary-service
+      - revenue-service
+      - notification-service
+      - authentication-service
+      - escrow-service
+    networks:
+      - banking-network
+
+  wallet-service:
+    build: ./wallet-service
+    container_name: wallet-service
+    ports:
+      - "8035:8035"
+      - "9090:9090"
+    environment:
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379 
+    depends_on:
+      - postgres
+      - history-service
+      - notification-service
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8035/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - banking-network
+
+  deposit-service:
+    build: ./deposit-service
+    container_name: deposit-service
+    ports:
+      - "8020:8020"
+    depends_on:
+      - history-service
+      - wallet-service
+    networks:
+      - banking-network
+
+  history-service:
+    build: ./history-service
+    container_name: history-service
+    ports:
+      - "8390:8390"
+    environment:
+      - GIN_MODE=release
+      - DB_HOST=mysql
+      - DB_USER=banking_user
+      - DB_PASSWORD=banking_pass
+      - DB_NAME=banking_db
+      - DB_PORT=3306
+      - DB_SSLMODE=disable
+      - DB_TIMEZONE=UTC
+      - PORT=8390
+      - JWT_SECRET_KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnBaWj2t3CwC6kxlhHYxKs2eirgl0kYohe6MZaNKS7XbS1zWlM2xZlaY9fUZbn9jlGGaKWci2gaGBU45JXAqzlpQbuWiMYavcfG19kB1dBNy6vOH++uJSEPNud7EwaBpdY9YENMkKKcEkTAZNXhifGGcSlAaBQ9NZmYdG5bTBiht1TsQk19GLOcS9DftjlAk7EadAVnfJBLLnVgZxBDTMP5L4LW1EMAS8y8Lwp98LWu7T3OfejnUMbH2AWd5FXYDZI1TXHhVMLVmM08ZZr0HpoLevjwCgv7CMhtvm7q6wIDAQABlcBCilFEQT0SWEZcCQhGx2UaCZcxPx4bYBfrGM0DVKDJycK2UL4dDJqAkZ8r4IBQxSa3S2wlTVlnVVzvzP5sfzPtLUournmEY2N3ZGVnQ1BtWEF0anZ0aDNLNHJhaHh9IkFVaj0PXA
+      - REDIS_ADDRESS=redis:6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - banking-network
+  
+  revenue-service:
+    build: ./revenue-service
+    container_name: revenue-service
+    ports:
+      - "8083:8083"
+    environment:
+      - GIN_MODE=release
+      - DB_HOST=mysql
+      - DB_USER=banking_user
+      - DB_PASSWORD=banking_pass
+      - DB_NAME=banking_db
+      - DB_PORT=3306
+      - DB_SSLMODE=disable
+      - DB_TIMEZONE=UTC
+      - PORT=8083  
+      - JWT_SECRET_KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnBaWj2t3CwC6kxlhHYxKs2eirgl0kYohe6MZaNKS7XbS1zWlM2xZlaY9fUZbn9jlGGaKWci2gaGBU45JXAqzlpQbuWiMYavcfG19kB1dBNy6vOH++uJSEPNud7EwaBpdY9YENMkKKcEkTAZNXhifGGcSlAaBQ9NZmYdG5bTBiht1TsQk19GLOcS9DftjlAk7EadAVnfJBLLnVgZxBDTMP5L4LW1EMAS8y8Lwp98LWu7T3OfejnUMbH2AWd5FXYDZI1TXHhVMLVmM08ZZr0HpoLevjwCgv7CMhtvm7q6wIDAQABlcBCilFEQT0SWEZcCQhGx2UaCZcxPx4bYBfrGM0DVKDJycK2UL4dDJqAkZ8r4IBQxSa3S2wlTVlnVVzvzP5sfzPtLUournmEY2N3ZGVnQ1BtWEF0anZ0aDNLNHJhaHh9IkFVaj0PXA
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - banking-network
+
+  bank-collection-service:
+    build: ./bank-collection-service
+    container_name: bank-collection-service
+    ports:
+      - "8040:8040"
+    environment:
+      - GIN_MODE=release
+      - DB_HOST=mysql
+      - DB_USER=banking_user
+      - DB_PASSWORD=banking_pass
+      - DB_NAME=banking_db
+      - DB_PORT=3306
+      - DB_SSLMODE=disable
+      - DB_TIMEZONE=UTC
+      - PORT=8013  
+      - JWT_SECRET_KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnBaWj2t3CwC6kxlhHYxKs2eirgl0kYohe6MZaNKS7XbS1zWlM2xZlaY9fUZbn9jlGGaKWci2gaGBU45JXAqzlpQbuWiMYavcfG19kB1dBNy6vOH++uJSEPNud7EwaBpdY9YENMkKKcEkTAZNXhifGGcSlAaBQ9NZmYdG5bTBiht1TsQk19GLOcS9DftjlAk7EadAVnfJBLLnVgZxBDTMP5L4LW1EMAS8y8Lwp98LWu7T3OfejnUMbH2AWd5FXYDZI1TXHhVMLVmM08ZZr0HpoLevjwCgv7CMhtvm7q6wIDAQABlcBCilFEQT0SWEZcCQhGx2UaCZcxPx4bYBfrGM0DVKDJycK2UL4dDJqAkZ8r4IBQxSa3S2wlTVlnVVzvzP5sfzPtLUournmEY2N3ZGVnQ1BtWEF0anZ0aDNLNHJhaHh9IkFVaj0PXA
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - banking-network
+
+  beneficiary-service:
+    build: ./beneficiary-service
+    container_name: beneficiary-service
+    ports:
+      - "8084:8084" 
+    environment:
+      - GIN_MODE=release
+      - DB_HOST=mysql
+      - DB_USER=banking_user
+      - DB_PASSWORD=banking_pass
+      - DB_NAME=banking_db
+      - DB_PORT=3306
+      - DB_SSLMODE=disable
+      - DB_TIMEZONE=UTC
+      - PORT=8084  
+      - JWT_SECRET_KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnBaWj2t3CwC6kxlhHYxKs2eirgl0kYohe6MZaNKS7XbS1zWlM2xZlaY9fUZbn9jlGGaKWci2gaGBU45JXAqzlpQbuWiMYavcfG19kB1dBNy6vOH++uJSEPNud7EwaBpdY9YENMkKKcEkTAZNXhifGGcSlAaBQ9NZmYdG5bTBiht1TsQk19GLOcS9DftjlAk7EadAVnfJBLLnVgZxBDTMP5L4LW1EMAS8y8Lwp98LWu7T3OfejnUMbH2AWd5FXYDZI1TXHhVMLVmM08ZZr0HpoLevjwCgv7CMhtvm7q6wIDAQABlcBCilFEQT0SWEZcCQhGx2UaCZcxPx4bYBfrGM0DVKDJycK2UL4dDJqAkZ8r4IBQxSa3S2wlTVlnVVzvzP5sfzPtLUournmEY2N3ZGVnQ1BtWEF0anZ0aDNLNHJhaHh9IkFVaj0PXA
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - banking-network
+
+  blacklist-service:
+    build: ./blacklist-service
+    container_name: blacklist-service
+    ports:
+      - "8013:8013" 
+    environment:
+      - GIN_MODE=release
+      - DB_HOST=mysql
+      - DB_USER=banking_user
+      - DB_PASSWORD=banking_pass
+      - DB_NAME=banking_db
+      - DB_PORT=3306
+      - DB_SSLMODE=disable
+      - DB_TIMEZONE=UTC
+      - PORT=8013  
+      - JWT_SECRET_KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnBaWj2t3CwC6kxlhHYxKs2eirgl0kYohe6MZaNKS7XbS1zWlM2xZlaY9fUZbn9jlGGaKWci2gaGBU45JXAqzlpQbuWiMYavcfG19kB1dBNy6vOH++uJSEPNud7EwaBpdY9YENMkKKcEkTAZNXhifGGcSlAaBQ9NZmYdG5bTBiht1TsQk19GLOcS9DftjlAk7EadAVnfJBLLnVgZxBDTMP5L4LW1EMAS8y8Lwp98LWu7T3OfejnUMbH2AWd5FXYDZI1TXHhVMLVmM08ZZr0HpoLevjwCgv7CMhtvm7q6wIDAQABlcBCilFEQT0SWEZcCQhGx2UaCZcxPx4bYBfrGM0DVKDJycK2UL4dDJqAkZ8r4IBQxSa3S2wlTVlnVVzvzP5sfzPtLUournmEY2N3ZGVnQ1BtWEF0anZ0aDNLNHJhaHh9IkFVaj0PXA
+      - ZIPKIN_ENDPOINT=http://zipkin:9411/
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - banking-network
+
+  maintenance-service:
+    build: ./maintenance-service
+    container_name: maintenance-service
+    ports:
+      - "8086:8086"
+    environment:
+      - DATABASE_URL=postgres://postgres:root@postgres:5432/pesco_db?schema=public
+      - DB_MAX_CONNECTIONS=10
+      - PORT=8086
+      - USER_SERVICE_URL=http://authentication-service:8187
+      - WALLET_SERVICE_URL=http://wallet-service:8035
+      - HISTORY_SERVICE_URL=http://history-service:8390
+      - REVENUE_SERVICE_URL=http://revenue-service:8083
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8079
+      - RUST_LOG=info
+    depends_on:
+      - postgres
+      - redis
+      - authentication-service
+      - wallet-service
+      - history-service
+      - notification-service
+    networks:
+      - banking-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8292:8292"
+    environment:
+      - PORT=8292
+      - BACKEND_URL=http://host.docker.internal:8000/v1
+      - BACKEND_WS_URL=ws://host.docker.internal:8000/v1/ws
+      - RATE_LIMIT_PER_MINUTE=100
+      - NODE_ENV=production
+      - ZIPKIN_BASE_URL=http://zipkin:9411
+    restart: unless-stopped
+    depends_on:
+      - zipkin
+    networks:
+      - banking-network
+     
+  escrow-service:
+    build: ./escrow-service
+    container_name: escrow-service
+    ports:
+      - "8755:8755"
+    depends_on:
+      - postgres
+      - notification-service
+      - wallet-service
+      - history-service
+      - authentication-service
+    networks:
+      - banking-network
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    ports:
+      - "8079:8079"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy 
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+    networks:
+      - banking-network
+  
+  administrator:
+    build: ./administrator
+    container_name: administrator
+    ports:
+      - "8109:8109"
+    environment:
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379 
+    depends_on:
+      - postgres
+      - escrow-service
+      - notification-service
+      - wallet-service
+      - history-service
+      - maintenance-service
+      - authentication-service
+      - blacklist-service
+      - deposit-service
+      - revenue-service
+      - bank-collection-service
+      - beneficiary-service
+      - withdraw-service
+      - redis
+    networks:
+      - banking-network
+
+  frontend:
+    build: ./frontend
+    container_name: banking-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - banking-network
+
+      
+volumes:
+  postgres_data:
+  mysql_data:
+  redis_data:
+  nginx_logs:
+    driver: local
+  nginx_cache:
+    driver: local
+  nginx_run:
+    driver: local
+
+networks:
+  banking-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
