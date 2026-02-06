@@ -3,6 +3,7 @@ function clearLoginData() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     localStorage.removeItem('token_expires');
+    localStorage.removeItem('refresh_token'); 
 }
 
 // Call this function when user clicks logout

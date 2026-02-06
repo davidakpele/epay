@@ -217,11 +217,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Function to clear all login data from localStorage
-function clearLoginData() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('token_expires');
-    localStorage.removeItem('refresh_token'); 
-}
-
