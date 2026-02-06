@@ -101,14 +101,14 @@ const TransactionReceipt: React.FC<Props> = ({ transaction }) => {
             max-width: 420px;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 20px #c3290b;
+            box-shadow: 0 2px 20px #166701;
             overflow: hidden;
             position: relative;
           }
           
           /* Header Section */
           .receipt-header {
-            background: #c3290b;
+            background: #166701;
             color: white;
             padding: 25px 20px;
             text-align: center;
@@ -150,7 +150,7 @@ const TransactionReceipt: React.FC<Props> = ({ transaction }) => {
             padding: 6px 16px;
             background: ${transaction.status === 'completed' ? '#10b981' : 
                         transaction.status === 'pending' ? '#f59e0b' : 
-                        '#ef4444'};
+                        '#166701'};
             color: white;
             border-radius: 4px;
             font-size: 12px;
@@ -393,7 +393,7 @@ const TransactionReceipt: React.FC<Props> = ({ transaction }) => {
             }
             
             .receipt-header {
-              background: #c3290b !important;
+              background: #166701 !important;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }

@@ -18,19 +18,19 @@
   width: 40px;
   height: 40px;
   border: 3px solid #f3f4f6;
-  border-top-color: #dc2626;
+  border-top-color: var(--bg-main);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 16px;
 }
 
 .error-state {
-  color: #ef4444;
+  color: var(--bg-main);
 }
 
 .error-icon {
   margin-bottom: 12px;
-  color: #ef4444;
+  color: var(--bg-main);
 }
 
 .error-state p {
@@ -41,7 +41,7 @@
 
 .retry-btn {
   padding: 10px 20px;
-  background: #dc2626;
+  background: var(--bg-main);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -52,7 +52,7 @@
 }
 
 .retry-btn:hover {
-  background: #b91c1c;
+  background: var(--bg-main);
 }
 
 /* Transactions List */
@@ -63,7 +63,7 @@
   background: #e5e7eb;
 }
 
-/* Transaction Card - WHITE when collapsed, DARK when expanded */
+
 .transaction-card {
   background: #ffffff;
   transition: all 0.3s ease;
@@ -74,7 +74,6 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* DARK background when expanded */
 .transaction-card.expanded {
   background: #f1f5f9;
 }
@@ -88,7 +87,6 @@
     display: flex;
 }
 
-/* Icon styling changes based on expanded state */
 .transaction-card:not(.expanded) .transaction-icon {
   width: 44px;
   height: 44px;
@@ -206,7 +204,7 @@
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
-  background: #ef4444;
+  background: var(--bg-main);
   color: #e5e7eb;
 }
 
@@ -214,7 +212,7 @@
   width: 32px;
   height: 32px;
   border-radius: 20px;
-  background: rgba(229, 62, 62, 0.807);
+  background: var(--bg-main);
   border: none;
   display: flex;
   align-items: center;
@@ -226,12 +224,12 @@
 }
 
 .expand-btn:hover {
-  background: rgba(229, 62, 62, 0.807);
+  background: var(--bg-main);
   color: #e5e7eb;
 }
 
 .transaction-card.expanded .expand-btn:hover {
-  background: rgba(229, 62, 62, 0.807);
+  background: var(--bg-main);
   color: #e5e7eb;
 }
 .transaction-details-panel {
@@ -501,13 +499,13 @@
 }
 
 .delete-btn {
-  color: #ef4444;
+  color: var(--bg-main);
 }
 
 .delete-btn:hover:not(:disabled) {
   background-color: #fef2f2;
-  border-color: #ef4444;
-  color: #ef4444;
+  border-color: var(--bg-main);
+  color: var(--bg-main);
 }
 
 .spin {

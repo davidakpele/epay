@@ -195,12 +195,11 @@
   background: transparent;
 }
 
-/* UPDATED USER AVATAR STYLES - CIRCULAR AND PROPERLY SIZED */
 .user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: #e2e8f0;
+  background-color: var(--bg-main);
   font-weight: bold;
   font-size: 13px;
   display: flex;
@@ -211,8 +210,8 @@
   overflow: hidden;
   position: relative;
   flex-shrink: 0;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--bg-main);
+  box-shadow: 0 2px 8px var(--bg-input-shadow);
   transition: all 0.3s ease;
 }
 
@@ -255,7 +254,7 @@
   position: relative;
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--bg-main);
   cursor: pointer;
   padding: 8px;
   display: flex;
@@ -265,11 +264,11 @@
 }
 
 .notification-icon:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--bg-main);
 }
 
 .dark .notification-icon:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-main);
 }
 
 .notification-badge {

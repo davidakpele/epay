@@ -901,3 +901,55 @@
 .pin-status-indicator .pin-not-set{
   color: var(--bg-main);
 }
+
+.settings-profile-info {
+  margin-top: 2rem;
+  color: #64748b;
+  width: 100%;
+}
+
+.account-title {
+  margin-bottom: 1rem;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ---------- GRID ---------- */
+
+/* DESKTOP DEFAULT */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+/* EACH ITEM */
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #ffffff;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+/* LABEL */
+.info-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* VALUE */
+.info-value {
+  font-size: 15px;
+  word-break: break-word;
+}
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 767px) {
+  .info-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}

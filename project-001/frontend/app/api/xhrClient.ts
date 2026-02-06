@@ -25,13 +25,8 @@ const xhrClient = <T = any>(
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open(method, api_url);
-
-      // Check if body is FormData
       const isFormData = body instanceof FormData;
-
-      // Set headers (skip Content-Type for FormData - browser sets it automatically)
       Object.keys(headers).forEach((key) => {
-        // Don't set Content-Type for FormData - browser adds boundary automatically
         if (isFormData && key.toLowerCase() === 'content-type') {
           return;
         }
@@ -40,7 +35,7 @@ const xhrClient = <T = any>(
 
       xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
-          if (xhr.status === 403) {
+          if (xhr.status === 403 || xhr.status === 401) {
             window.location.href = '/auth/logout';
             reject('Payment required. Redirecting to logout.');
             return;
@@ -134,8 +129,6 @@ const xhrClient = <T = any>(
           reject('The server is taking too long to respond. It might be down.');
         }
       };
-
-      // Send FormData as-is, or JSON.stringify for regular objects
       xhr.send(isFormData ? body : (body ? JSON.stringify(body) : null));
     });
   };

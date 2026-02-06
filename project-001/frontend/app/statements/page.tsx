@@ -11,7 +11,7 @@ import "./Statement.css"
 import { Currency, SendStatementPayload } from '../types/api';
 import { AccountTransactionStatement } from '../types/utils';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import { ApiResponse, ForwardAccountStatement, StatementItem } from '../types/errors';
+import {  ForwardAccountStatement, StatementItem } from '../types/errors';
 import { formatAmount, getUserFullName, getUserId, getUsername, getWallet, historyService, userService } from '../api';
 
 interface Toast {
@@ -533,8 +533,8 @@ This is an official receipt for your records.
       
       if (isReporting) return baseClass + " bg-yellow-600 text-white";
       if (reportStatus === 'success') return baseClass + " bg-green-600 text-white";
-      if (reportStatus === 'error') return baseClass + " bg-red-600 text-white";
-      return baseClass + " bg-red-600 text-white hover:bg-red-700";
+      if (reportStatus === 'error') return baseClass + " bg-green-600 text-white";
+      return baseClass + " bg-green-700 text-white hover:bg-green-700";
     };
 
     const totalCredits = statements
@@ -982,13 +982,13 @@ This is an official receipt for your records.
                                 setErrors({});
                               }}
                               disabled={isSendingEmail}
-                              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                              className="w-full rounded-lg border border-gray-300 px-3 py-3 text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-700 focus:border-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                             />
                           </div>
 
                           <button 
                             type='submit'
-                            className="w-full rounded-lg bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
+                            className="w-full rounded-lg bg-green-800 py-3 text-sm font-medium text-white hover:bg-green-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
                             disabled={isSendingEmail}
                           >
                             {isSendingEmail ? (

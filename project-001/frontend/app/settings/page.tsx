@@ -827,38 +827,61 @@ const Settings = () => {
 
                     {/* Profile Information Display */}
                     {!loading && userProfile && (
-                      <div className="settings-profile-info" style={{marginTop: '2rem', color:"#64748b"}}>
-                        <h3 style={{marginBottom: '1rem'}}>Account Information</h3>
-                        <div className="info-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem'}}>
+                      <div className="settings-profile-info">
+
+                        <h3 className="account-title">Account Information</h3>
+
+                        <div className="info-grid">
+
                           <div className="info-item">
-                            <span className={`info-label `} style={{fontWeight: 600}}>Full Name:</span>
-                            <span className={`info-value `}>{userRecord.firstName} {userRecord.lastName}</span>
-                          </div>
-                          <div className="info-item">
-                            <span className={`info-label `} style={{fontWeight: 600}}>Email:</span>
-                            <span className={`info-value `}>{userProfile.email}</span>
-                          </div>
-                          <div className="info-item">
-                            <span className={`info-label `} style={{fontWeight: 600}}>Gender:</span>
-                            <span className={`info-value `}>{capitalizeFirstLetter(userRecord.gender) || 'Not specified'}</span>
-                          </div>
-                          <div className="info-item">
-                            <span className={`info-label `} style={{fontWeight: 600}}>Mobile:</span>
-                            <span className={`info-value `}>{userRecord.telephone || 'Not provided'}</span>
-                          </div>
-                          <div className="info-item">
-                            <span className={`info-label `} style={{fontWeight: 600}}>Date of Birth:</span>
-                            <span className={`info-value `}>
-                              {userRecord.dob ? formatDateToDDMMYYYY(userRecord.dob) : (user_details?.dob ? formatDateToDDMMYYYY(user_details.dob) : 'Not provided')}
+                            <span className="info-label">Full Name:</span>
+                            <span className="info-value">
+                              {userRecord.firstName} {userRecord.lastName}
                             </span>
                           </div>
+
                           <div className="info-item">
-                            <span className={`info-label `} style={{fontWeight: 600}}>Username:</span>
-                            <span className={`info-value `}>@{userProfile.username || 'username'}</span>
+                            <span className="info-label">Email:</span>
+                            <span className="info-value">{userProfile.email}</span>
                           </div>
+
+                          <div className="info-item">
+                            <span className="info-label">Gender:</span>
+                            <span className="info-value">
+                              {capitalizeFirstLetter(userRecord.gender) || 'Not specified'}
+                            </span>
+                          </div>
+
+                          <div className="info-item">
+                            <span className="info-label">Mobile:</span>
+                            <span className="info-value">
+                              {userRecord.telephone || 'Not provided'}
+                            </span>
+                          </div>
+
+                          <div className="info-item">
+                            <span className="info-label">Date of Birth:</span>
+                            <span className="info-value">
+                              {userRecord.dob
+                                ? formatDateToDDMMYYYY(userRecord.dob)
+                                : (user_details?.dob
+                                    ? formatDateToDDMMYYYY(user_details.dob)
+                                    : 'Not provided')}
+                            </span>
+                          </div>
+
+                          <div className="info-item">
+                            <span className="info-label">Username:</span>
+                            <span className="info-value">
+                              @{userProfile.username || 'username'}
+                            </span>
+                          </div>
+
                         </div>
+
                       </div>
                     )}
+
 
                     {/* Hidden file input */}
                     <input

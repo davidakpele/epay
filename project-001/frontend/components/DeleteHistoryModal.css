@@ -58,14 +58,14 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
+  background: var(--bg-main);
   border-radius: 12px;
-  color: #dc2626;
+  color: var(--bg-input);
 }
 
 .dark .delete-modal-icon-wrapper {
-  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
-  color: #fca5a5;
+  background: var(--bg-main);
+  color: var(--bg-input);
 }
 
 .delete-modal-title {
@@ -126,25 +126,25 @@
   display: flex;
   gap: 12px;
   padding: 16px;
-  background: #fef2f2;
+  background: rgb(22 84 34 / 6%);
   border-radius: 12px;
   margin-bottom: 24px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--bg-input);
 }
 
 .dark .delete-modal-warning {
-  background: rgba(127, 29, 29, 0.2);
-  border-color: #7f1d1d;
+  background: var(--bg-main);
+  border-color: var(--bg-main);
 }
 
 .warning-icon-wrapper {
   display: flex;
   align-items: flex-start;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .dark .warning-icon-wrapper {
-  color: #fca5a5;
+  color: var(--bg-main);
 }
 
 .warning-content {
@@ -154,14 +154,14 @@
 .warning-title {
   font-size: 16px;
   font-weight: 600;
-  color: #dc2626;
+  color: #7f7c7c;
   margin: 0 0 4px 0;
   text-align: center;
   justify-self: center;
 }
 
 .dark .warning-title {
-  color: #fca5a5;
+  color: #cbd5e1;
 }
 
 .warning-text {
@@ -291,7 +291,7 @@
 .delete-confirm-btn {
   flex: 1;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background:  var(--bg-main);
   border: none;
   border-radius: 10px;
   color: white;
@@ -306,8 +306,8 @@
 }
 
 .delete-confirm-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background:  var(--bg-main);
+  box-shadow: 0 4px 12px  var(--bg-main);
 }
 
 .delete-confirm-btn:disabled {
