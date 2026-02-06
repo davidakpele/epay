@@ -56,13 +56,13 @@
 }
 
 .drawer-main-section::-webkit-scrollbar-thumb {
-  background: #dc2626;
+  background: var(--bg-main);
   border-radius: 3px;
 }
 
 .drawer-main-section{
   scrollbar-width: thin;
-  scrollbar-color: #dc2626 transparent;
+  scrollbar-color: var(--bg-main) transparent;
 }
 
 /* Header */
@@ -122,7 +122,7 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: #dc2626;
+  background: var(--bg-main);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -214,7 +214,7 @@
 
 .withdraw-option-card:hover {
   background: #ffffff;
-  border-color: #dc2626;
+  border-color: var(--bg-input-shadow);
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
 }
 
@@ -225,7 +225,7 @@
 
 .withdraw-drawer.dark .withdraw-option-card:hover {
   background: #1e293b;
-  border-color: #dc2626;
+  border-color: var(--bg-input-shadow);
 }
 
 .option-icon-wrapper {
@@ -283,7 +283,7 @@
 }
 
 .withdraw-option-card:hover .option-arrow {
-  color: #dc2626;
+  color: var(--bg-main);
   transform: translateX(4px);
 }
 
@@ -307,7 +307,7 @@
 }
 
 .wallet-select-btn:hover {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
 }
 
 .withdraw-drawer.dark .wallet-select-btn {
@@ -316,7 +316,7 @@
 }
 
 .withdraw-drawer.dark .wallet-select-btn:hover {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
 }
 
 .wallet-info {
@@ -535,9 +535,9 @@ select.form-input {
 }
 
 .quick-amount-btn:hover:not(:disabled) {
-  background: #fef2f2;
-  border-color: #dc2626;
-  color: #dc2626;
+  background: #fff; 
+  border-color: var(--bg-main);
+  color: var(--bg-main);
 }
 
 .quick-amount-btn:disabled {
@@ -545,16 +545,10 @@ select.form-input {
   cursor: not-allowed;
 }
 
-.withdraw-drawer.dark .quick-amount-btn {
-  background: #0f172a;
-  border-color: #334155;
-  color: #cbd5e1;
-}
-
 .withdraw-drawer.dark .quick-amount-btn:hover:not(:disabled) {
-  background: #1e293b;
-  border-color: #dc2626;
-  color: #dc2626;
+  background: #fff; 
+  border-color: var(--bg-main);
+  color: var(--bg-main);
 }
 
 /* Summary Card */
@@ -621,7 +615,7 @@ select.form-input {
 
 .total-value {
   font-size: 15px;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 /* Footer */
@@ -649,7 +643,7 @@ select.form-input {
 }
 
 .security-note svg {
-  color: #22c55e;
+  color: var(--bg-main);
 }
 
 .withdraw-drawer.dark .security-note {
@@ -700,7 +694,7 @@ select.form-input {
   height: 48px;
   border-radius: 10px;
   border: none;
-  background: #dc2626;
+  background: var(--bg-main);
   font-size: 14px;
   font-weight: 400;
   color: #ffffff;
@@ -714,8 +708,8 @@ select.form-input {
 }
 
 .confirm-btn:hover:not(:disabled) {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
 }
 
 .confirm-btn:active:not(:disabled) {
@@ -802,13 +796,13 @@ select.form-input {
 }
 
 .success-icon {
-  background: rgba(34, 197, 94, 0.1);
-  color: #dc2626;
+  background: var(--bg-main);
+  color: var(--bg-input);
 }
 
 .fail-icon {
-  background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  background: var(--bg-input-shadow);
+  color: var(--bg-main);
 }
 
 .status-modal-title {
@@ -892,23 +886,23 @@ select.form-input {
 }
 
 .success-btn {
-  background: #dc2626;;
-  color: #ffffff;
+  background: var(--bg-main);
+  color: var(--bg-input);
 }
 
 .success-btn:hover {
-  background: #dc2626;;
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
 }
 
 .fail-btn {
-  background: #dc2626;
+  background: var(--bg-main);
   color: #ffffff;
 }
 
 .fail-btn:hover {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
 }
 
 .secondary-btn {
@@ -955,21 +949,21 @@ select.form-input {
 .pin-input {
   width: 60px;
   height: 60px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--bg-input-shadow);
   border-radius: 12px;
   font-size: 24px;
   font-weight: 600;
   text-align: center;
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--bg-input);
+  color: var(--bg-main);
   outline: none;
   transition: all 0.2s;
   font-family: 'Courier New', monospace;
 }
 
 .pin-input:focus {
-  border-color: #dc2626;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  border-color: var(--bg-main);
+  box-shadow: 0 0 0 3px var(--bg-input-shadow);
 }
 
 .status-modal.dark .pin-input {
@@ -979,7 +973,7 @@ select.form-input {
 }
 
 .status-modal.dark .pin-input:focus {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
 }
 
 .pin-summary {
@@ -1018,7 +1012,7 @@ select.form-input {
   padding-top: 12px;
   border-top: 1px solid #e2e8f0;
   font-weight: 600;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .status-modal.dark .pin-summary .summary-row.total {
@@ -1043,21 +1037,21 @@ select.form-input {
 }
 
 .wallets-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-main);
   border-radius: 3px;
 }
 
 .wallets-list::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--bg-main);
   border-radius: 3px;
 }
 
 .status-modal.dark .wallets-list::-webkit-scrollbar-track {
-  background: #334155;
+  background: var(--bg-main);
 }
 
 .status-modal.dark .wallets-list::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: var(--bg-main);
 }
 
 .wallet-item {
@@ -1074,12 +1068,12 @@ select.form-input {
 }
 
 .wallet-item:hover {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
   transform: translateY(-2px);
 }
 
 .wallet-item.selected {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
   background: #fef2f2;
 }
 
@@ -1089,11 +1083,11 @@ select.form-input {
 }
 
 .status-modal.dark .wallet-item:hover {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
 }
 
 .status-modal.dark .wallet-item.selected {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
   background: rgba(220, 38, 38, 0.1);
 }
 
@@ -1101,7 +1095,7 @@ select.form-input {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: #dc2626;
+  background: var(--bg-main);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1136,7 +1130,7 @@ select.form-input {
 }
 
 .selected-icon {
-  color: #dc2626;
+  color:var(--bg-input-shadow);
   flex-shrink: 0;
 }
 
@@ -1274,7 +1268,7 @@ select.form-input {
   width: 24px;
   height: 24px;
   border: 3px solid #fbbf24;
-  border-top-color: #dc2626;
+  border-top-color: var(--bg-input-shadow);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 12px;
@@ -1286,8 +1280,8 @@ select.form-input {
 }
 
 .wallet-reset-transaction-btn {
-  background: #dc2626;
-  color: #ffffff;
+  background: var(--bg-main);
+  color: var(--bg-input);
   border: none;
   border-radius: 8px;
   padding: 10px 20px;
@@ -1300,8 +1294,8 @@ select.form-input {
 }
 
 .wallet-reset-transaction-btn:hover:not(:disabled) {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
   transform: translateY(-1px);
 }
 
@@ -1344,8 +1338,8 @@ select.form-input {
 }
 
 .dark .spinner-small {
-  border-color: rgba(217, 119, 6, 0.4);
-  border-top-color: #dc2626;
+  border-color: var(--bg-input-shadow);
+  border-top-color: var(--bg-input-shadow);
 }
 
 /* Responsive */

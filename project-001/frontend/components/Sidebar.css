@@ -19,7 +19,7 @@
 }
 
 .logo-icon-wrapper {
-  background-color: #ef4444; 
+  background-color: var(--bg-main); 
   padding: 6px;
   border-radius: 8px;
   display: flex;
@@ -64,12 +64,12 @@
 }
 
 .nav-item:hover {
-  background-color: #fee2e2;
-  color: #ef4444;
+  background-color: var(--bg-main);
+  color: var(--bg-input) !important;
 }
 
 .nav-item.active {
-  background-color: #ef4444;
+  background-color: var(--bg-main);
   color: #ffffff !important;
 }
 
@@ -83,7 +83,7 @@
 }
 
 .logout-link {
-  color: #ef4444 !important;
+  color: var(--bg-main) !important;
   font-weight: 600;
 }
 
@@ -92,7 +92,7 @@
 }
 
 .sidebar-nav-scrollable::-webkit-scrollbar-thumb {
-  background: #f87171;
+  background: var(--bg-main);
   border-radius: 10px;
 }
 

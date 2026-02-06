@@ -112,7 +112,6 @@ const UserProfile = () => {
   }, []);
 
   const fetchUserProfile = async () => {
-    setIsPageLoading(true);
     try {
       const userId = getUserId();
       const response = await userService.getById(userId);
@@ -325,9 +324,6 @@ const UserProfile = () => {
       showToast('Please fix the errors in the form');
       return;
     }
-
-    setIsLoading(true);
-    
     try {
       const userId = getUserId();
       

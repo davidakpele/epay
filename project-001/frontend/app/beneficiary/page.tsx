@@ -61,26 +61,18 @@ const BeneficiaryManager = () => {
     const [isLoadingBeneficiaries, setIsLoadingBeneficiaries] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Format beneficiary data from API to UI format
     const formatBeneficiary = (apiBeneficiary: any): Beneficiary => {
         const isEpay = apiBeneficiary.beneficiaryType === 'user';
-        
-        // Generate initials
+    
         const nameParts = apiBeneficiary.beneficiaryName.split(' ');
         const initial = nameParts.map((part: string) => part[0]).join('').substring(0, 2).toUpperCase();
-
-        // Generate detail string
         let detail = '';
         if (isEpay) {
             detail = `ePay Wallet • @${apiBeneficiary.recipientUsername}`;
         } else {
             detail = `${apiBeneficiary.bankName} • ${apiBeneficiary.accountNumber}`;
         }
-
-        // Determine category
         const category = isEpay ? 'epay' : 'banks';
-
-        // Calculate last transaction (placeholder - you can update this with real transaction data)
         const createdDate = new Date(apiBeneficiary.createdOn);
         const daysDiff = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
         let lastTransaction = '';
@@ -97,12 +89,11 @@ const BeneficiaryManager = () => {
             category,
             isEpay,
             lastTransaction,
-            amount: '₦0.00', // Placeholder - update with real transaction total
-            transactions: [], // Placeholder - update with real transaction history
+            amount: '₦0.00',
+            transactions: [],
         };
     };
 
-    // Fetch beneficiaries from API
     const fetchBeneficiaries = async () => {
         setIsLoadingBeneficiaries(true);
         setError(null);
@@ -130,7 +121,6 @@ const BeneficiaryManager = () => {
         }
     };
 
-    // Delete beneficiary
     const deleteBeneficiary = async (id: number) => {
         try {
             const userId = getUserId();
@@ -140,7 +130,6 @@ const BeneficiaryManager = () => {
 
             await beneficiaryService.deleteBeneficiary(id);
             
-            // Remove from local state
             setBeneficiaries(beneficiaries.filter(b => b.id !== id));
             setShowDeleteConfirm(false);
             setBeneficiaryToDelete(null);
@@ -150,14 +139,15 @@ const BeneficiaryManager = () => {
         }
     };
 
+    
     useEffect(() => {
-        // Handle page loading and fetch data
         const initializePage = async () => {
             setIsPageLoading(true);
-            await fetchBeneficiaries();
+            const minimumLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
+            const dataFetch = fetchBeneficiaries();
+            await Promise.all([minimumLoadTime, dataFetch]);
             setIsPageLoading(false);
         };
-
         initializePage();
     }, []);
 
@@ -267,14 +257,14 @@ const BeneficiaryManager = () => {
                             {/* Error Message */}
                             {error && (
                                 <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mb-6 flex items-center gap-3">
-                                    <i className="fas fa-exclamation-circle text-red-600 text-xl"></i>
+                                    <i className="fas fa-exclamation-circle text-[#166701] text-xl"></i>
                                     <div className="flex-1">
                                         <h4 className="font-bold text-red-900">Error</h4>
                                         <p className="text-sm text-red-700">{error}</p>
                                     </div>
                                     <button 
                                         onClick={() => setError(null)}
-                                        className="text-red-600 hover:text-red-800"
+                                        className="text-[#166701] hover:text-[#0d4401]"
                                     >
                                         <i className="fas fa-times"></i>
                                     </button>
@@ -282,7 +272,7 @@ const BeneficiaryManager = () => {
                             )}
 
                             {/* Header Banner */}
-                            <div className="bg-gradient-to-br from-red-600 via-red-700 to-red-800 rounded-3xl sm:rounded-[2rem] p-6 sm:p-8 lg:p-10 mb-6 shadow-xl">
+                            <div className="bg-gradient-to-br from-[#166701] via-[#145f01] to-[#125501] rounded-3xl sm:rounded-[2rem] p-6 sm:p-8 lg:p-10 mb-6 shadow-xl">
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-3">
@@ -293,7 +283,7 @@ const BeneficiaryManager = () => {
                                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Saved Beneficiaries</h1>
                                             </div>
                                         </div>
-                                        <p className="text-red-100 text-sm sm:text-base max-w-xl">Manage your trusted contacts and send money instantly to your favorite recipients.</p>
+                                        <p className="text-green-100 text-sm sm:text-base max-w-xl">Manage your trusted contacts and send money instantly to your favorite recipients.</p>
                                     </div>
                                     
                                     <div className="flex flex-wrap gap-4">
@@ -319,7 +309,7 @@ const BeneficiaryManager = () => {
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             placeholder="Search contacts..." 
-                                            className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-red-500 focus:bg-white outline-none transition-all text-sm sm:text-base text-gray-900 placeholder:text-gray-400"
+                                            className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#166701] focus:bg-white outline-none transition-all text-sm sm:text-base text-gray-900 placeholder:text-gray-400"
                                         />
                                         {searchQuery && (
                                             <button 
@@ -334,14 +324,14 @@ const BeneficiaryManager = () => {
                                     <div className="flex gap-2 bg-gray-100 rounded-xl p-1.5">
                                         <button 
                                             onClick={() => setViewMode('grid')}
-                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'grid' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-600'}`}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'grid' ? 'bg-white text-[#166701] shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <i className="fas fa-th mr-2"></i>
                                             <span className="hidden sm:inline">Grid</span>
                                         </button>
                                         <button 
                                             onClick={() => setViewMode('list')}
-                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'list' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-600'}`}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'list' ? 'bg-white text-[#166701] shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <i className="fas fa-list mr-2"></i>
                                             <span className="hidden sm:inline">List</span>
@@ -363,14 +353,14 @@ const BeneficiaryManager = () => {
                                             onClick={() => setActiveFilter(tab.key)} 
                                             className={`flex-1 min-w-[140px] px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-center gap-2 sm:gap-3 font-bold text-xs sm:text-sm transition-all border-b-4 ${
                                                 activeFilter === tab.key 
-                                                    ? 'text-red-600 bg-red-50/50 border-red-600' 
+                                                    ? 'text-[#166701] bg-green-50/50 border-[#166701]' 
                                                     : 'text-gray-500 border-transparent hover:bg-gray-50'
                                             }`}
                                         >
                                             <i className={`fas fa-${tab.icon} text-sm sm:text-base`}></i>
                                             <span>{tab.label}</span>
                                             <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                                                activeFilter === tab.key ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600'
+                                                activeFilter === tab.key ? 'bg-[#166701] text-white' : 'bg-gray-200 text-gray-600'
                                             }`}>
                                                 {getCategoryCount(tab.key)}
                                             </span>
@@ -409,7 +399,7 @@ const BeneficiaryManager = () => {
                             {isLoadingBeneficiaries && (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="text-center">
-                                        <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                        <div className="w-16 h-16 border-4 border-[#166701] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                                         <p className="text-gray-600">Loading beneficiaries...</p>
                                     </div>
                                 </div>
@@ -420,26 +410,26 @@ const BeneficiaryManager = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
                                     {filteredBeneficiaries.map((b) => (
                                         <div key={b.id} className={`bg-white rounded-2xl sm:rounded-3xl border-2 transition-all hover:shadow-xl hover:-translate-y-1 group ${
-                                            b.isEpay ? 'border-red-200 hover:border-red-400' : 'border-gray-100 hover:border-gray-300'
+                                            b.isEpay ? 'border-green-200 hover:border-[#166701]' : 'border-gray-100 hover:border-gray-300'
                                         }`}>
                                             <div className="p-5 sm:p-6">
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center font-bold text-xl ${
                                                         b.isEpay 
-                                                            ? 'bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg shadow-red-500/30' 
+                                                            ? 'bg-gradient-to-br from-[#166701] to-[#0d4401] text-white shadow-lg shadow-green-500/30' 
                                                             : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700'
                                                     }`}>
                                                         {b.initial}
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         {b.isEpay && (
-                                                            <span className="text-[9px] sm:text-[10px] bg-red-600 text-white px-2 py-1 rounded-full font-extrabold uppercase tracking-wider">
+                                                            <span className="text-[9px] sm:text-[10px] bg-[#166701] text-white px-2 py-1 rounded-full font-extrabold uppercase tracking-wider">
                                                                 ePay
                                                             </span>
                                                         )}
                                                         <button 
                                                             onClick={() => handleDeleteClick(b.id)}
-                                                            className="w-8 h-8 rounded-lg hover:bg-red-50 flex items-center justify-center text-gray-400 hover:text-red-600 transition"
+                                                            className="w-8 h-8 rounded-lg hover:bg-green-50 flex items-center justify-center text-gray-400 hover:text-[#166701] transition"
                                                         >
                                                             <i className="fas fa-trash"></i>
                                                         </button>
@@ -456,13 +446,13 @@ const BeneficiaryManager = () => {
                                                     </div>
                                                     <div className="flex justify-between items-center text-xs mt-1">
                                                         <span className="text-gray-500">Currency</span>
-                                                        <span className="font-bold text-red-600">{b.currency}</span>
+                                                        <span className="font-bold text-[#166701]">{b.currency}</span>
                                                     </div>
                                                 </div>
 
                                                 <button 
                                                     onClick={() => openHistoryModal(b)}
-                                                    className="w-full py-3 text-xs sm:text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-700 transition flex items-center justify-center gap-2 shadow-lg shadow-red-600/30"
+                                                    className="w-full py-3 text-xs sm:text-sm font-bold bg-[#166701] text-white rounded-xl hover:bg-[#0d4401] transition flex items-center justify-center gap-2 shadow-lg shadow-green-600/30"
                                                 >
                                                     <i className="fas fa-eye text-xs"></i>
                                                     View Details
@@ -488,13 +478,13 @@ const BeneficiaryManager = () => {
                                 <div className="space-y-3 mb-8">
                                     {filteredBeneficiaries.map((b) => (
                                         <div key={b.id} className={`bg-white rounded-2xl border-2 transition-all hover:shadow-lg ${
-                                            b.isEpay ? 'border-red-200 hover:border-red-400' : 'border-gray-100 hover:border-gray-300'
+                                            b.isEpay ? 'border-green-200 hover:border-[#166701]' : 'border-gray-100 hover:border-gray-300'
                                         }`}>
                                             <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
                                                 <div className="flex items-center gap-4 flex-1 min-w-0">
                                                     <div className={`w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl flex items-center justify-center font-bold ${
                                                         b.isEpay 
-                                                            ? 'bg-gradient-to-br from-red-500 to-red-700 text-white' 
+                                                            ? 'bg-gradient-to-br from-[#166701] to-[#0d4401] text-white' 
                                                             : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700'
                                                     }`}>
                                                         {b.initial}
@@ -504,7 +494,7 @@ const BeneficiaryManager = () => {
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <h4 className="font-bold text-gray-900 text-sm sm:text-base truncate">{b.beneficiaryName}</h4>
                                                             {b.isEpay && (
-                                                                <span className="text-[9px] bg-red-600 text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider flex-shrink-0">
+                                                                <span className="text-[9px] bg-[#166701] text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider flex-shrink-0">
                                                                     ePay
                                                                 </span>
                                                             )}
@@ -516,20 +506,20 @@ const BeneficiaryManager = () => {
                                                 <div className="flex items-center gap-3 sm:gap-4 justify-between sm:justify-end">
                                                     <div className="text-right">
                                                         <div className="text-xs text-gray-500">{b.lastTransaction}</div>
-                                                        <div className="text-sm font-bold text-red-600">{b.currency}</div>
+                                                        <div className="text-sm font-bold text-[#166701]">{b.currency}</div>
                                                     </div>
 
                                                     <div className="flex gap-2">
                                                         <button 
                                                             onClick={() => openHistoryModal(b)}
-                                                            className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition flex items-center justify-center gap-2 text-sm font-bold"
+                                                            className="px-4 py-2 bg-[#166701] text-white rounded-xl hover:bg-[#0d4401] transition flex items-center justify-center gap-2 text-sm font-bold"
                                                         >
                                                             <i className="fas fa-eye"></i>
                                                             <span className="hidden sm:inline">Details</span>
                                                         </button>
                                                         <button 
                                                             onClick={() => handleDeleteClick(b.id)}
-                                                            className="w-10 h-10 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition flex items-center justify-center"
+                                                            className="w-10 h-10 bg-green-50 text-[#166701] rounded-xl hover:bg-green-100 transition flex items-center justify-center"
                                                         >
                                                             <i className="fas fa-trash"></i>
                                                         </button>
@@ -568,8 +558,8 @@ const BeneficiaryManager = () => {
             {showDeleteConfirm && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i className="fas fa-trash text-red-600 text-2xl"></i>
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i className="fas fa-trash text-[#166701] text-2xl"></i>
                         </div>
                         <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-2">Delete Beneficiary?</h3>
                         <p className="text-gray-600 text-center mb-6">This action cannot be undone. Are you sure you want to remove this beneficiary from your list?</p>
@@ -582,7 +572,7 @@ const BeneficiaryManager = () => {
                             </button>
                             <button 
                                 onClick={confirmDelete}
-                                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition"
+                                className="flex-1 py-3 bg-[#166701] text-white rounded-xl font-bold hover:bg-[#0d4401] transition"
                             >
                                 Delete
                             </button>
@@ -631,7 +621,7 @@ const BeneficiaryManager = () => {
                         <div className="p-6 space-y-4">
                             <div className="bg-gray-50 rounded-2xl p-6">
                                 <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <i className="fas fa-info-circle text-red-600"></i>
+                                    <i className="fas fa-info-circle text-[#166701]"></i>
                                     Beneficiary Information
                                 </h3>
                                 <div className="space-y-3">

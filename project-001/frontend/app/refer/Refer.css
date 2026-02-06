@@ -25,7 +25,7 @@
 
 .referral-link-btn {
   background: white;
-  border: 1px dashed #c02418;
+  border: 1px dashed var(--bg-main);
   padding: 10px 20px;
   border-radius: 8px;
   color: #1a1a1a;
@@ -34,7 +34,7 @@
 }
 
 .referral-link-btn span {
-  color: #c02418;
+  color: var(--bg-main);
   font-weight: 700;
   margin-left: 8px;
 }
@@ -58,7 +58,7 @@
 }
 
 .total-earned {
-  background: #c02418;
+  background: var(--bg-main);
 }
 
 .total-earned .stat-info p, 
@@ -149,7 +149,7 @@
   width: 32px;
   height: 32px;
   background: #fee2e2;
-  color: #c02418;
+  color: var(--bg-main);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -178,7 +178,7 @@
 
 .more-tag {
   font-size: 11px;
-  color: #c02418;
+  color: var(--bg-main);
   align-self: center;
 }
 
@@ -233,7 +233,7 @@
 
 .referral-link-btn {
   background: white;
-  border: 1px dashed #c02418;
+  border: 1px dashed var(--bg-main);
   padding: 10px 16px;
   border-radius: 8px;
   font-size: 14px;
@@ -241,7 +241,7 @@
 }
 
 .referral-link-btn span {
-  color: #c02418;
+  color: var(--bg-main);
   font-weight: 700;
 }
 
@@ -264,7 +264,7 @@
 }
 
 .total-earned {
-  background: #c02418;
+  background: var(--bg-main);
 }
 
 .total-earned .stat-info p, 
@@ -329,8 +329,8 @@
 }
 
 .filter-trigger-btn {
-  background: #c3290b;
-   width: fit-content;
+  background: var(--bg-main);
+  width: fit-content;
   color: white;
   border: none;
   padding: 0 16px;
@@ -351,8 +351,8 @@
 .avatar-placeholder {
   width: 32px;
   height: 32px;
-  background: #fee2e2;
-  color: #c02418;
+  background: var(--bg-input-shadow);
+  color: var(--bg-main);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -419,7 +419,7 @@
 .refer-apply-btn {
   width: 100%;
   padding: 14px;
-  background: #c02418;
+  background: var(--bg-main);
   color: white;
   border: none;
   border-radius: 12px;
@@ -524,8 +524,8 @@
 .avatar-circle {
   width: 36px;
   height: 36px;
-  background: #fee2e2;
-  color: #c02418;
+  background: var(--bg-input-shadow);
+  color: var(--bg-main);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -633,7 +633,7 @@
 }
 
 .close-icon:hover {
-  color: #c02418;
+  color: var(--bg-main);
 }
 
 .refer-filter-options {
@@ -658,12 +658,12 @@
 
 .refer-filter-options button:hover {
   background: #fff1f0;
-  border-color: #fca5a5;
-  color: #c02418;
+  border-color: var(--bg-input-shadow);
+  color: var(--bg-main);
 }
 
 .apply-btn {
-  background: #c02418;
+  background: var(--bg-main);
   color: white;
   border: none;
   padding: 14px;
@@ -729,7 +729,6 @@
   border-radius: 10px;
 }
 
-/* Container for the search and filter */
 .refer-filter-row {
   display: flex;
   align-items: center;
@@ -739,7 +738,6 @@
   width: 40%;
 }
 
-/* Glassmorphism / Modern Elevated Look */
 .refer-search-container {
   position: relative;
   flex: 1;
@@ -750,7 +748,7 @@
 .refer-search-icon {
   position: absolute;
   left: 16px;
-  color: #64748b; /* Slate-500 */
+  color: #64748b; 
   z-index: 2;
   transition: color 0.2s;
 }
@@ -760,7 +758,7 @@
   height: 52px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px; /* Super rounded for modern feel */
+  border-radius: 16px; 
   padding: 0 16px 0 48px;
   font-size: 15px;
   font-weight: 500;
@@ -771,20 +769,19 @@
 }
 
 .refer-search-container input:focus {
-  border-color: #c02418;
+  border-color: var(--bg-main);
   background: #fff;
   box-shadow: 0 10px 15px -3px rgba(192, 36, 24, 0.1), 0 4px 6px -2px rgba(192, 36, 24, 0.05);
 }
 
 .refer-search-container input:focus + .refer-search-icon {
-  color: #c02418;
+  color: var(--bg-main);
 }
 
-/* Premium Filter Button */
 .refer-filter-main-btn {
   height: 52px;
   padding: 0 24px;
-  background: #c02418; /* Dark Navy/Slate */
+  background: var(--bg-main); 
   color: #ffffff;
   border: none;
   border-radius: 16px;
@@ -799,7 +796,7 @@
 }
 
 .refer-filter-main-btn:hover {
-  background: #c02418;
+  background: var(--bg-main);
   transform: translateY(-1px);
   box-shadow: 0 10px 15px -3px rgba(139, 5, 5, 0.1);
 }
@@ -812,7 +809,7 @@
     width: 100%;
   }
 }
-/* Responsive Breakpoints */
+
 @media (max-width: 640px) {
   .refer-filter-row {
     gap: 8px;
@@ -830,13 +827,11 @@
     border-radius: 14px;
   }
 
-  /* Hide text on mobile to keep search bar large */
   .refer-filter-main-btn span {
     display: none;
   }
 }
 
-/* Optional: Make it stick to top on very small screens during scroll */
 @media (max-width: 480px) {
   .refer-filter-row {
     position: sticky;
@@ -854,7 +849,6 @@
   padding: 8px 0;
 }
 
-/* Horizontal alignment for the inputs */
 .refer-range-picker .input-row {
   display: flex;
   align-items: center;
@@ -891,47 +885,43 @@
   transition: all 0.2s ease;
 }
 
-/* Highlight input on focus */
 .refer-range-picker input:focus {
   background: #fff;
-  border-color: #c02418;
+  border-color: var(--bg-main);
   box-shadow: 0 0 0 4px rgba(192, 36, 24, 0.1);
 }
 
-/* Divider arrow or dash between From and To */
 .range-divider {
   margin-top: 24px;
   color: #cbd5e1;
   font-weight: 300;
 }
 
-/* High-end Apply Button */
 .apply-btn {
   width: 100%;
   height: 54px;
-  background: #c02418;
-  color: #ffffff;
+  background: var(--bg-main);
+  color: var(--bg-input);
   border: none;
   border-radius: 14px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(192, 36, 24, 0.2);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
   margin-top: 8px;
 }
 
 .apply-btn:hover {
-  background: #a81f15;
+  background: var(--bg-main);
   transform: translateY(-1px);
-  box-shadow: 0 6px 15px rgba(192, 36, 24, 0.3);
+  box-shadow: 0 6px 15px var(--bg-input-shadow);
 }
 
 .apply-btn:active {
   transform: translateY(0);
 }
 
-/* Mobile responsive tweak */
 @media (max-width: 400px) {
   .refer-range-picker .input-row {
     flex-direction: column;
@@ -939,7 +929,7 @@
   }
   
   .range-divider {
-    display: none; /* Remove arrow on mobile stack */
+    display: none; 
   }
 }
 .stat-card.bg-dark,

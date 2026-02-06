@@ -176,14 +176,13 @@
 
 .error-message {
   font-size: 0.875rem;
-  color: #dc2626;
+  color: var(--bg-main);
   margin-bottom: 1rem;
 }
 
-/* Submit Button */
 .submit-button {
   width: 100%;
-  background-color: #dc2626;
+  background-color: var(--bg-main);
   color: white;
   padding: 0.75rem;
   border-radius: 0.5rem;
@@ -195,7 +194,7 @@
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #6b7280;
+  background-color: var(--bg-main);
 }
 
 .submit-button:disabled {
@@ -263,9 +262,6 @@
   transition: all 0.3s ease;
 }
 
-.bank-item {
-  /* Additional styling for bank item */
-}
 
 .light-background {
   background-color: #f3f4f6;
@@ -298,7 +294,7 @@
 }
 
 .delete-icon-wrapper:hover {
-  color: #ef4444;
+  color: var(--bg-main);
 }
 
 .currency1__img-block {
@@ -349,13 +345,13 @@
 .verified-text {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .currency1__check {
   display: flex;
   align-items: center;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .check-icon {
@@ -401,7 +397,7 @@
 .success-icon {
   width: 4rem;
   height: 4rem;
-  background-color: #dc2626;
+  background-color: var(--bg-main);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -440,12 +436,12 @@
 
 .success-btn {
   width: 100%;
-  background-color: #dc2626;
+  background-color: var(--bg-main);
   color: white;
 }
 
 .success-btn:hover {
-  background-color: #dc2626;
+  background-color: var(--bg-main);
 }
 
 .cancel-modal-btn {
@@ -459,12 +455,12 @@
 }
 
 .delete-btn {
-  background-color: #ef4444;
+  background-color: var(--bg-main);
   color: white;
 }
 
 .delete-btn:hover {
-  background-color: #dc2626;
+  background-color: var(--bg-main);
 }
 
 /* Responsive */
@@ -497,8 +493,8 @@
 }
 
 .bm-modal-icon.delete {
-    color: #dc2626;
-    background: #ef44441a;
+    color: var(--bg-main);
+    background: var(--bg-main)1a;
 }
 
 
@@ -523,7 +519,7 @@
 }
 
 .btn-primary {
-  background: #ef4444;
+  background: var(--bg-main);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -539,7 +535,7 @@
 }
 
 .btn-primary:hover {
-  background: #ef4444;
+  background: var(--bg-main);
 }
 
 .btn-primary svg {
@@ -562,7 +558,7 @@
   width: 22px;
   height: 22px;
   flex-shrink: 0;
-  color: #ef4444;
+  color: var(--bg-main);
   margin-top: 2px;
 }
 

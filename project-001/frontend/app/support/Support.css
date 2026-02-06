@@ -13,7 +13,7 @@
    ======================================== */
 
 .support-hero {
-  background: linear-gradient(135deg, #c3290b 0%, #ef4444 100%);
+  background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-main) 100%);
   padding: 80px 24px 100px;
   position: relative;
   overflow: hidden;
@@ -104,7 +104,7 @@
   left: 20px;
   top: 50%;
   transform: translateY(-50%);
-  color: #64748b;
+  color: var(--bg-main);
   pointer-events: none;
 }
 
@@ -114,21 +114,20 @@
   border: none;
   border-radius: 16px;
   font-size: 16px;
-  font-family: 'Outfit', sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   background: white;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   transition: all 0.3s;
-  color: #1e293b;
+  color: #595a5c;
 }
 
 .support-search-input:focus {
   outline: none;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  transform: translateY(-2px);
+  box-shadow: 0 20px 60px var(--bg-main);
 }
 
 .support-search-input::placeholder {
-  color: #94a3b8;
+  color: #7f8285;
 }
 
 /* ========================================
@@ -328,7 +327,7 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #c3290b 0%, #ef4444 100%);
+  background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-main) 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -371,7 +370,7 @@
   height: 48px;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(195, 41, 11, 0.1) 0%, rgba(239, 68, 68, 0.1) 100%);
-  color: #c3290b;
+  color: var(--bg-main);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -379,8 +378,8 @@
 
 .dark .faq-category-icon,
 .dark-theme .faq-category-icon {
-  background: linear-gradient(135deg, rgba(255, 77, 41, 0.2) 0%, rgba(239, 68, 68, 0.2) 100%);
-  color: #ff4d29;
+  background: linear-gradient(135deg, var(--bg-input-shadow) 0%, var(--bg-input-shadow) 100%);
+  color: var(--bg-main);
 }
 
 .faq-category-title {
@@ -547,7 +546,7 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #c3290b;
+  border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(195, 41, 11, 0.1);
 }
 
@@ -557,7 +556,7 @@
 .dark-theme .form-group input:focus,
 .dark-theme .form-group select:focus,
 .dark-theme .form-group textarea:focus {
-  border-color: #ff4d29;
+  border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(255, 77, 41, 0.1);
 }
 
@@ -568,7 +567,7 @@
 
 .submit-button {
   padding: 16px 32px;
-  background: linear-gradient(135deg, #c3290b 0%, #ef4444 100%);
+  background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-main) 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -581,12 +580,12 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 8px 24px rgba(195, 41, 11, 0.3);
+  box-shadow: 0 8px 24px var(--bg-input-shadow);
 }
 
 .submit-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(195, 41, 11, 0.4);
+  box-shadow: 0 12px 32px var(--bg-input-shadow);
 }
 
 .submit-button:active {
@@ -636,14 +635,14 @@
   background: #f1f5f9;
   border-radius: 8px;
   font-weight: 700;
-  color: #c3290b !important;
+  color: var(--bg-main) !important;
   margin-top: 8px;
 }
 
 .dark .ticket-number,
 .dark-theme .ticket-number {
   background: #0f172a;
-  color: #ff4d29 !important;
+  color: var(--bg-main) !important;
 }
 
 /* ========================================
@@ -651,10 +650,10 @@
    ======================================== */
 
 .support-hours {
-  background: linear-gradient(135deg, #c3290b 0%, #ef4444 100%);
+  background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-main) 100%);
   border-radius: 20px;
   padding: 40px;
-  box-shadow: 0 8px 32px rgba(195, 41, 11, 0.3);
+  box-shadow: 0 8px 32px var(--bg-input-shadow);
   position: relative;
   overflow: hidden;
 }

@@ -40,7 +40,7 @@
 
 /* Panel Header */
 .history-panel-header {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: linear-gradient(135deg, var(--bg-main), var(--bg-main));
   padding: 1rem;
   color: white;
   position: sticky;
@@ -205,7 +205,7 @@
 }
 
 .history-filter-tab-active {
-  background: #dc2626;
+  background: var(--bg-main);
   color: white;
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
 }
@@ -256,7 +256,7 @@
 }
 
 .history-clear-dates-button:hover {
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .history-date-inputs {
@@ -300,7 +300,7 @@
 }
 
 .history-date-input:focus {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
   z-index: 13;
 }
@@ -389,7 +389,7 @@
 }
 
 .history-suggested-range-button {
-  background: #dc2626;
+  background: var(--bg-main);
   color: white;
   border: none;
   padding: 0.625rem 1.25rem;
@@ -404,7 +404,7 @@
 }
 
 .history-suggested-range-button:hover {
-  background: #b91c1c;
+  background: var(--bg-main);
 }
 
 /* Transaction Items */
@@ -531,7 +531,7 @@
 
 .history-transaction-type-icon.sent {
   background: #fee2e2;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .history-transaction-type-icon.received {
@@ -579,7 +579,7 @@
 
 .history-transaction-status.failed {
   background: #fee2e2;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .history-transaction-info {
@@ -622,7 +622,7 @@
 
 .history-transaction-item.expanded .history-transaction-details-button {
   transform: rotate(90deg);
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 /* Responsive Design */

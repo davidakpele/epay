@@ -83,7 +83,7 @@
 }
 
 .card-option.card-selected {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
   background-color: #f0fdf4;
 }
 
@@ -126,7 +126,7 @@
 .card-price {
   font-size: 16px;
   font-weight: 500;
-  color: #dc2626;
+  color: var(--bg-main);
   margin: 0;
 }
 
@@ -145,7 +145,7 @@
 }
 
 .card-status-badge.selected-badge {
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 /* Request Section */
@@ -174,7 +174,7 @@
 
 .request-text strong,
 .request-price strong {
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 /* Empty State */
@@ -330,7 +330,7 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .fail-icon {
@@ -342,7 +342,7 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px;
-  color: #ef4444;
+  color: var(--bg-main);
 }
 
 .modal-title {
@@ -371,27 +371,27 @@
 }
 
 .success-btn {
-  background-color: #dc2626;
+  background-color: var(--bg-main);
   color: white;
 }
 
 .success-btn:hover {
-  background-color: #dc2626;
+  background-color: var(--bg-main);
 }
 
 .fail-btn {
-  background-color: #ef4444;
+  background-color: var(--bg-main);
   color: white;
 }
 
 .fail-btn:hover {
-  background-color: #dc2626;
+  background-color: var(--bg-main);
 }
 
 /* Submit Button */
 .submit-button {
   width: 100%;
-  background-color: #dc2626;
+  background-color: var(--bg-main);
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -403,7 +403,7 @@
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #dc2626;
+  background-color: var(--bg-main);
 }
 
 .submit-button:disabled {

@@ -64,7 +64,7 @@
 }
 
 .walletCard.active {
-  border-color: #c8372d;
+  border-color: var(--bg-main);
   background: #fff5f5;
 }
 
@@ -92,7 +92,7 @@
 .walletBalance {
   font-size: 18px;
   font-weight: 600;
-  color: #c8372d;
+  color: var(--bg-main);
   padding-top: 12px;
   border-top: 1px solid #e2e8f0;
 }
@@ -123,7 +123,7 @@
 }
 
 .providerCard.active {
-  border-color: #c8372d;
+  border-color: var(--bg-main);
   background: #fff5f5;
 }
 
@@ -163,12 +163,12 @@
 
 .mcCircle1 {
   left: 0;
-  background: #EB001B;
+  background: var(--bg-main);
 }
 
 .mcCircle2 {
   right: 0;
-  background: #FF5F00;
+  background: var(--bg-main);
   mix-blend-mode: multiply;
 }
 
@@ -322,12 +322,12 @@
 
 .mcCircleLarge1 {
   left: 0;
-  background: #EB001B;
+  background: var(--bg-main);
 }
 
 .mcCircleLarge2 {
   right: 0;
-  background: #FF5F00;
+  background: var(--bg-main);
   mix-blend-mode: multiply;
 }
 
@@ -368,7 +368,7 @@
 .submitButton {
   width: 100%;
   padding: 16px;
-  background: #c8372d;
+  background: var(--bg-main);
   color: white;
   border: none;
   border-radius: 12px;
@@ -380,9 +380,9 @@
 }
 
 .submitButton:hover:not(:disabled) {
-  background: #a82e26;
+  background: var(--bg-main);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(200, 55, 45, 0.4);
+  box-shadow: 0 6px 20px var(--bg-input-shadow);
 }
 
 .submitButton:active:not(:disabled) {

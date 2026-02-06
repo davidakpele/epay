@@ -284,25 +284,25 @@ const Dashboard = () => {
             <div className="hero-actions">
               <div className="hero-action-item" onClick={() => setIsDepositOpen(true)} style={{ cursor: 'pointer' }}>
                 <div className="hero-icon-box" style={{ background: '#fff', borderRadius: '50%', border: '1px solid #e2e8f0' }}>
-                  <Plus size={20} style={{ color: '#ef4444' }} />
+                  <Plus size={20} style={{ color: 'var(--bg-main)' }} />
                 </div>
                 <span>Deposit</span>
               </div>
               <div className="hero-action-item" onClick={() => setIsWithdrawOpen(true)} style={{ cursor: 'pointer' }}>
                 <div className="hero-icon-box" style={{ background: '#fff', borderRadius: '50%', border: '1px solid #e2e8f0' }}>
-                  <ArrowDownLeft size={20} style={{ color: '#ef4444' }} />
+                  <ArrowDownLeft size={20} style={{ color: 'var(--bg-main)' }} />
                 </div>
                 <span>Withdraw</span>
               </div>
               <div className="hero-action-item" onClick={handleRedirect}>
                 <div className="hero-icon-box" style={{ background: '#fff', borderRadius: '50%', border: '1px solid #e2e8f0' }}>
-                  <CreditCard size={20} style={{ color: '#ef4444' }} />
+                  <CreditCard size={20} style={{ color: 'var(--bg-main)' }} />
                 </div>
                 <span>Cards</span>
               </div>
               <div className="hero-action-item" onClick={handleExchangeRoute}>
                 <div className="hero-icon-box" style={{ background: '#fff', borderRadius: '50%', border: '1px solid #e2e8f0' }}>
-                  <Repeat size={20} style={{ color: '#ef4444' }} />
+                  <Repeat size={20} style={{ color: 'var(--bg-main)' }} />
                 </div>
                 <span>Exchange</span>
               </div>

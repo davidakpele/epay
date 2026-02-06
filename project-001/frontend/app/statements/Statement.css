@@ -199,7 +199,7 @@
 
 .country-list {
   scrollbar-width: thin; 
-  scrollbar-color: #ea2020 #f9f9f9; 
+  scrollbar-color: var(--bg-main) #f9f9f9; 
 }
 
 .country-list {
@@ -240,14 +240,14 @@ input[type="date"]::-webkit-datetime-edit-year-field {
 
 /* Red focus states for consistency */
 input[type="date"]:focus {
-  border-color: #dc2626 !important;
-  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2) !important;
+  border-color: var(--bg-main) !important;
+  box-shadow: 0 0 0 2px var(--bg-input-shadow) !important;
   outline: none;
 }
 
 /* Red button styles */
 .red-button {
-  background-color: #dc2626;
+  background-color: var(--bg-main);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -258,7 +258,7 @@ input[type="date"]:focus {
 }
 
 .red-button:hover {
-  background-color: #b91c1c;
+  background-color: var(--bg-main);
 }
 
 .red-button:disabled {
@@ -319,7 +319,7 @@ input[type="date"]:focus {
   font-weight: 700;
   color: #1a1d2e;
   margin: 0 0 0.5rem 0;
-  border-bottom: 3px solid #c41e3a;
+  border-bottom: 3px solid var(--bg-main);
   display: inline-block;
   padding-bottom: 0.25rem;
 }
@@ -350,8 +350,8 @@ input[type="date"]:focus {
 }
 
 .ah-back-btn:hover {
-  border-color: #c41e3a;
-  color: #c41e3a;
+  border-color: var(--bg-main);
+  color: var(--bg-main);
   transform: translateY(-2px);
 }
 
@@ -453,8 +453,8 @@ input[type="date"]:focus {
 .ah-clear-btn {
   padding: 0.625rem 1.25rem;
   background: transparent;
-  color: #c41e3a;
-  border: 2px solid #c41e3a;
+  color: var(--bg-main);
+  border: 2px solid var(--bg-main);
   border-radius: 10px;
   font-size: 0.9rem;
   font-weight: 600;
@@ -463,7 +463,7 @@ input[type="date"]:focus {
 }
 
 .ah-clear-btn:hover {
-  background: #c41e3a;
+  background: var(--bg-main);
   color: white;
 }
 
@@ -524,7 +524,7 @@ input[type="date"]:focus {
 .ah-filter-select:focus,
 .ah-filter-input:focus {
   outline: none;
-  border-color: #c41e3a;
+  border-color: var(--bg-main);
   background: white;
 }
 
@@ -564,7 +564,7 @@ input[type="date"]:focus {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.875rem 1.5rem;
-  background: #c41e3a;
+  background: var(--bg-main);
   color: white;
   border: none;
   border-radius: 10px;
@@ -576,9 +576,9 @@ input[type="date"]:focus {
 }
 
 .ah-search-btn:hover {
-  background: #a01830;
+  background: var(--bg-main);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
 }
 
 /* Table Section */
@@ -634,8 +634,8 @@ input[type="date"]:focus {
 }
 
 .ah-download-btn:hover {
-  border-color: #c41e3a;
-  color: #c41e3a;
+  border-color: var(--bg-main);
+  color: var(--bg-main);
   transform: translateY(-2px);
 }
 
@@ -651,7 +651,7 @@ input[type="date"]:focus {
   font-weight: 700;
   color: #1a1d2e;
   margin: 0 0 0.25rem 0;
-  border-bottom: 3px solid #c41e3a;
+  border-bottom: 3px solid var(--bg-main);
   display: inline-block;
   padding-bottom: 0.25rem;
 }
@@ -682,8 +682,8 @@ input[type="date"]:focus {
 }
 
 .ah-download-btn:hover {
-  border-color: #c41e3a;
-  color: #c41e3a;
+  border-color: var(--bg-main);
+  color: var(--bg-main);
 }
 
 .account-history.dark .ah-download-btn {
@@ -777,7 +777,7 @@ input[type="date"]:focus {
 
 .ah-transaction-icon.debit {
   background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .ah-transaction-description {
@@ -817,7 +817,7 @@ input[type="date"]:focus {
 }
 
 .ah-amount.debit {
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .ah-status-badge {
@@ -840,7 +840,7 @@ input[type="date"]:focus {
 
 .status-failed {
   background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .ah-date {
@@ -854,8 +854,8 @@ input[type="date"]:focus {
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background: transparent;
-  color: #c41e3a;
-  border: 2px solid #c41e3a;
+  color: var(--bg-main);
+  border: 2px solid var(--bg-main);
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -865,7 +865,7 @@ input[type="date"]:focus {
 }
 
 .ah-view-btn:hover {
-  background: #c41e3a;
+  background: var(--bg-main);
   color: white;
 }
 
@@ -1069,7 +1069,7 @@ input[type="date"]:focus {
   transition: all 0.3s ease;
 }
 .statement-selectField:hover {
-  border-color: #c41e3a;
+  border-color: var(--bg-main);
   background: white;
 }
 
@@ -1105,7 +1105,7 @@ input[type="date"]:focus {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.875rem 1.5rem;
-  background: #c41e3a;
+  background: var(--bg-main);
   color: white;
   border: none;
   border-radius: 10px;
@@ -1122,7 +1122,7 @@ input[type="date"]:focus {
   justify-content: center;
   gap: 0.1rem;
   padding: 0.85rem 0.2rem;
-  background: #c41e3a;
+  background: var(--bg-main);
   color: white;
   border: none;
   border-radius: 10px;
@@ -1133,9 +1133,9 @@ input[type="date"]:focus {
 }
 .apply-custom-btn,
 .ah-search-btn:hover {
-  background: #a01830;
+  background: var(--bg-main);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
 }
 .duration-selectTextView{
   max-width: 370px;
@@ -1394,7 +1394,7 @@ input[type="date"]:focus {
 
 .ah-transaction-icon.debit {
   background-color: #fee2e2;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .ah-transaction-details {
@@ -1447,7 +1447,7 @@ input[type="date"]:focus {
 }
 
 .ah-amount.debit {
-  color: #dc2626; /* Keep red for debits - no tick icon */
+  color: var(--bg-main); /* Keep red for debits - no tick icon */
 }
 
 /* ============================================================================
@@ -1477,7 +1477,7 @@ input[type="date"]:focus {
 
 .status-failed {
   background-color: #fee2e2;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 /* ============================================================================

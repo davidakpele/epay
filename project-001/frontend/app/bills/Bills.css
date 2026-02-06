@@ -12,7 +12,7 @@
 .page-header {
   margin-bottom: 50px;
   padding: 30px;
-  background: linear-gradient(135deg, rgb(220, 38, 38) 0%, #dc2626 100%);
+  background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-main) 100%);
   border-radius: 10px;
   box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
   position: relative;
@@ -95,7 +95,7 @@
 
 .filter-select:focus {
   outline: none;
-  border-color: #dc2626;
+  border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
@@ -128,7 +128,7 @@
 }
 
 .filter-button.active {
-  background: linear-gradient(135deg, rgb(220, 38, 38) 0%, #dc2626 100%);
+  background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-main) 100%);
   color: #ffffff;
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
   transform: translateY(-2px);

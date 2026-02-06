@@ -98,8 +98,8 @@
 
 .user-profile-status-badge.suspended {
   background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+  color: var(--bg-main);
+  border: 1px solid var(--bg-input-shadow);
 }
 
 .user-profile-status-badge.pending {
@@ -135,7 +135,7 @@
 /* Buttons */
 .user-profile-btn-primary {
   padding: 10px 20px;
-  background: #dc2626;
+  background: var(--bg-main);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -146,8 +146,8 @@
 }
 
 .user-profile-btn-primary:hover {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
 }
 
 .user-profile-btn-secondary {
@@ -169,7 +169,7 @@
 
 .user-profile-btn-danger {
   padding: 10px 20px;
-  background: #dc2626;
+  background: var(--bg-main);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -180,8 +180,8 @@
 }
 
 .user-profile-btn-danger:hover {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
 }
 
 /* Profile Content Layout */
@@ -216,7 +216,7 @@
 }
 
 .user-profile-section-header svg {
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .user-profile-section-header h2 {
@@ -376,18 +376,18 @@
 }
 
 .user-profile-security-action-btn.danger {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #991b1b;
+  background: var(--bg-main);
+  border-color: var(--bg-input-shadow);
+  color: var(--bg-input);
 }
 
 .user-profile-security-action-btn.danger:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
+  background: var(--bg-input-shadow);
+  border-color: var(--bg-input);
 }
 
 .user-profile-security-action-btn.danger svg {
-  color: #dc2626;
+  color: var(--bg-input);
 }
 
 /* Login History */
@@ -480,12 +480,12 @@
 
 .user-profile-modal-icon.warning {
   background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .user-profile-modal-icon.primary {
   background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .user-profile-modal-content h3 {
@@ -838,7 +838,7 @@
 }
 
 .toastr--success .toast-icon {
-  background-color: #b91c1c;
+  background-color: var(--bg-main);
   color: white;
   padding: 15px;
   display: flex;
@@ -894,7 +894,7 @@
   width: 30px;
   height: 30px;
   border: 3px solid #f3f3f3;
-  border-top: 3px solid #c3290b;
+  border-top: 3px solid var(--bg-main);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -939,7 +939,7 @@
 
 .settings-form-group input:focus,
 .settings-select:focus {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
@@ -963,7 +963,7 @@
 
 .settings-btn-primary {
   padding: 12px 24px;
-  background: #dc2626;
+  background: var(--bg-main);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -974,8 +974,8 @@
 }
 
 .settings-btn-primary:hover:not(:disabled) {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
 }
 
 .settings-btn-primary:disabled {
@@ -1096,7 +1096,7 @@
   max-height: 70vh;
   overflow-y: auto;
   scrollbar-width: thin; 
-  scrollbar-color: #ef4444 transparent;  
+  scrollbar-color: var(--bg-main) transparent;  
 }
 
 .metamap-step::-webkit-scrollbar {
@@ -1104,7 +1104,7 @@
 }
 
 .metamap-step::-webkit-scrollbar-thumb {
-  background-color: #ef4444; 
+  background-color: var(--bg-main); 
   border-radius: 8px;
 }
 
@@ -1200,17 +1200,17 @@
 }
 
 .metamap-terms::-webkit-scrollbar-thumb {
-  background: #dc2626;
+  background: var(--bg-main);
   border-radius: 2px;
 }
 
 .metamap-terms::-webkit-scrollbar-thumb:hover {
-  background: #b91c1c;
+  background: var(--bg-main);
 }
 
 .metamap-terms {
   scrollbar-width: thin;
-  scrollbar-color: #dc2626 transparent;
+  scrollbar-color: var(--bg-main) transparent;
 }
 
 .metamap-terms p {
@@ -1229,7 +1229,7 @@
 .metamap-btn-primary {
   width: 100%;
   padding: 14px 24px;
-  background: #b91c1c;
+  background: var(--bg-main);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1269,7 +1269,7 @@
 
 .metamap-form-group input:focus {
   outline: none;
-  border-color: #ef4444;
+  border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
@@ -1360,7 +1360,7 @@
 .metamap-exit-btn {
   height: 45px;
   margin-top:30px;
-  background: #b91c1c;
+  background: var(--bg-main);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1436,12 +1436,12 @@
 }
 
 .error-message {
-  color: #ef4444;
+  color: var(--bg-main);
   font-size: 0.875rem;
   margin-top: 0.25rem;
   display: block;
 }
 
 input.error {
-  border-color: #ef4444;
+  border-color: var(--bg-main);
 }

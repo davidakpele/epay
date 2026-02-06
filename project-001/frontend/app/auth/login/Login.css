@@ -51,7 +51,7 @@
 }
 
 .signup-link-text a {
-  color: #d43f12;
+  color: var(--bg-main);
   text-decoration: underline;
   font-size: 13px;
   font-family: "Karla", sans-serif;
@@ -175,9 +175,15 @@
 
 .forgot-password-link {
   font-size: 0.85rem;
-  color: #d43f12;
+  color: var(--bg-main);
   text-decoration:underline;
   font-weight: 500;
+  font-family: "Karla", sans-serif;
+  text-align: right;
+  justify-content: flex-end;
+  justify-items: flex-end;
+  display: flex;
+  margin-top: 8px;
 }
 
 .password-error, .username-error {

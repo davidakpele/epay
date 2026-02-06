@@ -10,16 +10,7 @@ const LoadingScreen: React.FC = () => {
       <div className={styles.bgCircle3}></div>
       
       <div className={styles.content}>
-        {/* Logo with rotating ring */}
-        <div className={styles.logoWrapper}>
-          <div className={styles.logoRing}></div>
-          <div className={styles.logo}>
-            <div className={styles.logoShape}>
-              <div className={styles.logoLeft}></div>
-              <div className={styles.logoRight}></div>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Brand Name */}
         <h1 className={styles.brandName}>ePay</h1>

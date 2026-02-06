@@ -61,7 +61,7 @@
   font-weight: 600;
 }
 .currency-option:hover{
-  background-color: #d5310c;
+  background-color: var(--bg-input-shadow);
   border-radius: 7px;
   width:fit-content;
   padding: 8px;
@@ -145,13 +145,13 @@
     justify-content: center;
 }
 .notification-icon svg{
-  color: var(--bell-bg);
+  color: var(--bg-main);
 }
 .notification-badge {
     position: absolute;
     top: 4px;
     right: 4px;
-    background-color: #ff4d4f;
+    background-color: var(--bg-input-shadow);
     color: #fff;
     border-radius: 50%;
     width: 16px;
@@ -348,7 +348,7 @@
 }
 
 .notif-select:focus {
-  border-color: #c3290b !important;
+  border-color: var(--bg-input-shadow) !important;
 }
 
 .notif-loader-container {
@@ -364,7 +364,7 @@
   width: 30px;
   height: 30px;
   border: 3px solid #f3f3f3;
-  border-top: 3px solid #c3290b;
+  border-top: 3px solid var(--bg-input-shadow);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

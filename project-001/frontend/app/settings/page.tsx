@@ -1224,7 +1224,7 @@ const Settings = () => {
                         </div>
                         {/* Status Indicator */}
                         <div className={`pin-status-indicator ${userHasPin ? 'pin-set' : 'pin-not-set'} `}>
-                          <i className={`fas ${userHasPin ? 'fa-check-circle' : 'fa-exclamation-circle'} `} style={{marginRight:"3px", color:"#df1717"}}></i>
+                          <i className={`fas ${userHasPin ? 'fa-check-circle' : 'fa-exclamation-circle'} `} style={{marginRight:"3px", color:"var(--bg-main)"}}></i>
                           <span style={{color:"#565252"}}>
                             {userHasPin ? 'Transfer PIN is already set' : 'Transfer PIN not set'}
                           </span>
@@ -1421,7 +1421,7 @@ const Settings = () => {
                           className={passwordErrors.currentPassword ? 'error' : ''}
                         />
                         {passwordErrors.currentPassword && (
-                          <span className="error-message" style={{color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block'}}>
+                          <span className="error-message" style={{color: 'var(--bg-main)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block'}}>
                             {passwordErrors.currentPassword}
                           </span>
                         )}
@@ -1437,7 +1437,7 @@ const Settings = () => {
                           className={passwordErrors.newPassword ? 'error' : ''}
                         />
                         {passwordErrors.newPassword && (
-                          <span className="error-message" style={{color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block'}}>
+                          <span className="error-message" style={{color: 'var(--bg-main)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block'}}>
                             {passwordErrors.newPassword}
                           </span>
                         )}
@@ -1453,7 +1453,7 @@ const Settings = () => {
                           className={passwordErrors.confirmPassword ? 'error' : ''}
                         />
                         {passwordErrors.confirmPassword && (
-                          <span className="error-message" style={{color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block'}}>
+                          <span className="error-message" style={{color: 'var(--bg-main)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block'}}>
                             {passwordErrors.confirmPassword}
                           </span>
                         )}

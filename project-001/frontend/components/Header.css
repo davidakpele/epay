@@ -44,7 +44,7 @@
 .mobile-menu-button {
   background: none;
   border: none;
-  color: #ca0f0fdb;
+  color: var(--bg-main);
   cursor: pointer;
   padding: 8px;
   display: flex;
@@ -276,7 +276,7 @@
   position: absolute;
   top: 4px;
   right: 4px;
-  background-color: #ff4d4f;
+  background-color: var(--bg-main);
   color: #fff;
   border-radius: 50%;
   width: 16px;
@@ -320,7 +320,7 @@
 }
 
 .mobile-logo-icon {
-  background-color: #ef4444;
+  background-color: var(--bg-main);
   padding: 5px;
   border-radius: 6px;
   display: flex;
@@ -380,7 +380,7 @@
 
 .mobile-nav-link:hover {
   background-color: #fee2e2;
-  color: #ef4444;
+  color: var(--bg-main);
 }
 
 .dark-sidebar .mobile-nav-link:hover {
@@ -394,7 +394,7 @@
 }
 
 .logout-link-mobile {
-  color: #ef4444 !important;
+  color: var(--bg-main) !important;
   font-weight: 600;
   margin-top: 10px;
 }
@@ -555,7 +555,7 @@
 }
 
 .mobile-nav-container::-webkit-scrollbar-thumb {
-  background: #ef4444;
+  background: var(--bg-main);
   border-radius: 10px;
 }
 
@@ -645,7 +645,7 @@
 }
 
 .notif-select:focus {
-  border-color: #ef4444;
+  border-color: var(--bg-input-shadow);
 }
 
 .dark .notif-select {
@@ -782,8 +782,8 @@
   width: 100%;
   padding: 10px 16px;
   background: transparent;
-  color: #ef4444;
-  border: 1px solid #ef4444;
+  color: var(--bg-main);
+  border: 1px solid var(--bg-main);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
@@ -792,7 +792,7 @@
 }
 
 .clear-all-btn:hover {
-  background: #ef4444;
+  background: var(--bg-main);
   color: white;
 }
 
@@ -813,7 +813,7 @@
   width: 30px;
   height: 30px;
   border: 3px solid #f3f3f3;
-  border-top: 3px solid #ef4444;
+  border-top: 3px solid var(--bg-main);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -828,20 +828,20 @@
 }
 
 .notif-list::-webkit-scrollbar-thumb {
-  background: #ef4444;
+  background: var(--bg-main);
   border-radius: 3px;
 }
 
 .notif-list::-webkit-scrollbar-thumb:hover {
-  background: #ef4444;
+  background: var(--bg-main);
 }
 
 .dark .notif-list::-webkit-scrollbar-thumb {
-  background: #ef4444;
+  background: var(--bg-main);
 }
 
 .dark .notif-list::-webkit-scrollbar-thumb:hover {
-  background: #ef4444;
+  background: var(--bg-main);
 }
 
 /* Responsive */

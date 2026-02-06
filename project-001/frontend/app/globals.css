@@ -16,9 +16,10 @@
   --border-color: #e2e8f0;
 
   /* Backgrounds */
-  --bg-main: #c3290b;
+  --bg-main: #166701;
   --bg-card: #ffffff;
   --bg-input: #f1f3f5;
+  --bg-input-shadow: lab(26 -34.76 25.41 / 0.39);
   --bg-input-border: oklab(53.259% 0.16246 0.10343 / 0.279);
   --sidebar-bg: #0f172a;
   --text-main: #334155;
@@ -63,7 +64,7 @@ body {
 }
 
 .theme-toggle.active {
-  background-color: #c3290b; 
+  background-color: var(--bg-main); 
 }
 
 .toggle-circle {
@@ -183,13 +184,13 @@ body {
 }
 
 .scrollable-content::-webkit-scrollbar-thumb {
-  background: #ef4444;
+  background: var(--bg-main);
   border-radius: 10px;
 }
 
 .scrollable-content {
   scrollbar-width: thin;
-  scrollbar-color: #ef4444 transparent;
+  scrollbar-color: var(--bg-main) transparent;
 }
 
 .color-dark{
@@ -235,7 +236,7 @@ body {
   justify-content: center;
 }
 .toastr--success .toast-icon {
-  background-color: #b91c1c;
+  background-color: var(--bg-main);
   color: white;
   padding: 15px;
   display: flex;

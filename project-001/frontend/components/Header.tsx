@@ -310,14 +310,14 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
                 {/* Header */}
                 <div className="notif-header">
                   <div className="notif-title">
-                    <Bell size={18} style={{ color: '#ef4444' }} />
+                    <Bell size={18} style={{ color: 'var(--bg-main)' }} />
                     <span style={{ fontWeight: '600', color: '#111827' }}>
                       Notifications {filteredNotifications.length > 0 && `(${filteredNotifications.length})`}
                     </span>
                   </div>
                   <X 
                     size={18} 
-                    style={{ cursor: 'pointer', color: '#ce1706ff' }} 
+                    style={{ cursor: 'pointer', color: 'var(--bg-main)' }} 
                     onClick={() => setShowNotif(false)} 
                   />
                 </div>
@@ -358,7 +358,7 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
                       ))
                     ) : (
                       <div className="notif-empty">
-                        <Bell size={40} style={{ color: '#ef4444' }} />
+                        <Bell size={40} style={{ color: 'var(--bg-main)' }} />
                         <p>No {filter !== 'all' ? filter : ''} notifications</p>
                         <small>
                           {filter === 'all' 

@@ -220,7 +220,7 @@
 }
 
 .footer-link a {
-  color: #d43f12;
+  color: var(--bg-main);
   text-decoration: underline;
   font-weight: 400;
   font-family: "Karla", sans-serif !important;
@@ -423,7 +423,7 @@
 .radio-inner {
   width: 10px;
   height: 10px;
-  background: var(--bg-input-border);
+  background: var(--bg-main);
   border-radius: 50%;
   display: none;
 }

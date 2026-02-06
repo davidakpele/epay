@@ -25,7 +25,7 @@
   width: 64px;
   height: 64px;
   border-radius: 16px;
-  background: #dc2626;
+  background: var(--bg-main);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -75,7 +75,7 @@
 }
 
 .rate-label svg {
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .rate-updated {
@@ -111,7 +111,7 @@
   width: 20px;
   height: 20px;
   border: 2px solid #f1f5f9;
-  border-top-color: #dc2626;
+  border-top-color: var(--bg-main);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -200,7 +200,7 @@
 }
 
 .currency-dropdown:focus {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
@@ -218,12 +218,12 @@
 }
 
 .currency-input:focus {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .currency-input.error {
-  border-color: #dc2626;
+  border-color: var(--bg-main);
 }
 
 .currency-input.readonly {
@@ -251,7 +251,7 @@
   display: block;
   margin-top: 8px;
   font-size: 12px;
-  color: #dc2626;
+  color: var(--bg-main);
   font-weight: 500;
 }
 
@@ -275,13 +275,13 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  color: #dc2626;
+  color: var(--bg-main);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .swap-button:hover:not(:disabled) {
   background: #fef2f2;
-  border-color: #dc2626;
+  border-color: var(--bg-main);
   transform: rotate(180deg);
 }
 
@@ -338,15 +338,15 @@
 
 .summary-row.highlight .summary-value {
   font-size: 18px;
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .summary-row.fee-row .summary-label {
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .summary-row.fee-row .fee-value {
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 /* Exchange Notice */
@@ -363,14 +363,14 @@
 }
 
 .exchange-notice svg {
-  color: #dc2626;
+  color: var(--bg-main);
   flex-shrink: 0;
   margin-top: 2px;
 }
 
 .exchange-notice p {
   font-size: 13px;
-  color: #991b1b;
+  color: var(--bg-main);
   line-height: 1.6;
   margin: 0;
 }
@@ -381,7 +381,7 @@
   height: 50px;
   border-radius: 12px;
   border: none;
-  background: #dc2626;
+  background: var(--bg-main);
   font-size: 16px;
   font-weight: 400;
   color: #ffffff;
@@ -394,8 +394,8 @@
 }
 
 .exchange-button:hover:not(:disabled) {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
   transform: translateY(-2px);
 }
 
@@ -435,12 +435,12 @@
 
 .success-icon {
   background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .fail-icon {
   background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  color: var(--bg-main);
 }
 .status-detail-row {
   display: flex;
@@ -463,21 +463,21 @@
 
 .status-detail-row.fee-detail .status-detail-label,
 .status-detail-row.fee-detail .status-detail-value {
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .success-btn {
-  background: #dc2626;
+  background: var(--bg-main);
   color: #ffffff;
 }
 
 .success-btn:hover {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
 }
 
 .fail-btn {
-  background: #dc2626;
+  background: var(--bg-main);
   color: #ffffff;
 }
 
@@ -881,7 +881,7 @@
   background: #fff;
   transition: all 0.2s;
 }
-.custom-select-trigger:hover { border-color: #dc2626; }
+.custom-select-trigger:hover { border-color: var(--bg-main); }
 .trigger-flag { font-size: 20px; }
 .trigger-code { font-size: 14px; font-weight: 600; color: #334155; }
 .trigger-icon { color: #94a3b8; margin-left: auto; }
@@ -937,7 +937,7 @@
   background: #fff;
   transition: all 0.2s;
 }
-.custom-select-trigger:hover { border-color: #dc2626; }
+.custom-select-trigger:hover { border-color: var(--bg-main); }
 .trigger-flag { font-size: 20px; }
 .trigger-code { font-size: 14px; font-weight: 600; color: #334155; }
 .trigger-icon { color: #94a3b8; margin-left: auto; }
@@ -961,7 +961,7 @@
   border-radius: 50%;
   border: 1px solid #e2e8f0;
   background: #fff;
-  color: #dc2626;
+  color: var(--bg-main);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -973,7 +973,7 @@
 .summary-label { color: #64748b; }
 .summary-value { font-weight: 600; color: #1e293b; }
 .summary-divider { height: 1px; background: #e2e8f0; margin: 12px 0; }
-.highlight .summary-value { font-size: 18px; color: #dc2626; }
+.highlight .summary-value { font-size: 18px; color: var(--bg-main); }
 
 
 .exachange-search-container {
@@ -1017,12 +1017,12 @@
   align-items: center;
   justify-content: center;
 }
-.exachange-radio-indicator.active { border-color: #dc2626; }
-.radio-inner { width: 10px; height: 10px; background: #dc2626; border-radius: 50%; }
-.success-btn { background: #dc2626; color: #fff; }
+.exachange-radio-indicator.active { border-color: var(--bg-main); }
+.radio-inner { width: 10px; height: 10px; background: var(--bg-main); border-radius: 50%; }
+.success-btn { background: var(--bg-main); color: #fff; }
 
 .exachange-currency-list::-webkit-scrollbar { width: 4px; }
-.exachange-currency-list::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 10px; }
+.exachange-currency-list::-webkit-scrollbar-thumb { background: var(--bg-main); border-radius: 10px; }
 
 
 
@@ -1215,12 +1215,12 @@
 
 .success-icon {
   background: rgba(34, 197, 94, 0.1);
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .fail-icon {
   background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  color: var(--bg-main);
 }
 
 .status-modal-title {
@@ -1304,23 +1304,23 @@
 }
 
 .success-btn {
-  background: #dc2626;;
+  background: var(--bg-main);;
   color: #ffffff;
 }
 
 .success-btn:hover {
-  background: #dc2626;;
+  background: var(--bg-main);;
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
 .fail-btn {
-  background: #dc2626;
+  background: var(--bg-main);
   color: #ffffff;
 }
 
 .fail-btn:hover {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow);
 }
 
 .secondary-btn {
