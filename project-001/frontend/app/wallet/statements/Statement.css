@@ -1548,3 +1548,23 @@ input[type="date"]:focus {
 .ah-table tbody tr {
   counter-increment: row-number;
 }
+
+.ah-amount.credit {
+  color: #10b981 !important; 
+  font-weight: 700;
+}
+
+.ah-amount.debit {
+  color: #ef4444 !important; 
+  font-weight: 700;
+}
+
+.ah-transaction-icon.credit {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.ah-transaction-icon.debit {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}

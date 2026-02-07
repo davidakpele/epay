@@ -8,14 +8,17 @@ import Sidebar from "@/components/Sidebar";
 import { useState, useMemo, useEffect } from "react";
 import "./BeneficiaryManager.css";
 import LoadingScreen from "@/components/loader/Loadingscreen";
-import { beneficiaryService, getUserId } from "@/app/api";
+import { beneficiaryService, getUserId, historyService } from "@/app/api";
 
 interface Transaction {
-    id: number;
+    id: string | number;
     date: string;
     amount: string;
     type: string;
     status: string;
+    description?: string;
+    reference?: string;
+    currencyType?: string;
 }
 
 interface Beneficiary {
@@ -50,10 +53,10 @@ const BeneficiaryManager = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
-    const [expandedTransaction, setExpandedTransaction] = useState<number | null>(null);
     const [historyFilter, setHistoryFilter] = useState('all');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
+    const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
     const [isPageLoading, setIsPageLoading] = useState(true);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [beneficiaryToDelete, setBeneficiaryToDelete] = useState<number | null>(null);
@@ -172,12 +175,77 @@ const BeneficiaryManager = () => {
         return beneficiaries.filter(b => b.category === category).length;
     };
 
-    const openHistoryModal = (beneficiary: Beneficiary) => {
-        setSelectedBeneficiary(beneficiary);
-        setShowHistoryModal(true);
-        setHistoryFilter('all');
-        setDateFrom('');
-        setDateTo('');
+    const openHistoryModal = async (beneficiary: Beneficiary) => {
+        try {
+            setSelectedBeneficiary({
+                ...beneficiary,
+                transactions: []
+            });
+            setShowHistoryModal(true);
+            setHistoryFilter('all');
+            setDateFrom('');
+            setDateTo('');
+            setIsLoadingTransactions(true); 
+            const minimumDelay = new Promise(resolve => setTimeout(resolve, 3000));
+            const fetchData = historyService.getHistoryByBeneficiaryId(beneficiary.userId);
+            const [_, response] = await Promise.all([minimumDelay, fetchData]);
+           
+            if (response && Array.isArray(response)) {
+                const transactions: Transaction[] = response.map((t: any) => ({
+                    id: t.id || t.transactionId,
+                    date: t.timestamp || t.createdOn,
+                    amount: t.amount ? `${t.amount}` : '0',
+                    type: t.type || 'TRANSFER',
+                    status: mapTransactionStatus(t.status),
+                    description: t.description || t.message || '',
+                    reference: t.referenceNo || t.transactionId || '',
+                    currencyType: t.currencyType || beneficiary.currency
+                }));
+                setSelectedBeneficiary({
+                    ...beneficiary,
+                    transactions: transactions
+                });
+                
+                console.log('Successfully set', transactions.length, 'transactions to state');
+            } else {
+                console.log('No transactions found or invalid response structure');
+                setSelectedBeneficiary({
+                    ...beneficiary,
+                    transactions: []
+                });
+            }
+        } catch (err: any) {
+            console.error('Error loading transaction history:', err);
+            console.error('Error details:', err.response || err.message);
+            setError(err.message || 'Failed to load transaction history');
+            setSelectedBeneficiary({
+                ...beneficiary,
+                transactions: []
+            });
+        } finally {
+            setIsLoadingTransactions(false); 
+        }
+    };
+
+    // Add helper function to map transaction status
+    const mapTransactionStatus = (status: string): string => {
+        const statusLower = status?.toLowerCase() || '';
+        
+        switch (statusLower) {
+            case 'success':
+            case 'completed':
+            case 'confirmed':
+                return 'completed';
+            case 'pending':
+            case 'processing':
+                return 'pending';
+            case 'failed':
+            case 'rejected':
+            case 'cancelled':
+                return 'failed';
+            default:
+                return 'pending';
+        }
     };
 
     const handleDeleteClick = (id: number) => {
@@ -189,37 +257,6 @@ const BeneficiaryManager = () => {
         if (beneficiaryToDelete) {
             deleteBeneficiary(beneficiaryToDelete);
         }
-    };
-
-    const getFilteredTransactions = () => {
-        if (!selectedBeneficiary) return [];
-        
-        const now = new Date();
-        const transactions = selectedBeneficiary.transactions;
-
-        if (historyFilter === 'custom' && dateFrom && dateTo) {
-            return transactions.filter((t: Transaction) => {
-                const tDate = new Date(t.date);
-                return tDate >= new Date(dateFrom) && tDate <= new Date(dateTo);
-            });
-        }
-
-        return transactions.filter((t: Transaction) => {
-            const tDate = new Date(t.date);
-            const diffTime = now.getTime() - tDate.getTime();
-            const diffDays = diffTime / (1000 * 3600 * 24);
-
-            switch(historyFilter) {
-                case 'day':
-                    return diffDays <= 1;
-                case 'week':
-                    return diffDays <= 7;
-                case 'month':
-                    return diffDays <= 30;
-                default:
-                    return true;
-            }
-        });
     };
 
     // Get frequent beneficiaries (top 5 by most recent)
@@ -272,7 +309,7 @@ const BeneficiaryManager = () => {
                             )}
 
                             {/* Header Banner */}
-                            <div className="bg-gradient-to-br from-[#166701] via-[#145f01] to-[#125501] rounded-3xl sm:rounded-[2rem] p-6 sm:p-8 lg:p-10 mb-6 shadow-xl">
+                            <div className="bg-gradient-to-br from-[#166701] via-[#145f01] to-[#125501] rounded-2xl sm:rounded-[1rem] p-6 sm:p-8 lg:p-10 mb-6 shadow-xl">
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-3">
@@ -283,7 +320,7 @@ const BeneficiaryManager = () => {
                                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Saved Beneficiaries</h1>
                                             </div>
                                         </div>
-                                        <p className="text-green-100 text-sm sm:text-base max-w-xl">Manage your trusted contacts and send money instantly to your favorite recipients.</p>
+                                        <p className="text-green-100 text-xs sm:text-sm max-w-xl">Manage your trusted contacts and send money instantly to your favorite recipients.</p>
                                     </div>
                                     
                                     <div className="flex flex-wrap gap-4">
@@ -341,7 +378,7 @@ const BeneficiaryManager = () => {
                             </div>
 
                             {/* Filter Tabs */}
-                            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
+                            <div className="bg-white rounded-2xl sm:rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
                                 <div className="flex overflow-x-auto no-scrollbar">
                                     {[
                                         { key: 'all', label: 'All', icon: 'users' },
@@ -582,108 +619,204 @@ const BeneficiaryManager = () => {
             )}
 
             {/* History Modal */}
-            {showHistoryModal && selectedBeneficiary && (
-                <>
-                    <div 
-                        className="history-backdrop"
-                        onClick={() => setShowHistoryModal(false)}
-                    />
-                    
-                    <div className="history-panel">
-                        <div className="history-panel-header">
-                            <div className="history-panel-header-content">
-                                <div className="history-panel-back-button">
-                                    <button 
-                                        onClick={() => setShowHistoryModal(false)}
-                                        className="history-back-button"
-                                    >
-                                        <i className="fas fa-arrow-left"></i>
-                                    </button>
-                                </div>
-                                <div className="history-panel-title-section">
-                                    <h2 className="history-panel-title">
-                                        <i className="fas fa-user-circle history-panel-title-icon"></i>
-                                        Beneficiary Details
-                                    </h2>
-                                    <p className="history-panel-subtitle">{selectedBeneficiary.beneficiaryName}</p>
-                                </div>
-                                <div className="history-panel-header-actions">
-                                    <button 
-                                        onClick={() => setShowHistoryModal(false)}
-                                        className="history-panel-send-button"
-                                    >
-                                        <i className="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
+           {/* History Modal */}
+{showHistoryModal && selectedBeneficiary && (
+    <>
+        <div 
+            className="history-backdrop"
+            onClick={() => setShowHistoryModal(false)}
+        />
+        
+        <div className="history-panel">
+            <div className="history-panel-header">
+                <div className="history-panel-header-content">
+                    <div className="history-panel-back-button">
+                        <button 
+                            onClick={() => setShowHistoryModal(false)}
+                            className="history-back-button"
+                        >
+                            <i className="fas fa-arrow-left"></i>
+                        </button>
+                    </div>
+                    <div className="history-panel-title-section">
+                        <h2 className="history-panel-title">
+                            <i className="fas fa-user-circle history-panel-title-icon"></i>
+                            Transaction History
+                        </h2>
+                    </div>
+                    <div className="history-panel-header-actions">
+                        <button 
+                            onClick={() => setShowHistoryModal(false)}
+                            className="history-panel-send-button"
+                        >
+                            <i className="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+                {/* Beneficiary Information */}
+                <div className="bg-gray-50 rounded-2xl p-6">
+                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i className="fas fa-info-circle text-[#166701]"></i>
+                        Beneficiary Information
+                    </h3>
+                    <div className="space-y-3">
+                        <div className="flex justify-between">
+                            <span className="text-gray-600 text-sm">Name</span>
+                            <span className="font-semibold text-gray-900 text-sm">{selectedBeneficiary.beneficiaryName}</span>
                         </div>
-
-                        <div className="p-6 space-y-4">
-                            <div className="bg-gray-50 rounded-2xl p-6">
-                                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <i className="fas fa-info-circle text-[#166701]"></i>
-                                    Beneficiary Information
-                                </h3>
-                                <div className="space-y-3">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Name</span>
-                                        <span className="font-semibold text-gray-900">{selectedBeneficiary.beneficiaryName}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Type</span>
-                                        <span className="font-semibold text-gray-900">
-                                            {selectedBeneficiary.isEpay ? 'ePay User' : 'Bank Account'}
-                                        </span>
-                                    </div>
-                                    {selectedBeneficiary.isEpay ? (
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Username</span>
-                                            <span className="font-semibold text-gray-900">@{selectedBeneficiary.recipientUsername}</span>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">Bank</span>
-                                                <span className="font-semibold text-gray-900">{selectedBeneficiary.bankName}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">Account Number</span>
-                                                <span className="font-semibold text-gray-900">{selectedBeneficiary.accountNumber}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">Account Name</span>
-                                                <span className="font-semibold text-gray-900">{selectedBeneficiary.accountName}</span>
-                                            </div>
-                                        </>
-                                    )}
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Currency</span>
-                                        <span className="font-semibold text-gray-900">{selectedBeneficiary.currency}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Added</span>
-                                        <span className="font-semibold text-gray-900">
-                                            {new Date(selectedBeneficiary.createdOn).toLocaleDateString('en-GB', {
-                                                day: 'numeric',
-                                                month: 'short',
-                                                year: 'numeric'
-                                            })}
-                                        </span>
-                                    </div>
-                                </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-600 text-sm">Type</span>
+                            <span className="font-semibold text-gray-900 text-sm">
+                                {selectedBeneficiary.isEpay ? 'ePay User' : 'Bank Account'}
+                            </span>
+                        </div>
+                        {selectedBeneficiary.isEpay ? (
+                            <div className="flex justify-between">
+                                <span className="text-gray-600 text-sm">Username</span>
+                                <span className="font-semibold text-gray-900 text-sm">@{selectedBeneficiary.recipientUsername}</span>
                             </div>
-
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
-                                <i className="fas fa-info-circle text-yellow-600 mt-0.5"></i>
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-yellow-900 text-sm mb-1">Transaction History Coming Soon</h4>
-                                    <p className="text-xs text-yellow-800">Transaction history for beneficiaries will be available in the next update.</p>
+                        ) : (
+                            <>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600 text-sm">Bank</span>
+                                    <span className="font-semibold text-gray-900 text-sm">{selectedBeneficiary.bankName}</span>
                                 </div>
-                            </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600 text-sm">Account Number</span>
+                                    <span className="font-semibold text-gray-900 text-sm">{selectedBeneficiary.accountNumber}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600 text-sm">Account Name</span>
+                                    <span className="font-semibold text-gray-900 text-sm">{selectedBeneficiary.accountName}</span>
+                                </div>
+                            </>
+                        )}
+                        <div className="flex justify-between">
+                            <span className="text-gray-600 text-sm">Currency</span>
+                            <span className="font-semibold text-gray-900 text-sm">{selectedBeneficiary.currency}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-600 text-sm">Added</span>
+                            <span className="font-semibold text-gray-900 text-sm">
+                                {new Date(selectedBeneficiary.createdOn).toLocaleDateString('en-GB', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric'
+                                })}
+                            </span>
                         </div>
                     </div>
-                </>
+                </div>
+
+                {/* Transaction History Section */}
+                {/* Transaction History Section */}
+<div className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden">
+    <div className="p-4 border-b border-gray-100">
+        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+            <i className="fas fa-history text-[#166701]"></i>
+            Transaction History
+            <span className="text-sm font-normal text-gray-500">
+                ({selectedBeneficiary.transactions.length})
+            </span>
+        </h3>
+    </div>
+
+    {/* Loading State */}
+    {isLoadingTransactions ? (
+        <div className="p-12 text-center">
+            <div className="w-16 h-16 border-4 border-[#166701] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h4 className="font-bold text-gray-900 text-sm mb-1">Loading Transactions...</h4>
+            <p className="text-xs text-gray-500">Please wait while we fetch your transaction history.</p>
+        </div>
+    ) : (
+        /* Transactions List with Scrollbar */
+        <div className={`${selectedBeneficiary.transactions.length > 5 ? 'history-transaction-scrollable' : ''}`}>
+            {selectedBeneficiary.transactions.length === 0 ? (
+                <div className="p-8 text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i className="fas fa-inbox text-2xl text-gray-400"></i>
+                    </div>
+                    <h4 className="font-bold text-gray-900 text-sm mb-1">No Transactions Yet</h4>
+                    <p className="text-xs text-gray-500">No transaction history available for this beneficiary.</p>
+                </div>
+            ) : (
+                <div className="space-y-2 p-4">
+                    {selectedBeneficiary.transactions.map((transaction) => (
+                        <div 
+                            key={transaction.id} 
+                            className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors"
+                        >
+                            <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                        transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT'
+                                            ? 'bg-green-100 text-green-600'
+                                            : 'bg-red-100 text-red-600'
+                                    }`}>
+                                        <i className={`fas ${
+                                            transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT'
+                                                ? 'fa-arrow-down'
+                                                : 'fa-arrow-up'
+                                        }`}></i>
+                                    </div>
+                                    <div>
+                                        <h5 className="font-bold text-gray-900 text-sm">{transaction.type}</h5>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            {new Date(transaction.date).toLocaleDateString('en-GB', {
+                                                day: 'numeric',
+                                                month: 'short',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className={`font-bold text-sm ${
+                                        transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT'
+                                            ? 'text-green-600'
+                                            : 'text-red-600'
+                                    }`}>
+                                        {transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT' ? '+' : '-'}
+                                        {transaction.currencyType === 'NGN' ? '₦' : 
+                                         transaction.currencyType === 'USD' ? '$' : 
+                                         transaction.currencyType === 'EUR' ? '€' : 
+                                         transaction.currencyType === 'GBP' ? '£' : ''}
+                                        {parseFloat(transaction.amount).toLocaleString('en-US', {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        })}
+                                    </p>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                                        transaction.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                        transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                        'bg-red-100 text-red-700'
+                                    }`}>
+                                        {transaction.status}
+                                    </span>
+                                </div>
+                            </div>
+                            {transaction.description && (
+                                <p className="text-xs text-gray-600 mt-2 pl-13">{transaction.description}</p>
+                            )}
+                            {transaction.reference && (
+                                <p className="text-xs text-gray-400 mt-1 pl-13 font-mono">Ref: {transaction.reference}</p>
+                            )}
+                        </div>
+                    ))}
+                </div>
             )}
+        </div>
+    )}
+</div>
+            </div>
+        </div>
+    </>
+)}
         </div>
     );
 };

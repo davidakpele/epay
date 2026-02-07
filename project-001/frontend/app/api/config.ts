@@ -106,8 +106,8 @@ export const API_URLS = {
   HISTORY: {
     ALL: (userId: string | number) => `${SERVICE_URLS.HISTORY}/history/user/${userId}`,
     DELETE: (id: string | number) => `${SERVICE_URLS.HISTORY}/history/${id}`,
-    FILTERED: (userId: string | number, payload: HistoryFilterPayload) => 
-      `${SERVICE_URLS.HISTORY}/history/user/${userId}/filter?fromDate=${payload.startDate}&toDate=${payload.endDate}&transactionType=${payload.transactionType}&currency=${payload.currency}`,
+    FILTERED: (userId: string | number, payload: HistoryFilterPayload) => `${SERVICE_URLS.HISTORY}/history/user/${userId}/filter?fromDate=${payload.startDate}&toDate=${payload.endDate}&transactionType=${payload.transactionType}&currency=${payload.currency}`,
+    BENEFICIARY: (beneficiaryId: string | number) => `${SERVICE_URLS.HISTORY}/history/user/${beneficiaryId}`,
   },
 
   BENEFICIARY: {

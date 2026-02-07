@@ -12,10 +12,14 @@ export const historyService = {
         return makeAuthenticatedRequest(API_URLS.HISTORY.DELETE(id), 'DELETE');
     },
 
+
     getFilteredHistory: (id, data) => {
         return makeAuthenticatedRequest(API_URLS.HISTORY.FILTERED(id, data), 'GET');
-    }
+    },
 
+    getHistoryByBeneficiaryId: (beneficiaryId) => {
+        return makeAuthenticatedRequest(API_URLS.HISTORY.BENEFICIARY(beneficiaryId), 'GET');
+    },
 };
 
 export default historyService;

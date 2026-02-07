@@ -1,14 +1,31 @@
 .auth-page-wrapper {
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     background-color: #f8f9fa;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M30 10l-5 25h10l-7 35 25-45h-10l7-15z' fill='%23e9ecef' fill-opacity='0.4'/%3E%3C/svg%3E");
-    padding: 20px;
+    padding: 40px 20px;
     font-family: "Karla", sans-serif;
 }
+.auth-page-wrapper {
+    max-height: 100vh;
+    overflow-y: scroll;
+}
 
+.auth-page-wrapper::-webkit-scrollbar {
+    width: 2px;
+}
+
+.auth-page-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.auth-page-wrapper::-webkit-scrollbar-thumb {
+    background: var(--bg-main);
+    border-radius: 6px;
+}
+
+.auth-page-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--bg-main);
+}
 .register-card {
   background: #ffffff;
   padding: 40px;
@@ -16,6 +33,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   width: 100%;
   max-width: 500px;
+  margin: 0 auto;
 }
 
 .logo-container {
@@ -474,6 +492,7 @@
   width: 100%;
   text-align: center;
   animation: slideUp 0.4s ease-out;
+  margin: 0 auto;
 }
 
 @keyframes slideUp {
@@ -576,20 +595,21 @@
 .toggle-switch {
   position: relative;
   width: 48px;
-  height: 19px;
+  height: 23px;
   background: #e5e7eb;
   border-radius: 12px;
   transition: background 0.3s;
 }
 
 .toggle-switch.active {
-  background: #c62828;
+  background: var(--bg-main);
 }
 
 .toggle-slider {
   position: absolute;
-  top: 2px;
+  top: 4px;
   left: 2px;
+  right:2px;
   width: 15px;
   height: 15px;
   background: white;

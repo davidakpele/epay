@@ -51,7 +51,7 @@
 }
 
 .signup-link-text a {
-  color: var(--bg-main);
+  color: var(--warning-color);
   text-decoration: underline;
   font-size: 13px;
   font-family: "Karla", sans-serif;

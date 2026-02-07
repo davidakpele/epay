@@ -552,6 +552,16 @@ This is an official receipt for your records.
       return baseClass + " bg-green-700 text-white hover:bg-green-700";
     };
 
+    const isDebitTransaction = (type: string): boolean => {
+      const debitTypes = ['DEBIT', 'WITHDRAW', 'WITHDRAWAL', 'BILL PAYMENT', 'BILLS PAYMENT', 'PAYMENT', 'TRANSFER'];
+      return debitTypes.some(debitType => type.toUpperCase().includes(debitType));
+    };
+
+    const isCreditTransaction = (type: string): boolean => {
+      const creditTypes = ['CREDIT', 'CREDITED', 'DEPOSIT', 'DEPOSITED'];
+      return creditTypes.some(creditType => type.toUpperCase().includes(creditType));
+    };
+
     const totalCredits = statements
       .filter(s => s.amount >= 0)
       .reduce((sum, s) => sum + s.amount, 0);
@@ -844,8 +854,12 @@ This is an official receipt for your records.
                                   </td>
                                   <td>
                                     <div className="ah-transaction-cell">
-                                      <div className={`ah-transaction-icon ${transaction.amount >= 0 ? 'credit' : 'debit'}`}>
-                                        {transaction.amount >= 0 ? 
+                                      <div className={`ah-transaction-icon ${
+                                        isCreditTransaction(transaction.type) ? 'credit' : 
+                                        isDebitTransaction(transaction.type) ? 'debit' : 
+                                        transaction.amount >= 0 ? 'credit' : 'debit'
+                                      }`}>
+                                        {isCreditTransaction(transaction.type) || (!isDebitTransaction(transaction.type) && transaction.amount >= 0) ? 
                                           <ArrowDownLeft size={18} /> : 
                                           <ArrowUpRight size={18} />
                                         }
@@ -860,8 +874,15 @@ This is an official receipt for your records.
                                     <span className="ah-type-badge">{transaction.type}</span>
                                   </td>
                                   <td>
-                                    <span className={`ah-amount ${transaction.amount >= 0 ? 'credit' : 'debit'}`}>
-                                      {formatAmount(transaction.amount)}
+                                    <span className={`ah-amount ${
+                                      isCreditTransaction(transaction.type) ? 'credit' : 
+                                      isDebitTransaction(transaction.type) ? 'debit' : 
+                                      transaction.amount >= 0 ? 'credit' : 'debit'
+                                    }`}>
+                                      {isCreditTransaction(transaction.type) ? '+' : 
+                                      isDebitTransaction(transaction.type) ? '-' : 
+                                      transaction.amount >= 0 ? '+' : '-'}
+                                      {formatAmount(Math.abs(transaction.amount))}
                                     </span>
                                   </td>
                                   <td>
@@ -1178,9 +1199,14 @@ This is an official receipt for your records.
                           </div>
                           <div className="flex-1 min-w-0">
                             <h2 className={`text-2xl font-bold truncate ${
+                              isCreditTransaction(selectedTransaction.type) ? 'text-green-600' : 
+                              isDebitTransaction(selectedTransaction.type) ? 'text-red-600' : 
                               selectedTransaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
                             }`}>
-                              {formatAmount(selectedTransaction.amount)}
+                              {isCreditTransaction(selectedTransaction.type) ? '+' : 
+                              isDebitTransaction(selectedTransaction.type) ? '-' : 
+                              selectedTransaction.amount >= 0 ? '+' : '-'}
+                              {formatAmount(Math.abs(selectedTransaction.amount))}
                             </h2>
                             <p className="text-xs text-gray-500 mt-0.5">
                               {selectedTransaction.amount >= 0 ? 'Money In' : 'Money Out'}

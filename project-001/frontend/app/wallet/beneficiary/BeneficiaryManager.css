@@ -13,6 +13,7 @@
   to { opacity: 1; }
 }
 
+/* Transaction History Section - Parent Container */
 .history-panel {
   position: fixed;
   top: 0;
@@ -25,8 +26,70 @@
   flex-direction: column;
   box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
   animation: historyPanelSlide 0.3s ease-out;
-  overflow: hidden;
+  overflow: hidden; 
   border-radius: 0;
+}
+
+/* Make the main content area scrollable */
+.history-panel > .p-6 {
+  overflow-y: auto;
+  flex: 1;
+  max-height: calc(100vh - 80px);
+}
+
+/* Transaction Scrollable Container */
+.history-transaction-scrollable {
+  max-height: 500px; 
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar Styling */
+.history-transaction-scrollable::-webkit-scrollbar {
+  width: 2px;
+}
+
+.history-transaction-scrollable::-webkit-scrollbar-track {
+  background: var(--bg-main);
+  border-radius: 4px;
+  margin: 8px 0; /* Add margin to scrollbar track */
+}
+
+.history-transaction-scrollable::-webkit-scrollbar-thumb {
+  background: var(--bg-main);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.history-transaction-scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-main);
+}
+
+/* Firefox Scrollbar */
+.history-transaction-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-main) var(--bg-main);
+}
+
+/* Smooth scrolling */
+.history-transaction-scrollable {
+  scroll-behavior: smooth;
+}
+
+/* Add padding to last transaction item */
+.history-transaction-scrollable > .space-y-2 {
+  padding-bottom: 1rem;
+}
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .history-transaction-scrollable {
+    max-height: 450px;
+  }
+  
+  .history-transaction-scrollable::-webkit-scrollbar {
+    width: 2px;
+  }
 }
 
 @keyframes historyPanelSlide {
@@ -764,4 +827,74 @@
     background: #f8fafc;
     transform: scale(0.99);
   }
+}
+
+/* Transaction Scrollable Container */
+.history-transaction-scrollable {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar Styling */
+.history-transaction-scrollable::-webkit-scrollbar {
+  width: 2px;
+}
+
+.history-transaction-scrollable::-webkit-scrollbar-track {
+  background: var(--bg-main);
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.history-transaction-scrollable::-webkit-scrollbar-thumb {
+  background: var(--bg-main);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.history-transaction-scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-main);
+}
+
+/* Firefox Scrollbar */
+.history-transaction-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-main) #f1f5f9;
+}
+
+/* Smooth scrolling */
+.history-transaction-scrollable {
+  scroll-behavior: smooth;
+}
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .history-transaction-scrollable {
+    max-height: 350px;
+  }
+  
+  .history-transaction-scrollable::-webkit-scrollbar {
+    width: 6px;
+  }
+}
+
+/* Transaction Loading Animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+}
+
+.transaction-loader-pulse {
+  animation: pulse-ring 2s ease-in-out infinite;
 }
