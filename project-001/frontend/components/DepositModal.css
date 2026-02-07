@@ -1039,8 +1039,8 @@
 }
 
 .confirm-btn:hover:not(:disabled) {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow)
 }
 
 .confirm-btn:active:not(:disabled) {
@@ -1288,8 +1288,8 @@
 }
 
 .success-btn:hover {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow)
 }
 
 .fail-btn {
@@ -1298,8 +1298,8 @@
 }
 
 .fail-btn:hover {
-  background: #b91c1c;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: var(--bg-main);
+  box-shadow: 0 4px 12px var(--bg-input-shadow)
 }
 
 .secondary-btn {

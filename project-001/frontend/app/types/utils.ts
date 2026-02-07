@@ -229,6 +229,12 @@ export type MetaMapErrors = {
   dob?: string;
 };
 
+export interface CardTheme {
+  name: string;
+  imageUrl: string;
+  label: string;
+};
+
 
 export type TransactionType = "deposit" | "withdrawal" | "swap" | "transfer" | "credited";
 export type TransactionStatus = "completed" | "pending" | "failed";

@@ -179,13 +179,12 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
   const desktopNavItems = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'bills', label: 'Paybills' },
-    { id: 'giftcard', label: 'Giftcard' },
-    { id: 'virtualCards', label: 'Virtual Cards' },
+    { id: 'cards', label: 'Virtual Cards' },
   ];
 
   const accountDropdownItems = [
-    { id: 'user', label: 'Profile', icon: <User size={16} /> },
-    { id: 'settings', label: 'Settings', icon: <Settings size={16} /> },
+    { id: 'settings/profile', label: 'Profile', icon: <User size={16} /> },
+    { id: 'settings/general', label: 'Settings', icon: <Settings size={16} /> },
     { id: 'auth/logout', label: 'Logout', icon: <LogOut size={16} /> },
   ];
 

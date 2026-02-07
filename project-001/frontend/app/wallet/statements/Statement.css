@@ -144,7 +144,7 @@
 }
 
 .country-list::-webkit-scrollbar {
-  width: 6px;
+  width: 2px;
 }
 
 .country-list::-webkit-scrollbar-track {
@@ -323,35 +323,43 @@ input[type="date"]:focus {
   display: inline-block;
   padding-bottom: 0.25rem;
 }
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px; 
+  width: 500px;
+  max-width: 500px;
+}
 
 .account-history.dark .ah-title {
   color: #ffffff;
 }
 
 .ah-subtitle {
-  font-size: 1rem;
+  font-size: 14px;
   color: #64748b;
   margin: 0.5rem 0 0 0;
 }
-
 .ah-back-btn {
+  background: var(--bg-main);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
-  background: white;
-  color: #1a1d2e;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
+  gap: 8px;
+  transition: background .2s;
+  white-space: nowrap;
   transition: all 0.3s ease;
 }
 
 .ah-back-btn:hover {
   border-color: var(--bg-main);
-  color: var(--bg-main);
+  color: var(--bg-input);
   transform: translateY(-2px);
 }
 
@@ -363,11 +371,11 @@ input[type="date"]:focus {
 
 /* Account Info Card */
 .ah-account-card {
-  background: white;
-  border-radius: 20px;
+  background: var(--bg-main);
+  border-radius: 10px;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--bg-input-shadow);
 }
 
 .account-history.dark .ah-account-card {
@@ -384,7 +392,7 @@ input[type="date"]:focus {
 .ah-account-name {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a1d2e;
+  color: var(--bg-input);
   margin: 0 0 0.5rem 0;
 }
 
@@ -394,7 +402,7 @@ input[type="date"]:focus {
 
 .ah-account-number {
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--bg-input);
   margin: 0;
 }
 
@@ -405,7 +413,7 @@ input[type="date"]:focus {
 .ah-balance-amount {
   font-size: 2rem;
   font-weight: 700;
-  color: #1a1d2e;
+  color: var(--bg-input);
   margin: 0 0 0.5rem 0;
 }
 
@@ -415,10 +423,23 @@ input[type="date"]:focus {
 
 .ah-balance-label {
   font-size: 0.95rem;
-  color: #64748b;
+  
   margin: 0;
 }
-
+.ah-balance-label.credits{
+  color: var(--success-border);
+}
+.ah-balance-label.debits{
+  color: var(--debit-amount);
+}
+.breadcrumb {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 /* Filter Section */
 .ah-filter-section {
   background: white;
@@ -511,14 +532,20 @@ input[type="date"]:focus {
 
 .ah-filter-select,
 .ah-filter-input {
-  padding: 0.875rem 1rem;
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 0.95rem;
+  white-space: nowrap;
   color: #1a1d2e;
-  transition: all 0.3s ease;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  flex-shrink: 0;
+  justify-content: space-between;
+  align-items: center;
   width: 100%;
+  padding: .85rem 1rem;
+  font-family: Outfit, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+ 
 }
 
 .ah-filter-select:focus,
@@ -611,6 +638,49 @@ input[type="date"]:focus {
   flex: 1;
 }
 
+.ah-table-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ah-table-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1d2e;
+  margin: 0;
+  border-bottom: 3px solid var(--bg-main);
+  display: inline-block;
+  padding-bottom: 0.25rem;
+}
+
+.account-history.dark .ah-table-title {
+  color: white;
+}
+
+.ah-collapse-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.ah-collapse-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.account-history.dark .ah-collapse-btn:hover {
+  background: #374151;
+  color: #e5e7eb;
+}
+
 .ah-action-buttons {
   display: flex;
   gap: 1rem;
@@ -645,71 +715,198 @@ input[type="date"]:focus {
   border-color: #334155;
 }
 
-
-.ah-table-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1a1d2e;
-  margin: 0 0 0.25rem 0;
-  border-bottom: 3px solid var(--bg-main);
-  display: inline-block;
-  padding-bottom: 0.25rem;
-}
-
-.account-history.dark .ah-table-title {
-  color: white;
-}
-
 .ah-table-subtitle {
   font-size: 0.875rem;
   color: #64748b;
   margin: 0.5rem 0 0 0;
 }
 
-.ah-download-btn {
+.ah-table-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 0 0 12px 12px;
+}
+
+.account-history.dark .ah-table-footer {
+  background: #1a1d2e;
+  border-top-color: #334155;
+}
+
+.ah-footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ah-table-footer .ah-table-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.account-history.dark .ah-table-footer .ah-table-subtitle {
+  color: #9ca3af;
+}
+
+/* Pagination Styles */
+.ah-pagination {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  gap: 12px;
+}
+
+.ah-pagination-btn {
+  padding: 8px 20px;
   background: white;
-  color: #1a1d2e;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-.ah-download-btn:hover {
-  border-color: var(--bg-main);
-  color: var(--bg-main);
+.ah-pagination-btn:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
 }
 
-.account-history.dark .ah-download-btn {
-  background: #1a1d2e;
-  color: white;
-  border-color: #334155;
+.ah-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: white;
+  color: #9ca3af;
+}
+
+.account-history.dark .ah-pagination-btn {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.account-history.dark .ah-pagination-btn:hover:not(:disabled) {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+.account-history.dark .ah-pagination-btn:disabled {
+  background: #2d3748;
+  opacity: 0.4;
+}
+
+.ah-pagination-number {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ah-pagination-number:hover:not(.active) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.ah-pagination-number.active {
+  background: var(--bg-main) !important;
+  color: white !important;
+  border-color: var(--bg-main) !important;
+}
+
+.account-history.dark .ah-pagination-number {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.account-history.dark .ah-pagination-number:hover:not(.active) {
+  background: #4b5563;
+}
+
+.account-history.dark .ah-pagination-number.active {
+  background: var(--bg-main) !important;
+  color: white !important;
+  border-color: var(--bg-main) !important;
 }
 
 /* Table */
 .ah-table-container {
   overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
+}
+
+/* Thinner scrollbar for table container */
+.ah-table-container::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.ah-table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.ah-table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.ah-table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.ah-table-container {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
 .account-history.dark .ah-table-container {
   border-color: #334155;
 }
 
+.account-history.dark .ah-table-container::-webkit-scrollbar-track {
+  background: #1a1d2e;
+}
+
+.account-history.dark .ah-table-container::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.account-history.dark .ah-table-container::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 .ah-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 900px;
 }
 
 .ah-table thead {
   background: #f8fafc;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .account-history.dark .ah-table thead {
@@ -781,8 +978,8 @@ input[type="date"]:focus {
 }
 
 .ah-transaction-description {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 13px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   margin: 0 0 0.25rem 0;
 }
 
@@ -795,11 +992,11 @@ input[type="date"]:focus {
 .ah-type-badge {
   display: inline-block;
   padding: 0.375rem 0.875rem;
-  background: #f1f5f9;
-  color: #475569;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  background: var(--bg-main);
+  color: var(--bg-input);
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 .account-history.dark .ah-type-badge {
@@ -821,11 +1018,22 @@ input[type="date"]:focus {
 }
 
 .ah-status-badge {
-  display: inline-block;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 0.375rem 0.875rem;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.65rem;
   font-weight: 600;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  
+  flex-shrink: 0;
 }
 
 .status-completed {
@@ -833,14 +1041,26 @@ input[type="date"]:focus {
   color: #059669;
 }
 
+.status-completed .status-dot {
+  background: #059669;
+}
+
 .status-pending {
   background: rgba(234, 179, 8, 0.1);
   color: #ca8a04;
 }
 
+.status-pending .status-dot {
+  background: #ca8a04;
+}
+
 .status-failed {
   background: rgba(239, 68, 68, 0.1);
   color: var(--bg-main);
+}
+
+.status-failed .status-dot {
+  background: var(--bg-main);
 }
 
 .ah-date {
@@ -1013,6 +1233,28 @@ input[type="date"]:focus {
     padding: 0.375rem 0.75rem;
     font-size: 0.75rem;
   }
+
+  /* Pagination responsive */
+  .ah-footer-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ah-pagination {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ah-pagination-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .ah-pagination-number {
+    min-width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1047,20 +1289,51 @@ input[type="date"]:focus {
   .ah-table {
     min-width: 800px;
   }
-}
 
-/* Statement Select Field */
+  /* Pagination mobile */
+  .ah-pagination {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .ah-pagination-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .ah-pagination-number {
+    min-width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .ah-pagination-numbers {
+    gap: 3px;
+  }
+}
+.account-ah-filter-label{
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-weight:600;
+  font-size:13px;
+}
+.account-divider{
+  height:1px;
+  background:#e2e8f0;
+  margin:0.04rem 0;
+}
 .statement-container {
   width: 100%;
 }
-
-.statement-selectField {
+.duration-selectTextView{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
+  width: 100%;  
+  flex-shrink: 0;  
+  white-space: nowrap;   
+  padding: 0.65rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   font-size: 15px;
   color: #1a1d2e;
@@ -1068,6 +1341,24 @@ input[type="date"]:focus {
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   transition: all 0.3s ease;
 }
+.statement-selectField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 250px;  
+  flex-shrink: 0;  
+  white-space: nowrap;   
+  padding: 0.65rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #1a1d2e;
+  cursor: pointer;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: all 0.3s ease;
+}
+
 .statement-selectField:hover {
   border-color: var(--bg-main);
   background: white;
@@ -1095,16 +1386,16 @@ input[type="date"]:focus {
 /* Filter Actions */
 .ah-filter-actions {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .ah-search-btn {
-  width: 65%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
+  height:45px;
+  width:200px;
   background: var(--bg-main);
   color: white;
   border: none;
@@ -1172,7 +1463,7 @@ input[type="date"]:focus {
   animation: fadeInSlide 0.3s ease-out;
 }
 /* Responsive Design */
-@media (max-width: 1000px) {
+@media (max-width: 1300px) {
   .ah-filter-row-3 {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1203,447 +1494,11 @@ input[type="date"]:focus {
   }
 }
 
-
-
-
-/* Statement.css - Updated with Scrollable Table */
-
-/* ============================================================================
-   TRANSACTION HISTORY TABLE STYLES - WITH SCROLL
-   ============================================================================ */
-
-/* Table Section Container */
-.ah-table-section {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-top: 24px;
-  overflow: hidden;
+.table-action{
+  display:flex;
+  gap:10px;
 }
 
-/* Table Header */
-.ah-table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.ah-table-info {
-  flex: 1;
-  min-width: 200px;
-}
-
-.ah-table-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 4px 0;
-}
-
-.ah-table-subtitle {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0;
-}
-
-.ah-action-buttons {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.ah-download-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.ah-download-btn:hover {
-  background: #e5e7eb;
-  border-color: #9ca3af;
-}
-
-/* ============================================================================
-   SCROLLABLE TABLE CONTAINER - NEW
-   ============================================================================ */
-
-.ah-table-container {
-  max-height: 600px; /* Adjust this value based on your needs */
-  overflow-y: auto;
-  overflow-x: auto;
-  position: relative;
-  border-top: 1px solid #e5e7eb;
-}
-
-/* Custom Scrollbar Styling */
-.ah-table-container::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.ah-table-container::-webkit-scrollbar-track {
-  background: #f3f4f6;
-}
-
-.ah-table-container::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
-}
-
-.ah-table-container::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-/* For Firefox */
-.ah-table-container {
-  scrollbar-width: thin;
-  scrollbar-color: #d1d5db #f3f4f6;
-}
-
-/* ============================================================================
-   TABLE STYLES
-   ============================================================================ */
-
-.ah-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  min-width: 900px; /* Ensures horizontal scroll on small screens */
-}
-
-/* Sticky Table Header */
-.ah-table thead {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: #f9fafb;
-}
-
-.ah-table thead tr {
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.ah-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: #f9fafb;
-}
-
-.ah-table tbody tr {
-  border-bottom: 1px solid #f3f4f6;
-  transition: background-color 0.2s;
-}
-
-.ah-table tbody tr:hover {
-  background-color: #f9fafb;
-}
-
-.ah-table tbody tr:last-child {
-  border-bottom: none;
-}
-
-.ah-table td {
-  padding: 16px;
-  font-size: 14px;
-  color: #111827;
-  vertical-align: middle;
-}
-
-/* ============================================================================
-   TRANSACTION CELL STYLES
-   ============================================================================ */
-
-.ah-transaction-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.ah-transaction-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ah-transaction-icon.credit {
-  background-color: #dcfce7;
-  color: #16a34a;
-}
-
-.ah-transaction-icon.debit {
-  background-color: #fee2e2;
-  color: var(--bg-main);
-}
-
-.ah-transaction-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.ah-transaction-description {
-  font-weight: 500;
-  color: #111827;
-  margin: 0 0 4px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ah-transaction-reference {
-  font-size: 12px;
-  color: #6b7280;
-  margin: 0;
-}
-
-/* ============================================================================
-   TYPE BADGE
-   ============================================================================ */
-
-.ah-type-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  background-color: #f3f4f6;
-  color: #374151;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-/* ============================================================================
-   AMOUNT STYLES - UPDATED COLORS (NO RED TICK)
-   ============================================================================ */
-
-.ah-amount {
-  font-weight: 600;
-  font-size: 15px;
-  white-space: nowrap;
-}
-
-.ah-amount.credit {
-  color: #16a34a; /* Green for credits */
-}
-
-.ah-amount.debit {
-  color: var(--bg-main); /* Keep red for debits - no tick icon */
-}
-
-/* ============================================================================
-   STATUS BADGE STYLES
-   ============================================================================ */
-
-.ah-status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
-  white-space: nowrap;
-}
-
-.status-completed {
-  background-color: #dcfce7;
-  color: #16a34a;
-}
-
-.status-pending {
-  background-color: #fef3c7;
-  color: #d97706;
-}
-
-.status-failed {
-  background-color: #fee2e2;
-  color: var(--bg-main);
-}
-
-/* ============================================================================
-   DATE STYLES
-   ============================================================================ */
-
-.ah-date {
-  color: #6b7280;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-/* ============================================================================
-   VIEW BUTTON
-   ============================================================================ */
-
-.ah-view-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.ah-view-btn:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
-  color: #111827;
-}
-
-.ah-empty-state {
-  text-align: center;
-  padding: 60px 20px !important;
-}
-
-.ah-empty-state p {
-  color: #6b7280;
-  font-size: 15px;
-  margin: 0;
-}
-
-
-@media (max-width: 768px) {
-  .ah-table-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .ah-action-buttons {
-    width: 100%;
-  }
-
-  .ah-download-btn {
-    flex: 1;
-    justify-content: center;
-  }
-
-  .ah-table-container {
-    max-height: 500px; 
-  }
-
-  .ah-table th,
-  .ah-table td {
-    padding: 12px;
-  }
-
-  .ah-transaction-description {
-    font-size: 13px;
-  }
-
-  .ah-transaction-reference {
-    font-size: 11px;
-  }
-}
-.dark .ah-table-section {
-  background: #1f2937;
-}
-
-.dark .ah-table-header {
-  border-bottom-color: #374151;
-}
-
-.dark .ah-table-title {
-  color: #f9fafb;
-}
-
-.dark .ah-table-subtitle {
-  color: #9ca3af;
-}
-
-.dark .ah-download-btn {
-  background: #374151;
-  border-color: #4b5563;
-  color: #e5e7eb;
-}
-
-.dark .ah-download-btn:hover {
-  background: #4b5563;
-  border-color: #6b7280;
-}
-
-.dark .ah-table {
-  background: #1f2937;
-}
-
-.dark .ah-table thead {
-  background: #111827;
-}
-
-.dark .ah-table th {
-  color: #9ca3af;
-  background: #111827;
-}
-
-.dark .ah-table tbody tr {
-  border-bottom-color: #374151;
-}
-
-.dark .ah-table tbody tr:hover {
-  background-color: #111827;
-}
-
-.dark .ah-table td {
-  color: #e5e7eb;
-}
-
-.dark .ah-transaction-description {
-  color: #f9fafb;
-}
-
-.dark .ah-type-badge {
-  background-color: #374151;
-  color: #e5e7eb;
-}
-
-.dark .ah-view-btn {
-  background: #374151;
-  border-color: #4b5563;
-  color: #e5e7eb;
-}
-
-.dark .ah-view-btn:hover {
-  background: #4b5563;
-  border-color: #6b7280;
-  color: #f9fafb;
-}
-
-.dark .ah-table-container::-webkit-scrollbar-track {
-  background: #111827;
-}
-
-.dark .ah-table-container::-webkit-scrollbar-thumb {
-  background: #4b5563;
-}
-
-.dark .ah-table-container::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}
 .scroll-indicator {
   position: absolute;
   bottom: 0;
@@ -1693,21 +1548,3 @@ input[type="date"]:focus {
 .ah-table tbody tr {
   counter-increment: row-number;
 }
-
-/* Uncomment if you want row numbers */
-/*
-.ah-table tbody tr td:first-child::before {
-  content: counter(row-number);
-  display: inline-block;
-  width: 24px;
-  height: 24px;
-  line-height: 24px;
-  text-align: center;
-  background: #f3f4f6;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #6b7280;
-  margin-right: 12px;
-}
-*/

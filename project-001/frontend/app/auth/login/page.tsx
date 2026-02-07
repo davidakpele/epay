@@ -145,8 +145,7 @@ const Login = () => {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}
-          >
+            className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}>
             <div className="toast-icon">
               <i className={`fa ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} aria-hidden="true"></i>
             </div>

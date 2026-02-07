@@ -1,18 +1,18 @@
 'use client';
 
 import React, {useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Search, Calendar, Filter, Download, Eye, ArrowUpRight, ArrowDownLeft, SendIcon, X, Copy, Check, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, Filter, Download, Eye, ArrowUpRight, ArrowDownLeft, SendIcon, X, Copy, Check, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import DepositModal from '@/components/DepositModal'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import MobileNav from '@/components/MobileNav'
 import Sidebar from '@/components/Sidebar'
 import "./Statement.css"
-import { Currency, SendStatementPayload } from '../types/api';
-import { AccountTransactionStatement } from '../types/utils';
+import { Currency, SendStatementPayload } from '../../types/api';
+import { AccountTransactionStatement } from '../../types/utils';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import {  ForwardAccountStatement, StatementItem } from '../types/errors';
-import { formatAmount, getUserFullName, getUserId, getUsername, getWallet, historyService, userService } from '../api';
+import {  ForwardAccountStatement, StatementItem } from '../../types/errors';
+import { formatAmount, getUserFullName, getUserId, getUsername, getWallet, historyService, userService } from '../../api';
 
 interface Toast {
   id: number;
@@ -49,6 +49,10 @@ const Statements = () => {
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedTransaction, setSelectedTransaction] = useState<AccountTransactionStatement | null>(null);
     const [isCopied, setIsCopied] = useState(false);
+    const [isStatementPreviewOpen, setIsStatementPreviewOpen] = useState(true);
+    
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
     
     const [isDownloading, setIsDownloading] = useState(false);
     const [isReporting, setIsReporting] = useState(false);
@@ -107,6 +111,13 @@ const Statements = () => {
       }, 2000);
       return () => clearTimeout(loadingTimer);
     }, []);
+
+    useEffect(() => {
+      const tableContainer = document.querySelector('.ah-table-container');
+      if (tableContainer) {
+        tableContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, [currentPage]);
 
     const fetchCurrencyBalance = async (currencyCode: string) => {
       try {
@@ -260,16 +271,19 @@ const Statements = () => {
             previousBalance: Number(item.previousBalance) || 0,
           }));
           
+          setCurrentPage(1);
           setStatements(transformedStatements);
           showToast(`Found ${transformedStatements.length} transactions`, 'success');
         } else {
           showToast('No transactions found for the selected filters', 'warning');
           setStatements([]);
+          setCurrentPage(1);
         }
       } catch (error: any) {
         console.error('Error fetching statements:', error);
         showToast(error?.message || 'Error loading statements from server', 'warning');
         setStatements([]);
+        setCurrentPage(1);
       } finally {
         setIsSearchLoading(false);
       }
@@ -305,6 +319,7 @@ const Statements = () => {
       setStartDate('');
       setEndDate('');
       setStatements([]);
+      setCurrentPage(1);
       showToast('All filters cleared', 'success');
     };
 
@@ -545,6 +560,62 @@ This is an official receipt for your records.
       .filter(s => s.amount < 0)
       .reduce((sum, s) => sum + Math.abs(s.amount), 0);
 
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentStatements = statements.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(statements.length / itemsPerPage);
+
+    const handlePageChange = (pageNumber: number) => {
+      setCurrentPage(pageNumber);
+    };
+
+    const handlePreviousPage = () => {
+      if (currentPage > 1) {
+        handlePageChange(currentPage - 1);
+      }
+    };
+
+    const handleNextPage = () => {
+      if (currentPage < totalPages) {
+        handlePageChange(currentPage + 1);
+      }
+    };
+
+    const getPageNumbers = () => {
+      const pages: (number | string)[] = [];
+      const maxVisiblePages = 5;
+
+      if (totalPages <= maxVisiblePages) {
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        if (currentPage <= 3) {
+          for (let i = 1; i <= 4; i++) {
+            pages.push(i);
+          }
+          pages.push('...');
+          pages.push(totalPages);
+        } else if (currentPage >= totalPages - 2) {
+          pages.push(1);
+          pages.push('...');
+          for (let i = totalPages - 3; i <= totalPages; i++) {
+            pages.push(i);
+          }
+        } else {
+          pages.push(1);
+          pages.push('...');
+          pages.push(currentPage - 1);
+          pages.push(currentPage);
+          pages.push(currentPage + 1);
+          pages.push('...');
+          pages.push(totalPages);
+        }
+      }
+
+      return pages;
+    };
+
     if (isPageLoading) {
       return <LoadingScreen />;
     }
@@ -584,9 +655,15 @@ This is an official receipt for your records.
               </div>
             ))}
           </div>
+          
           <div className={`scrollable-content ${theme === 'dark' ? 'bg-light' : 'bg-dark'}`}>
             <div className="wallet-header-wrapper">
               <div className={`account-history ${theme}`}>
+                <div className="breadcrumb">
+                  <span>Settings</span>
+                  <span className="separator">›</span>
+                  <span>Settlement Accounts</span>
+                </div>
                 <div className="ah-header">
                   <div className="ah-header-content">
                     <h1 className="ah-title">Account History</h1>
@@ -596,20 +673,19 @@ This is an official receipt for your records.
                     <ArrowLeft size={20} />
                     Back to Dashboard
                   </button>
-                </div>
-          
+                </div> 
                 <div className="ah-account-card">
                   <div className="ah-account-info">
                     <div className="ah-account-details">
                       <h2 className="ah-account-name">{getUserFullName()}</h2>
-                      <p className="ah-account-number">Username: {getUsername()}</p>
+                      <p className="ah-account-number">Username:@{getUsername()}</p>
                     </div>
                     <div className="ah-balance-info">
                       <h3 className="ah-balance-amount">{selectedCurrency.symbol}{formatAmount(currentBalance)}</h3>
-                      <p className="ah-balance-label" style={{ color: '#10b981' }}>
+                      <p className="ah-balance-label credits">
                         Total Credits: {formatAmount(totalCredits)}
                       </p>
-                      <p className="ah-balance-label" style={{ color: '#ef4444' }}>
+                      <p className="ah-balance-label debits">
                         Total Debits: {formatAmount(totalDebits)}
                       </p>
                     </div>
@@ -625,21 +701,21 @@ This is an official receipt for your records.
                   </div>
 
                   <div className="ah-filters-grid">
+                    <div className="account-row">
+                      <label className="account-ah-filter-label">Select Account:</label>
+                      <div className="statement-selectField" onClick={() => setIsModalOpen(true)}>
+                        <span className="statement-selectedText">
+                          {selectedCurrency.code ? `${selectedCurrency.name} (${selectedCurrency.code})` : "Select Wallet"}
+                        </span>
+                        <svg className="statement-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="account-divider"></div>
                     <div className="ah-filter-row ah-filter-row-3">
                       <div className="ah-filter-group">
-                        <label className="ah-filter-label">Wallet</label>
-                        <div className="statement-selectField" onClick={() => setIsModalOpen(true)}>
-                          <span className="statement-selectedText">
-                            {selectedCurrency.code ? `${selectedCurrency.name} (${selectedCurrency.code})` : "Select Wallet"}
-                          </span>
-                          <svg className="statement-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                      </div>
-
-                      <div className="ah-filter-group">
-                        <label className="ah-filter-label">Transaction Type</label>
+                        <label className="account-ah-filter-label">Transaction Type</label>
                         <select 
                           className="ah-filter-select"
                           value={filters.transactionType}
@@ -651,23 +727,19 @@ This is an official receipt for your records.
                       </div>
 
                       <div className="ah-filter-group">
-                        <label className="ah-filter-label">Status</label>
+                        <label className="account-ah-filter-label">Status</label>
                         <select 
                           className="ah-filter-select"
                           value={filters.status}
-                          onChange={(e) => handleFilterChange('status', e.target.value)}
-                        >
+                          onChange={(e) => handleFilterChange('status', e.target.value)}>
                           {statuses.map(status => (
                             <option key={status} value={status}>{status}</option>
                           ))}
                         </select>
                       </div>
-                    </div>
-
-                    <div className="ah-filter-row ah-filter-row-2">
                       <div className="ah-filter-group">
-                        <label className="ah-filter-label">Duration</label>
-                        <div className="statement-selectField duration-selectTextView" onClick={handleDurationOpenModal}>
+                        <label className="account-ah-filter-label">Duration</label>
+                        <div className="duration-selectTextView" onClick={handleDurationOpenModal}>
                           <span className="statement-selectedText">
                             {duration || "--Select--"}
                           </span>
@@ -675,8 +747,10 @@ This is an official receipt for your records.
                             <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </div>
-                      </div>
-
+                    </div> 
+                    </div>
+                           
+                    <div className="ah-filter-row ah-filter-row-2">
                       <div className="ah-filter-group ah-filter-actions">
                         <button className="ah-search-btn" onClick={handleSearch} disabled={isSearchLoading} >
                           {isSearchLoading ? (
@@ -725,10 +799,16 @@ This is an official receipt for your records.
                   <div className="ah-table-section">
                     <div className="ah-table-header">
                       <div className="ah-table-info">
-                        <h3 className="ah-table-title">Transaction History</h3>
-                        <p className="ah-table-subtitle">
-                          Showing {statements.length} of {statements.length} transactions
-                        </p>
+                        <div className="ah-table-title-wrapper">
+                          <h3 className="ah-table-title">Statement Preview</h3>
+                          <button 
+                            className="ah-collapse-btn" 
+                            onClick={() => setIsStatementPreviewOpen(!isStatementPreviewOpen)}
+                            aria-label={isStatementPreviewOpen ? "Collapse table" : "Expand table"}
+                          >
+                            {isStatementPreviewOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                          </button>
+                        </div>
                       </div>
                       <div className="ah-action-buttons">
                         <button className="ah-download-btn">
@@ -742,65 +822,116 @@ This is an official receipt for your records.
                       </div>
                     </div>
           
-                    <div className="ah-table-container">
-                      <table className="ah-table">
-                        <thead>
-                          <tr>
-                            <th>TRANSACTION</th>
-                            <th>TYPE</th>
-                            <th>AMOUNT</th>
-                            <th>STATUS</th>
-                            <th>DATE</th>
-                            <th>ACTIONS</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {statements.map((transaction) => (
-                            <tr key={transaction.id}>
-                              <td>
-                                <div className="ah-transaction-cell">
-                                  <div className={`ah-transaction-icon ${transaction.amount >= 0 ? 'credit' : 'debit'}`}>
-                                    {transaction.amount >= 0 ? 
-                                      <ArrowDownLeft size={18} /> : 
-                                      <ArrowUpRight size={18} />
-                                    }
-                                  </div>
-                                  <div className="ah-transaction-details">
-                                    <p className="ah-transaction-description">{transaction.description}</p>
-                                    <p className="ah-transaction-reference">{transaction.reference}</p>
-                                  </div>
-                                </div>
-                              </td>
-                              <td>
-                                <span className="ah-type-badge">{transaction.type}</span>
-                              </td>
-                              <td>
-                                <span className={`ah-amount ${transaction.amount >= 0 ? 'credit' : 'debit'}`}>
-                                  {formatAmount(transaction.amount)}
-                                </span>
-                              </td>
-                              <td>
-                                <span className={`ah-status-badge ${getStatusClass(transaction.status)}`}>
-                                  {transaction.status}
-                                </span>
-                              </td>
-                              <td>
-                                <span className="ah-date">{formatDate(transaction.date)}</span>
-                              </td>
-                              <td>
+                    {isStatementPreviewOpen && (
+                      <>
+                        <div className="ah-table-container">
+                          <table className="ah-table">
+                            <thead>
+                              <tr> 
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>TYPE</th>
+                                <th>AMOUNT</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {currentStatements.map((transaction) => (
+                                <tr key={transaction.id}>
+                                  <td>
+                                    <span className="ah-date">{formatDate(transaction.date)}</span>
+                                  </td>
+                                  <td>
+                                    <div className="ah-transaction-cell">
+                                      <div className={`ah-transaction-icon ${transaction.amount >= 0 ? 'credit' : 'debit'}`}>
+                                        {transaction.amount >= 0 ? 
+                                          <ArrowDownLeft size={18} /> : 
+                                          <ArrowUpRight size={18} />
+                                        }
+                                      </div>
+                                      <div className="ah-transaction-details">
+                                        <p className="ah-transaction-description">{transaction.description}</p>
+                                        <p className="ah-transaction-reference">{transaction.reference}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <span className="ah-type-badge">{transaction.type}</span>
+                                  </td>
+                                  <td>
+                                    <span className={`ah-amount ${transaction.amount >= 0 ? 'credit' : 'debit'}`}>
+                                      {formatAmount(transaction.amount)}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <span className={`ah-status-badge ${getStatusClass(transaction.status)}`}>
+                                      <span className="status-dot"></span>
+                                      {transaction.status}
+                                    </span>
+                                  </td>
+                                  
+                                  <td>
+                                    <div className="table-action">
+                                      <button  className="ah-view-btn" onClick={() => handleViewDetails(transaction)}>
+                                        <Eye size={12} />
+                                      </button>
+                                      <button className="ah-view-btn" onClick={handleDownloadReceipt} disabled={isDownloading}>
+                                        <Download size={12} />
+                                      </button>
+                                    </div>
+                                    
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        {statements.length > itemsPerPage && (
+                          <div className="ah-table-footer">
+                            <div className="ah-footer-content">
+                              <p className="ah-table-subtitle">
+                                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, statements.length)} of {statements.length} entries
+                              </p>
+                              
+                              <div className="ah-pagination">
                                 <button 
-                                  className="ah-view-btn"
-                                  onClick={() => handleViewDetails(transaction)}
+                                  className="ah-pagination-btn"
+                                  onClick={handlePreviousPage}
+                                  disabled={currentPage === 1}
                                 >
-                                  <Eye size={18} />
-                                  View Details
+                                  Previous
                                 </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                                
+                                {getPageNumbers().map((pageNum, index) => (
+                                  pageNum === '...' ? (
+                                    <span key={`ellipsis-${index}`} className="px-2 text-gray-500 flex items-center">
+                                      ...
+                                    </span>
+                                  ) : (
+                                    <button
+                                      key={pageNum}
+                                      onClick={() => typeof pageNum === 'number' && handlePageChange(pageNum)}
+                                      className={`ah-pagination-number ${pageNum === currentPage ? 'active' : ''}`}
+                                    >
+                                      {pageNum}
+                                    </button>
+                                  )
+                                ))}
+                                
+                                <button 
+                                  className="ah-pagination-btn"
+                                  onClick={handleNextPage}
+                                  disabled={currentPage === totalPages}
+                                >
+                                  Next
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="ah-empty-message">
@@ -1061,6 +1192,7 @@ This is an official receipt for your records.
                           <div className="flex items-center justify-between py-2 border-b border-gray-100">
                             <span className="text-xs font-medium text-gray-600">Status</span>
                             <span className={`ah-status-badge text-xs ${getStatusClass(selectedTransaction.status)}`}>
+                              <span className="status-dot"></span>
                               {selectedTransaction.status}
                             </span>
                           </div>

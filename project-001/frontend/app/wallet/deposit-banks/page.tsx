@@ -9,8 +9,8 @@ import Sidebar from '@/components/Sidebar';
 import "./Banks.css";
 import { CheckCircle, Trash2Icon, Trash2 } from 'lucide-react';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import { Toast } from '../types/auth';
-import { bankCollectionService, getUserId } from '../../app/api/index';
+import { Toast } from '../../types/auth';
+import { bankCollectionService, getUserId } from '../../api/index';
 import Select from 'react-select';
 
 type BankAccount = {

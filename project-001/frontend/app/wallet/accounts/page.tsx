@@ -18,16 +18,16 @@ import {
 import './WalletStyle.css';
 import './WalletHistory.css';
 import Sidebar from '@/components/Sidebar';
-import { Currency } from '../types/api';
+import { Currency } from '../../types/api';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MobileNav from '@/components/MobileNav';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
-import { StatusInfo, Transaction, TransactionStatus, TransactionType } from '../types/utils';
-import { formatAmount } from '../lib/walletCrate';
+import { StatusInfo, Transaction, TransactionStatus, TransactionType } from '../../types/utils';
+import { formatAmount } from '../../lib/walletCrate';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import { getUserId, getWallet, historyService, setActiveWallet, setFiat } from '../api';
+import { getUserId, getWallet, historyService, setActiveWallet, setFiat } from '../../api';
 
 
 const TransactionReceipt = React.lazy(
