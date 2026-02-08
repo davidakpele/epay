@@ -201,13 +201,24 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
                 Long userId = Long.valueOf(userStringId);
                 
                 synchronized (("credit_wallet" + userId).intern()) {
-                    Wallet wallet = walletRepository.findWalletByUserId(userId);
-                    String currency = (String) payload.get("currencyType");
-                    BigDecimal amount = new BigDecimal(((String) payload.get("amount")).replace(",", "."));
-                    Currency currencyType = Currency.valueOf(currency.toUpperCase());
+                    try {
+                        Wallet wallet = walletRepository.findWalletByUserId(userId);
+                        String currency = (String) payload.get("currencyType");
+                        BigDecimal amount = new BigDecimal(((String) payload.get("amount")).replace(",", "."));
+                        Currency currencyType = Currency.valueOf(currency.toUpperCase());
 
-                    this.updateWallet(wallet.getId(), userId, currencyType, amount);
-                    this.sendWalletUpdateResponse(session, userId);
+                        // Update wallet
+                        WalletResponseDTO updatedWallet = this.updateWallet(wallet.getId(), userId, currencyType, amount);
+                        
+                        // Send single response with wallet data
+                        if (session.isOpen()) {
+                            sendCreditWalletResponse(session, userId, updatedWallet, true, "Wallet credited successfully");
+                        }
+                    } catch (Exception e) {
+                        if (session.isOpen()) {
+                            sendCreditWalletResponse(session, userId, null, false, "Failed to credit wallet: " + e.getMessage());
+                        }
+                    }
                 }
             }
 
@@ -226,12 +237,33 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
                 responseMessageObject.put("type", "swap_response");
                 sendMessage(session, responseMessageObject);
             }
-
-        }catch(IOException | InterruptedException | NumberFormatException | ExecutionException e){
+        }catch(Exception e){
             sendErrorAndClose(session, "Error", e.getMessage());
         }
     }
- 
+    
+    private void sendCreditWalletResponse(WebSocketSession session, Long userId, WalletResponseDTO wallet, boolean success, String message) {
+        try {
+            Map<String, Object> response = new HashMap<>();
+            response.put("type", "credit_wallet_response");
+            response.put("success", success);
+            response.put("userId", userId);
+            response.put("message", message);
+            
+            if (wallet != null) {
+                response.put("wallet", wallet);
+            }
+
+            synchronized (session) {
+                if (session.isOpen()) {
+                    session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));
+                }
+            }
+        } catch (IOException e) {
+            sendErrorAndClose(session, "Error", e.getMessage());
+        }
+    }
+
     private WalletResponseDTO updateWallet(Long walletId, Long userId, Currency currencyType, BigDecimal amount) {
         try {
             // Call the wallet service to update balance

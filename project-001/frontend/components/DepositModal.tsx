@@ -305,7 +305,7 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
   };
 
   const handleRedirect =()=>{
-    router.push("/banks");
+    router.push("/wallet/deposit-banks");
   }
 
   if (!isOpen) return null;

@@ -444,7 +444,7 @@ const BeneficiaryManager = () => {
 
                             {/* Grid View */}
                             {!isLoadingBeneficiaries && viewMode === 'grid' && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8 pb-15">
                                     {filteredBeneficiaries.map((b) => (
                                         <div key={b.id} className={`bg-white rounded-2xl sm:rounded-3xl border-2 transition-all hover:shadow-xl hover:-translate-y-1 group ${
                                             b.isEpay ? 'border-green-200 hover:border-[#166701]' : 'border-gray-100 hover:border-gray-300'

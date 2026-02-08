@@ -111,7 +111,7 @@ const Login = () => {
         return; 
       }else if (response.is_profile_complete === false) {
         setAuthToken(payload);
-        router.push("/user");
+        router.push("/settings/profile");
         return;
       }else{
         setAuthToken(payload);
@@ -140,7 +140,7 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-page-wrapper">
+    <div className="auth-login-page-wrapper">
       <div className="toastrs">
         {toasts.map((toast) => (
           <div

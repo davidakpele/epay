@@ -226,7 +226,6 @@
   color: #cbd5e1;
 }
 
-/* Make sure images inside avatar are circular and fit properly */
 .user-avatar img,
 .user-avatar .settings-avatar {
   width: 100%;
@@ -236,7 +235,6 @@
   display: block;
 }
 
-/* Larger avatar for mobile sidebar */
 .user-avatar.large {
   width: 50px;
   height: 50px;
@@ -277,6 +275,7 @@
   align-items: center;
   justify-content: center;
 }
+
 /* Mobile Sidebar Redesign */
 .mobile-sidebar {
   position: fixed;
@@ -302,6 +301,10 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
+}
+
+.dark-sidebar .sidebar-header {
+  border-bottom-color: #1e293b;
 }
 
 .sidebar-logo-container {
@@ -346,12 +349,6 @@
   letter-spacing: 0.05em;
 }
 
-.mobile-nav-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
 .mobile-nav-link {
   display: flex;
   align-items: center;
@@ -363,6 +360,8 @@
   font-size: 14px;
   transition: all 0.2s;
   margin-bottom: 2px;
+  cursor: pointer;
+  position: relative;
 }
 
 .dark-sidebar .mobile-nav-link {
@@ -376,6 +375,55 @@
 
 .dark-sidebar .mobile-nav-link:hover {
   background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Mobile expandable nav item */
+.mobile-nav-expandable {
+  cursor: pointer;
+}
+
+.mobile-chevron-icon {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+/* Mobile submenu styles */
+.mobile-submenu {
+  margin-left: 32px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  border-left: 2px solid var(--bg-main);
+  padding-left: 8px;
+}
+
+.mobile-submenu-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #64748b;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  margin-bottom: 2px;
+}
+
+.mobile-submenu-item:hover {
+  background-color: #f1f5f9;
+  color: var(--bg-main);
+}
+
+.dark-sidebar .mobile-submenu {
+  border-left-color: var(--bg-main);
+}
+
+.dark-sidebar .mobile-submenu-item {
+  color: #94a3b8;
+}
+
+.dark-sidebar .mobile-submenu-item:hover {
+  background-color: #1e293b;
+  color: #f8fafc;
 }
 
 .nav-icon {
@@ -408,35 +456,6 @@
   cursor: pointer;
 }
 
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 999;
-}
-
-.mobile-sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 280px;
-  background-color: white;
-  z-index: 1000;
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
-  animation: slideIn 0.3s ease;
-  display: flex;
-  flex-direction: column;
-}
-
-.dark-sidebar {
-  background-color: #0f172a;
-  color: white;
-}
-
 @keyframes slideIn {
   from {
     transform: translateX(-100%);
@@ -444,97 +463,6 @@
   to {
     transform: translateX(0);
   }
-}
-
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.dark-sidebar .sidebar-header {
-  border-bottom: 1px solid #334155;
-}
-
-.sidebar-user-info {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.sidebar-user-info h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.sidebar-user-info p {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: #64748b;
-}
-
-.dark-sidebar .sidebar-user-info p {
-  color: #94a3b8;
-}
-
-.sidebar-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-}
-
-.mobile-nav {
-  flex: 1;
-  padding: 16px 0;
-  overflow-y: auto;
-}
-
-.mobile-nav-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.mobile-nav-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 20px;
-  text-decoration: none;
-  color: #334155;
-  font-size: 15px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.dark-sidebar .mobile-nav-link {
-  color: #cbd5e1;
-}
-
-.mobile-nav-link:hover {
-  background-color: #f1f5f9;
-}
-
-.dark-sidebar .mobile-nav-link:hover {
-  background-color: #1e293b;
-}
-.nav-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-}
-
-.mobile-nav-container::-webkit-scrollbar {
-  width: 6px;
 }
 
 .mobile-nav-container::-webkit-scrollbar {
@@ -550,8 +478,7 @@
   border-radius: 10px;
 }
 
-/* Notification Dropdown - Add these to your Header.css */
-
+/* Notification Dropdown */
 .notification-dropdown {
   position: absolute;
   top: 65px;
@@ -807,6 +734,11 @@
   border-top: 3px solid var(--bg-main);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Scrollbar */

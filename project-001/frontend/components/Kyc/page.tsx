@@ -24,13 +24,12 @@ const KycCheckProgress: React.FC<KycCheckProgressProps> = ({
     }
   }, [autoCalculate]);
 
-  // Use provided progress or calculated progress
   const displayProgress = autoCalculate ? calculatedProgress : (progress || 0);
   const clampedProgress = Math.max(0, Math.min(100, displayProgress));
 
   return (
     <div className="kyc-progress-container">
-      <Link href={"/user"} className="kyc-progress-header-link">
+      <Link href={"/settings/profile"} className="kyc-progress-header-link">
         <h2 className="kyc-progress-header">{linkText}</h2>
         <span className="kyc-progress-arrow">→</span>
       </Link>

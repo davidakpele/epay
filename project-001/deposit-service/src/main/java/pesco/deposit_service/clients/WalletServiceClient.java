@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.beans.factory.annotation.Value;
@@ -134,7 +135,6 @@ public class WalletServiceClient {
             failedFuture.completeExceptionally(new IllegalArgumentException("Parameters cannot be null"));
             return failedFuture;
         }
-
         String url = walletSocketUrl + "/ws/wallet?userId=" + userId;
 
         Map<String, Object> request = Map.of(
@@ -153,6 +153,8 @@ public class WalletServiceClient {
             StandardWebSocketClient client = new StandardWebSocketClient();
 
             client.doHandshake(new TextWebSocketHandler() {
+                private final AtomicBoolean responseReceived = new AtomicBoolean(false);
+
                 @Override
                 public void afterConnectionEstablished(WebSocketSession session) throws Exception {
                     session.sendMessage(new TextMessage(json));
@@ -166,8 +168,20 @@ public class WalletServiceClient {
                     if ("wallet_update_response".equalsIgnoreCase(type)
                             || "credit_wallet_response".equalsIgnoreCase(type)
                             || "CREDIT_SUCCESS".equalsIgnoreCase(type)) {
-                        responseFuture.complete(res);
-                        session.close();
+                        
+                        if (responseReceived.compareAndSet(false, true)) {
+                            responseFuture.complete(res);
+                            new Thread(() -> {
+                                try {
+                                    Thread.sleep(500);  
+                                    if (session.isOpen()) {
+                                        session.close();
+                                    }
+                                } catch (Exception e) {
+                                    // Ignore
+                                }
+                            }).start();
+                        }
                     }
                 }
 

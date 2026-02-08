@@ -21,11 +21,11 @@ const MobileNav = ({ activeTab = 'home', onPlusClick }: MobileNavProps) => {
   };
 
   const handleUserProfileRoute = () => {
-    router.push('/user');
+    router.push('/settings/profile');
   };
 
   const handleWalletRoute = () => {
-    router.push('/wallet');
+    router.push('/wallet/accounts');
   };
 
   // Helper function to check if a tab is active

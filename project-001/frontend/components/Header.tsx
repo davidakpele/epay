@@ -5,8 +5,9 @@ import ReactSwitch from 'react-switch';
 import { 
   Bell, X, Menu, ChevronDown, User, Settings, LogOut, 
   History, Headphones, CreditCard, Wallet, Receipt, 
-  FileText, UserPlus,LayoutDashboard, 
-  Smartphone, Repeat, Send, Landmark, UserStarIcon
+  FileText, UserPlus, LayoutDashboard, 
+  Smartphone, Repeat, Send, Landmark, UserStarIcon,
+  ChevronRight
 } from 'lucide-react';
 import './Header.css';
 import Link from 'next/link';
@@ -36,7 +37,9 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState('all');
-  const [profileImage, setProfileImage] = useState('/assets/images/user-profile.jpg');  
+  const [profileImage, setProfileImage] = useState('/assets/images/user-profile.jpg');
+  const [expandedMobileMenus, setExpandedMobileMenus] = useState<string[]>([]);
+  
   const notifRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const accountDropdownRef = useRef<HTMLDivElement>(null);
@@ -48,7 +51,6 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
     setNotifications(storedNotifications);
     setFilteredNotifications(storedNotifications);
   }, []);
-
 
   useEffect(() => {
     const checkMobile = () => {
@@ -98,6 +100,14 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
       setFilteredNotifications(filtered);
     }
   }, [filter, notifications]);
+
+  const toggleMobileMenu = (label: string) => {
+    setExpandedMobileMenus(prev => 
+      prev.includes(label) 
+        ? prev.filter(item => item !== label)
+        : [...prev, label]
+    );
+  };
 
   const handleToggleNotif = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -191,38 +201,51 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
   const mobileMenuGroups = [
     {
       title: "DASHBOARD",
-      items: [{ id: 'dashboard', label: 'Overview', icon: <LayoutDashboard size={20} /> }]
+      items: [
+        { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, href: '/dashboard' }
+      ]
     },
     {
       title: "ACCOUNT",
       items: [
-        { id: 'statements', label: 'Statements', icon: <FileText size={20} /> },
-        { id: 'beneficiary', label: 'Beneficiary', icon: <UserStarIcon size={20} /> },
+        { 
+          id: 'wallet', 
+          label: 'Wallets', 
+          icon: <Wallet size={20} />, 
+          href: '/wallet',
+          submenu: [
+            { label: 'Accounts', href: '/wallet/accounts' },
+            { label: 'Account Statements', href: '/wallet/statements' },
+            { label: 'Beneficiary', href: '/wallet/beneficiary' },
+            { label: 'Deposit Banks', href: '/wallet/deposit-banks' }
+          ]
+        },
+        { id: 'exchange', label: 'Exchange', icon: <Repeat size={20} />, href: '/exchange' },
       ]
     },
     {
-      title: "FUND TRANSFER",
+      title: "UTILITIES",
       items: [
-        { id: 'payments', label: 'Local Transfer', icon: <Send size={20} /> },
-        { id: 'exchange', label: 'Exchange', icon: <Repeat size={20} /> },
-      ]
-    },
-    {
-      title: "DEPOSITS",
-      items: [
-        { id: 'banks', label: 'Deposit Banks', icon: <Landmark size={20} /> },
-        { id: 'wallet', label: 'Wallets', icon: <Wallet size={20} /> },
-        { id: 'cards', label: 'Cards', icon: <CreditCard size={20} /> },
-        { id: 'bills', label: 'Bills', icon: <Receipt size={20} /> },
+        { id: 'cards', label: 'Cards', icon: <CreditCard size={20} />, href: '/cards' },
+        { id: 'bills', label: 'Bills', icon: <Receipt size={20} />, href: '/bills' },
+        { id: 'refer', label: 'Refer and Earn', icon: <UserPlus size={20} />, href: '/refer' },
       ]
     },
     {
       title: "USER",
       items: [
-        { id: 'refer', label: 'Refer and Earn', icon: <UserPlus size={20} /> },
-        { id: 'user', label: 'Profile Settings', icon: <User size={20} /> },
-        { id: 'support', label: 'Support', icon: <Headphones size={20} /> },
-        { id: 'settings', label: 'Settings', icon: <Settings size={20} /> },
+        { id: 'support', label: 'Support', icon: <Headphones size={20} />, href: '/support' },
+        { 
+          id: 'settings', 
+          label: 'Settings', 
+          icon: <Settings size={20} />, 
+          href: '/settings',
+          submenu: [
+            { label: 'General', href: '/settings/general' },
+            { label: 'Profile Settings', href: '/settings/profile' },
+            { label: 'Security', href: '/settings/security' }
+          ]
+        },
       ]
     }
   ];
@@ -276,19 +299,6 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
         </div>
 
         <div className="header-right">
-          {/* <div className="theme-switch-container">
-            <ReactSwitch
-              onChange={toggleTheme}
-              checked={theme === 'dark'}
-              checkedIcon={false}
-              uncheckedIcon={false}
-              offColor="#bbb"
-              onColor="#ef4444"
-              height={20}
-              width={40}
-              handleDiameter={16}
-            />
-          </div> */}
           <button className="notification-icon" onClick={handleToggleNotif}>
             <Bell size={24} />
             <span className="notification-badge">{notifications.length > 0 ? notifications.length : '0'}</span>
@@ -306,7 +316,6 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
               </div>
             ) : (
               <>
-                {/* Header */}
                 <div className="notif-header">
                   <div className="notif-title">
                     <Bell size={18} style={{ color: 'var(--bg-main)' }} />
@@ -321,7 +330,6 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
                   />
                 </div>
 
-                {/* Body with Filter */}
                 <div className="notif-body">
                   <div className="notif-filter">
                     <select 
@@ -336,7 +344,6 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
                     </select>
                   </div>
 
-                  {/* Notification List */}
                   <div className="notif-list">
                     {filteredNotifications.length > 0 ? (
                       filteredNotifications.map((notification, index) => (
@@ -370,10 +377,8 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
                   </div>
                 </div>
 
-                {/* Divider */}
                 {notifications.length > 0 && <div className="notif-divider"></div>}
 
-                {/* Footer */}
                 {notifications.length > 0 && (
                   <div className="notif-footer">
                     <button 
@@ -410,20 +415,53 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
               {mobileMenuGroups.map((group, gIdx) => (
                 <div key={gIdx} className="mobile-nav-group">
                   <h3 className="mobile-group-title">{group.title}</h3>
-                  <ul className="mobile-nav-list">
-                    {group.items.map((item) => (
-                      <li key={item.id}>
-                        <Link
-                          href={`/${item.id}`}
-                          className="mobile-nav-link"
-                          onClick={() => setIsSidebarOpen(false)}
-                        >
-                          <span className="nav-icon">{item.icon}</span>
-                          <span>{item.label}</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+                  {group.items.map((item, idx) => {
+                    const isExpanded = expandedMobileMenus.includes(item.label);
+                    const hasSubmenu = item.submenu && item.submenu.length > 0;
+
+                    return (
+                      <div key={idx}>
+                        {hasSubmenu ? (
+                          <div
+                            className="mobile-nav-link mobile-nav-expandable"
+                            onClick={() => toggleMobileMenu(item.label)}
+                          >
+                            <span className="nav-icon">{item.icon}</span>
+                            <span>{item.label}</span>
+                            {isExpanded ? (
+                              <ChevronDown size={16} className="mobile-chevron-icon" />
+                            ) : (
+                              <ChevronRight size={16} className="mobile-chevron-icon" />
+                            )}
+                          </div>
+                        ) : (
+                          <Link
+                            href={item.href || `/${item.id}`}
+                            className="mobile-nav-link"
+                            onClick={() => setIsSidebarOpen(false)}
+                          >
+                            <span className="nav-icon">{item.icon}</span>
+                            <span>{item.label}</span>
+                          </Link>
+                        )}
+                        
+                        {hasSubmenu && isExpanded && (
+                          <div className="mobile-submenu">
+                            {item.submenu.map((subItem, subIdx) => (
+                              <Link
+                                key={subIdx}
+                                href={subItem.href}
+                                className="mobile-submenu-item"
+                                onClick={() => setIsSidebarOpen(false)}
+                              >
+                                <span>{subItem.label}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
               <div className="mobile-nav-group">
