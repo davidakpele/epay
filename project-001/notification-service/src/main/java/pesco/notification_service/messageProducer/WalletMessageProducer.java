@@ -208,8 +208,8 @@ public class WalletMessageProducer {
         }
     }   
 
-    public void sendRegistrationOtpMessage(String email, String otp) {
-        RegistrationOtpMessage request = new RegistrationOtpMessage(email, otp);
+    public void sendRegistrationOtpMessage(String email, String message) {
+        RegistrationOtpMessage request = new RegistrationOtpMessage(email, message);
         try {
             rabbitTemplate.convertAndSend(RabbitMQConfig.WALLET_EXCHANGE, RabbitMQConfig.ROUTING_KEY_REGISTRATION_OTP, request);
         } catch (AmqpException e) {

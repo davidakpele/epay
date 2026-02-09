@@ -323,9 +323,10 @@ public class MessageController {
     public ResponseEntity<Map<String, Object>> createRegistrationOtpMessage(
             HttpServletRequest httpRequest,
             @RequestBody RegistrationOtpMessage request) {
-
+            System.out.println("Received request to send registration OTP to: " + request.getEmail());
+            System.out.println("OTP Message Content: " + request.getMessage());
         try {
-            walletMessageProducer.sendRegistrationOtpMessage(
+            authenticationMessageProducer.sendRegistrationOtpMessage( 
                     request.getEmail(),
                     request.getMessage()
             );
@@ -341,7 +342,5 @@ public class MessageController {
             return ResponseEntity.internalServerError().body(error);
         }
     }
-
-
 
 }

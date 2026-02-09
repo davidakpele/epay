@@ -186,6 +186,7 @@ public class AuthenticationEmailService {
 
     @RabbitListener(queues = RabbitMQConfig.REGISTRATION_OTP_QUEUE)
     public void receiveRegistrationOtp(RegistrationOtpMessage registrationOtpMessage) {
+        System.out.println("From Email Service Check1- Received registration OTP message: " + registrationOtpMessage);
         if (registrationOtpMessage != null) {
             sendRegistrationOtpMessage(
                     registrationOtpMessage.getEmail(),
@@ -202,17 +203,21 @@ public class AuthenticationEmailService {
         try {   
             // Create MimeMessageHelper
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
-
+            System.out.println("From Email Service Check12 Received registration OTP message: " + message);
             // Prepare the HTML template
             Context context = new Context();
             context.setVariable("message", message);
+            System.out.println("Processing template with message: " + message);
             String htmlContent = templateEngine.process("registration-otp", context);
             // Set email attributes
             mimeMessageHelper.setTo(email);
             mimeMessageHelper.setSubject("Registration OTP");
             mimeMessageHelper.setText(htmlContent, true);
+            System.out.println("Prepared email for: " + email);
+            System.out.println("Email content: " + message);
             // Send the email
             javaMailSender.send(mimeMessage);
+            System.out.println("Email sent successfully to: " + email);
             return CompletableFuture.completedFuture(null);
         } catch (MessagingException | MailException e) {
             throw new MailSendException("Failed to send email: " + e.getMessage(), e);

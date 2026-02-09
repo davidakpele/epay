@@ -44,7 +44,7 @@ public class RabbitMQConfig {
     public static final String ROUTING_KEY_ACCOUNT_STATEMENT = "account.statement";
     public static final String ROUTING_KEY_SWAP_WALLET = "wallet.swap";
     public static final String ROUTING_KEY_BLOCK_USER_WALLET = "wallet.block-user";
-    public static final String ROUTING_KEY_REGISTRATION_OTP = "auth.registration-otp";
+    public static final String ROUTING_KEY_REGISTRATION_OTP = "auth.registration";
 
     // Declare the exchanges
     @Bean
@@ -80,7 +80,7 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue registrationOtpQueue() {
-        return new Queue(RabbitMQConfig.REGISTRATION_OTP_QUEUE);
+        return new Queue(REGISTRATION_OTP_QUEUE);
     }
 
     @Bean
@@ -134,6 +134,11 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(resetPasswordQueue).to(authExchange).with(ROUTING_KEY_RESET_PASSWORD);
     }
 
+    @Bean
+    public Binding registrationOtpBinding(Queue registrationOtpQueue, TopicExchange authExchange) {
+        return BindingBuilder.bind(registrationOtpQueue).to(authExchange).with(ROUTING_KEY_REGISTRATION_OTP); 
+    }
+
     // Bindings for Wallet Exchange
     @Bean
     public Binding creditWalletBinding(Queue creditWalletQueue, TopicExchange walletExchange) {
@@ -156,13 +161,19 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding accountStatementBinding(Queue accountStatementQueue, TopicExchange accountExchange) {
-        return BindingBuilder.bind(accountStatementQueue).to(accountExchange).with(ROUTING_KEY_ACCOUNT_STATEMENT);
+    public Binding swapWalletBinding(Queue swapWalletQueue, TopicExchange walletExchange) {
+        return BindingBuilder.bind(swapWalletQueue).to(walletExchange).with(ROUTING_KEY_SWAP_WALLET);
     }
 
     @Bean
-    public Binding swapWalletBinding(Queue swapWalletQueue, TopicExchange walletExchange) {
-        return BindingBuilder.bind(swapWalletQueue).to(walletExchange).with(ROUTING_KEY_SWAP_WALLET);
+    public Binding blockUserWalletBinding(Queue blockUserWalletQueue, TopicExchange walletExchange) {
+        return BindingBuilder.bind(blockUserWalletQueue).to(walletExchange).with(ROUTING_KEY_BLOCK_USER_WALLET);
+    }
+
+    // Bindings for Account Exchange
+    @Bean
+    public Binding accountStatementBinding(Queue accountStatementQueue, TopicExchange accountExchange) {
+        return BindingBuilder.bind(accountStatementQueue).to(accountExchange).with(ROUTING_KEY_ACCOUNT_STATEMENT);
     }
 
     @Bean
@@ -176,16 +187,4 @@ public class RabbitMQConfig {
         rabbitTemplate.setMessageConverter(messageConverter());
         return rabbitTemplate;
     }
-    
-    @Bean
-    public Binding blockUserWalletBinding(Queue blockUserWalletQueue, TopicExchange walletExchange) {
-        return BindingBuilder.bind(blockUserWalletQueue).to(walletExchange).with(ROUTING_KEY_BLOCK_USER_WALLET);
-    }
-
-    @Bean
-    public Binding registrationOtpBinding(Queue registrationOtpQueue, TopicExchange authExchange) {
-        return BindingBuilder.bind(registrationOtpQueue).to(authExchange).with(ROUTING_KEY_REGISTRATION_OTP); 
-    }
-
-    
 }

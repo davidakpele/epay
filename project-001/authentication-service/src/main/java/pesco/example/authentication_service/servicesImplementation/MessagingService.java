@@ -82,7 +82,7 @@ public class MessagingService {
             DEFAULT_OTP_LENGTH,
             DEFAULT_OTP_EXPIRY_MINUTES
         );
-        String content = "Your verification code is: " + otp + ". It is valid for " + DEFAULT_OTP_EXPIRY_MINUTES + " minutes.";
+        String content = otp;
     
        emailService.sendRegistrationOTPMessage(email, content);
     }

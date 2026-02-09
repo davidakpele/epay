@@ -1,64 +1,170 @@
-{% comment %} Registration OTP Template {% endcomment %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration OTP</title>
+    <title>Email Verification</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
             margin: 0;
             padding: 0;
+            line-height: 1.6;
         }
-        .container {
+        .email-wrapper {
             max-width: 600px;
-            margin: 50px auto;
+            margin: 0 auto;
             background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        } 
+        }
         .header {
+            background: linear-gradient(135deg, #166701 0%, #1a7d01 100%);
+            padding: 40px 30px;
             text-align: center;
-            padding-bottom: 20px;
         }
         .header h1 {
-            color: #333333;
+            color: #ffffff;
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
         }
         .content {
-            font-size: 16px;
-            color: #555555;
+            padding: 40px 30px;
+            background-color: #ffffff;
         }
-        .otp {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007BFF;
-            text-align: center; 
-            margin: 20px 0;
+        .greeting {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .message-text {
+            font-size: 15px;
+            color: #555555;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        .otp-container {
+            background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);
+            border: 2px dashed #166701;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .otp-label {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        .otp-code {
+            font-size: 36px;
+            font-weight: 700;
+            color: #166701;
+            letter-spacing: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .validity {
+            font-size: 13px;
+            color: #888888;
+            margin-top: 10px;
+        }
+        .validity strong {
+            color: #166701;
+        }
+        .security-notice {
+            background-color: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .security-notice p {
+            margin: 0;
+            font-size: 13px;
+            color: #666666;
+        }
+        .security-icon {
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 16px;
         }
         .footer {
+            background-color: #f9f9f9;
+            padding: 30px;
             text-align: center;
-            font-size: 12px;
-            color: #999999;
-            margin-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer-text {
+            font-size: 13px;
+            color: #888888;
+            margin: 5px 0;
+        }
+        .company-name {
+            color: #166701;
+            font-weight: 600;
+        }
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+            margin: 25px 0;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 30px 20px;
+            }
+            .otp-code {
+                font-size: 28px;
+                letter-spacing: 4px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="email-wrapper">
         <div class="header">
-            <h1>Welcome to Our Bank!</h1>
+            <h1>✓ Verification Required</h1>
         </div>
+        
         <div class="content">
-            <p>Thank you for registering with us. To complete your registration, please use the following One-Time Password (OTP):</p>
-            <div class="otp">
-                <p>{{ message }}</p>
+            <p class="greeting">Hello,</p>
+            
+            <p class="message-text">
+                Thank you for registering with us. To complete your account setup and verify your email address, 
+                please use the One-Time Password (OTP) below:
+            </p>
+            
+            <div class="otp-container">
+                <div class="otp-label">Your Verification Code</div>
+                <div class="otp-code" th:text="${message}"></div>
+                <div class="validity">Valid for <strong>15 minutes</strong></div>
             </div>
+            
+            <div class="security-notice">
+                <p>
+                    <span class="security-icon">🔒</span>
+                    <strong>Security Notice:</strong> Never share this code with anyone. Our team will never ask for your OTP.
+                </p>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <p class="message-text" style="margin-bottom: 0; font-size: 13px;">
+                If you didn't request this code, please ignore this email or contact our support team if you have concerns.
+            </p>
         </div>
+        
         <div class="footer">
-            <p>&copy; 2024 Our Bank. All rights reserved.</p>
+            <p class="footer-text">
+                <span class="company-name">Our Bank</span> - Secure Banking Solutions
+            </p>
+            <p class="footer-text">
+                &copy; 2024 Our Bank. All rights reserved.
+            </p>
         </div>
     </div>
 </body>
