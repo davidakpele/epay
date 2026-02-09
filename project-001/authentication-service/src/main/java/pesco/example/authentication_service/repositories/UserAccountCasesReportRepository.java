@@ -7,8 +7,8 @@ import pesco.example.authentication_service.models.UserAccountCases;
 
 @Repository
 public interface UserAccountCasesReportRepository extends JpaRepository<UserAccountCases, Long> {
-
-    @Query("SELECT r FROM UserAccountCases r WHERE r.user.id = :userId")
+ 
+    @Query("SELECT r FROM UserAccountCases r WHERE r.userId = :userId")
     UserAccountCases findByUserId(Long userId);
 
 }

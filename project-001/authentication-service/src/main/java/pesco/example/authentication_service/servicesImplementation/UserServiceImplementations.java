@@ -100,7 +100,7 @@ public class UserServiceImplementations implements UserService {
         if (recordOptional.isPresent()) {
             UserRecord record = recordOptional.get();
             record.setLocked(true);
-            record.setIsBlocked(true);
+            record.setBlocked(true);
             userRecordRepository.save(record);
         }else{
             System.out.println("Nothing found");

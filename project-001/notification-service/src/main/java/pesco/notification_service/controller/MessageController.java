@@ -26,6 +26,7 @@ import pesco.notification_service.payloads.DebitWalletNotification;
 import pesco.notification_service.payloads.DepositWalletNotification;
 import pesco.notification_service.payloads.MaintenanceDeductionNotification;
 import pesco.notification_service.payloads.PasswordResetRequest;
+import pesco.notification_service.payloads.RegistrationOtpMessage;
 import pesco.notification_service.payloads.SwapCurrencyPayload;
 import pesco.notification_service.payloads.UserOTPMessage;
 
@@ -318,12 +319,28 @@ public class MessageController {
         }
     }
 
+    @PostMapping("/send/registration-otp-message")
+    public ResponseEntity<Map<String, Object>> createRegistrationOtpMessage(
+            HttpServletRequest httpRequest,
+            @RequestBody RegistrationOtpMessage request) {
 
+        try {
+            walletMessageProducer.sendRegistrationOtpMessage(
+                    request.getEmail(),
+                    request.getMessage()
+            );
 
-
-
-
-
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Registration OTP message successfully sent!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", "Failed to send registration OTP message: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
 
 
 

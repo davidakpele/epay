@@ -68,7 +68,7 @@ public class UserAccountCasesReportServiceImplementation implements UserAccountC
 
         userRecord.setLocked(true);
         userRecord.setLockedAt(LocalDateTime.now());
-        userRecord.setIsBlocked(true);
+        userRecord.setBlocked(true);
         userRecord.setBlockedReason(deleteAccountRequest.getReason());
         userRecord.setStatus(UserStatus.SUSPENDED); 
         userRecordRepository.save(userRecord);

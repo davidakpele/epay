@@ -92,7 +92,7 @@ public class UserRecordImplementations implements UserRecordService {
             Optional<UserRecord> userRecord = userRecordRepository.findByUserId(id);
             if (userRecord.isPresent()) {
                 UserRecord updateUserRecord = userRecord.get();
-                updateUserRecord.setIsTransferPinSet(true);
+                updateUserRecord.setTransferPinSet(true);
                 userRecordRepository.save(updateUserRecord);
             }
             return ResponseEntity.ok("Transfer Pin set successfully.");
@@ -141,7 +141,7 @@ public class UserRecordImplementations implements UserRecordService {
         Optional<UserRecord> user = userRecordRepository.findByUserId(userId);
         if (user != null && user.isPresent()) {
             UserRecord updateUserAccount = user.get();
-            updateUserAccount.setIsBlocked(true);
+            updateUserAccount.setBlocked(true);
             userRecordRepository.save(updateUserAccount);
             return ResponseEntity.ok("User account successfully block.");
         }
@@ -178,7 +178,7 @@ public class UserRecordImplementations implements UserRecordService {
                 if(updateProfilePayload.getCity() != null && !updateProfilePayload.getCity().isEmpty()) {
                     updateUserRecord.setCity(updateProfilePayload.getCity());
                 }
-                updateUserRecord.setIsProfileComplete(true);
+                updateUserRecord.setProfileComplete(true);
                 updateUserRecord.setUser(getUser.get());
                 updatedRecord = userRecordRepository.save(updateUserRecord);
             }
@@ -188,6 +188,7 @@ public class UserRecordImplementations implements UserRecordService {
             response.put("message", "Profile updated successfully.");
             response.put("userId", id);
             response.put("is_profile_complete", updatedRecord != null && updatedRecord.getIsProfileComplete());
+            
             if (updatedRecord != null) {
                 Map<String, Object> userData = new HashMap<>();
                 userData.put("firstName", updatedRecord.getFirstName());
@@ -274,7 +275,7 @@ public class UserRecordImplementations implements UserRecordService {
                         HttpStatus.NOT_FOUND, "User not found"));
         UserRecord record = users.getRecords().get(0);
         record.setLocked(false);  
-        record.setIsBlocked(false); 
+        record.setBlocked(false); 
         userRepository.save(users);
         
         UserAttempt attempt = userAttemptRepository.findByUserId(id);

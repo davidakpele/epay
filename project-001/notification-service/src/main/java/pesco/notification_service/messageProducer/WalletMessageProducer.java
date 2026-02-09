@@ -13,6 +13,7 @@ import pesco.notification_service.payloads.CreditWalletNotification;
 import pesco.notification_service.payloads.DebitWalletNotification;
 import pesco.notification_service.payloads.DepositWalletNotification;
 import pesco.notification_service.payloads.MaintenanceDeductionNotification;
+import pesco.notification_service.payloads.RegistrationOtpMessage;
 import pesco.notification_service.payloads.StatementPayload;
 import pesco.notification_service.payloads.SwapCurrencyPayload;
 
@@ -206,4 +207,13 @@ public class WalletMessageProducer {
             throw e;
         }
     }   
+
+    public void sendRegistrationOtpMessage(String email, String otp) {
+        RegistrationOtpMessage request = new RegistrationOtpMessage(email, otp);
+        try {
+            rabbitTemplate.convertAndSend(RabbitMQConfig.WALLET_EXCHANGE, RabbitMQConfig.ROUTING_KEY_REGISTRATION_OTP, request);
+        } catch (AmqpException e) {
+            throw e;
+        }
+    }
 }

@@ -8,14 +8,21 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
+
 import jakarta.mail.internet.MimeMessage;
 import pesco.notification_service.configurations.RabbitMQConfig;
 import pesco.notification_service.payloads.AccountVerificationRequest;
 import pesco.notification_service.payloads.PasswordResetRequest;
+import pesco.notification_service.payloads.RegistrationOtpMessage;
 import pesco.notification_service.payloads.UserOTPMessage;
 import pesco.notification_service.utils.CustomerServiceEmailProperty;
+
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+
+import org.springframework.mail.MailException;
+
+import jakarta.mail.MessagingException;
 
 @Service
 public class AuthenticationEmailService {
@@ -84,7 +91,7 @@ public class AuthenticationEmailService {
             // Send the email
             javaMailSender.send(mimeMessage);
             return CompletableFuture.completedFuture(null);
-        } catch (Exception e) {
+        } catch (MessagingException | MailException e) {
             throw new MailSendException("Failed to send email: " + e.getMessage(), e);
         }
     }
@@ -128,7 +135,7 @@ public class AuthenticationEmailService {
             // Send the email
             javaMailSender.send(mimeMessage);
             return CompletableFuture.completedFuture(null);
-        } catch (Exception e) {
+        } catch (MessagingException | MailException e) {
             throw new MailSendException("Failed to send email: " + e.getMessage(), e);
         }
     }
@@ -171,9 +178,45 @@ public class AuthenticationEmailService {
             // Send the email
             javaMailSender.send(mimeMessage);
             return CompletableFuture.completedFuture(null);
-        } catch (Exception e) {
+        } catch (MessagingException | MailException e) {
             throw new MailSendException("Failed to send email: " + e.getMessage(), e);
         }
+    }
+
+
+    @RabbitListener(queues = RabbitMQConfig.REGISTRATION_OTP_QUEUE)
+    public void receiveRegistrationOtp(RegistrationOtpMessage registrationOtpMessage) {
+        if (registrationOtpMessage != null) {
+            sendRegistrationOtpMessage(
+                    registrationOtpMessage.getEmail(),
+                    registrationOtpMessage.getMessage()
+            );
+        } else {
+            System.out.println("Failed to deserialize email request.");
+        }
+    }
+
+    @Async
+    public CompletableFuture<Void> sendRegistrationOtpMessage(String email, String message) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {   
+            // Create MimeMessageHelper
+            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
+
+            // Prepare the HTML template
+            Context context = new Context();
+            context.setVariable("message", message);
+            String htmlContent = templateEngine.process("registration-otp", context);
+            // Set email attributes
+            mimeMessageHelper.setTo(email);
+            mimeMessageHelper.setSubject("Registration OTP");
+            mimeMessageHelper.setText(htmlContent, true);
+            // Send the email
+            javaMailSender.send(mimeMessage);
+            return CompletableFuture.completedFuture(null);
+        } catch (MessagingException | MailException e) {
+            throw new MailSendException("Failed to send email: " + e.getMessage(), e);
+        }   
     }
 
 }

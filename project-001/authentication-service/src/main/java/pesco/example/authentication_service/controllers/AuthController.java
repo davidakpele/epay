@@ -170,7 +170,6 @@ public class AuthController {
                     "Passwords do not match");
         }
 
-        // Validate verification code
         if (request.getVerificationCode() == null || request.getVerificationCode().trim().isEmpty()) {
             return Error.createResponse("Verification code is required.*", HttpStatus.BAD_REQUEST,
                     "Verification code cannot be empty");
@@ -178,8 +177,7 @@ public class AuthController {
 
         return authenticationService.createAccount(request);
     }
-
-
+    
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserSignInRequest request,
             HttpServletResponse response) {
@@ -307,16 +305,6 @@ public class AuthController {
         }
     }
 
-    private boolean emailExists(String email) {
-        Optional<Users> existingUsers = authenticationService.findByEmail(email);
-        return existingUsers.isPresent();
-    }
-
-    private boolean existUsername(String username) {
-        Optional<Users> existingUsers = authenticationService.findByUsername(username);
-        return existingUsers.isPresent();
-    }
-
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(
             @RequestParam(name = "sessionId", required = false) String sessionId) {
@@ -361,10 +349,20 @@ public class AuthController {
     }
 
     @PostMapping("/send-verify-code")
-    public ResponseEntity<Map<String, Object>> sendVerificationCode(
-            @RequestParam String identifier,
-            @RequestParam ContactMethod method) {
-
+    public ResponseEntity<Map<String, Object>> sendVerificationCode(@RequestParam String identifier, @RequestParam ContactMethod method) {
+        if (method == ContactMethod.EMAIL) {
+            if (!identifier.matches(EMAIL_REGEX)) {
+                return buildError("Invalid email format", HttpStatus.BAD_REQUEST);
+            }
+            if (emailExists(identifier)) {
+                return buildError("Email already exists", HttpStatus.CONFLICT);
+            }
+        }
+        else if (method == ContactMethod.SMS || method == ContactMethod.WHATSAPP) {
+            if (phoneExists(identifier)) {
+                return buildError("Phone number already exists", HttpStatus.CONFLICT);
+            }
+        }
         switch (method) {
             case SMS -> messagingService.sendSmSMessage(identifier);
             case WHATSAPP -> messagingService.sendWhatsAppMessage(identifier);
@@ -379,11 +377,28 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-    
+
     @GetMapping("/unlock-account/{id}")
     public ResponseEntity<?> unlockUserAccountById(@PathVariable Long id) {
         return userRecordService.unlockedAccount(id);
     }
+     
+    private boolean emailExists(String email) {
+        Optional<Users> existingUsers = authenticationService.findByEmail(email);
+        return existingUsers.isPresent();
+    }
 
+    private boolean existUsername(String username) {
+        Optional<Users> existingUsers = authenticationService.findByUsername(username);
+        return existingUsers.isPresent();
+    }
+
+    private ResponseEntity<Map<String,Object>> buildError(String message, HttpStatus status) {
+        Map<String,Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("status", status.value());
+        response.put("message", message);
+        return ResponseEntity.status(status).body(response);
+    }
 
 }

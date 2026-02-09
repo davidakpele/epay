@@ -200,10 +200,9 @@ public class NotificationServiceClient {
         try {
             // Create the request body
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("recipient", recipient);
+            requestBody.put("email", recipient);
             requestBody.put("message", message);
-
-            // Send the POST request
+            
             return notificationServiceWebClient.post()
                     .uri("/send/registration-otp-message")
                     .bodyValue(requestBody)
@@ -228,5 +227,7 @@ public class NotificationServiceClient {
             return null;
         }
     }
+
+
 }
 

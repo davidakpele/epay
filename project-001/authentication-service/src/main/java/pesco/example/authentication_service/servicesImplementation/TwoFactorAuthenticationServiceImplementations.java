@@ -143,7 +143,7 @@ public class TwoFactorAuthenticationServiceImplementations implements TwoFactorA
                 response.put("gender", record.getGender());
                 response.put("telephone", record.getTelephone());
                 response.put("is_verify", user.isEnabled());
-                response.put("is_profile_complete", record.isIsProfileComplete());
+                response.put("is_profile_complete", record.isProfileComplete());
                 response.put("twoFactorAuthEnabled", user.isTwoFactorAuth());
                 response.put("success", true);
                 response.put("session", true);

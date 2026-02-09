@@ -161,12 +161,12 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
             userRecord.setTelephone(request.getPhone());
         }
         
-        userRecord.setIsTransferPinSet(false);
+        userRecord.setTransferPinSet(false);
         userRecord.setLocked(false);
         userRecord.setLockedAt(null);
         userRecord.setReferralCode(referralCode);
-        userRecord.setIsBlocked(false);
-        userRecord.setIsProfileComplete(false);
+        userRecord.setBlocked(false);
+        userRecord.setProfileComplete(false);
         userRecord.setTotalReferers(null);
         userRecord.setReferralUsername("n13_" + request.getUsername());
         userRecord.setReferralLink(keysWrapper.getUrl() + "/auth/register?referral_code=" + referralCode);
@@ -222,7 +222,7 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
             optionalRecord.ifPresent(record -> {
                 record.setStatus(UserStatus.ACTIVE);
                 record.setLocked(false);
-                record.setIsBlocked(false);
+                record.setBlocked(false);
                 userRecordRepository.save(record);
             });
 
@@ -286,7 +286,7 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
                     Authresponse.put("success", false);
                     Authresponse.put("message", "Sorry, this account is currently locked. Please contact customer service.");
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Authresponse);
-                } else if (recordStatus.isIsBlocked()) {
+                } else if (recordStatus.isBlocked()) {
                     Authresponse.put("status", HttpStatus.UNAUTHORIZED.value());
                     Authresponse.put("success", false);
                     Authresponse.put("message", "Sorry, this account is currently blocked. Please contact customer service.");
@@ -344,7 +344,7 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
             Authresponse.put("userId", user.getId());
             Authresponse.put("status", HttpStatus.OK.value());
             Authresponse.put("is_verify", user.isEnabled());
-            Authresponse.put("is_profile_complete", user.getRecords().get(0).isIsProfileComplete());
+            Authresponse.put("is_profile_complete", user.getRecords().get(0).isProfileComplete());
             Authresponse.put("referral_username", record.get().getReferralUsername());
             Authresponse.put("date_of_birth", record.get().getDateofBirth());
             Authresponse.put("referral_link", record.get().getReferralLink());
@@ -476,7 +476,7 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
             optionalRecord.ifPresent(userRecord -> {
                 userRecord.setStatus(UserStatus.ACTIVE);
                 userRecord.setLocked(false);
-                userRecord.setIsBlocked(false);
+                userRecord.setBlocked(false);
                 userRecordRepository.save(userRecord);
             });
 
