@@ -180,35 +180,39 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
 
         userRecordRepository.save(userRecord);
         
-        UUID verificationToken = UUID.randomUUID();
-        expirationTime = calculateExpirationDate(EXPIRATION_MINUTES);
-        VerificationToken tokenEntity = new VerificationToken();
-        tokenEntity.setUserId(nextUserId);
-        tokenEntity.setToken(String.valueOf(verificationToken));
-        tokenEntity.setExpirationTime(expirationTime);
+        // UUID verificationToken = UUID.randomUUID();
+        // expirationTime = calculateExpirationDate(EXPIRATION_MINUTES);
+        // VerificationToken tokenEntity = new VerificationToken();
+        // tokenEntity.setUserId(nextUserId);
+        // tokenEntity.setToken(String.valueOf(verificationToken));
+        // tokenEntity.setExpirationTime(expirationTime);
 
-        verificationTokenRepository.save(tokenEntity);
+        // verificationTokenRepository.save(tokenEntity);
 
         if ("email".equals(request.getRegMode())) {
             Long unverifiedUserId = KeyWrapper.generateUniqueAuthorizeUserId();
             authorizeUserVerificationService.save(nextUserId, unverifiedUserId);
-            
-            String verificationLink = keysWrapper.getUrl() + "/auth/verifyRegistration?token=" 
-                + verificationToken + "&id=" + unverifiedUserId;
-            String content = "Dear " + request.getUsername() + ",\n\n"
-                    + "Thank you for signing up for pesco! We're excited to have you on board.\n\n"
-                    + "Please verify your email address to complete your registration and activate your account.";
+            CompletableFuture<Void> walletCreationFuture = CompletableFuture
+            .runAsync(() -> {
+                    walletServiceClient.createUserWallet(user.getId());
+            });
+        
+            walletCreationFuture.join();
+            // String verificationLink = keysWrapper.getUrl() + "/auth/verifyRegistration?token=" 
+            //     + verificationToken + "&id=" + unverifiedUserId;
+            // String content = "Dear " + request.getUsername() + ",\n\n"
+            //         + "Thank you for signing up for pesco! We're excited to have you on board.\n\n"
+            //         + "Please verify your email address to complete your registration and activate your account.";
 
-            CompletableFuture<Void> sendVerificationMessage = CompletableFuture.runAsync(() -> 
-                notificationServiceClient.sendVerificationEmail(request.getEmail(), content, 
-                    verificationLink, request.getUsername()));
-            sendVerificationMessage.join();
+            // CompletableFuture<Void> sendVerificationMessage = CompletableFuture.runAsync(() -> 
+            //     notificationServiceClient.sendVerificationEmail(request.getEmail(), content, 
+            //         verificationLink, request.getUsername()));
+            // sendVerificationMessage.join();
 
             String message = "Thanks for your interest in joining Artex network! A verification email has been sent to the email address you provided.";
             return Error.createResponse("success", HttpStatus.CREATED, message);
         } else {
             // Phone registration - account is already verified via OTP
-            
             // Create wallet asynchronously
             CompletableFuture<Void> walletCreationFuture = CompletableFuture
                 .runAsync(() -> {
