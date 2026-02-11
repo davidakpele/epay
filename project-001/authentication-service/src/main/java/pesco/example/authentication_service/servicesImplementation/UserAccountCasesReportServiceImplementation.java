@@ -16,7 +16,6 @@ import pesco.example.authentication_service.repositories.UserAccountCasesReportR
 import pesco.example.authentication_service.repositories.UserRecordRepository;
 import pesco.example.authentication_service.repositories.UsersRepository;
 import pesco.example.authentication_service.services.UserAccountCasesReportService;
-import pesco.wallet_service.grpc.CurrencyType;
 
 @Service
 public class UserAccountCasesReportServiceImplementation implements UserAccountCasesReportService {

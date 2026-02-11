@@ -69,13 +69,16 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserSignUpRequest request) {
         
-        // Validate name
-        if (request.getName() == null || request.getName().trim().isEmpty()) {
-            return Error.createResponse("Name is required.*", HttpStatus.BAD_REQUEST,
-                    "Name cannot be empty");
+        if (request.getFirstname() == null || request.getFirstname().trim().isEmpty()) {
+            return Error.createResponse("Firstname is required.*", HttpStatus.BAD_REQUEST,
+                    "Firstname cannot be empty");
         }
 
-        // Validate username
+        if (request.getLastname() == null || request.getLastname().trim().isEmpty()) {
+            return Error.createResponse("Lastname is required.*", HttpStatus.BAD_REQUEST,
+                    "Lastname cannot be empty");
+        }
+
         if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
             return Error.createResponse("Username is required.*", HttpStatus.BAD_REQUEST,
                     "Username cannot be empty");

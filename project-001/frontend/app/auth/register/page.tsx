@@ -13,7 +13,8 @@ const Register = () => {
   const [phoneChannel, setPhoneChannel] = useState<'SMS' | 'WHATSAPP'>('SMS');
   const [codeSent, setCodeSent] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    firstname: '',
+    lastname: '',
     username: '',
     email: '',
     phone: '',
@@ -85,8 +86,13 @@ const Register = () => {
   const validateForm = () => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     
-    if (!formData.name.trim()) { 
-        showToast('Name is required'); 
+    if (!formData.firstname.trim()) { 
+        showToast('Firstname is required'); 
+        nameRef.current?.focus();
+        return false; 
+    }
+    if (!formData.lastname.trim()) { 
+        showToast('Lastname is required'); 
         nameRef.current?.focus();
         return false; 
     }
@@ -310,10 +316,17 @@ const Register = () => {
             </div>
 
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Name</label>
-                <input ref={nameRef} type="text" name="name" className="form-control" value={formData.name} onChange={handleChange} placeholder="Name" />
+              <div className="user-details-form">
+                <div className="form-group">
+                  <label htmlFor='firstname'>Firstname</label>
+                  <input ref={nameRef} type="text" name="firstname" className="form-control" value={formData.firstname} onChange={handleChange} placeholder="Firstname" />
+                </div>
+                <div className="form-group">
+                  <label htmlFor='lastname'>Lastname</label>
+                  <input type="text" name="lastname" className="form-control" value={formData.lastname} onChange={handleChange} placeholder="Lastname" />
+                </div>
               </div>
+              
               <div className="form-group">
                 <label>Username</label>
                 <input ref={usernameRef} type="text" name="username" className="form-control" value={formData.username} onChange={handleChange} placeholder="Username" />

@@ -3,6 +3,9 @@ package pesco.example.authentication_service.payloads;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import org.checkerframework.checker.units.qual.min;
+
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,7 +13,15 @@ import lombok.Data;
 @Builder
 public class UserSignUpRequest {
     
-    private String name;
+    @NotBlank(message = "Firstname is required")
+    @Size(min = 2, max = 50, message = "Firstname must be between 2 and 50 characters")
+    @NotEmpty(message = "Firstname cannot be empty")
+    private String firstname;
+
+    @NotBlank(message = "Lastname is required")
+    @Size(min = 2, max = 50, message = "Lastname must be between 2 and 50 characters")
+    @NotEmpty(message = "Lastname cannot be empty")
+    private String lastname;
     
     private String email;
 
@@ -38,10 +49,11 @@ public class UserSignUpRequest {
     public UserSignUpRequest() {
     }
 
-    public UserSignUpRequest(String name, String email, String phone, String regMode, 
+    public UserSignUpRequest(String firstname, String lastname, String email, String phone, String regMode, 
                            String verificationMethod, String username, String password, 
                            String confirmPassword, String verificationCode) {
-        this.name = name;
+        this.firstname = firstname;
+        this.lastname = lastname;
         this.email = email;
         this.phone = phone;
         this.regMode = regMode;
@@ -53,12 +65,20 @@ public class UserSignUpRequest {
     }
 
     // Getters and setters
-    public String getName() {
-        return this.name;
+    public String getFirstname() {
+        return this.firstname;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return this.lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
     }
 
     public String getEmail() {

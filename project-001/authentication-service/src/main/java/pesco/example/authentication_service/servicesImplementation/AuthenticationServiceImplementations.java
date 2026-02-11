@@ -107,8 +107,6 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
 
     @Transactional
     public ResponseEntity<?> createAccount(UserSignUpRequest request) {
-        
-        // Verify the OTP first before creating account
         String identifier = "email".equals(request.getRegMode()) 
             ? request.getEmail() 
             : request.getPhone();
@@ -120,7 +118,6 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
         System.out.println("Is OTP Valid: " + MessagingService.isOTPValid(identifier));
         System.out.println("Remaining Time: " + MessagingService.getRemainingTime(identifier) + " minutes");
         
-        // Verify the OTP first before creating account
         if (!MessagingService.verifyOTP(identifier, request.getVerificationCode())) {
             System.out.println("OTP Verification FAILED");
             return Error.createResponse("Invalid or expired verification code.*", 
@@ -136,18 +133,16 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
         user.setRole(Role.USER);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         
-        // Set email and enabled status based on registration mode
         if ("email".equals(request.getRegMode())) {
             user.setEmail(request.getEmail());
-            user.setEnabled(false); // Email users need to verify via link
+            user.setEnabled(false); 
         } else {
             user.setEmail(null);
-            user.setEnabled(true); // Phone users are already verified via OTP
+            user.setEnabled(true); 
         }
 
         userRepository.save(user);
 
-        // Retrieve saved user
         Users savedUser = userRepository.findById(nextUserId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         
@@ -156,11 +151,12 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
         UserRecord userRecord = new UserRecord();
         userRecord.setUser(savedUser);
         
-        // Set telephone if phone registration
         if ("phone".equals(request.getRegMode())) {
             userRecord.setTelephone(request.getPhone());
         }
         
+        userRecord.setFirstName(request.getFirstname());
+        userRecord.setLastName(request.getLastname());
         userRecord.setTransferPinSet(false);
         userRecord.setLocked(false);
         userRecord.setLockedAt(null);
@@ -171,7 +167,6 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
         userRecord.setReferralUsername("n13_" + request.getUsername());
         userRecord.setReferralLink(keysWrapper.getUrl() + "/auth/register?referral_code=" + referralCode);
         
-        // Set status based on registration mode
         if ("email".equals(request.getRegMode())) {
             userRecord.setStatus(UserStatus.PENDING_VERIFICATION);
         } else {
@@ -188,16 +183,26 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
         // tokenEntity.setExpirationTime(expirationTime);
 
         // verificationTokenRepository.save(tokenEntity);
-
+        String message = "Thanks for sigining up for ePay! Your account has been created succcessfully.";
         if ("email".equals(request.getRegMode())) {
             Long unverifiedUserId = KeyWrapper.generateUniqueAuthorizeUserId();
             authorizeUserVerificationService.save(nextUserId, unverifiedUserId);
             CompletableFuture<Void> walletCreationFuture = CompletableFuture
-            .runAsync(() -> {
+                .runAsync(() -> {
                     walletServiceClient.createUserWallet(user.getId());
-            });
-        
+                });
+    
             walletCreationFuture.join();
+            Optional<UserRecord> optionalRecord = userRecordRepository.findByUserId(user.getId());
+            optionalRecord.ifPresent(record -> {
+                record.setStatus(UserStatus.ACTIVE);
+                record.setLocked(false);
+                record.setBlocked(false);
+                userRecordRepository.save(record);
+
+                user.setEnabled(true);
+                userRepository.save(user);
+            });
             // String verificationLink = keysWrapper.getUrl() + "/auth/verifyRegistration?token=" 
             //     + verificationToken + "&id=" + unverifiedUserId;
             // String content = "Dear " + request.getUsername() + ",\n\n"
@@ -208,8 +213,6 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
             //     notificationServiceClient.sendVerificationEmail(request.getEmail(), content, 
             //         verificationLink, request.getUsername()));
             // sendVerificationMessage.join();
-
-            String message = "Thanks for your interest in joining Artex network! A verification email has been sent to the email address you provided.";
             return Error.createResponse("success", HttpStatus.CREATED, message);
         } else {
             // Phone registration - account is already verified via OTP
@@ -230,6 +233,8 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
                 userRecordRepository.save(record);
             });
 
+            user.setEnabled(true);
+            userRepository.save(user);
             // Invalidate the OTP after successful registration
             MessagingService.invalidateOTP(identifier);
             
@@ -240,8 +245,6 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
             
             CompletableFuture.runAsync(() -> 
                 messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
-            
-            String message = "Account created successfully! You can now sign in with your phone number.";
             return Error.createResponse("success", HttpStatus.CREATED, message);
         }
     }
