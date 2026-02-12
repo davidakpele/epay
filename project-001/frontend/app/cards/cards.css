@@ -1,0 +1,712 @@
+/* Virtual Cards Container */
+.virtual-cards-container {
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header Section */
+.vc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  gap: 20px;
+}
+
+.vc-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.5px;
+}
+
+.vc-subtitle {
+  font-size: 15px;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 400;
+}
+
+.btn-create-new {
+  background: var(--bg-main);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-create-new span {
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.btn-create-new:hover {
+  background: var(--bg-main);
+  transform: translateY(-1px);
+}
+
+/* Controls Section */
+.vc-controls {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+  align-items: center;
+}
+
+.vc-search {
+  position: relative;
+  flex: 1;
+  max-width: 420px;
+}
+
+.vc-search svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.vc-search input {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #1f2937;
+  outline: none;
+  transition: border 0.2s;
+  background: white;
+}
+
+.vc-search input:focus {
+  border-color: var(--bg-main);
+}
+
+.vc-search input::placeholder {
+  color: #9ca3af;
+}
+
+.vc-currency-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.currency-tab {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.currency-tab:hover:not(.disabled) {
+  background: #e5e7eb;
+}
+
+.currency-tab.active {
+  background: var(--bg-main);
+  color: white;
+}
+
+.currency-tab.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Cards Grid */
+.vc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.vc-card-wrapper {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.vc-card-wrapper:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Featured Card (Navy Blue) */
+.card-featured {
+  background: linear-gradient(135deg, #475368 0%, #072149 100%);
+  border-radius: 14px 14px 0 0;
+  padding: 22px;
+  margin: -20px -20px 0 -20px;
+  min-height: 150;
+  position: relative;
+  overflow: hidden;
+}
+.card-featured:before{
+    content: "";
+    background: radial-gradient(circle, #babac142 0%, #ebe1e100 70%);
+    border-radius: 50%;
+    width: 250px;
+    height: 200px;
+    position: absolute;
+    top: -5%;
+    right: -12%;
+}
+
+.card-featured-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.card-featured-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.card-bank-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.visa-logo {
+  opacity: 0.95;
+}
+
+.card-featured-title {
+  color: #fff;
+  letter-spacing: .2px;
+  margin: -5px 0 -5px;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.card-featured-number {
+  color: white;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 20px;
+}
+
+.card-featured-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+}
+
+.card-holder {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.expire-date{
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.card-expiry {
+  color: rgba(255, 255, 255, 0.429);
+  font-size: 13px;
+  font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  font-weight: 500;
+}
+.card-expiry-date{
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 500;
+}
+.card-type{
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+/* Simple Card (Light Gray) */
+.card-simple {
+  background: linear-gradient(135deg, #bec5cd 0%, #fbfbfb 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px 12px 0 0;
+  padding: 20px;
+  margin: -20px -20px 0 -20px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+.card-simple-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.card-simple-top span {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.card-simple-top svg {
+  color: #4b5563;
+  opacity: 0.7;
+}
+
+.card-simple-number {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  letter-spacing: 1.5px;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 14px;
+}
+
+.card-simple-holder {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+}
+
+.visa-logo-simple {
+  position: absolute;
+  bottom: 18px;
+  right: 20px;
+}
+
+/* Card Info Section - REDESIGNED */
+.vc-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 10px;
+}
+
+.info-row-1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+  gap: 12px;
+}
+
+.info-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.status-pill.active {
+  color: #fff;
+  background: var(--bg-main);
+  font-family: sans-serif;
+}
+
+.status-pill.locked {
+  background: #dc2626;
+  color: white;
+}
+
+.balance-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.balance-label img {
+  width: 18px;
+  height: auto;
+  border-radius: 2px;
+}
+
+.info-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.balance-amt {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.balance-sub {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.balance-sub-vital {
+  font-size: 12px;
+  color: #059669;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.info-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 0px;
+}
+
+.btn-details-outline {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 16px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-details-outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-details-outline svg {
+  color: #6b7280;
+}
+
+.btn-details-solid {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 16px;
+  background: var(--bg-main);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-details-solid:hover {
+  background: var(--bg-main);
+}
+
+/* Dark Theme */
+.dark .virtual-cards-container {
+  background: transparent;
+}
+
+.dark .vc-title {
+  color: #f9fafb;
+}
+
+.dark .vc-subtitle {
+  color: #9ca3af;
+}
+
+.dark .btn-create-new {
+  background: #22c55e;
+}
+
+.dark .btn-create-new:hover {
+  background: #16a34a;
+}
+
+.dark .vc-search input {
+  background: #1f2937;
+  border-color: #374151;
+  color: #f9fafb;
+}
+
+.dark .vc-search input::placeholder {
+  color: #6b7280;
+}
+
+.dark .vc-search svg {
+  color: #6b7280;
+}
+
+.dark .currency-tab {
+  background: #1f2937;
+  color: #9ca3af;
+}
+
+.dark .currency-tab:hover:not(.disabled) {
+  background: #374151;
+}
+
+.dark .currency-tab.active {
+  background: #22c55e;
+  color: white;
+}
+
+.dark .vc-card-wrapper {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark .vc-card-wrapper:hover {
+  border-color: #4b5563;
+}
+
+.dark .card-simple {
+  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+  border-color: #4b5563;
+}
+
+.dark .card-simple-top span {
+  color: #f9fafb;
+}
+
+.dark .card-simple-number {
+  color: #e5e7eb;
+}
+
+.dark .card-simple-holder {
+  color: #9ca3af;
+}
+
+.dark .balance-amt {
+  color: #f9fafb;
+}
+
+.dark .info-row-1 {
+  border-bottom-color: #374151;
+}
+
+.dark .btn-details-outline {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.dark .btn-details-outline:hover {
+  background: #4b5563;
+}
+
+.dark .btn-details-solid {
+  background: #22c55e;
+}
+
+.dark .btn-details-solid:hover {
+  background: #16a34a;
+}
+
+/* Responsive Design */
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .vc-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .virtual-cards-container {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 1500px) {
+  .vc-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .btn-create-new {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .vc-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .vc-search {
+    max-width: 100%;
+  }
+  
+  .vc-currency-tabs {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+  
+  .vc-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .virtual-cards-container {
+    padding: 20px;
+  }
+  
+  .vc-title {
+    font-size: 28px;
+  }
+  
+  .info-left {
+    flex-wrap: wrap;
+  }
+  
+  .balance-amt {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .virtual-cards-container {
+    padding: 16px;
+  }
+  
+  .vc-title {
+    font-size: 24px;
+  }
+  
+  .vc-subtitle {
+    font-size: 14px;
+  }
+  
+  .vc-card-wrapper {
+    padding: 16px;
+  }
+  
+  .card-featured {
+    padding: 18px;
+    min-height: 180px;
+  }
+  
+  .card-featured-number {
+    font-size: 18px;
+  }
+  
+  .card-simple {
+    padding: 16px;
+    min-height: 160px;
+  }
+  
+  .card-simple-number {
+    font-size: 16px;
+  }
+  
+  .balance-amt {
+    font-size: 24px;
+  }
+  
+  .info-actions {
+    flex-direction: column;
+  }
+  
+  .btn-details-outline,
+  .btn-details-solid {
+    width: 100%;
+  }
+  
+  .info-row-1 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .info-left {
+    width: 100%;
+  }
+  
+  .info-right {
+    width: 100%;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 360px) {
+  .virtual-cards-container {
+    padding: 12px;
+  }
+  
+  .vc-card-wrapper {
+    padding: 14px;
+  }
+  
+  .card-featured {
+    padding: 16px;
+  }
+  
+  .balance-amt {
+    font-size: 22px;
+  }
+}
+
+/* High DPI Displays */
+@media (min-width: 1440px) {
+  .vc-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1920px) {
+  .virtual-cards-container {
+    max-width: 1600px;
+  }
+}

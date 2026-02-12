@@ -1,170 +1,94 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Select from 'react-select';
-import { ArrowLeft, User, CheckCircle } from 'lucide-react';
-import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Sidebar from '@/components/Sidebar';
 import MobileNav from '@/components/MobileNav';
 import DepositModal from '@/components/DepositModal';
-import "./CreateCard.css";
+import { Toast } from '../types/auth';
+import WithdrawModal from '@/components/WithdrawModal';
+import './cards.css';
 
-const customStyles = {
-  control: (base: any, state: any) => ({
-    ...base,
-    backgroundColor: 'white',
-    borderColor: '#e9ecef',
-    borderRadius: '8px',
-    padding: '4px 8px',
-    minHeight: '44px',
-    boxShadow: state.isFocused ? '0 0 0 3px rgba(0, 123, 255, 0.1)' : 'none',
-    borderWidth: '1px',
-    '&:hover': {
-      borderColor: '#007bff'
-    }
-  }),
-  option: (base: any, state: any) => ({
-    ...base,
-    backgroundColor: state.isSelected ? '#6c757d' : state.isFocused ? '#495057' : 'white',
-    color: state.isSelected ? 'white' : state.isFocused ? 'white' : '#333',
-    padding: '10px 12px',
-    cursor: 'pointer',
-    '&:active': {
-      backgroundColor: '#6c757d'
-    }
-  }),
-  menu: (base: any) => ({
-    ...base,
-    backgroundColor: '#f8f9fa',
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    zIndex: 9999
-  }),
-  menuList: (base: any) => ({
-    ...base,
-    padding: '4px',
-    backgroundColor: '#f8f9fa'
-  }),
-  singleValue: (base: any) => ({
-    ...base,
-    color: '#333'
-  }),
-  placeholder: (base: any) => ({
-    ...base,
-    color: '#999'
-  }),
-  dropdownIndicator: (base: any) => ({
-    ...base,
-    color: '#666',
-    '&:hover': {
-      color: '#333'
-    }
-  }),
-  indicatorSeparator: (base: any) => ({
-    ...base,
-    backgroundColor: '#e9ecef'
-  }),
-  loadingIndicator: (base: any) => ({
-    ...base,
-    color: '#666'
-  })
-};
-
-interface WalletOption {
-  value: string;
-  label: string;
+interface VirtualCard {
+  id: string;
+  cardNumber: string;
+  holder: string;
+  validThru: string;
+  balance: number;
+  currency: string;
+  status: 'active' | 'locked';
+  isFeatured?: boolean;
 }
 
-interface Wallet {
-  currency_code: string;
-  symbol: string;
-  balance: string;
-}
-
-interface FormData {
-  accountCurrency: string;
-  cardType: 'mastercard' | 'visa';
-  spendingLimit: string;
-  cardTheme: string;
-  cardHolderName: string;
-}
-
-interface FormErrors {
-  accountCurrency?: string;
-  cardHolderName?: string;
-}
-
-interface CardTheme {
-  name: string;
-  imageUrl: any;
-  label: string;
-}
-
-interface Toast {
-  id: number;
-  message: string;
-  type: 'warning' | 'success';
-  exiting: boolean;
-}
-
-const mastercardThemes: CardTheme[] = [
-  { name: 'theme1', imageUrl: '/assets/images/darkcard.png', label: 'Black' },
-  { name: 'theme2', imageUrl: '/assets/images/greenCard.png', label: 'Green' },
-  { name: 'theme3', imageUrl: '/assets/images/darkGreenCard.png', label: 'Dark Green' },
-];
-
-const visaThemes: CardTheme[] = [
-  { name: 'theme1', imageUrl: '/assets/images/visaCardBlur.png', label: 'Green' },
-  { name: 'theme2', imageUrl: '/assets/images/visaCardBlue.png', label: 'Blue' },
-];
-const CreateCard = () => {
+function Cards() {
   const router = useRouter();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [cardType, setCardType] = useState<'mastercard' | 'visa'>('mastercard');
-  const [selectedTheme, setSelectedTheme] = useState('theme1');
-  const [options, setOptions] = useState<WalletOption[]>([]);
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [isLoader, setIsLoader] = useState(true);
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [walletData, setWalletData] = useState<Wallet[]>([]);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [userHandle, setUserHandle] = useState('');
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const [formData, setFormData] = useState<FormData>({
-    accountCurrency: '',
-    cardType: 'mastercard',
-    spendingLimit: '10000.00',
-    cardTheme: 'theme1',
-    cardHolderName: '',
-  });
+  const cards: VirtualCard[] = [
+    {
+      id: '1',
+      cardNumber: '4321 **** **** 0911',
+      holder: 'DAVID APEKELE',
+      validThru: '04/28',
+      balance: 650.00,
+      currency: 'USD',
+      status: 'active',
+      isFeatured: true
+    },
+    {
+      id: '2',
+      cardNumber: '5271 **** **** 0012',
+      holder: 'DAVID APEKELE',
+      validThru: '04/28',
+      balance: 0.00,
+      currency: 'USD',
+      status: 'locked'
+    },
+    {
+      id: '3',
+      cardNumber: '5271 **** **** 3323',
+      holder: 'DAVID APEKELE',
+      validThru: '04/28',
+      balance: 0.00,
+      currency: 'USD',
+      status: 'locked'
+    }
+  ];
 
-  // Custom toast function
+  const currencies = [
+    { code: 'USD', count: 3 },
+    { code: 'EUR', count: 2 },
+    { code: 'NGN', count: 1 },
+    { code: 'GBP', count: 1 },
+    { code: 'JPY', count: 1 },
+    { code: 'AUD', count: 0 },
+    { code: 'CAD', count: 0 }
+  ];
+
   const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
     setToasts((prev) => {
       if (prev.length >= 5) return prev;
-
       const id = Date.now();
       const newToast: Toast = { id, message: msg, type, exiting: false };
-
       setTimeout(() => {
         setToasts((currentToasts) =>
           currentToasts.map((t) => (t.id === id ? { ...t, exiting: true } : t))
         );
-
         setTimeout(() => {
           setToasts((currentToasts) => currentToasts.filter((t) => t.id !== id));
         }, 300);
       }, 3000);
-
       return [...prev, newToast];
     });
   };
-
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -174,342 +98,172 @@ const CreateCard = () => {
     document.body.classList.toggle('dark-theme', newTheme === 'dark');
   };
 
-  const handleBankChange = (selectedOption: WalletOption | null) => {
-    handleInputChange('accountCurrency', selectedOption ? selectedOption.value : '');
-  };
-
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-
-    if (formErrors[field as keyof FormErrors]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
-  };
-
-  const fetchBanklist = async () => {
-    setIsLoader(true);
-    
-    try {
-      // Mock wallet data - replace with actual API call
-      const mockWallets: Wallet[] = [
-        { currency_code: 'NGN', symbol: '₦', balance: '0.00' },
-        { currency_code: 'USD', symbol: '$', balance: '0.00' },
-        { currency_code: 'GBP', symbol: '£', balance: '0.00' }
-      ];
-
-      setWalletData(mockWallets);
-      const walletOptions = mockWallets.map(wallet => ({
-        value: wallet.currency_code,
-        label: `${wallet.symbol} ${wallet.currency_code} - Balance: ${wallet.balance}`
-      }));
-      setOptions(walletOptions);
-      setIsLoader(false);
-    } catch (error) {
-      console.error('Error fetching wallets:', error);
-      setOptions([]);
-      setIsLoader(false);
-    }
-  };
-
-  const validateForm = () => {
-    const errors: FormErrors = {};
-
-    if (!formData.accountCurrency) {
-      errors.accountCurrency = 'Please select an account currency';
-    }
-
-    if (!formData.cardHolderName.trim()) {
-      errors.cardHolderName = 'Card holder name is required';
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const getSelectedWalletBalance = () => {
-    if (!formData.accountCurrency || !walletData.length) return '0.00';
-    const selectedWallet = walletData.find(wallet => 
-      wallet.currency_code === formData.accountCurrency
-    );
-    return selectedWallet ? selectedWallet.balance : '0.00';
-  };
-
-  const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  };
-
-  const preparePayload = async () => {
-    const payload = {
-      id: generateUUID(),
-      user_id: 'user_123', // Replace with actual user ID
-      user_wallet_id: 'wallet_123', // Replace with actual wallet ID
-      accountCurrency: formData.accountCurrency,
-      cardNumber: '',
-      cvv: '',
-      expiryMonth: new Date().getMonth() + 1,
-      expiryYear: new Date().getFullYear() + 3,
-      card_holder_name: formData.cardHolderName,
-      card_type: formData.cardType,
-      card_theme: formData.cardTheme,
-      status: 'pending',
-      spendingLimit: 10000.00,
-      currentBalance: 0,
-      currency: formData.accountCurrency,
-      createdAt: new Date().toISOString(),
-      metadata: {
-        theme: formData.cardTheme,
-        isVirtual: true,
-        cardNetwork: formData.cardType
-      }
-    };
-
-    try {
-      // Replace with your actual API call
-      // const response = await bankCollectionService.createVirtualCard(payload);
-      console.log('Payload:', payload);
-      showToast('Card created successfully!', 'success');
-      setTimeout(() => {
-        router.push('/cards');
-      }, 2000);
-    } catch (error) {
-      console.error('Error creating card:', error);
-      showToast('Sorry, something went wrong!', 'warning');
-    }
-  };
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) {
-      showToast('Please fix the form errors before submitting', 'warning');
-      return;
-    }
-    preparePayload();
-  };
-
   useEffect(() => {
-    fetchBanklist();
-    
-    // Load user data from localStorage or API
-    const storedUserName = localStorage.getItem('userName') || 'Angel Mike';
-    const storedUserHandle = localStorage.getItem('userHandle') || 'angelmike';
-    const storedVerified = localStorage.getItem('isVerified') === 'true';
-    
-    setUserName(storedUserName);
-    setUserHandle(storedUserHandle);
-    setIsVerified(storedVerified);
+    const loadingTimer = setTimeout(() => setIsLoader(false), 2000);
+    return () => clearTimeout(loadingTimer);
   }, []);
-
-  useEffect(() => {
-    handleInputChange('cardType', cardType);
-  }, [cardType]);
-
-  useEffect(() => {
-    handleInputChange('cardTheme', selectedTheme);
-  }, [selectedTheme]);
-
-  const handleThemeChange = (theme: string) => {
-    setSelectedTheme(theme);
-  };
-
-  const handleGoBack = () => {
-    router.back();
-  };
-
-  const hasError = (field: keyof FormErrors) => {
-    return formErrors[field] && formErrors[field] !== '';
-  };
 
   return (
     <>
-      <div className="dashboard-container">
+      <div className={`dashboard-container ${theme === 'dark' ? 'dark' : ''}`}>
         <Sidebar />
-        <main className={`main-content ${isDepositOpen ? 'blur-sm' : ''}`}>
+        <main className={`main-content ${isDepositOpen ? 'dashboard-blur' : ''}`}>
           <Header theme={theme} toggleTheme={toggleTheme} />
           <div className="scrollable-content">
-            {/* Custom Toast Container */}
-            <div className="toastrs">
-              {toasts.map((toast) => (
-                <div
-                  key={toast.id}
-                  className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}>
-                  <div className="toast-icon">
-                    <i className={`fa ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} aria-hidden="true"></i>
-                  </div>
-                  <div className="toast-message">{toast.message}</div>
+            <div className="virtual-cards-container">
+              {/* Header */}
+              <div className="vc-header">
+                <div>
+                  <h1 className="vc-title">Virtual Cards</h1>
+                  <p className="vc-subtitle">Manage your virtual debit cards across multiple wallets.</p>
                 </div>
-              ))}
-            </div>
-            
-            <div className="create-card-container">
-              <form onSubmit={handleSubmit} className="form-content">
-                <div className="card-header-title">
-                  <button type="button" className="back-button" onClick={handleGoBack}>
-                    <ArrowLeft size={24} />
-                  </button>
-                  <h1 className="title">Create new card</h1>
-                </div>
-                <p className="info-text">
-                  There is a $4.00 (NGN 6,170.00) fee to create a card and KYC verified to be eligible to create a virtual card.
-                </p>
+                <button className="btn-create-new">
+                  <span>+</span> Create New Card
+                </button>
+              </div>
 
-                <div className="section">
-                  <label htmlFor="accountCurrency" className="section-title">
-                    Select account
-                  </label>
-                  <Select
-                    options={options}
-                    onChange={handleBankChange}
-                    isDisabled={isLoader}
-                    isLoading={isLoader}
-                    styles={customStyles}
-                    placeholder={isLoader ? "Loading accounts..." : "Select Account Currency"}
-                    noOptionsMessage={() => "No accounts available"}
-                    className={`react-select-container ${hasError('accountCurrency') ? 'error-form' : ''}`}
-                    classNamePrefix="react-select"
-                  />
-                  {formErrors.accountCurrency && (
-                    <div className="error-message">{formErrors.accountCurrency}</div>
-                  )}
-                  <div className="account-selector" style={{ marginTop: "10px" }}>
-                    <span>Selected account balance:</span>
-                    <span className="balance-amount">
-                      {getSelectedWalletBalance()} {formData.accountCurrency}
-                    </span>
-                  </div>
+              {/* Search and Filters */}
+              <div className="vc-controls">
+                <div className="vc-search">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M12 12L15.5 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <input type="text" placeholder="Search virtual cards..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                 </div>
+                <div className="vc-currency-tabs">
+                  {currencies.map((curr) => (
+                    <button
+                      key={curr.code}
+                      className={`currency-tab ${selectedCurrency === curr.code ? 'active' : ''} ${curr.count === 0 ? 'disabled' : ''}`}
+                      onClick={() => curr.count > 0 && setSelectedCurrency(curr.code)}
+                      disabled={curr.count === 0}
+                    >
+                      {curr.code} {curr.count > 0 && curr.count}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                <div className="section">
-                  <div className="user-profile-box">
-                    <span className="user-icon">
-                      <User size={24} />
-                    </span>
-                    <div className="user-details">
-                      <p className="user-name">{userName}</p>
-                      <p className="username">@{userHandle}</p>
-                    </div>
-                    {isVerified ? (
-                      <div className="verification-status">
-                        Verified
+              {/* Cards Grid */}
+              <div className="vc-grid">
+                {cards.map((card) => (
+                  <div key={card.id} className="vc-card-wrapper">
+                    {/* Card Visual */}
+                    {card.isFeatured ? (
+                      <div className="card-featured">
+                        <div className="card-featured-inner">
+                          <div className="card-featured-top">
+                            <div className="card-bank-logo">
+                              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <circle cx="10" cy="10" r="9" stroke="white" strokeWidth="1.5"/>
+                                <circle cx="10" cy="10" r="4" fill="white"/>
+                              </svg>
+                              <span>OpenAI Bank</span>
+                            </div>
+                            <svg className="visa-logo" width="48" height="16" viewBox="0 0 48 16" fill="white">
+                              <path d="M18 2L14 12H16.5L20.5 2H18Z"/>
+                              <path d="M12 2L8 12H10.5L14.5 2H12Z"/>
+                              <path d="M24 2L28 12H25.5L21.5 2H24Z"/>
+                              <path d="M30 2L34 12H31.5L27.5 2H30Z"/>
+                            </svg>
+                          </div>
+                          <h3 className="card-featured-title">USD Virtual Card</h3>
+                          <div className="card-featured-number">{card.cardNumber}</div>
+                          <div className="card-featured-bottom">
+                            <span className="card-holder">{card.holder}</span>
+                            <div className="expire-date">
+                              <span className="card-expiry">Valid Thru:</span> 
+                              <span className='card-expiry-date'> {card.validThru}</span>
+                            </div>
+                             <span className="card-type">VISA</span> 
+                          </div>
+                        </div>
                       </div>
                     ) : (
-                      <div className="unverification-status">
-                        Unverified
+                      <div className="card-simple">
+                        <div className="card-simple-top">
+                          <span>USD Virtual Card</span>
+                          <svg width="40" height="14" viewBox="0 0 40 14" fill="currentColor">
+                            <path d="M15 1L12 9H13.5L16.5 1H15Z"/>
+                            <path d="M10 1L7 9H8.5L11.5 1H10Z"/>
+                            <path d="M20 1L23 9H21.5L18.5 1H20Z"/>
+                            <path d="M25 1L28 9H26.5L23.5 1H25Z"/>
+                          </svg>
+                        </div>
+                        <div className="card-simple-number">{card.cardNumber}</div>
+                        <div className="card-simple-holder">{card.holder}</div>
+                        <svg className="visa-logo-simple" width="40" height="14" viewBox="0 0 40 14" fill="#1A1F71">
+                          <path d="M15 1L12 9H13.5L16.5 1H15Z"/>
+                          <path d="M10 1L7 9H8.5L11.5 1H10Z"/>
+                          <path d="M20 1L23 9H21.5L18.5 1H20Z"/>
+                          <path d="M25 1L28 9H26.5L23.5 1H25Z"/>
+                        </svg>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                <div className="section">
-                  <p className="section-title">User verification</p>
-                  {isVerified ? (
-                    <button type="button" className="verification-badge verified">
-                      Verified
-                    </button>
-                  ) : (
-                    <button type="button" className="verification-badge unverified">
-                      Unverified
-                    </button>
-                  )}
-                </div>
-
-                <div className="section">
-                  <p className="section-title">Card type</p>
-                  <div className="radio-group">
-                    <label className="radio-option">
-                      <input
-                        type="radio"
-                        name="cardType"
-                        value="mastercard"
-                        checked={cardType === 'mastercard'}
-                        onChange={(e) => setCardType(e.target.value as 'mastercard' | 'visa')}
-                      />
-                      <span className="radio-custom"></span>
-                      <span>Master card</span>
-                    </label>
-                    <label className="radio-option">
-                      <input
-                        type="radio"
-                        name="cardType"
-                        value="visa"
-                        checked={cardType === 'visa'}
-                        onChange={(e) => setCardType(e.target.value as 'mastercard' | 'visa')}
-                      />
-                      <span className="radio-custom"></span>
-                      <span>Visa card</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="section">
-                  <p className="section-title">Card alias</p>
-                  <input
-                    type="text"
-                    className={`alias-input ${hasError('cardHolderName') ? 'error-form' : ''}`}
-                    placeholder="Enter card alias"
-                    value={formData.cardHolderName}
-                    onChange={(e) => handleInputChange('cardHolderName', e.target.value)}
-                  />
-                  {formErrors.cardHolderName && (
-                    <div className="error-message">{formErrors.cardHolderName}</div>
-                  )}
-                </div>
-
-                <div className="section">
-                  <p className="section-title">Choose card theme</p>
-                  <div className="theme-selector">
-                    {(cardType === 'mastercard' ? mastercardThemes : visaThemes).map((themeOption) => (
-                      <div
-                        key={themeOption.name}
-                        className={`card-preview ${selectedTheme === themeOption.name ? 'selected' : ''}`}
-                        onClick={() => handleThemeChange(themeOption.name)}
-                      >
-                        <Image
-                          src={themeOption.imageUrl}
-                          alt={themeOption.label}
-                          fill
-                          className="card-theme-image"
-                          style={{ objectFit: 'cover' }}
-                        />
-                        {selectedTheme === themeOption.name && (
-                          <div className="check-icon-overlay">
-                            <CheckCircle size={24} color="white" />
+                    {/* Card Info - REDESIGNED */}
+                    <div className="vc-card-info">
+                      <div className="info-row-1">
+                        <div className="info-left">
+                          <span className={`status-pill ${card.status}`}>
+                            {card.status === 'active' ? (
+                              <>✓ Active</>
+                            ) : (
+                              <>🔒 Locked</>
+                            )}
+                          </span>
+                          <div className="balance-label">
+                            <img src="https://flagcdn.com/w20/us.png" alt="US" width="16" />
+                            <span>$ Dollar Balance</span>
                           </div>
-                        )}
+                        </div>
+                        <div className="info-right">
+                          <span className="balance-amt">${card.balance.toFixed(2)}</span>
+                          {card.balance > 0 && <span className="balance-sub">68 prceheres..</span>}
+                          {card.balance === 0 && <span className="balance-sub-vital">Vital ✓</span>}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                <button type="submit" className="cta-button">
-                  Proceed to verification
-                </button>
-              </form>
+                      <div className="info-actions">
+                        <button className="btn-details-outline">
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <rect x="3" y="5" width="8" height="7" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+                            <path d="M5 5V4C5 3 5.5 2 7 2C8.5 2 9 3 9 4V5" stroke="currentColor" strokeWidth="1.3"/>
+                          </svg>
+                          Card Details
+                        </button>
+                        <button className="btn-details-solid">
+                          Card Details
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <circle cx="6" cy="3.5" r="0.8" fill="white"/>
+                            <circle cx="6" cy="6" r="0.8" fill="white"/>
+                            <circle cx="6" cy="8.5" r="0.8" fill="white"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            
             <Footer theme={theme} />
           </div>
+          
         </main>
-
-        <MobileNav activeTab="none" onPlusClick={() => setIsDepositOpen(true)} />
-
-        <DepositModal
-          isOpen={isDepositOpen}
-          onClose={() => setIsDepositOpen(false)}
-          theme={theme}
-        />
+        <MobileNav activeTab="wallet" onPlusClick={() => setIsDepositOpen(true)} />
+        <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} theme={theme} />
+        <WithdrawModal isOpen={isWithdrawOpen} onClose={() => setIsWithdrawOpen(false)} theme={theme} />
+        <div className="toasts-container">
+          {toasts.map((toast) => (
+            <div key={toast.id} className={`toast ${toast.type} ${toast.exiting ? 'exiting' : ''}`}>
+              {toast.message}
+            </div>
+          ))}
+        </div>
       </div>
     </>
   );
-};
+}
 
-export default CreateCard;
+export default Cards;

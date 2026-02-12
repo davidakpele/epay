@@ -284,8 +284,7 @@ const Register = () => {
             <h2>Account Created!</h2>
             <p>
               {regMode === 'email' ? (
-                <>A confirmation email has been sent to <strong>{formData.email}</strong>. 
-                Please check your inbox (and spam folder) to verify your account.</>
+                <>Your account has been created successfully!</>
               ) : (
                 <>Your account has been created successfully! You can now sign in with your phone number.</>
               )}
