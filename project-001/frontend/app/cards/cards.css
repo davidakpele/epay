@@ -66,7 +66,7 @@
 .vc-search {
   position: relative;
   flex: 1;
-  max-width: 420px;
+  width: -webkit-fill-available;
 }
 
 .vc-search svg {
@@ -353,7 +353,7 @@
 }
 
 .status-pill.locked {
-  background: #dc2626;
+  background: #eb898991;
   color: white;
 }
 
@@ -555,9 +555,6 @@
   background: #16a34a;
 }
 
-/* Responsive Design */
-
-/* Tablets */
 @media (max-width: 1024px) {
   .vc-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -574,25 +571,15 @@
     gap: 16px;
   }
   
-  .btn-create-new {
-    width: 100%;
-    justify-content: center;
-  }
-  
   .vc-controls {
     flex-direction: column;
     gap: 12px;
   }
-  
-  .vc-search {
-    max-width: 100%;
-  }
-  
   .vc-currency-tabs {
     width: 100%;
     overflow-x: auto;
     flex-wrap: nowrap;
-    padding-bottom: 4px;
+    padding-bottom: 14px;
   }
   
   .vc-grid {
@@ -619,6 +606,7 @@
 @media (max-width: 480px) {
   .virtual-cards-container {
     padding: 16px;
+    margin-bottom: 30px;
   }
   
   .vc-title {
@@ -697,8 +685,6 @@
     font-size: 22px;
   }
 }
-
-/* High DPI Displays */
 @media (min-width: 1440px) {
   .vc-grid {
     grid-template-columns: repeat(3, 1fr);
