@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import pesco.example.virtual_card_service.bootstrap.UsersDetailsDTO;
 import pesco.example.virtual_card_service.dto.UserDTO;
 import pesco.example.virtual_card_service.exceptions.UserClientNotFoundException;
@@ -86,12 +85,11 @@ public class UserServiceClient {
                     .block();
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }
 
-    // Fixed method - now handles JsonProcessingException
+
     private String extractDetailsFromError(String errorMessage) {
         try {
             JsonNode rootNode = objectMapper.readTree(errorMessage);
@@ -123,65 +121,63 @@ public class UserServiceClient {
         try {
             return objectMapper.readValue(response, UserDTO.class);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
             throw new RuntimeException("Error converting response to UserDTO", e);
         }
     }
 
     public UserDTO findById(Long userId) {
         String endpoint = "/user/" + userId;
-     
         return this.webClient.get()
-                .uri(endpoint)
-                .retrieve()
-                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                        clientResponse -> clientResponse.bodyToMono(String.class)
-                                .flatMap(errorMessage -> {
-                                    if (clientResponse.statusCode().is4xxClientError()) {
-                                        String details = extractDetailsFromError(errorMessage);
-                                        return Mono.error(new UserClientNotFoundException("User not found", details));
-                                    }
-                                    return Mono.error(new RuntimeException("Server error"));
-                                }))
-                .bodyToMono(UserDTO.class)
-                .block();
+            .uri(endpoint)
+            .retrieve()
+            .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+            clientResponse -> clientResponse.bodyToMono(String.class)
+                    .flatMap(errorMessage -> {
+                        if (clientResponse.statusCode().is4xxClientError()) {
+                            String details = extractDetailsFromError(errorMessage);
+                            return Mono.error(new UserClientNotFoundException("User not found", details));
+                        }
+                        return Mono.error(new RuntimeException("Server error"));
+                    }))
+            .bodyToMono(UserDTO.class)
+            .block();
     }
 
     public UserDTO findByUsername(String username, String token) {
         String endpoint = "/user/username/" + username;
-
         return this.webClient.get()
-                .uri(endpoint)
-                .headers(headers -> headers.setBearerAuth(token))
-                .retrieve()
-                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                        clientResponse -> clientResponse.bodyToMono(String.class)
-                                .flatMap(errorMessage -> {
-                                    if (clientResponse.statusCode().is4xxClientError()) {
-                                        String details = extractDetailsFromError(errorMessage);
-                                        return Mono.error(new UserClientNotFoundException("User not found", details));
-                                    }
-                                    return Mono.error(new RuntimeException("Server error"));
-                                }))
-                .bodyToMono(UserDTO.class)
-                .block();
+            .uri(endpoint)
+            .headers(headers -> headers.setBearerAuth(token))
+            .retrieve()
+            .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+            clientResponse -> clientResponse.bodyToMono(String.class)
+                    .flatMap(errorMessage -> {
+                        if (clientResponse.statusCode().is4xxClientError()) {
+                            String details = extractDetailsFromError(errorMessage);
+                            return Mono.error(new UserClientNotFoundException("User not found", details));
+                        }
+                        return Mono.error(new RuntimeException("Server error"));
+                    }))
+            .bodyToMono(UserDTO.class)
+            .block();
     }
 
     public UsersDetailsDTO getUserByUsername(String username, String token) {
         return this.webClient.get()
-                .uri("/user/username/{username}", username)
-                .headers(headers -> headers.setBearerAuth(token))
-                .retrieve()
-                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                        clientResponse -> clientResponse.bodyToMono(String.class)
-                                .flatMap(errorMessage -> {
-                                    if (clientResponse.statusCode().is4xxClientError()) {
-                                        String details = extractDetailsFromError(errorMessage);
-                                        return Mono.error(new UserClientNotFoundException("User not found", details));
-                                    }
-                                    return Mono.error(new RuntimeException("Server error"));
-                                }))
-                .bodyToMono(UsersDetailsDTO.class)
-                .block();
+        .uri("/user/username/{username}", username)
+        .headers(headers -> headers.setBearerAuth(token))
+        .retrieve()
+        .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                clientResponse -> clientResponse.bodyToMono(String.class)
+                        .flatMap(errorMessage -> {
+                            if (clientResponse.statusCode().is4xxClientError()) {
+                                String details = extractDetailsFromError(errorMessage);
+                                return Mono.error(new UserClientNotFoundException("User not found", details));
+                            }
+                            return Mono.error(new RuntimeException("Server error"));
+                        }))
+        .bodyToMono(UsersDetailsDTO.class)
+        .block();
     }
+    
 }

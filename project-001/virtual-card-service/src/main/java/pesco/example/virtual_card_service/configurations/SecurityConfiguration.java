@@ -23,8 +23,6 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletResponse;
 import pesco.example.virtual_card_service.components.CustomAuthenticationEntryPoint;
 import pesco.example.virtual_card_service.components.JwtProperties;
@@ -33,6 +31,9 @@ import pesco.example.virtual_card_service.security.FirewallExceptionFilter;
 import pesco.example.virtual_card_service.security.InputValidationFilter;
 import pesco.example.virtual_card_service.security.RateLimitingFilter;
 import pesco.example.virtual_card_service.security.SecurityHeadersFilter;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+
 
 @Configuration
 @EnableWebSecurity
@@ -104,6 +105,7 @@ public class SecurityConfiguration {
         return source;
     }
 
+    @SuppressWarnings("removal")
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

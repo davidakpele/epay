@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 @Component
@@ -41,7 +40,7 @@ public class ValidationFilter extends OncePerRequestFilter {
         ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request, 0);
         String path = wrappedRequest.getRequestURI();
 
-        if (path.contains("/auth/") || path.contains("/user/")) {
+        if (path.contains("/virtualcard/") || path.contains("/virtual_card/")) {
             String queryString = wrappedRequest.getQueryString();
             if (queryString != null && containsMaliciousInput(queryString)) {
                 sendErrorResponse(response, "Invalid input detected in query parameters");
@@ -51,18 +50,7 @@ public class ValidationFilter extends OncePerRequestFilter {
                 sendErrorResponse(response, "Invalid input detected in URL path");
                 return;
             }
-
-            if ("POST".equalsIgnoreCase(wrappedRequest.getMethod()) &&
-                    (path.contains("/auth/login") || path.contains("/auth/register"))) {
-
-                String requestBody = new String(wrappedRequest.getContentAsByteArray(), StandardCharsets.UTF_8);
-                if (containsMaliciousInput(requestBody)) {
-                    sendErrorResponse(response, "Invalid input detected in request body");
-                    return;
-                }
-            }
         }
-        // Continue filter chain with wrapped request
         filterChain.doFilter(wrappedRequest, response);
     }
 

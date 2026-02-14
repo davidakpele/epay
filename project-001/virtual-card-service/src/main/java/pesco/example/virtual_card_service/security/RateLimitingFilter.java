@@ -47,13 +47,13 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
         // SAFETY: This should never happen because of shouldNotFilter,
         // but we keep it defensive.
-        if (!path.startsWith("/wallet")) {
+        if (!path.startsWith("/virtual_card")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String clientIp = getClientIp(request);
-        String bucketKey = clientIp + "_wallet";
+        String bucketKey = clientIp + "_virtual_card";
 
         Bucket bucket = buckets.computeIfAbsent(bucketKey, k -> createWalletBucket());
 
@@ -68,24 +68,17 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             response.setContentType("application/json");
             response.setHeader("Retry-After", "60");
             response.getWriter().write(
-                "{\"error\":\"Too many wallet requests. Please try again later.\"," +
+                "{\"error\":\"Too many virtual card requests. Please try again later.\"," +
                 "\"code\":\"RATE_LIMIT_EXCEEDED\"}"
             );
         }
     }
 
-    /**
-     * IMPORTANT:
-     * Only apply filter to /wallet/**
-     * Explicitly exclude auth, health, swagger, etc.
-     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-
         return
-            !path.startsWith("/wallet") ||
-            path.startsWith("/api/auth") ||
+            !path.startsWith("/virtual_card") ||
             path.startsWith("/actuator") ||
             path.startsWith("/swagger") ||
             path.startsWith("/v3/api-docs") ||

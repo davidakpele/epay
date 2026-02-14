@@ -1,7 +1,6 @@
 package pesco.example.virtual_card_service.configurations;
 
 import java.util.List;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,11 +14,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import jakarta.servlet.http.HttpServletRequest;
 import pesco.example.virtual_card_service.bootstrap.UsersDetailsDTO;
 import pesco.example.virtual_card_service.clients.UserServiceClient;
@@ -42,7 +39,6 @@ public class ApplicationConfiguration {
     public UserDetailsService userDetailsService() {
         return username -> {
             try {
-                // Get the current request from RequestContextHolder
                 ServletRequestAttributes attributes = 
                     (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
                 HttpServletRequest request = attributes.getRequest();
@@ -68,10 +64,9 @@ public class ApplicationConfiguration {
                     throw new UsernameNotFoundException("User not found: " + username);
                 }
             } catch (IllegalStateException e) {
-                // No request context available (e.g., during startup or async operations)
                 throw new UsernameNotFoundException(
                     "Unable to fetch user details - no request context for: " + username, e);
-            } catch (Exception e) {
+            } catch (UsernameNotFoundException e) {
                 throw new UsernameNotFoundException(
                     "Unable to fetch user details for: " + username, e);
             }
