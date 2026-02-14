@@ -107,24 +107,16 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
 
     @Transactional
     public ResponseEntity<?> createAccount(UserSignUpRequest request) {
+       
         String identifier = "email".equals(request.getRegMode()) 
             ? request.getEmail() 
             : request.getPhone();
 
-        System.out.println("=== OTP Verification Debug ===");
-        System.out.println("Identifier: " + identifier);
-        System.out.println("Verification Code from request: " + request.getVerificationCode());
-        System.out.println("OTP Store Size: " + MessagingService.getOTPStoreSize());
-        System.out.println("Is OTP Valid: " + MessagingService.isOTPValid(identifier));
-        System.out.println("Remaining Time: " + MessagingService.getRemainingTime(identifier) + " minutes");
-        
         if (!MessagingService.verifyOTP(identifier, request.getVerificationCode())) {
-            System.out.println("OTP Verification FAILED");
             return Error.createResponse("Invalid or expired verification code.*", 
                 HttpStatus.BAD_REQUEST, "The verification code you entered is invalid or has expired.");
         }
-        
-        System.out.println("OTP Verification SUCCESS");
+
         Long nextUserId = getNextUserId();
         Users user = new Users();
         user.setId(nextUserId);

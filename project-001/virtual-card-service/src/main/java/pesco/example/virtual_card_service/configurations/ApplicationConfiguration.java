@@ -1,13 +1,7 @@
-package com.pesco.wallet_service.configuration;
+package pesco.example.virtual_card_service.configurations;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.pesco.wallet_service.bootstrap.UsersDetailsDTO;
-import com.pesco.wallet_service.client.UserServiceClient;
-import com.pesco.wallet_service.dtos.UserRecordDTO;
-import com.pesco.wallet_service.util.TokenExtractor;
 import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,27 +13,40 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import jakarta.servlet.http.HttpServletRequest;
+import pesco.example.virtual_card_service.bootstrap.UsersDetailsDTO;
+import pesco.example.virtual_card_service.clients.UserServiceClient;
+import pesco.example.virtual_card_service.components.TokenExtractor;
+import pesco.example.virtual_card_service.dto.UserRecordDTO;
 
 @Configuration
 public class ApplicationConfiguration {
 
     private final UserServiceClient userServiceClient;
     private final TokenExtractor tokenExtractor;
-    private final HttpServletRequest request;
 
     public ApplicationConfiguration(UserServiceClient userServiceClient,
-                                    TokenExtractor tokenExtractor,
-                                    HttpServletRequest request) {
+                                    TokenExtractor tokenExtractor) {
         this.userServiceClient = userServiceClient;
         this.tokenExtractor = tokenExtractor;
-        this.request = request;
     }
     
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
             try {
+                // Get the current request from RequestContextHolder
+                ServletRequestAttributes attributes = 
+                    (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+                HttpServletRequest request = attributes.getRequest();
+                
                 String token = tokenExtractor.extractToken(request);
                 UsersDetailsDTO userDTO = userServiceClient.getUserByUsername(username, token);
 
@@ -47,36 +54,37 @@ public class ApplicationConfiguration {
                     List<SimpleGrantedAuthority> authorities = userDTO.getRecords().stream()
                             .map(record -> new SimpleGrantedAuthority("ROLE_USER"))
                             .toList();
+                    
                     return new org.springframework.security.core.userdetails.User(
                             userDTO.getUsername(),
                             "", 
                             userDTO.isEnabled(),
                             true, 
                             true, 
-                            !isAccountLocked(userDTO), 
+                            !isAccountLocked(userDTO),
                             authorities
                     );
                 } else {
                     throw new UsernameNotFoundException("User not found: " + username);
                 }
+            } catch (IllegalStateException e) {
+                // No request context available (e.g., during startup or async operations)
+                throw new UsernameNotFoundException(
+                    "Unable to fetch user details - no request context for: " + username, e);
             } catch (Exception e) {
-                // Log the error and throw an exception to prevent unauthorized access
-                throw new UsernameNotFoundException("Unable to fetch user details for: " + username, e);
+                throw new UsernameNotFoundException(
+                    "Unable to fetch user details for: " + username, e);
             }
         };
     }
 
-    // Helper method to determine if the account is locked
     private boolean isAccountLocked(UsersDetailsDTO userDTO) {
         return userDTO.getRecords().stream().anyMatch(UserRecordDTO::isLocked);
     }
 
-
-    @SuppressWarnings("deprecation")
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService());
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
@@ -98,5 +106,4 @@ public class ApplicationConfiguration {
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return mapper;
     }
-    
 }
