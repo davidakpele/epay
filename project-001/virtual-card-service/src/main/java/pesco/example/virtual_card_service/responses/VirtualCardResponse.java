@@ -2,12 +2,14 @@ package pesco.example.virtual_card_service.responses;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
 import lombok.Builder;
 import lombok.Data;
 import pesco.example.virtual_card_service.enums.CardPlan;
 import pesco.example.virtual_card_service.enums.CardStatus;
 import pesco.example.virtual_card_service.enums.CardType;
 import pesco.example.virtual_card_service.enums.LimitPeriod;
+import pesco.example.virtual_card_service.models.CardLimit;
 
 @Data
 @Builder
@@ -17,6 +19,8 @@ public class VirtualCardResponse {
     private Long userId;
     private String cardHolderName;
     private String lastFour; 
+    private String firstFour; 
+    private String hashedCardNumber;
     private String expirationMonth; 
     private String expirationYear;
     private CardStatus status;
@@ -40,18 +44,20 @@ public class VirtualCardResponse {
     private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private LocalDateTime lastUsedAt;
-
+    private CardLimit cardLimit;
 
     public VirtualCardResponse() {
     }
 
 
-    public VirtualCardResponse(String id, String cardId, Long userId, String cardHolderName, String lastFour, String expirationMonth, String expirationYear, CardStatus status, CardType cardType, CardPlan cardPlan, String currency, BigDecimal balance, BigDecimal spendingLimit, LimitPeriod limitPeriod, BigDecimal currentPeriodSpent, Boolean allowInternational, Boolean allowOnline, Boolean allowAtm, Boolean allowContactless, String merchantName, String merchantId, String merchantCategoryCode, String merchantCountry, String merchantCity, String maskedCardNumber, LocalDateTime expiresAt, LocalDateTime createdAt, LocalDateTime lastUsedAt) {
+    public VirtualCardResponse(String id, String cardId, Long userId, String cardHolderName, String lastFour, String firstFour, String hashedCardNumber, String expirationMonth, String expirationYear, CardStatus status, CardType cardType, CardPlan cardPlan, String currency, BigDecimal balance, BigDecimal spendingLimit, LimitPeriod limitPeriod, BigDecimal currentPeriodSpent, Boolean allowInternational, Boolean allowOnline, Boolean allowAtm, Boolean allowContactless, String merchantName, String merchantId, String merchantCategoryCode, String merchantCountry, String merchantCity, String maskedCardNumber, LocalDateTime expiresAt, LocalDateTime createdAt, LocalDateTime lastUsedAt, CardLimit cardLimit) {
         this.id = id;
         this.cardId = cardId;
         this.userId = userId;
         this.cardHolderName = cardHolderName;
         this.lastFour = lastFour;
+        this.firstFour = firstFour;
+        this.hashedCardNumber = hashedCardNumber;
         this.expirationMonth = expirationMonth;
         this.expirationYear = expirationYear;
         this.status = status;
@@ -75,6 +81,7 @@ public class VirtualCardResponse {
         this.expiresAt = expiresAt;
         this.createdAt = createdAt;
         this.lastUsedAt = lastUsedAt;
+        this.cardLimit = cardLimit;
     }
 
     public String getId() {
@@ -115,6 +122,22 @@ public class VirtualCardResponse {
 
     public void setLastFour(String lastFour) {
         this.lastFour = lastFour;
+    }
+
+    public String getFirstFour() {
+        return this.firstFour;
+    }
+
+    public void setFirstFour(String firstFour) {
+        this.firstFour = firstFour;
+    }
+
+    public String getHashedCardNumber() {
+        return this.hashedCardNumber;
+    }
+
+    public void setHashedCardNumber(String hashedCardNumber) {
+        this.hashedCardNumber = hashedCardNumber;
     }
 
     public String getExpirationMonth() {
@@ -316,5 +339,14 @@ public class VirtualCardResponse {
     public void setLastUsedAt(LocalDateTime lastUsedAt) {
         this.lastUsedAt = lastUsedAt;
     }
+
+    public CardLimit getCardLimit() {
+        return this.cardLimit;
+    }
+
+    public void setCardLimit(CardLimit cardLimit) {
+        this.cardLimit = cardLimit;
+    }
+
 
 }

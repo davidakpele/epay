@@ -1,17 +1,26 @@
 package pesco.example.virtual_card_service.models;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.Builder;
 import lombok.Data;
 import pesco.example.virtual_card_service.enums.CardPlan;
 import pesco.example.virtual_card_service.enums.CardStatus;
 import pesco.example.virtual_card_service.enums.CardType;
 import pesco.example.virtual_card_service.enums.LimitPeriod;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import jakarta.persistence.*;
 
 @Data
 @Builder
@@ -110,11 +119,17 @@ public class VirtualCard {
     @Column(name = "bin", length = 6)
     private String bin; // Bank Identification Number (first 6 digits)
     
+    @Column(name = "first_four", length = 4)
+    private String firstFour; // First 4 digits for display
+    
     @Column(name = "last_four", length = 4)
     private String lastFour; // Last 4 digits for display
     
     @Column(name = "masked_card_number", length = 19)
     private String maskedCardNumber; // "****-****-****-1234"
+    
+    @Column(name = "hashed_card_number")
+    private String hashedCardNumber; // Hashed complete card number for security
     
     @Column(name = "provider_card_id")
     private String providerCardId; // External card provider reference ID
@@ -199,7 +214,7 @@ public class VirtualCard {
     public VirtualCard() {
     }
 
-    public VirtualCard(String id, String cardId, Long userId, String cardNumber, String cardHolderName, String expirationMonth, String expirationYear, String cvv, CardStatus status, CardType cardType, CardPlan cardPlan, String currency, BigDecimal balance, BigDecimal spendingLimit, LimitPeriod limitPeriod, LocalDate limitResetDate, BigDecimal currentPeriodSpent, String merchantName, String merchantId, String merchantCategoryCode, String merchantCountry, String merchantCity, String authorizationCode, Boolean allowInternational, Boolean allowOnline, Boolean allowAtm, Boolean allowContactless, String bin, String lastFour, String maskedCardNumber, String providerCardId, LocalDateTime expiresAt, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activatedAt, LocalDateTime frozenAt, LocalDateTime cancelledAt, LocalDateTime lastUsedAt, LocalDateTime deletedAt, Long version) {
+    public VirtualCard(String id, String cardId, Long userId, String cardNumber, String cardHolderName, String expirationMonth, String expirationYear, String cvv, CardStatus status, CardType cardType, CardPlan cardPlan, String currency, BigDecimal balance, BigDecimal spendingLimit, LimitPeriod limitPeriod, LocalDate limitResetDate, BigDecimal currentPeriodSpent, String merchantName, String merchantId, String merchantCategoryCode, String merchantCountry, String merchantCity, String authorizationCode, Boolean allowInternational, Boolean allowOnline, Boolean allowAtm, Boolean allowContactless, String bin, String firstFour, String lastFour, String maskedCardNumber, String hashedCardNumber, String providerCardId, LocalDateTime expiresAt, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activatedAt, LocalDateTime frozenAt, LocalDateTime cancelledAt, LocalDateTime lastUsedAt, LocalDateTime deletedAt, Long version) {
         this.id = id;
         this.cardId = cardId;
         this.userId = userId;
@@ -228,8 +243,10 @@ public class VirtualCard {
         this.allowAtm = allowAtm;
         this.allowContactless = allowContactless;
         this.bin = bin;
+        this.firstFour = firstFour;
         this.lastFour = lastFour;
         this.maskedCardNumber = maskedCardNumber;
+        this.hashedCardNumber = hashedCardNumber;
         this.providerCardId = providerCardId;
         this.expiresAt = expiresAt;
         this.createdAt = createdAt;
@@ -482,6 +499,14 @@ public class VirtualCard {
         this.bin = bin;
     }
 
+    public String getFirstFour() {
+        return this.firstFour;
+    }
+
+    public void setFirstFour(String firstFour) {
+        this.firstFour = firstFour;
+    }
+
     public String getLastFour() {
         return this.lastFour;
     }
@@ -496,6 +521,14 @@ public class VirtualCard {
 
     public void setMaskedCardNumber(String maskedCardNumber) {
         this.maskedCardNumber = maskedCardNumber;
+    }
+
+    public String getHashedCardNumber() {
+        return this.hashedCardNumber;
+    }
+
+    public void setHashedCardNumber(String hashedCardNumber) {
+        this.hashedCardNumber = hashedCardNumber;
     }
 
     public String getProviderCardId() {

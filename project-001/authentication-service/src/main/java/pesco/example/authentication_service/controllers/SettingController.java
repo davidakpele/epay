@@ -1,8 +1,6 @@
 package pesco.example.authentication_service.controllers;
 
 import java.util.Map;
-
-import org.hibernate.sql.Delete;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import pesco.example.authentication_service.exceptions.Error;
@@ -26,6 +23,7 @@ import pesco.example.authentication_service.services.TwoFactorAuthenticationServ
 import pesco.example.authentication_service.services.UserAccountCasesReportService;
 import pesco.example.authentication_service.services.UserRecordService;
 import pesco.example.authentication_service.services.UserService;
+
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -85,7 +83,7 @@ public class SettingController {
     }
 
     @PreAuthorize("hasRole('USER')")
-    @PostMapping("/settings/enable-twofactor")
+    @PostMapping("/enable-twofactor")
     public ResponseEntity<?> verifyUserOtp(@RequestBody Map<String, Boolean> requestPayload, Authentication authentication) {
         Boolean enable2FA = requestPayload.get("enable2FA");
 

@@ -9,7 +9,7 @@ spring:
       add-mappings: false
   jackson:
       deserialization:
-        fail-on-null-for-primitives: false
+        fail-on-null-for-primitives: false    
       default-property-inclusion: non_null
   main:
     allow-bean-definition-overriding: true
@@ -17,7 +17,7 @@ spring:
     filter:
       dispatcher-types: REQUEST,ERROR,ASYNC
   datasource:
-    url: jdbc:postgresql://localhost:5432/pesco_db
+    url: jdbc:postgresql://postgres:5432/pesco_db
     username: postgres
     password: root
     driver-class-name: org.postgresql.Driver
@@ -157,19 +157,19 @@ web:
     static-locations: classpath:/static/
 
 notification-service:
-  base-url: http://localhost:8079
+  base-url: http://notification-service:8079
 
 wallet-service:
-  base-url: http://localhost:8035
+  base-url: http://wallet-service:8035
 
 authentication-service:
-  base-url: http://localhost:8187
+  base-url: http://authentication-service:8187
 
 history-service:
-  base-url: http://localhost:8390
+  base-url: http://history-service:8390
 
 wallet-websocket:
-  url: ws://localhost:8035/ws/wallet
+  url: ws://wallet-service:8035/ws/wallet
 
 grpc:
   server:
@@ -179,6 +179,16 @@ grpc:
       address: static://localhost:9090
       negotiationType: plaintext
 
+management:
+  tracing:
+    enabled: false
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
+      enabled: false
+      
 logging:
   level:
     com.mouad.movieservice: DEBUG

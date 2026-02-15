@@ -10,6 +10,7 @@ import DepositModal from '@/components/DepositModal';
 import { Toast } from '../types/auth';
 import WithdrawModal from '@/components/WithdrawModal';
 import './cards.css';
+import Link from 'next/link';
 
 interface VirtualCard {
   id: string;
@@ -156,9 +157,9 @@ function Cards() {
                   <h1 className="vc-title">Virtual Cards</h1>
                   <p className="vc-subtitle">Manage your virtual debit cards across multiple wallets.</p>
                 </div>
-                <button className="btn-create-new">
-                  <span>+</span> Create New Card
-                </button>
+                <Link href={"/cards/create"} className="btn-create-new">
+                  <span>+</span> Request for New Card
+                </Link>
               </div>
 
               {/* Search and Filters */}

@@ -28,7 +28,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/virtual-cards")
+@RequestMapping("/virtual-cards")
 @RequiredArgsConstructor
 @Tag(name = "Virtual Card Management", description = "APIs for managing virtual cards")
 public class VirtualCardController {
@@ -181,20 +181,6 @@ public class VirtualCardController {
             @Parameter(description = "Card ID") @PathVariable String cardId) {
         log.info("REST request to soft delete virtual card: {}", cardId);
         virtualCardService.deleteCard(cardId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/{cardId}/permanent")
-    @Operation(summary = "Permanently delete card", 
-               description = "Permanently deletes a virtual card from the database")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Card permanently deleted"),
-            @ApiResponse(responseCode = "404", description = "Card not found")
-    })
-    public ResponseEntity<Void> permanentlyDeleteCard(
-            @Parameter(description = "Card ID") @PathVariable String cardId) {
-        log.info("REST request to permanently delete virtual card: {}", cardId);
-        virtualCardService.permanentlyDeleteCard(cardId);
         return ResponseEntity.noContent().build();
     }
 

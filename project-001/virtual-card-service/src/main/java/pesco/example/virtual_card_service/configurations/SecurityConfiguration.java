@@ -144,7 +144,6 @@ public class SecurityConfiguration {
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/virtual-cards/**").permitAll()
                 .requestMatchers(
                     "/actuator/health",
                     "/health",

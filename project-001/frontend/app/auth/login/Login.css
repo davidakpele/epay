@@ -221,7 +221,7 @@
   justify-content: center;
 }
 .toastr--success .toast-icon {
-  background-color: #b91c1c;
+  background-color: var(--bg-main);
   color: white;
   padding: 15px;
   display: flex;

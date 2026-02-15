@@ -7,12 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pesco.example.virtual_card_service.clients.UserServiceClient;
-import pesco.example.virtual_card_service.dto.UserDTO;
 import pesco.example.virtual_card_service.enums.BalanceOperation;
 import pesco.example.virtual_card_service.enums.CardStatus;
 import pesco.example.virtual_card_service.enums.LimitPeriod;
 import pesco.example.virtual_card_service.exceptions.*;
+import pesco.example.virtual_card_service.models.CardLimit;
 import pesco.example.virtual_card_service.models.VirtualCard;
+import pesco.example.virtual_card_service.repository.CardLimitRepository;
 import pesco.example.virtual_card_service.repository.VirtualCardRepository;
 import pesco.example.virtual_card_service.requests.CreateVirtualCardRequest;
 import pesco.example.virtual_card_service.requests.UpdateBalanceRequest;
@@ -34,28 +35,23 @@ import java.util.stream.Collectors;
 public class VirtualCardService {
 
     private final VirtualCardRepository virtualCardRepository;
+    private final CardLimitRepository cardLimitRepository;
     private final UserServiceClient userServiceClient;
+    
     private static final SecureRandom random = new SecureRandom();
 
-    // ==================== CREATE ====================
     @Transactional
     public VirtualCardResponse createCard(CreateVirtualCardRequest request) {
-        log.info("Creating virtual card for user: {}", request.getUserId());
-        
-        // Validate user exists (call to User Service)
         validateUserExists(request.getUserId());
         
-        // Generate card details
         String cardNumber = generateCardNumber(request.getCardType());
         String cvv = generateCVV();
         String cardId = UUID.randomUUID().toString();
         
-        // Calculate expiration (3 years from now)
         LocalDateTime expiresAt = LocalDateTime.now().plusYears(3);
         String expirationMonth = String.format("%02d", expiresAt.getMonthValue());
         String expirationYear = String.valueOf(expiresAt.getYear());
         
-        // Build virtual card
         VirtualCard card = VirtualCard.builder()
                 .cardId(cardId)
                 .userId(request.getUserId())
@@ -63,7 +59,7 @@ public class VirtualCardService {
                 .cardHolderName(request.getAccountHolderName().toUpperCase())
                 .expirationMonth(expirationMonth)
                 .expirationYear(expirationYear)
-                .cvv(cvv) 
+                .cvv(cvv)
                 .status(CardStatus.PENDING)
                 .cardType(request.getCardType())
                 .cardPlan(request.getPlan())
@@ -82,141 +78,244 @@ public class VirtualCardService {
                 .merchantCountry(request.getMerchantCountry())
                 .merchantCity(request.getMerchantCity())
                 .bin(cardNumber.substring(0, 6))
+                .firstFour(cardNumber.substring(0, 4))
                 .lastFour(cardNumber.substring(cardNumber.length() - 4))
                 .maskedCardNumber(maskCardNumber(cardNumber))
+                .hashedCardNumber(formatCardNumberForDisplay(cardNumber))
                 .expiresAt(expiresAt)
                 .activatedAt(LocalDateTime.now())
                 .build();
         
-        // Set limit reset date if limit period is specified
         if (request.getLimitPeriod() != null) {
             card.setLimitResetDate(calculateLimitResetDate(request.getLimitPeriod()));
         }
         
         VirtualCard savedCard = virtualCardRepository.save(card);
-        log.info("Virtual card created successfully: {}", savedCard.getCardId());
+
+        LocalDateTime now = LocalDateTime.now();
+        CardLimit cardLimit = CardLimit.builder()
+                .cardId(savedCard.getCardId())
+                .maxTransactionAmount(new BigDecimal("10000.00"))
+                .minTransactionAmount(new BigDecimal("1.00"))
+                .dailyLimit(new BigDecimal("5000.00"))
+                .dailySpent(BigDecimal.ZERO)
+                .dailyResetAt(now.plusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0))
+                .weeklyLimit(new BigDecimal("20000.00"))
+                .weeklySpent(BigDecimal.ZERO)
+                .weeklyResetAt(now.plusWeeks(1).with(java.time.DayOfWeek.MONDAY)
+                        .withHour(0).withMinute(0).withSecond(0).withNano(0))
+                .monthlyLimit(new BigDecimal("50000.00"))
+                .monthlySpent(BigDecimal.ZERO)
+                .monthlyResetAt(now.plusMonths(1).withDayOfMonth(1)
+                        .withHour(0).withMinute(0).withSecond(0).withNano(0))
+                .dailyTransactionCountLimit(50)
+                .dailyTransactionCount(0)
+                .build();
         
-        return mapToResponse(savedCard);
+        cardLimitRepository.save(cardLimit);
+        return mapToResponse(savedCard, cardLimit);
     }
 
-    // ==================== READ ====================
     @Transactional(readOnly = true)
     public VirtualCardResponse getCardById(String cardId) {
-        log.info("Fetching virtual card: {}", cardId);
         VirtualCard card = findCardByIdOrThrow(cardId);
-        return mapToResponse(card);
+        CardLimit cardLimit = findCardLimitByCardId(cardId);
+        return mapToResponse(card, cardLimit);
     }
 
     @Transactional(readOnly = true)
     public VirtualCardDetailsResponse getCardDetails(String cardId) {
-        log.info("Fetching virtual card details: {}", cardId);
         VirtualCard card = findCardByIdOrThrow(cardId);
-        return mapToDetailsResponse(card);
+        CardLimit cardLimit = findCardLimitByCardId(cardId);
+        return mapToDetailsResponse(card, cardLimit);
     }
 
     @Transactional(readOnly = true)
     public List<VirtualCardResponse> getCardsByUserId(Long userId) {
-        log.info("Fetching all cards for user: {}", userId);
         List<VirtualCard> cards = virtualCardRepository.findByUserIdAndDeletedAtIsNull(userId);
         return cards.stream()
-                .map(this::mapToResponse)
+                .map(card -> mapToResponse(card, findCardLimitByCardId(card.getCardId())))
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public Page<VirtualCardResponse> getCardsByUserId(Long userId, Pageable pageable) {
-        log.info("Fetching cards for user: {} with pagination", userId);
         Page<VirtualCard> cards = virtualCardRepository.findByUserIdAndDeletedAtIsNull(userId, pageable);
-        return cards.map(this::mapToResponse);
+        return cards.map(card -> mapToResponse(card, findCardLimitByCardId(card.getCardId())));
     }
 
     @Transactional(readOnly = true)
     public List<VirtualCardResponse> getActiveCardsByUserId(Long userId) {
-        log.info("Fetching active cards for user: {}", userId);
-        List<VirtualCard> cards = virtualCardRepository.findByUserIdAndStatusAndDeletedAtIsNull(
-                userId, CardStatus.AUTHORIZED);
+        List<VirtualCard> cards = virtualCardRepository.findByUserIdAndStatusAndDeletedAtIsNull(userId, CardStatus.AUTHORIZED);
         return cards.stream()
-                .map(this::mapToResponse)
+                .map(card -> mapToResponse(card, findCardLimitByCardId(card.getCardId())))
                 .collect(Collectors.toList());
     }
 
-    // ==================== UPDATE ====================
     @Transactional
     public VirtualCardResponse updateCard(String cardId, UpdateVirtualCardRequest request) {
-        log.info("Updating virtual card: {}", cardId);
         VirtualCard card = findCardByIdOrThrow(cardId);
         
-        // Update only provided fields
-        if (request.getAccountHolderName()!= null) {
+        if (request.getAccountHolderName() != null) {
             card.setCardHolderName(request.getAccountHolderName().toUpperCase());
         }
-        
         if (request.getStatus() != null) {
             updateCardStatus(card, request.getStatus());
         }
-        
         if (request.getSpendingLimit() != null) {
             card.setSpendingLimit(request.getSpendingLimit());
         }
-        
         if (request.getLimitPeriod() != null) {
             card.setLimitPeriod(request.getLimitPeriod());
             card.setLimitResetDate(calculateLimitResetDate(request.getLimitPeriod()));
         }
-        
         if (request.getAllowInternational() != null) {
             card.setAllowInternational(request.getAllowInternational());
         }
-        
         if (request.getAllowOnline() != null) {
             card.setAllowOnline(request.getAllowOnline());
         }
-        
         if (request.getAllowAtm() != null) {
             card.setAllowAtm(request.getAllowAtm());
         }
-        
         if (request.getAllowContactless() != null) {
             card.setAllowContactless(request.getAllowContactless());
         }
-        
         if (request.getMerchantName() != null) {
             card.setMerchantName(request.getMerchantName());
         }
-        
         if (request.getMerchantId() != null) {
             card.setMerchantId(request.getMerchantId());
         }
-        
         if (request.getMerchantCategoryCode() != null) {
             card.setMerchantCategoryCode(request.getMerchantCategoryCode());
         }
-        
         if (request.getMerchantCountry() != null) {
             card.setMerchantCountry(request.getMerchantCountry());
         }
-        
         if (request.getMerchantCity() != null) {
             card.setMerchantCity(request.getMerchantCity());
         }
         
         VirtualCard updatedCard = virtualCardRepository.save(card);
-        log.info("Virtual card updated successfully: {}", cardId);
-        
-        return mapToResponse(updatedCard);
+        return mapToResponse(updatedCard, findCardLimitByCardId(cardId));
     }
 
     @Transactional
     public VirtualCardResponse updateCardStatus(String cardId, UpdateCardStatusRequest request) {
-        log.info("Updating card status: {} to {}", cardId, request.getStatus());
         VirtualCard card = findCardByIdOrThrow(cardId);
-        
         updateCardStatus(card, request.getStatus());
+        VirtualCard updatedCard = virtualCardRepository.save(card);
+        return mapToResponse(updatedCard, findCardLimitByCardId(cardId));
+    }
+
+    @Transactional
+    public VirtualCardResponse updateBalance(String cardId, UpdateBalanceRequest request) {
+        VirtualCard card = findCardByIdOrThrow(cardId);
+        validateCardActive(card);
+        
+        BigDecimal newBalance;
+        if (request.getOperation() == BalanceOperation.ADD) {
+            newBalance = card.getBalance().add(request.getAmount());
+        } else {
+            if (!card.hasAvailableBalance(request.getAmount())) {
+                throw new InsufficientBalanceException(cardId);
+            }
+            newBalance = card.getBalance().subtract(request.getAmount());
+        }
+        
+        card.setBalance(newBalance);
+        card.setLastUsedAt(LocalDateTime.now());
         
         VirtualCard updatedCard = virtualCardRepository.save(card);
-        log.info("Card status updated successfully: {}", cardId);
+        return mapToResponse(updatedCard, findCardLimitByCardId(cardId));
+    }
+
+    @Transactional
+    public void deleteCard(String cardId) {
+        VirtualCard card = findCardByIdOrThrow(cardId);
+        if(card !=null){
+           cardLimitRepository.deleteByCardId(cardId);
+            virtualCardRepository.deleteByCardId(cardId); 
+        }
+    }
+
+    @Transactional
+    public void deleteAllCardsByUserId(Long userId) {
+        List<VirtualCard> cards = virtualCardRepository.findByUserId(userId);
+        cards.forEach(card -> cardLimitRepository.deleteByCardId(card.getCardId()));
+        virtualCardRepository.deleteAllByUserId(userId);
+    }
+
+    @Transactional
+    public VirtualCardResponse freezeCard(String cardId) {
+        VirtualCard card = findCardByIdOrThrow(cardId);
         
-        return mapToResponse(updatedCard);
+        if (card.getStatus() == CardStatus.FROZEN) {
+            throw new InvalidCardOperationException("Card is already frozen");
+        }
+        if (card.getStatus() == CardStatus.CANCELLED) {
+            throw new InvalidCardOperationException("Cannot freeze a cancelled card");
+        }
+        
+        card.setStatus(CardStatus.FROZEN);
+        card.setFrozenAt(LocalDateTime.now());
+        
+        VirtualCard updatedCard = virtualCardRepository.save(card);
+        return mapToResponse(updatedCard, findCardLimitByCardId(cardId));
+    }
+
+    @Transactional
+    public VirtualCardResponse unfreezeCard(String cardId) {
+        VirtualCard card = findCardByIdOrThrow(cardId);
+        
+        if (card.getStatus() != CardStatus.FROZEN) {
+            throw new InvalidCardOperationException("Card is not frozen");
+        }
+        
+        card.setStatus(CardStatus.ACTIVE);
+        card.setFrozenAt(null);
+        
+        VirtualCard updatedCard = virtualCardRepository.save(card);
+        return mapToResponse(updatedCard, findCardLimitByCardId(cardId));
+    }
+
+    @Transactional
+    public VirtualCardResponse cancelCard(String cardId) {
+        VirtualCard card = findCardByIdOrThrow(cardId);
+        
+        if (card.getStatus() == CardStatus.CANCELLED) {
+            throw new InvalidCardOperationException("Card is already cancelled");
+        }
+        
+        card.setStatus(CardStatus.CANCELLED);
+        card.setCancelledAt(LocalDateTime.now());
+        
+        VirtualCard updatedCard = virtualCardRepository.save(card);
+        return mapToResponse(updatedCard, findCardLimitByCardId(cardId));
+    }
+
+    private VirtualCard findCardByIdOrThrow(String cardId) {
+        return virtualCardRepository.findByCardIdAndDeletedAtIsNull(cardId)
+                .orElseThrow(() -> new CardNotFoundException(cardId));
+    }
+
+    private CardLimit findCardLimitByCardId(String cardId) {
+        return cardLimitRepository.findByCardId(cardId)
+                .orElseThrow(() -> new RuntimeException("Card limit not found for card: " + cardId));
+    }
+
+    private void validateUserExists(Long userId) {
+        userServiceClient.findById(userId);
+    }
+
+    private void validateCardActive(VirtualCard card) {
+        if (!card.isActive()) {
+            throw new CardNotActiveException(card.getCardId());
+        }
+        if (card.isExpired()) {
+            throw new CardExpiredException(card.getCardId());
+        }
     }
 
     private void updateCardStatus(VirtualCard card, CardStatus newStatus) {
@@ -242,159 +341,18 @@ public class VirtualCardService {
                 card.setCancelledAt(LocalDateTime.now());
                 card.setFrozenAt(LocalDateTime.now());
             }
-            default -> throw new IllegalArgumentException("Unknown card status: " + newStatus);
         }
     }
 
-    @Transactional
-    public VirtualCardResponse updateBalance(String cardId, UpdateBalanceRequest request) {
-        log.info("Updating balance for card: {}", cardId);
-        VirtualCard card = findCardByIdOrThrow(cardId);
-        
-        validateCardActive(card);
-        
-        BigDecimal newBalance;
-        if (request.getOperation() == BalanceOperation.ADD) {
-            newBalance = card.getBalance().add(request.getAmount());
-            log.info("Adding {} to card balance", request.getAmount());
-        } else {
-            if (!card.hasAvailableBalance(request.getAmount())) {
-                throw new InsufficientBalanceException(cardId);
-            }
-            newBalance = card.getBalance().subtract(request.getAmount());
-            log.info("Deducting {} from card balance", request.getAmount());
-        }
-        
-        card.setBalance(newBalance);
-        card.setLastUsedAt(LocalDateTime.now());
-        
-        VirtualCard updatedCard = virtualCardRepository.save(card);
-        log.info("Balance updated successfully for card: {}", cardId);
-        
-        return mapToResponse(updatedCard);
-    }
-
-    // ==================== DELETE ====================
-    @Transactional
-    public void deleteCard(String cardId) {
-        log.info("Soft deleting virtual card: {}", cardId);
-        VirtualCard card = findCardByIdOrThrow(cardId);
-        
-        card.setDeletedAt(LocalDateTime.now());
-        card.setStatus(CardStatus.CANCELLED);
-        card.setCancelledAt(LocalDateTime.now());
-        
-        virtualCardRepository.save(card);
-        log.info("Virtual card soft deleted successfully: {}", cardId);
-    }
-
-    @Transactional
-    public void permanentlyDeleteCard(String cardId) {
-        log.info("Permanently deleting virtual card: {}", cardId);
-        VirtualCard card = findCardByIdOrThrow(cardId);
-        virtualCardRepository.delete(card);
-        log.info("Virtual card permanently deleted: {}", cardId);
-    }
-
-    // ==================== CARD OPERATIONS ====================
-    @Transactional
-    public VirtualCardResponse freezeCard(String cardId) {
-        log.info("Freezing card: {}", cardId);
-        VirtualCard card = findCardByIdOrThrow(cardId);
-        
-        if (card.getStatus() == CardStatus.FROZEN) {
-            throw new InvalidCardOperationException("Card is already frozen");
-        }
-        
-        if (card.getStatus() == CardStatus.CANCELLED) {
-            throw new InvalidCardOperationException("Cannot freeze a cancelled card");
-        }
-        
-        card.setStatus(CardStatus.FROZEN);
-        card.setFrozenAt(LocalDateTime.now());
-        
-        VirtualCard updatedCard = virtualCardRepository.save(card);
-        log.info("Card frozen successfully: {}", cardId);
-        
-        return mapToResponse(updatedCard);
-    }
-
-    @Transactional
-    public VirtualCardResponse unfreezeCard(String cardId) {
-        log.info("Unfreezing card: {}", cardId);
-        VirtualCard card = findCardByIdOrThrow(cardId);
-        
-        if (card.getStatus() != CardStatus.FROZEN) {
-            throw new InvalidCardOperationException("Card is not frozen");
-        }
-        
-        card.setStatus(CardStatus.ACTIVE);
-        card.setFrozenAt(null);
-        
-        VirtualCard updatedCard = virtualCardRepository.save(card);
-        log.info("Card unfrozen successfully: {}", cardId);
-        
-        return mapToResponse(updatedCard);
-    }
-
-    @Transactional
-    public VirtualCardResponse cancelCard(String cardId) {
-        log.info("Cancelling card: {}", cardId);
-        VirtualCard card = findCardByIdOrThrow(cardId);
-        
-        if (card.getStatus() == CardStatus.CANCELLED) {
-            throw new InvalidCardOperationException("Card is already cancelled");
-        }
-        
-        card.setStatus(CardStatus.CANCELLED);
-        card.setCancelledAt(LocalDateTime.now());
-        
-        VirtualCard updatedCard = virtualCardRepository.save(card);
-        log.info("Card cancelled successfully: {}", cardId);
-        
-        return mapToResponse(updatedCard);
-    }
-
-    // ==================== HELPER METHODS ====================
-    private VirtualCard findCardByIdOrThrow(String cardId) {
-        return virtualCardRepository.findByCardIdAndDeletedAtIsNull(cardId)
-                .orElseThrow(() -> new CardNotFoundException(cardId));
-    }
-
-    private void validateUserExists(Long userId) {
-        UserDTO user = userServiceClient.findById(userId);
-        if(!user.getUsername().isEmpty() && !user.getUsername().isBlank());
-    }
-
-    private void validateCardActive(VirtualCard card) {
-        if (!card.isActive()) {
-            throw new CardNotActiveException(card.getCardId());
-        }
-        
-        if (card.isExpired()) {
-            throw new CardExpiredException(card.getCardId());
-        }
-    }
-
-   
     private String generateCardNumber(pesco.example.virtual_card_service.enums.CardType cardType) {
-        // Generate a valid card number using Luhn algorithm
         StringBuilder cardNumber = new StringBuilder();
-        switch (cardType) {
-            case VISA -> cardNumber.append("4"); 
-            case MASTER -> cardNumber.append("5"); 
-            default -> cardNumber.append("4");
-        }
+        cardNumber.append(cardType == pesco.example.virtual_card_service.enums.CardType.VISA ? "4" : "5");
         
-        // Generate 14 random digits
         for (int i = 0; i < 14; i++) {
             cardNumber.append(random.nextInt(10));
         }
         
-        // Calculate and append Luhn check digit
-        int checkDigit = calculateLuhnCheckDigit(cardNumber.toString());
-        cardNumber.append(checkDigit);
-        
+        cardNumber.append(calculateLuhnCheckDigit(cardNumber.toString()));
         return cardNumber.toString();
     }
 
@@ -423,39 +381,46 @@ public class VirtualCardService {
         return String.format("%03d", random.nextInt(1000));
     }
 
+    private String formatCardNumberForDisplay(String cardNumber) {
+        if (cardNumber == null || cardNumber.length() != 16) {
+            return cardNumber;
+        }
+        
+        return cardNumber.substring(0, 4) + "-" + 
+               cardNumber.substring(4, 8) + "-" + 
+               cardNumber.substring(8, 12) + "-" + 
+               cardNumber.substring(12, 16);
+    }
+
     private String maskCardNumber(String cardNumber) {
         if (cardNumber == null || cardNumber.length() < 4) {
             return cardNumber;
         }
         
-        String lastFour = cardNumber.substring(cardNumber.length() - 4);
-        return "****-****-****-" + lastFour;
+        return "****-****-****-" + cardNumber.substring(cardNumber.length() - 4);
     }
 
     private LocalDate calculateLimitResetDate(LimitPeriod period) {
         LocalDate now = LocalDate.now();
         
-        switch (period) {
-            case DAILY:
-                return now.plusDays(1);
-            case WEEKLY:
-                return now.plusWeeks(1);
-            case MONTHLY:
-                return now.plusMonths(1);
-            case TRANSACTION:
-            default:
-                return null;
-        }
+        return switch (period) {
+            case DAILY -> now.plusDays(1);
+            case WEEKLY -> now.plusWeeks(1);
+            case MONTHLY -> now.plusMonths(1);
+            case TRANSACTION -> null;
+        };
     }
 
-    private VirtualCardResponse mapToResponse(VirtualCard card) {
+    private VirtualCardResponse mapToResponse(VirtualCard card, CardLimit cardLimit) {
         return VirtualCardResponse.builder()
                 .id(card.getId())
                 .cardId(card.getCardId())
                 .userId(card.getUserId())
                 .cardHolderName(card.getCardHolderName())
                 .maskedCardNumber(card.getMaskedCardNumber())
+                .firstFour(card.getFirstFour())
                 .lastFour(card.getLastFour())
+                .hashedCardNumber(card.getHashedCardNumber())
                 .expirationMonth(card.getExpirationMonth())
                 .expirationYear(card.getExpirationYear())
                 .status(card.getStatus())
@@ -478,21 +443,24 @@ public class VirtualCardService {
                 .expiresAt(card.getExpiresAt())
                 .createdAt(card.getCreatedAt())
                 .lastUsedAt(card.getLastUsedAt())
+                .cardLimit(cardLimit)
                 .build();
     }
 
-    private VirtualCardDetailsResponse mapToDetailsResponse(VirtualCard card) {
+    private VirtualCardDetailsResponse mapToDetailsResponse(VirtualCard card, CardLimit cardLimit) {
         return VirtualCardDetailsResponse.builder()
                 .id(card.getId())
                 .cardId(card.getCardId())
                 .userId(card.getUserId())
-                .cardNumber(card.getCardNumber()) 
+                .cardNumber(card.getCardNumber())
                 .cardHolderName(card.getCardHolderName())
                 .expirationMonth(card.getExpirationMonth())
                 .expirationYear(card.getExpirationYear())
-                .cvv(card.getCvv()) 
+                .cvv(card.getCvv())
                 .maskedCardNumber(card.getMaskedCardNumber())
+                .firstFour(card.getFirstFour())
                 .lastFour(card.getLastFour())
+                .hashedCardNumber(card.getHashedCardNumber())
                 .status(card.getStatus())
                 .cardType(card.getCardType())
                 .cardPlan(card.getCardPlan())
@@ -505,9 +473,15 @@ public class VirtualCardService {
                 .allowOnline(card.getAllowOnline())
                 .allowAtm(card.getAllowAtm())
                 .allowContactless(card.getAllowContactless())
+                .merchantName(card.getMerchantName())
+                .merchantId(card.getMerchantId())
+                .merchantCategoryCode(card.getMerchantCategoryCode())
+                .merchantCountry(card.getMerchantCountry())
+                .merchantCity(card.getMerchantCity())
                 .expiresAt(card.getExpiresAt())
                 .createdAt(card.getCreatedAt())
                 .lastUsedAt(card.getLastUsedAt())
+                .cardLimit(cardLimit)
                 .build();
     }
 }

@@ -232,6 +232,42 @@ services:
     depends_on:
       - history-service
       - wallet-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8035/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - banking-network
+
+  
+  virtual-card-service:
+    build: ./virtual-card-service
+    container_name: virtual-card-service
+    ports:
+      - "8037:8037"
+    depends_on:
+      postgres:
+        condition: service_healthy  # Wait for postgres to be healthy
+      history-service:
+        condition: service_started
+      wallet-service:
+        condition: service_started
+      authentication-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/pesco_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8037/actuator/health"]  # Fixed port
+      interval: 30s
+      timeout: 10s
+      retries: 5  # Increased retries
+      start_period: 90s  # More time for Spring Boot startup
     networks:
       - banking-network
 
