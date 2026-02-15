@@ -134,7 +134,7 @@ public class VirtualCardService {
     public List<VirtualCardResponse> getActiveCardsByUserId(Long userId) {
         log.info("Fetching active cards for user: {}", userId);
         List<VirtualCard> cards = virtualCardRepository.findByUserIdAndStatusAndDeletedAtIsNull(
-                userId, CardStatus.ACTIVE);
+                userId, CardStatus.AUTHORIZED);
         return cards.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -217,6 +217,33 @@ public class VirtualCardService {
         log.info("Card status updated successfully: {}", cardId);
         
         return mapToResponse(updatedCard);
+    }
+
+    private void updateCardStatus(VirtualCard card, CardStatus newStatus) {
+        card.setStatus(newStatus);
+        
+        switch (newStatus) {
+            case ACTIVE -> {
+                card.setActivatedAt(LocalDateTime.now());
+                card.setFrozenAt(null);
+                card.setCancelledAt(null);
+            }
+            case PENDING -> {
+                card.setActivatedAt(null);
+                card.setFrozenAt(null);
+            }
+            case FROZEN -> card.setFrozenAt(LocalDateTime.now());
+            case SUSPENDED -> card.setFrozenAt(LocalDateTime.now());
+            case EXPIRED -> card.setFrozenAt(LocalDateTime.now());
+            case AUTHORIZED -> card.setActivatedAt(LocalDateTime.now());
+            case APPROVED -> card.setActivatedAt(LocalDateTime.now());
+            case REJECTED -> card.setActivatedAt(null);
+            case CANCELLED -> {
+                card.setCancelledAt(LocalDateTime.now());
+                card.setFrozenAt(LocalDateTime.now());
+            }
+            default -> throw new IllegalArgumentException("Unknown card status: " + newStatus);
+        }
     }
 
     @Transactional
@@ -349,34 +376,7 @@ public class VirtualCardService {
         }
     }
 
-    private void updateCardStatus(VirtualCard card, CardStatus newStatus) {
-        CardStatus currentStatus = card.getStatus();
-        
-        // Validate status transitions
-        if (currentStatus == CardStatus.CANCELLED) {
-            throw new InvalidCardOperationException("Cannot update status of a cancelled card");
-        }
-        
-        card.setStatus(newStatus);
-        
-        switch (newStatus) {
-            case ACTIVE -> {
-                card.setActivatedAt(LocalDateTime.now());
-                card.setFrozenAt(null);
-            }
-            case FROZEN -> card.setFrozenAt(LocalDateTime.now());
-            case CANCELLED -> card.setCancelledAt(LocalDateTime.now());
-            case EXPIRED -> {
-            }
-            case APPROVED -> throw new UnsupportedOperationException("Unimplemented case: " + newStatus);
-            case AUTHORIZED -> throw new UnsupportedOperationException("Unimplemented case: " + newStatus);
-            case PENDING -> throw new UnsupportedOperationException("Unimplemented case: " + newStatus);
-            case REJECTED -> throw new UnsupportedOperationException("Unimplemented case: " + newStatus);
-            case SUSPENDED -> throw new UnsupportedOperationException("Unimplemented case: " + newStatus);
-            default -> throw new IllegalArgumentException("Unexpected value: " + newStatus);
-        }
-    }
-
+   
     private String generateCardNumber(pesco.example.virtual_card_service.enums.CardType cardType) {
         // Generate a valid card number using Luhn algorithm
         StringBuilder cardNumber = new StringBuilder();

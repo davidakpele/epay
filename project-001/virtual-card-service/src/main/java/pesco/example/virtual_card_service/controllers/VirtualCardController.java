@@ -138,8 +138,8 @@ public class VirtualCardController {
         VirtualCardResponse response = virtualCardService.updateCard(cardId, request);
         return ResponseEntity.ok(response);
     }
-
-    @PatchMapping("/{cardId}/status")
+    
+    @PutMapping("/{cardId}/status")
     @Operation(summary = "Update card status", description = "Updates the status of a virtual card")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Status updated successfully"),

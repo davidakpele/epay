@@ -7,6 +7,10 @@ spring:
   web:
     resources:
       add-mappings: false
+  jackson:
+      deserialization:
+        fail-on-null-for-primitives: false
+      default-property-inclusion: non_null
   main:
     allow-bean-definition-overriding: true
   security:
@@ -55,6 +59,65 @@ spring:
   sql:
     init:
       mode: never
+  # ==================== DISABLE AUTO-CONFIGURATIONS ====================
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration
+
+# ==================== SWAGGER/OPENAPI CONFIGURATION ====================
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+    version: openapi_3_0
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    filter: true
+    display-request-duration: true
+    doc-expansion: none
+    default-models-expand-depth: 3
+    default-model-expand-depth: 3
+    show-extensions: true
+    show-common-extensions: true
+    disable-swagger-default-url: true
+    use-root-path: false
+  packages-to-scan: pesco.example.virtual_card_service.controllers
+  paths-to-match: /api/**
+  show-actuator: false
+  writer-with-default-pretty-printer: true
+  override-with-generic-response: false
+  cache:
+    disabled: false
+  # Disable HATEOAS support in SpringDoc
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+  use-management-port: false
+  pre-loading-enabled: false
+
+# Application metadata for Swagger
+app:
+  name: Virtual Card Service
+  version: 1.0.0
+  description: REST API for managing virtual cards with comprehensive CRUD operations, security features, and spending controls
+  contact:
+    name: Virtual Card Team
+    email: support@virtualcard.com
+    url: https://virtualcard.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  servers:
+    - url: http://localhost:8037
+      description: Local Development Server
+    - url: http://localhost:8037
+      description: Development Environment
+    - url: https://api.virtualcard.com
+      description: Production Server
 
 file:
   upload-dir: ${FILE_UPLOAD_DIR:/var/www/uploads/images}
@@ -94,26 +157,26 @@ web:
     static-locations: classpath:/static/
 
 notification-service:
-  base-url: http://notification-service:8079
+  base-url: http://localhost:8079
 
 wallet-service:
-  base-url: http://wallet-service:8035
+  base-url: http://localhost:8035
 
 authentication-service:
-  base-url: http://wallet-service:8035
+  base-url: http://localhost:8187
 
 history-service:
-  base-url: http://wallet-service:8035
+  base-url: http://localhost:8390
 
 wallet-websocket:
-  url: ws://wallet-service:8035/ws/wallet
+  url: ws://localhost:8035/ws/wallet
 
 grpc:
   server:
     port: 9090
   client:
     wallet-service:
-      address: static://wallet-service:9090
+      address: static://localhost:9090
       negotiationType: plaintext
 
 logging:
@@ -123,3 +186,23 @@ logging:
     com.example.demo: DEBUG
     org.springframework.security: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    pesco.example.virtual_card_service: DEBUG
+    springdoc: INFO
+    org.springframework.boot.autoconfigure: WARN
+
+# ==================== PROFILE-SPECIFIC SWAGGER CONFIGURATION ====================
+---
+# Development Profile
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  show-actuator: false
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+

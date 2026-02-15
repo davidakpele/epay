@@ -16,12 +16,7 @@ import jakarta.persistence.*;
 @Data
 @Builder
 @Entity
-@Table(name = "virtual_cards", indexes = {
-    @Index(name = "idx_user_id", columnList = "user_id"),
-    @Index(name = "idx_card_id", columnList = "card_id"),
-    @Index(name = "idx_card_number", columnList = "card_number"),
-    @Index(name = "idx_status", columnList = "status")
-})
+@Table(name = "virtual_cards")
 public class VirtualCard {
     
     @Id

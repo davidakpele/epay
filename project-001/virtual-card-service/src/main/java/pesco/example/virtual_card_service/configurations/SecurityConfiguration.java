@@ -1,6 +1,6 @@
 package pesco.example.virtual_card_service.configurations;
 
-import java.util.Arrays;
+import java.util.List;
 import javax.crypto.SecretKey;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,14 +65,14 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         
         configuration.setAllowCredentials(true);
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
         
-        configuration.setAllowedMethods(Arrays.asList(
+        configuration.setAllowedMethods(List.of(
             "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
         ));
         
-        configuration.setAllowedHeaders(Arrays.asList(
-        "Authorization",
+        configuration.setAllowedHeaders(List.of(
+            "Authorization",
             "Content-Type",
             "X-Requested-With",
             "Accept",
@@ -88,7 +88,7 @@ public class SecurityConfiguration {
             "Sec-WebSocket-Extensions"
         ));
         
-        configuration.setExposedHeaders(Arrays.asList(
+        configuration.setExposedHeaders(List.of(
             "Authorization",
             "Content-Type",
             "X-Request-ID",
@@ -144,7 +144,8 @@ public class SecurityConfiguration {
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
-                 .requestMatchers(
+                .requestMatchers("/api/v1/virtual-cards/**").permitAll()
+                .requestMatchers(
                     "/actuator/health",
                     "/health",
                     "/swagger-ui.html",

@@ -1,6 +1,8 @@
 package pesco.example.virtual_card_service.configurations;
 
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,7 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import pesco.example.virtual_card_service.bootstrap.UsersDetailsDTO;
 import pesco.example.virtual_card_service.clients.UserServiceClient;
 import pesco.example.virtual_card_service.components.TokenExtractor;
-import pesco.example.virtual_card_service.dto.UserRecordDTO;
+
 
 @Configuration
 public class ApplicationConfiguration {
@@ -74,7 +76,8 @@ public class ApplicationConfiguration {
     }
 
     private boolean isAccountLocked(UsersDetailsDTO userDTO) {
-        return userDTO.getRecords().stream().anyMatch(UserRecordDTO::isLocked);
+        return userDTO.getRecords().stream()
+                .anyMatch(record -> Optional.ofNullable(record.getLocked()).orElse(false));
     }
 
     @Bean
