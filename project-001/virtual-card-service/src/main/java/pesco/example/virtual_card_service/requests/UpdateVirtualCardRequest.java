@@ -1,20 +1,15 @@
 package pesco.example.virtual_card_service.requests;
 
 import java.math.BigDecimal;
-
-import pesco.example.virtual_card_service.enums.CardPlan;
-import pesco.example.virtual_card_service.enums.CardType;
+import pesco.example.virtual_card_service.enums.CardStatus;
 import pesco.example.virtual_card_service.enums.LimitPeriod;
 
-public class CreateVirtualCardRequest {
-    private Long userId;
+public class UpdateVirtualCardRequest {
+    private Long cardId;
     private String accountHolderName;
-    private CardType cardType;
-    private String currency;
-    private BigDecimal initialBalance;
     private BigDecimal spendingLimit;
     private LimitPeriod limitPeriod;
-    private CardPlan plan;
+    private CardStatus status;
     private Boolean allowInternational;
     private Boolean allowOnline;
     private Boolean allowAtm;
@@ -25,18 +20,15 @@ public class CreateVirtualCardRequest {
     private String merchantCountry;
     private String merchantCity;
 
-    public CreateVirtualCardRequest() {
+    public UpdateVirtualCardRequest() {
     }
 
-    public CreateVirtualCardRequest(Long userId, String accountHolderName, CardType cardType, String currency, BigDecimal initialBalance, BigDecimal spendingLimit, LimitPeriod limitPeriod, CardPlan plan, Boolean allowInternational, Boolean allowOnline, Boolean allowAtm, Boolean allowContactless, String merchantName, String merchantId, String merchantCategoryCode, String merchantCountry, String merchantCity) {
-        this.userId = userId;
+    public UpdateVirtualCardRequest(Long cardId, String accountHolderName, BigDecimal spendingLimit, LimitPeriod limitPeriod, CardStatus status, Boolean allowInternational, Boolean allowOnline, Boolean allowAtm, Boolean allowContactless, String merchantName, String merchantId, String merchantCategoryCode, String merchantCountry, String merchantCity) {
+        this.cardId = cardId;
         this.accountHolderName = accountHolderName;
-        this.cardType = cardType;
-        this.currency = currency;
-        this.initialBalance = initialBalance;
         this.spendingLimit = spendingLimit;
         this.limitPeriod = limitPeriod;
-        this.plan = plan;
+        this.status = status;
         this.allowInternational = allowInternational;
         this.allowOnline = allowOnline;
         this.allowAtm = allowAtm;
@@ -48,13 +40,12 @@ public class CreateVirtualCardRequest {
         this.merchantCity = merchantCity;
     }
 
-
-    public Long getUserId() {
-        return this.userId;
+    public Long getCardId() {
+        return this.cardId;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setCardId(Long cardId) {
+        this.cardId = cardId;
     }
 
     public String getAccountHolderName() {
@@ -63,30 +54,6 @@ public class CreateVirtualCardRequest {
 
     public void setAccountHolderName(String accountHolderName) {
         this.accountHolderName = accountHolderName;
-    }
-
-    public CardType getCardType() {
-        return this.cardType;
-    }
-
-    public void setCardType(CardType cardType) {
-        this.cardType = cardType;
-    }
-
-    public String getCurrency() {
-        return this.currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
-    public BigDecimal getInitialBalance() {
-        return this.initialBalance;
-    }
-
-    public void setInitialBalance(BigDecimal initialBalance) {
-        this.initialBalance = initialBalance;
     }
 
     public BigDecimal getSpendingLimit() {
@@ -105,12 +72,12 @@ public class CreateVirtualCardRequest {
         this.limitPeriod = limitPeriod;
     }
 
-    public CardPlan getPlan() {
-        return this.plan;
+    public CardStatus getStatus() {
+        return this.status;
     }
 
-    public void setPlan(CardPlan plan) {
-        this.plan = plan;
+    public void setStatus(CardStatus status) {
+        this.status = status;
     }
 
     public Boolean isAllowInternational() {

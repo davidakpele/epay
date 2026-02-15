@@ -8,5 +8,6 @@ public enum CardStatus {
     EXPIRED,      // Past expiration date
     AUTHORIZED,    // Funds held
     APPROVED,       // Approved for use
-    REJECTED
+    REJECTED,
+    CANCELLED
 }
