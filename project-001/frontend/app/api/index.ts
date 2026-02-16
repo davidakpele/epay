@@ -10,7 +10,7 @@ import withdrawService from './services/withdrawService';
 import historyService from './services/historyService';
 import configService from './services/configService';
 import  beneficiaryService from './services/beneficiaryService';
-// Re-export utilities and config
+import virtualCardService from './services/virtualCardService';
 export * from './utils';
 export * from './config';
 
@@ -27,6 +27,7 @@ export {
   historyService,
   configService,
   beneficiaryService,
+  virtualCardService,
 };
 
 // Default export as a grouped object
@@ -41,7 +42,8 @@ const api = {
   withdrawService,
   historyService,
   configService,
-  beneficiaryService
+  beneficiaryService,
+  virtualCardService
 };
 
 export default api;

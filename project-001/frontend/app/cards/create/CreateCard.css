@@ -329,3 +329,139 @@
     height: 45px;
   }
 }
+
+.account-selector-container{
+  border: 1px solid #c8c9cb;
+  padding: 10px;
+  border-radius:8px;
+  cursor: pointer;
+}
+.account-selector-container span{
+  color:#444;
+  margin-top:-10;
+}
+
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10001;
+  font-family: "Karla", sans-serif !important;
+}
+
+.modal-content {
+  background: #fff;
+  width: 20rem;
+  height: 30rem;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; 
+}
+
+.modal-header h3 {
+  font-size: 15px;
+  margin: 0 0 16px 0;
+  color: #333;
+  font-family: "Karla", sans-serif !important;
+}
+
+.search-container {
+  position: relative;
+  background: transparent;
+  z-index: 10;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.search-icon-inside {
+  position: absolute;
+  left: 12px;
+  top: 8px;
+  color: #15670182;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 8px 8px 8px 36px;
+    border: 1px solid #15670182;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #444;
+    font-family: "Karla", sans-serif;
+    box-sizing: border-box; 
+    outline: none;
+}
+
+.country-list {
+  display: block;
+  flex: 1;
+  overflow-y: auto; 
+  padding-right: 8px;
+}
+
+.country-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #f8f9fa;
+  cursor: pointer;
+  font-size: 12px;
+  color: #444;
+  font-family: "Karla", sans-serif !important;
+}
+
+.radio-outer {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.radio-outer.checked {
+  border-color: var(--bg-main);
+}
+
+.radio-inner {
+  width: 10px;
+  height: 10px;
+  background: var(--bg-main);
+  border-radius: 50%;
+  display: none;
+}
+
+.radio-outer.checked .radio-inner {
+  display: block;
+}
+
+.country-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.country-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.country-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.country-list.is-scrolling::-webkit-scrollbar-thumb,
+.country-list::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-main)
+}

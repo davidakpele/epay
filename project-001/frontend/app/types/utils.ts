@@ -21,6 +21,12 @@ export interface WithdrawModalProps {
   onWithdrawReloadSuccess?: () => void; 
 }
 
+export interface HistoryFilterPayload {
+  startDate: string;
+  endDate: string;
+  transactionType: string;
+  currency: string;
+}
 
 export interface Bank {
   id: number;

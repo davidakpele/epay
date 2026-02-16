@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Select from 'react-select';
-import { ArrowLeft, User, CheckCircle } from 'lucide-react';
+import { ArrowLeft, User, CheckCircle, Search } from 'lucide-react';
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -11,67 +11,15 @@ import Sidebar from '@/components/Sidebar';
 import MobileNav from '@/components/MobileNav';
 import DepositModal from '@/components/DepositModal';
 import "./CreateCard.css";
+import LoadingScreen from '@/components/loader/Loadingscreen';
+import { eventEmitter } from '@/app/utils/eventEmitter';
+import { getFiat, getToken, getUserFullName, getUserId, getUsername, setActiveWallet, setFiat, setWalletContainer, virtualCardService, walletService } from '@/app/api';
+import { Currency } from '@/app/types/api';
 
-const customStyles = {
-  control: (base: any, state: any) => ({
-    ...base,
-    backgroundColor: 'white',
-    borderColor: '#e9ecef',
-    borderRadius: '8px',
-    padding: '4px 8px',
-    minHeight: '44px',
-    boxShadow: state.isFocused ? '0 0 0 3px rgba(0, 123, 255, 0.1)' : 'none',
-    borderWidth: '1px',
-    '&:hover': {
-      borderColor: '#007bff'
-    }
-  }),
-  option: (base: any, state: any) => ({
-    ...base,
-    backgroundColor: state.isSelected ? '#6c757d' : state.isFocused ? '#495057' : 'white',
-    color: state.isSelected ? 'white' : state.isFocused ? 'white' : '#333',
-    padding: '10px 12px',
-    cursor: 'pointer',
-    '&:active': {
-      backgroundColor: '#6c757d'
-    }
-  }),
-  menu: (base: any) => ({
-    ...base,
-    backgroundColor: '#f8f9fa',
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    zIndex: 9999
-  }),
-  menuList: (base: any) => ({
-    ...base,
-    padding: '4px',
-    backgroundColor: '#f8f9fa'
-  }),
-  singleValue: (base: any) => ({
-    ...base,
-    color: '#333'
-  }),
-  placeholder: (base: any) => ({
-    ...base,
-    color: '#999'
-  }),
-  dropdownIndicator: (base: any) => ({
-    ...base,
-    color: '#666',
-    '&:hover': {
-      color: '#333'
-    }
-  }),
-  indicatorSeparator: (base: any) => ({
-    ...base,
-    backgroundColor: '#e9ecef'
-  }),
-  loadingIndicator: (base: any) => ({
-    ...base,
-    color: '#666'
-  })
-};
+// Extended Currency interface with balance
+interface CurrencyWithBalance extends Currency {
+  balance?: string;
+}
 
 interface WalletOption {
   value: string;
@@ -86,7 +34,7 @@ interface Wallet {
 
 interface FormData {
   accountCurrency: string;
-  cardType: 'mastercard' | 'visa';
+  cardType: 'MASTER' | 'VISA';
   spendingLimit: string;
   cardTheme: string;
   cardHolderName: string;
@@ -120,10 +68,11 @@ const visaThemes: CardTheme[] = [
   { name: 'theme1', imageUrl: '/assets/images/visaCardBlur.png', label: 'Green' },
   { name: 'theme2', imageUrl: '/assets/images/visaCardBlue.png', label: 'Blue' },
 ];
+
 const CreateCard = () => {
   const router = useRouter();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [cardType, setCardType] = useState<'mastercard' | 'visa'>('mastercard');
+  const [cardType, setCardType] = useState<'MASTER' | 'VISA'>('MASTER');
   const [selectedTheme, setSelectedTheme] = useState('theme1');
   const [options, setOptions] = useState<WalletOption[]>([]);
   const [isLoader, setIsLoader] = useState(true);
@@ -134,16 +83,88 @@ const CreateCard = () => {
   const [userName, setUserName] = useState('');
   const [userHandle, setUserHandle] = useState('');
   const [toasts, setToasts] = useState<Toast[]>([]);
-
+  const [wallet, setWallet] = useState<any>(null);
+  const [currencies, setCurrencies] = useState<CurrencyWithBalance[]>([]);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyWithBalance | null>(null);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
   const [formData, setFormData] = useState<FormData>({
     accountCurrency: '',
-    cardType: 'mastercard',
+    cardType: 'MASTER',
     spendingLimit: '10000.00',
     cardTheme: 'theme1',
     cardHolderName: '',
   });
 
-  // Custom toast function
+  const refreshBalance = useCallback(async () => {
+      try {
+        const token = getToken();
+        const userId = getUserId();
+        
+        if (!token || !userId) {
+          return;
+        }
+        
+        const response = await walletService.getByUserId(userId, token);
+        if (!response || response.status === 401 || response.status === 500) {
+          router.push('/auth/logout');
+          return;
+        }
+        setWallet(response);
+        
+        if (response && response.wallet_balances) {
+          const apiCurrencies: CurrencyWithBalance[] = response.wallet_balances.map((balance: any) => {
+            return {
+              name: balance.currency_code,
+              code: balance.currency_code,
+              symbol: balance.symbol,
+              balance: balance.balance
+            };
+          });
+          
+          setCurrencies(apiCurrencies);
+          if (getFiat() !== '' && getFiat() != null) {
+            const fiatCurrency = apiCurrencies.find(c => c.code === getFiat());
+            if (fiatCurrency) {
+              setSelectedCurrency(fiatCurrency);
+              setFormData(prev => ({...prev, accountCurrency: fiatCurrency.code}));
+            }
+          }
+          else {
+            if (!selectedCurrency && apiCurrencies.length > 0) {
+              const defaultCurrency = apiCurrencies.find(c => c.code === 'NGN') || apiCurrencies[0];
+              setSelectedCurrency(defaultCurrency);
+              setActiveWallet(defaultCurrency.code);
+              setFiat(defaultCurrency.code);
+              setFormData(prev => ({...prev, accountCurrency: defaultCurrency.code}));
+            }
+          }
+            
+          setWalletContainer(response.wallet_balances, response.hasTransferPin, response.walletId);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    }, []); 
+  
+
+   useEffect(() => {
+      document.title = 'Create Card - ePay Online Business Banking';
+      const handleBalanceRefresh = () => {
+        refreshBalance();
+      };
+  
+      eventEmitter.on('refreshBalance', handleBalanceRefresh);
+      
+      return () => {
+        eventEmitter.off('refreshBalance', handleBalanceRefresh);
+      };
+    }, [refreshBalance]);
+
   const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
     setToasts((prev) => {
       if (prev.length >= 5) return prev;
@@ -165,17 +186,12 @@ const CreateCard = () => {
     });
   };
 
-
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
     document.body.classList.toggle('dark-theme', newTheme === 'dark');
-  };
-
-  const handleBankChange = (selectedOption: WalletOption | null) => {
-    handleInputChange('accountCurrency', selectedOption ? selectedOption.value : '');
   };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -192,31 +208,6 @@ const CreateCard = () => {
     }
   };
 
-  const fetchBanklist = async () => {
-    setIsLoader(true);
-    
-    try {
-      // Mock wallet data - replace with actual API call
-      const mockWallets: Wallet[] = [
-        { currency_code: 'NGN', symbol: '₦', balance: '0.00' },
-        { currency_code: 'USD', symbol: '$', balance: '0.00' },
-        { currency_code: 'GBP', symbol: '£', balance: '0.00' }
-      ];
-
-      setWalletData(mockWallets);
-      const walletOptions = mockWallets.map(wallet => ({
-        value: wallet.currency_code,
-        label: `${wallet.symbol} ${wallet.currency_code} - Balance: ${wallet.balance}`
-      }));
-      setOptions(walletOptions);
-      setIsLoader(false);
-    } catch (error) {
-      console.error('Error fetching wallets:', error);
-      setOptions([]);
-      setIsLoader(false);
-    }
-  };
-
   const validateForm = () => {
     const errors: FormErrors = {};
 
@@ -224,7 +215,7 @@ const CreateCard = () => {
       errors.accountCurrency = 'Please select an account currency';
     }
 
-    if (!formData.cardHolderName.trim()) {
+    if (!getUserFullName()?.toString().trim() ) {
       errors.cardHolderName = 'Card holder name is required';
     }
 
@@ -233,56 +224,65 @@ const CreateCard = () => {
   };
 
   const getSelectedWalletBalance = () => {
-    if (!formData.accountCurrency || !walletData.length) return '0.00';
-    const selectedWallet = walletData.find(wallet => 
-      wallet.currency_code === formData.accountCurrency
+    if (!wallet || !wallet.wallet_balances || !selectedCurrency) return '0.00';
+    
+    const balanceData = wallet.wallet_balances.find(
+      (item: any) => item.currency_code === selectedCurrency.code
     );
-    return selectedWallet ? selectedWallet.balance : '0.00';
+    
+    return balanceData ? balanceData.balance : '0.00';
   };
 
-  const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
+  const formatBalance = (balance: string) => {
+    const numBalance = parseFloat(balance);
+    if (isNaN(numBalance)) return '0.00';
+    
+    return numBalance.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
   };
 
-  const preparePayload = async () => {
-    const payload = {
-      id: generateUUID(),
-      user_id: 'user_123', // Replace with actual user ID
-      user_wallet_id: 'wallet_123', // Replace with actual wallet ID
-      accountCurrency: formData.accountCurrency,
-      cardNumber: '',
-      cvv: '',
-      expiryMonth: new Date().getMonth() + 1,
-      expiryYear: new Date().getFullYear() + 3,
-      card_holder_name: formData.cardHolderName,
-      card_type: formData.cardType,
-      card_theme: formData.cardTheme,
-      status: 'pending',
-      spendingLimit: 10000.00,
-      currentBalance: 0,
-      currency: formData.accountCurrency,
-      createdAt: new Date().toISOString(),
-      metadata: {
-        theme: formData.cardTheme,
-        isVirtual: true,
-        cardNetwork: formData.cardType
-      }
-    };
+  const generateMerchantId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 15; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
 
+  const generateMerchantCategoryCode = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  };
+
+  const preparePayload = async () => {
+    const userId = getUserId();
+    const fullName = getUserFullName();
+    
+    const payload = {
+      userId: userId,
+      accountHolderName: fullName?.toUpperCase() || formData.cardHolderName.toUpperCase(),
+      cardType: formData.cardType,
+      currency: formData.accountCurrency,
+      initialBalance: parseFloat(getSelectedWalletBalance()),
+      spendingLimit: parseFloat(formData.spendingLimit),
+      limitPeriod: "TRANSACTION",
+      plan: "SINGLE_USE",
+      allowInternational: true,
+      allowOnline: true,
+      allowAtm: true,
+      allowContactless: true,
+      merchantName: "Standard Chartered Bank",
+      merchantId: generateMerchantId(),
+      merchantCategoryCode: generateMerchantCategoryCode(),
+      merchantCountry: "US",
+      merchantCity: "Washington DC"
+    };
     try {
-      // Replace with your actual API call
-      // const response = await bankCollectionService.createVirtualCard(payload);
-      console.log('Payload:', payload);
-      showToast('Card created successfully!', 'success');
-      setTimeout(() => {
-        router.push('/cards');
-      }, 2000);
+  
+      const response = await virtualCardService.createCard(payload)
     } catch (error) {
-      console.error('Error creating card:', error);
       showToast('Sorry, something went wrong!', 'warning');
     }
   };
@@ -297,12 +297,22 @@ const CreateCard = () => {
   };
 
   useEffect(() => {
-    fetchBanklist();
+    refreshBalance();
+    const storedUserName = getUserFullName()?.toString() || '';
+    const storedUserHandle = getUsername() || '';
+    const userDataString = localStorage.getItem('data');
     
-    // Load user data from localStorage or API
-    const storedUserName = localStorage.getItem('userName') || 'Angel Mike';
-    const storedUserHandle = localStorage.getItem('userHandle') || 'angelmike';
-    const storedVerified = localStorage.getItem('isVerified') === 'true';
+    let storedVerified = false;
+    
+    if (userDataString) {
+      try {
+        
+        const userData = JSON.parse(userDataString);
+        storedVerified = userData.user?.is_verify === true;
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+      }
+    }
     
     setUserName(storedUserName);
     setUserHandle(storedUserHandle);
@@ -328,6 +338,29 @@ const CreateCard = () => {
   const hasError = (field: keyof FormErrors) => {
     return formErrors[field] && formErrors[field] !== '';
   };
+  
+  const handleScroll = () => {
+    setIsScrolling(true);
+    if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => setIsScrolling(false), 1000);
+  };
+
+  const filteredCurrencies = currencies.filter(c => 
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    c.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  useEffect(() => {
+    const loadingTimer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(loadingTimer);
+  }, []);
+
+  if (isPageLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <>
@@ -336,7 +369,6 @@ const CreateCard = () => {
         <main className={`main-content ${isDepositOpen ? 'blur-sm' : ''}`}>
           <Header theme={theme} toggleTheme={toggleTheme} />
           <div className="scrollable-content">
-            {/* Custom Toast Container */}
             <div className="toastrs">
               {toasts.map((toast) => (
                 <div
@@ -366,24 +398,17 @@ const CreateCard = () => {
                   <label htmlFor="accountCurrency" className="section-title">
                     Select account
                   </label>
-                  <Select
-                    options={options}
-                    onChange={handleBankChange}
-                    isDisabled={isLoader}
-                    isLoading={isLoader}
-                    styles={customStyles}
-                    placeholder={isLoader ? "Loading accounts..." : "Select Account Currency"}
-                    noOptionsMessage={() => "No accounts available"}
-                    className={`react-select-container ${hasError('accountCurrency') ? 'error-form' : ''}`}
-                    classNamePrefix="react-select"
-                  />
+                  <div className="account-selector-container" onClick={() => {setIsModalOpen(true)}}>
+                    <span>{selectedCurrency ? `${selectedCurrency.name} (${selectedCurrency.code})` : 'Select Wallet'}</span>
+                  </div>
+                
                   {formErrors.accountCurrency && (
                     <div className="error-message">{formErrors.accountCurrency}</div>
                   )}
                   <div className="account-selector" style={{ marginTop: "10px" }}>
                     <span>Selected account balance:</span>
                     <span className="balance-amount">
-                      {getSelectedWalletBalance()} {formData.accountCurrency}
+                      {selectedCurrency?.symbol}{formatBalance(getSelectedWalletBalance())} {formData.accountCurrency}
                     </span>
                   </div>
                 </div>
@@ -410,28 +435,15 @@ const CreateCard = () => {
                 </div>
 
                 <div className="section">
-                  <p className="section-title">User verification</p>
-                  {isVerified ? (
-                    <button type="button" className="verification-badge verified">
-                      Verified
-                    </button>
-                  ) : (
-                    <button type="button" className="verification-badge unverified">
-                      Unverified
-                    </button>
-                  )}
-                </div>
-
-                <div className="section">
                   <p className="section-title">Card type</p>
                   <div className="radio-group">
                     <label className="radio-option">
                       <input
                         type="radio"
                         name="cardType"
-                        value="mastercard"
-                        checked={cardType === 'mastercard'}
-                        onChange={(e) => setCardType(e.target.value as 'mastercard' | 'visa')}
+                        value="MASTER"
+                        checked={cardType === 'MASTER'}
+                        onChange={(e) => setCardType(e.target.value as 'MASTER' | 'VISA')}
                       />
                       <span className="radio-custom"></span>
                       <span>Master card</span>
@@ -440,9 +452,9 @@ const CreateCard = () => {
                       <input
                         type="radio"
                         name="cardType"
-                        value="visa"
-                        checked={cardType === 'visa'}
-                        onChange={(e) => setCardType(e.target.value as 'mastercard' | 'visa')}
+                        value="VISA"
+                        checked={cardType === 'VISA'}
+                        onChange={(e) => setCardType(e.target.value as 'MASTER' | 'VISA')}
                       />
                       <span className="radio-custom"></span>
                       <span>Visa card</span>
@@ -456,7 +468,7 @@ const CreateCard = () => {
                     type="text"
                     className={`alias-input ${hasError('cardHolderName') ? 'error-form' : ''}`}
                     placeholder="Enter card alias"
-                    value={formData.cardHolderName}
+                    value={getUserFullName()?.toString()}
                     onChange={(e) => handleInputChange('cardHolderName', e.target.value)}
                   />
                   {formErrors.cardHolderName && (
@@ -467,7 +479,7 @@ const CreateCard = () => {
                 <div className="section">
                   <p className="section-title">Choose card theme</p>
                   <div className="theme-selector">
-                    {(cardType === 'mastercard' ? mastercardThemes : visaThemes).map((themeOption) => (
+                    {(cardType === 'MASTER' ? mastercardThemes : visaThemes).map((themeOption) => (
                       <div
                         key={themeOption.name}
                         className={`card-preview ${selectedTheme === themeOption.name ? 'selected' : ''}`}
@@ -496,6 +508,35 @@ const CreateCard = () => {
               </form>
             </div>
             
+             {isModalOpen && (
+                <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+                  <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header"><h3>Select Currency</h3></div>
+                    <div className="search-container">
+                      <span className="search-icon-inside"><Search size={16} /></span>
+                      <input type="text" placeholder="Search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    </div>
+                    <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
+                      {filteredCurrencies.map((c) => (
+                        <div key={c.code} className="country-item" onClick={() => { 
+                          setSelectedCurrency(c); 
+                          setIsModalOpen(false);
+                          setFiat(c.code); 
+                          setActiveWallet(c.code);
+                          setFormData(prev => ({...prev, accountCurrency: c.code}));
+                          setSearchTerm('') 
+                          setIsDropdownOpen(false);
+                        }}>
+                          <span>{c.name} ({c.code})</span>
+                          <div className={`radio-outer ${selectedCurrency?.code === c.code ? 'checked' : ''}`}>
+                            <div className="radio-inner"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             <Footer theme={theme} />
           </div>
         </main>

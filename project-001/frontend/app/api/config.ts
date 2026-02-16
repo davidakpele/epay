@@ -1,3 +1,5 @@
+import { HistoryFilterPayload } from "../types/utils";
+
 const BASE_URL = 'http://localhost:8292/api';
 
 export const SERVICE_URLS = {
@@ -10,18 +12,12 @@ export const SERVICE_URLS = {
   WITHDRAW: BASE_URL,
   HISTORY: BASE_URL,
   BENEFICIARY: BASE_URL,
+  VIRTUALCARD: BASE_URL,
 } as const;
 
 export const defaultHeaders: Record<string, string> = {
   'Content-Type': 'application/json',
 };
-
-export interface HistoryFilterPayload {
-  startDate: string;
-  endDate: string;
-  transactionType: string;
-  currency: string;
-}
 
 export const API_URLS = {
   AUTH: {
@@ -90,10 +86,8 @@ export const API_URLS = {
     GET_BY_USER_ID: (userId: string | number) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/users/${userId}`,
     DELETE: (id: string | number) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/delete/${id}`,
     GET_BANK_LIST_API: `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/bank-list`,
-    VERIFY_USER_BANK_DETAILS: (accountNumber: string, bankCode: string) => 
-      `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/verify-user-bank-details?accountNumber=${accountNumber}&bankCode=${bankCode}`,
-    VERIFY: (accountNumber: string, bankCode: string) => 
-      `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/user/bank?accountNumber=${accountNumber}&bankCode=${bankCode}`,
+    VERIFY_USER_BANK_DETAILS: (accountNumber: string, bankCode: string) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/verify-user-bank-details?accountNumber=${accountNumber}&bankCode=${bankCode}`,
+    VERIFY: (accountNumber: string, bankCode: string) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/user/bank?accountNumber=${accountNumber}&bankCode=${bankCode}`,
     DEFAULT_HOME: `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/`,
     GET_VIRTUAL_CARD_LIST_BY_USER_ID: (id: string | number) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/${id}/cards`,
   },
@@ -119,4 +113,9 @@ export const API_URLS = {
     DELETE: (id: string | number) => `${SERVICE_URLS.BENEFICIARY}/beneficiary/${id}`,
     VERIFY: (id: string | number) => `${SERVICE_URLS.BENEFICIARY}/beneficiary/${id}/verify`,
   },
+
+  VIRTUALCARD: {
+    GET_CARDS_BY_USER_ID: (id: string | number) => `${SERVICE_URLS.VIRTUALCARD}/virtual-cards/user/${id}`,
+    CREATE: `${SERVICE_URLS.VIRTUALCARD}/virtual-cards`,
+  }
 };

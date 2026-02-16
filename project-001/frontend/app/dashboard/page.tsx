@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { 
@@ -23,7 +22,6 @@ import WithdrawModal from '@/components/WithdrawModal';
 import LoadingScreen from '@/components/loader/Loadingscreen';
 import { getFiat, getToken, getUserId, setActiveWallet, setFiat, setWalletContainer, walletService, historyService } from '../api';
 import { eventEmitter } from '../utils/eventEmitter';
-import { get } from 'http';
 import KycCheckProgress from '@/components/Kyc/page';
 
 const Dashboard = () => {

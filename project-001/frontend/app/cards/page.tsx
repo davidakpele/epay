@@ -11,16 +11,34 @@ import { Toast } from '../types/auth';
 import WithdrawModal from '@/components/WithdrawModal';
 import './cards.css';
 import Link from 'next/link';
+import { getUserId, virtualCardService } from '../api';
+import LoadingScreen from '@/components/loader/Loadingscreen';
 
 interface VirtualCard {
   id: string;
+  cardId: string;
   cardNumber: string;
+  maskedCardNumber: string;
+  hashedCardNumber: string;
   holder: string;
   validThru: string;
+  expirationMonth: string;
+  expirationYear: string;
   balance: number;
   currency: string;
-  status: 'active' | 'locked';
-  isFeatured?: boolean;
+  status: string;
+  cardType: string;
+  cardPlan: string;
+  merchantName: string;
+  merchantCity: string;
+  merchantCountry: string;
+  spendingLimit: number;
+  allowInternational: boolean;
+  allowOnline: boolean;
+  allowAtm: boolean;
+  allowContactless: boolean;
+  createdAt: string;
+  expiresAt: string;
 }
 
 function Cards() {
@@ -28,89 +46,98 @@ function Cards() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [isLoader, setIsLoader] = useState(true);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [allCards, setAllCards] = useState<VirtualCard[]>([]);
+  const [isLoadingCards, setIsLoadingCards] = useState(true);
+  const [isCardDetailsOpen, setIsCardDetailsOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<VirtualCard | null>(null);
 
-  // All cards data - one card per currency
-  const allCards: VirtualCard[] = [
-    {
-      id: '1',
-      cardNumber: '4321 **** **** 0911',
-      holder: 'DAVID APEKELE',
-      validThru: '04/28',
-      balance: 650.00,
-      currency: 'USD',
-      status: 'active',
-      isFeatured: false
-    },
-    {
-      id: '2',
-      cardNumber: '5271 **** **** 0012',
-      holder: 'DAVID APEKELE',
-      validThru: '04/28',
-      balance: 320.50,
-      currency: 'EUR',
-      status: 'active',
-      isFeatured: false
-    },
-    {
-      id: '3',
-      cardNumber: '5271 **** **** 3323',
-      holder: 'DAVID APEKELE',
-      validThru: '04/28',
-      balance: 125000.00,
-      currency: 'NGN',
-      status: 'active',
-      isFeatured: true // NGN has the blue featured card
-    },
-    {
-      id: '4',
-      cardNumber: '4532 **** **** 7891',
-      holder: 'DAVID APEKELE',
-      validThru: '04/28',
-      balance: 450.75,
-      currency: 'GBP',
-      status: 'active',
-      isFeatured: false
-    },
-    {
-      id: '5',
-      cardNumber: '6011 **** **** 4567',
-      holder: 'DAVID APEKELE',
-      validThru: '04/28',
-      balance: 85000.00,
-      currency: 'JPY',
-      status: 'active',
-      isFeatured: false
-    }
-  ];
-
-  // Filter cards based on selected currency
-  const cards = allCards.filter(card => card.currency === selectedCurrency);
-
-  // Update currency counts based on actual cards
-  const currencies = [
-    { code: 'USD', count: allCards.filter(c => c.currency === 'USD').length },
-    { code: 'EUR', count: allCards.filter(c => c.currency === 'EUR').length },
-    { code: 'NGN', count: allCards.filter(c => c.currency === 'NGN').length },
-    { code: 'GBP', count: allCards.filter(c => c.currency === 'GBP').length },
-    { code: 'JPY', count: allCards.filter(c => c.currency === 'JPY').length },
-    { code: 'AUD', count: 0 },
-    { code: 'CAD', count: 0 }
-  ];
-
-  // Helper function to get currency symbol and flag
-  const getCurrencyInfo = (currencyCode: string) => {
-    const currencyMap: Record<string, { symbol: string; flag: string; name: string }> = {
-      USD: { symbol: '$', flag: 'https://flagcdn.com/w20/us.png', name: 'Dollar' },
-      EUR: { symbol: '€', flag: 'https://flagcdn.com/w20/eu.png', name: 'Euro' },
-      NGN: { symbol: '₦', flag: 'https://flagcdn.com/w20/ng.png', name: 'Naira' },
-      GBP: { symbol: '£', flag: 'https://flagcdn.com/w20/gb.png', name: 'Pound' },
-      JPY: { symbol: '¥', flag: 'https://flagcdn.com/w20/jp.png', name: 'Yen' }
+  useEffect(() => {
+    const fetchCards = async () => {
+      setIsLoadingCards(true);
+      try {
+        const userId = getUserId();
+        if (!userId) return;
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        const response = virtualCardService.fetchUserVirtualCardsByUserId(userId);
+      
+        const data = await response;
+      
+        const transformedCards: VirtualCard[] = data.map((card: any) => ({
+          id: card.id,
+          cardId: card.cardId,
+          cardNumber: card.maskedCardNumber,
+          maskedCardNumber: card.maskedCardNumber,
+          hashedCardNumber: card.hashedCardNumber,
+          holder: card.cardHolderName,
+          validThru: `${card.expirationMonth}/${card.expirationYear.slice(-2)}`,
+          expirationMonth: card.expirationMonth,
+          expirationYear: card.expirationYear,
+          balance: card.balance,
+          currency: card.currency,
+          status: card.status,
+          cardType: card.cardType,
+          cardPlan: card.cardPlan,
+          merchantName: card.merchantName,
+          merchantCity: card.merchantCity,
+          merchantCountry: card.merchantCountry,
+          spendingLimit: card.spendingLimit,
+          allowInternational: card.allowInternational,
+          allowOnline: card.allowOnline,
+          allowAtm: card.allowAtm,
+          allowContactless: card.allowContactless,
+          createdAt: card.createdAt,
+          expiresAt: card.expiresAt
+        }));
+        
+        setAllCards(transformedCards);
+        if (transformedCards.length > 0) {
+          setSelectedCurrency(transformedCards[0].currency);
+        }
+      } catch (error) {
+        console.error('Error fetching cards:', error);
+        showToast('Failed to load cards. Please try again.', 'warning');
+      } finally {
+        setIsLoadingCards(false);
+      }
     };
-    return currencyMap[currencyCode] || { symbol: '$', flag: 'https://flagcdn.com/w20/us.png', name: 'Dollar' };
+
+    fetchCards();
+  }, []);
+  const cards = allCards.filter(card => card.currency === selectedCurrency);
+  const availableCurrencies = Array.from(new Set(allCards.map(card => card.currency)));
+
+  const allPossibleCurrencies = ['USD', 'EUR', 'NGN', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'INR'];
+  const currencies = allPossibleCurrencies.map(code => ({
+    code,
+    count: allCards.filter(c => c.currency === code).length
+  }));
+
+  const getCurrencyInfo = (currencyCode: string) => {
+    const currencyMap: Record<string, { symbol: string; name: string }> = {
+      USD: { symbol: '$', name: 'Dollar' },
+      EUR: { symbol: '€', name: 'Euro' },
+      NGN: { symbol: '₦', name: 'Naira' },
+      GBP: { symbol: '£', name: 'Pound' },
+      JPY: { symbol: '¥', name: 'Yen' }
+    };
+    return currencyMap[currencyCode] || { symbol: '$', name: 'Dollar' };
+  };
+
+  const getCardTypeName = (cardType: string) => {
+    if (cardType === 'MASTER' || cardType === 'MASTERCARD') {
+      return 'MASTER';
+    }
+    return 'VISA';
+  };
+  const handleCardDetailsClick = (card: VirtualCard) => {
+    setSelectedCard(card);
+    setIsCardDetailsOpen(true);
   };
 
   const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
@@ -139,10 +166,16 @@ function Cards() {
   };
 
   useEffect(() => {
-    const loadingTimer = setTimeout(() => setIsLoader(false), 2000);
-    return () => clearTimeout(loadingTimer);
-  }, []);
+    const loadingTimer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 2000);
 
+    return () => clearTimeout(loadingTimer);
+  }, []);;
+
+  if (isPageLoading) {
+    return <LoadingScreen />;
+  }
   return (
     <>
       <div className={`dashboard-container ${theme === 'dark' ? 'dark' : ''}`}>
@@ -179,102 +212,112 @@ function Cards() {
                 </div>
               </div>
 
-              {/* Cards Grid */}
-              <div className="vc-grid">
-                {cards.map((card) => {
-                  const currencyInfo = getCurrencyInfo(card.currency);
-                  return (
-                    <div key={card.id} className="vc-card-wrapper">
-                      {/* Card Visual */}
-                      {card.isFeatured ? (
-                        <div className="card-featured">
-                          <div className="card-featured-inner">
-                            <div className="card-featured-top">
-                              <div className="card-bank-logo">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                  <circle cx="10" cy="10" r="9" stroke="white" strokeWidth="1.5"/>
-                                  <circle cx="10" cy="10" r="4" fill="white"/>
-                                </svg>
-                                <span>OpenAI Bank</span>
+              {/* Loading State */}
+              {isLoadingCards ? (
+                <div className="cards-loader">
+                  <div className="loader-spinner"></div>
+                  <p>Loading your cards...</p>
+                </div>
+              ) : allCards.length === 0 ? (
+                <div className="no-cards">
+                  <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                    <rect x="8" y="20" width="48" height="32" rx="4" stroke="#9ca3af" strokeWidth="2"/>
+                    <rect x="8" y="28" width="48" height="8" fill="#e5e7eb"/>
+                    <circle cx="16" cy="40" r="2" fill="#9ca3af"/>
+                  </svg>
+                  <h3>No Cards Available</h3>
+                  <p>You haven't created any virtual cards yet.</p>
+                  <Link href={"/cards/create"} className="btn-create-new">
+                    <span>+</span> Create Your First Card
+                  </Link>
+                </div>
+              ) : (
+                /* Cards Grid */
+                <div className="vc-grid">
+                  {cards.map((card) => {
+                    const currencyInfo = getCurrencyInfo(card.currency);
+                    return (
+                      <div key={card.id} className="vc-card-wrapper">
+                        {/* Card Visual */}
+                        {card.cardType === 'MASTER' || card.cardType === 'MASTERCARD' ? (
+                          <div className="card-featured">
+                            <div className="card-featured-inner">
+                              <div className="card-featured-top">
+                                <div className="card-bank-logo">
+                                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <circle cx="10" cy="10" r="9" stroke="white" strokeWidth="1.5"/>
+                                    <circle cx="10" cy="10" r="4" fill="white"/>
+                                  </svg>
+                                  <span>OpenAI Bank</span>
+                                </div>
+                                <span className="card-type">{getCardTypeName(card.cardType)}</span>
                               </div>
-                              <svg className="visa-logo" width="48" height="16" viewBox="0 0 48 16" fill="white">
-                                <path d="M18 2L14 12H16.5L20.5 2H18Z"/>
-                                <path d="M12 2L8 12H10.5L14.5 2H12Z"/>
-                                <path d="M24 2L28 12H25.5L21.5 2H24Z"/>
-                                <path d="M30 2L34 12H31.5L27.5 2H30Z"/>
+                              <h3 className="card-featured-title">{card.currency} Virtual Card</h3>
+                              <div className="card-featured-number">{card.cardNumber}</div>
+                              <div className="card-featured-bottom">
+                                <span className="card-holder">{card.holder}</span>
+                                <div className="expire-date">
+                                  <span className="card-expiry">Valid Thru:</span> 
+                                  <span className='card-expiry-date'> {card.validThru}</span>
+                                </div>
+                                <span className="card-type">{getCardTypeName(card.cardType)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="card-simple">
+                            <div className="card-simple-top">
+                              <span>{card.currency} Virtual Card</span>
+                            </div>
+                            <h3 className="card-simple-title">{card.currency} Virtual Card</h3>
+                            <div className="card-simple-number">{card.cardNumber}</div>
+                            <div className="card-simple-bottom">
+                              <span className="card-simple-holder">{card.holder}</span>
+                              <div className="card-simple-expiry">
+                                <span className="expiry-label">Valid Thru:</span>
+                                <span className="expiry-value"> {card.validThru}</span>
+                              </div>
+                              <span className="card-simple-type">{getCardTypeName(card.cardType)}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Card Info - REDESIGNED */}
+                        <div className="vc-card-info">
+                          <div className="info-row-1">
+                            <div className="info-left">
+                              <span className={`status-pill ${card.status}`}>
+                                {card.status}
+                              </span>
+                              <div className="balance-label">
+                                <span>{currencyInfo.symbol} {currencyInfo.name} Balance</span>
+                              </div>
+                            </div>
+                            <div className="info-right">
+                              <span className="balance-amt">{currencyInfo.symbol}{card.balance.toFixed(2)}</span>
+                              {card.balance > 0 && <span className="balance-sub">68 prceheres..</span>}
+                              {card.balance === 0 && <span className="balance-sub-vital">Vital ✓</span>}
+                            </div>
+                          </div>
+
+                          <div className="info-actions">
+                            <button 
+                              className="btn-details-outline"
+                              onClick={() => handleCardDetailsClick(card)}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                <rect x="3" y="5" width="8" height="7" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+                                <path d="M5 5V4C5 3 5.5 2 7 2C8.5 2 9 3 9 4V5" stroke="currentColor" strokeWidth="1.3"/>
                               </svg>
-                            </div>
-                            <h3 className="card-featured-title">{card.currency} Virtual Card</h3>
-                            <div className="card-featured-number">{card.cardNumber}</div>
-                            <div className="card-featured-bottom">
-                              <span className="card-holder">{card.holder}</span>
-                              <div className="expire-date">
-                                <span className="card-expiry">Valid Thru:</span> 
-                                <span className='card-expiry-date'> {card.validThru}</span>
-                              </div>
-                              <span className="card-type">VISA</span> 
-                            </div>
+                              Card Details
+                            </button>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="card-simple">
-                          <div className="card-simple-top">
-                            <span>{card.currency} Virtual Card</span>
-                            <svg width="40" height="14" viewBox="0 0 40 14" fill="currentColor">
-                              <path d="M15 1L12 9H13.5L16.5 1H15Z"/>
-                              <path d="M10 1L7 9H8.5L11.5 1H10Z"/>
-                              <path d="M20 1L23 9H21.5L18.5 1H20Z"/>
-                              <path d="M25 1L28 9H26.5L23.5 1H25Z"/>
-                            </svg>
-                          </div>
-                          <div className="card-simple-number">{card.cardNumber}</div>
-                          <div className="card-simple-holder">{card.holder}</div>
-                          <svg className="visa-logo-simple" width="40" height="14" viewBox="0 0 40 14" fill="#1A1F71">
-                            <path d="M15 1L12 9H13.5L16.5 1H15Z"/>
-                            <path d="M10 1L7 9H8.5L11.5 1H10Z"/>
-                            <path d="M20 1L23 9H21.5L18.5 1H20Z"/>
-                            <path d="M25 1L28 9H26.5L23.5 1H25Z"/>
-                          </svg>
-                        </div>
-                      )}
-
-                      {/* Card Info - REDESIGNED */}
-                      <div className="vc-card-info">
-                        <div className="info-row-1">
-                          <div className="info-left">
-                            <span className={`status-pill ${card.status}`}>
-                              {card.status === 'active' ? (
-                                <>✓ Active</>
-                              ) : (
-                                <>🔒 Locked</>
-                              )}
-                            </span>
-                            <div className="balance-label">
-                              <img src={currencyInfo.flag} alt={card.currency} width="16" />
-                              <span>{currencyInfo.symbol} {currencyInfo.name} Balance</span>
-                            </div>
-                          </div>
-                          <div className="info-right">
-                            <span className="balance-amt">{currencyInfo.symbol}{card.balance.toFixed(2)}</span>
-                            {card.balance > 0 && <span className="balance-sub">68 prceheres..</span>}
-                            {card.balance === 0 && <span className="balance-sub-vital">Vital ✓</span>}
-                          </div>
-                        </div>
-
-                        <div className="info-actions">
-                          <button className="btn-details-outline">
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                              <rect x="3" y="5" width="8" height="7" rx="1" stroke="currentColor" strokeWidth="1.3"/>
-                              <path d="M5 5V4C5 3 5.5 2 7 2C8.5 2 9 3 9 4V5" stroke="currentColor" strokeWidth="1.3"/>
-                            </svg>
-                            Card Details
-                          </button>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <Footer theme={theme} />
           </div>
@@ -283,8 +326,166 @@ function Cards() {
         <MobileNav activeTab="wallet" onPlusClick={() => setIsDepositOpen(true)} />
         <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} theme={theme} />
         <WithdrawModal isOpen={isWithdrawOpen} onClose={() => setIsWithdrawOpen(false)} theme={theme} />
-        <div className="toasts-container">
-          {toasts.map((toast) => (
+        
+        {/* Card Details Modal */}
+        {isCardDetailsOpen && selectedCard && (
+          <div className="modal-overlay" onClick={() => setIsCardDetailsOpen(false)}>
+            <div className="card-details-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Card Details</h2>
+                <button className="modal-close" onClick={() => setIsCardDetailsOpen(false)}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="modal-body">
+                {/* Card Preview */}
+                <div className={selectedCard.cardType === 'MASTER' || selectedCard.cardType === 'MASTERCARD' ? "card-featured-modal" : "card-simple-modal"}>
+                  <div className="card-modal-inner">
+                    <div className="card-modal-top">
+                      <div className="card-bank-logo">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <circle cx="10" cy="10" r="9" stroke="white" strokeWidth="1.5"/>
+                          <circle cx="10" cy="10" r="4" fill="white"/>
+                        </svg>
+                        <span>{selectedCard.merchantName}</span>
+                      </div>
+                      <span className="card-type-badge">{getCardTypeName(selectedCard.cardType)}</span>
+                    </div>
+                    <h3 className="card-modal-title">{selectedCard.currency} Virtual Card</h3>
+                    <div className="card-modal-number">{selectedCard.hashedCardNumber}</div>
+                    <div className="card-modal-bottom">
+                      <span className="card-modal-holder">{selectedCard.holder}</span>
+                      <div className="card-modal-expiry">
+                        <span>Valid Thru:</span>
+                        <span>{selectedCard.expirationMonth}/{selectedCard.expirationYear}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Information */}
+                <div className="card-info-grid">
+                  <div className="info-section">
+                    <h3>Card Information</h3>
+                    <div className="info-row">
+                      <span className="info-label">Card Number</span>
+                      <span className="info-value">{selectedCard.hashedCardNumber}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Card Holder</span>
+                      <span className="info-value">{selectedCard.holder}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Expiration Date</span>
+                      <span className="info-value">{selectedCard.expirationMonth}/{selectedCard.expirationYear}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Card Type</span>
+                      <span className="info-value">{getCardTypeName(selectedCard.cardType)}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Card Plan</span>
+                      <span className="info-value">{selectedCard.cardPlan.replace('_', ' ')}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Status</span>
+                      <span className={`info-value status-${selectedCard.status}`}>
+                        {selectedCard.status.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="info-section">
+                    <h3>Balance & Limits</h3>
+                    <div className="info-row">
+                      <span className="info-label">Current Balance</span>
+                      <span className="info-value balance-highlight">
+                        {getCurrencyInfo(selectedCard.currency).symbol}{selectedCard.balance.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Spending Limit</span>
+                      <span className="info-value">
+                        {getCurrencyInfo(selectedCard.currency).symbol}{selectedCard.spendingLimit.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Currency</span>
+                      <span className="info-value">{selectedCard.currency}</span>
+                    </div>
+                  </div>
+
+                  <div className="info-section">
+                    <h3>Merchant Details</h3>
+                    <div className="info-row">
+                      <span className="info-label">Merchant Name</span>
+                      <span className="info-value">{selectedCard.merchantName}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Location</span>
+                      <span className="info-value">{selectedCard.merchantCity}, {selectedCard.merchantCountry}</span>
+                    </div>
+                  </div>
+
+                  <div className="info-section">
+                    <h3>Card Permissions</h3>
+                    <div className="permissions-grid">
+                      <div className={`permission-item ${selectedCard.allowInternational ? 'enabled' : 'disabled'}`}>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5"/>
+                          <path d="M10 2C10 2 6 6 6 10C6 14 10 18 10 18C10 18 14 14 14 10C14 6 10 2 10 2Z" stroke="currentColor" strokeWidth="1.5"/>
+                        </svg>
+                        <span>International</span>
+                        <span className="status-badge">{selectedCard.allowInternational ? '✓' : '✗'}</span>
+                      </div>
+                      <div className={`permission-item ${selectedCard.allowOnline ? 'enabled' : 'disabled'}`}>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <rect x="3" y="5" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                          <path d="M7 9h6M7 11h4" stroke="currentColor" strokeWidth="1.5"/>
+                        </svg>
+                        <span>Online Shopping</span>
+                        <span className="status-badge">{selectedCard.allowOnline ? '✓' : '✗'}</span>
+                      </div>
+                      <div className={`permission-item ${selectedCard.allowAtm ? 'enabled' : 'disabled'}`}>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <rect x="4" y="3" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                          <rect x="6" y="6" width="8" height="5" stroke="currentColor" strokeWidth="1.5"/>
+                        </svg>
+                        <span>ATM Withdrawal</span>
+                        <span className="status-badge">{selectedCard.allowAtm ? '✓' : '✗'}</span>
+                      </div>
+                      <div className={`permission-item ${selectedCard.allowContactless ? 'enabled' : 'disabled'}`}>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <path d="M8 10c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z" stroke="currentColor" strokeWidth="1.5"/>
+                          <path d="M5 10c0-2.8 2.2-5 5-5s5 2.2 5 5-2.2 5-5 5-5-2.2-5-5z" stroke="currentColor" strokeWidth="1.5"/>
+                        </svg>
+                        <span>Contactless</span>
+                        <span className="status-badge">{selectedCard.allowContactless ? '✓' : '✗'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="info-section">
+                    <h3>Card Timeline</h3>
+                    <div className="info-row">
+                      <span className="info-label">Created</span>
+                      <span className="info-value">{new Date(selectedCard.createdAt).toLocaleString()}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Expires</span>
+                      <span className="info-value">{new Date(selectedCard.expiresAt).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="toasts-container">{toasts.map((toast) => (
             <div key={toast.id} className={`toast ${toast.type} ${toast.exiting ? 'exiting' : ''}`}>
               {toast.message}
             </div>
