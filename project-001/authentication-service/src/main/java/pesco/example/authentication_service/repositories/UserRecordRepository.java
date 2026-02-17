@@ -29,4 +29,9 @@ public interface UserRecordRepository extends JpaRepository<UserRecord, Long> {
 
     @Query("SELECT r FROM UserRecord r WHERE r.telephone = :telephone")
     Optional<UserRecord> findByTelephone(@Param("telephone") String telephone);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM UserRecord r WHERE r.user.id=:userId")
+    void deleteByUserId(Long userId);
 }

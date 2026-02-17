@@ -8,7 +8,6 @@ spring:
       secure: false  
       same-site: strict
 
-
   error:
     include-message: always
     include-binding-errors: always
@@ -29,26 +28,25 @@ spring:
       filter:
         dispatcher-types: REQUEST,ERROR,ASYNC
   datasource:
-    url: jdbc:postgresql://postgres:5432/pesco_db
-    username: postgres
-    password: root
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:mysql://mysql:3306/banking_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: banking_user
+    password: banking_pass
+    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      auto-commit: false 
+      auto-commit: false
       minimum-idle: 5
       maximum-pool-size: 10
       idle-timeout: 30000
       connection-timeout: 20000
       pool-name: HikariPool
-      max-lifetime: 1200000 
-      leak-detection-threshold: 60000  
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         jdbc:
           lob:

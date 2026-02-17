@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -249,5 +250,41 @@ public class UserController {
         return ResponseEntity.ok(totalUsers);
     }
 
+    @PostMapping("/{id}/block")
+    public ResponseEntity<?> blockUserAccount(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
+        boolean block = Boolean.TRUE.equals(body.get("block"));
+        userServices.blockUserAccount(id, block);
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", block ? "User blocked successfully" : "User unblocked successfully"
+        ));
+    }
+
+    @PostMapping("/{id}/lock")
+    public ResponseEntity<?> lockUserAccount(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
+        boolean lock = Boolean.TRUE.equals(body.get("lock"));
+        userServices.lockUserAccount(id, lock);
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", lock ? "User locked successfully" : "User unlocked successfully"
+        ));
+    }
     
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUserAccount(@PathVariable String id) {
+        userServices.deleteUserAccount(id);
+        return ResponseEntity.ok("User account successfully deleted!");
+    }
+
+    @GetMapping("/{id}/edit")
+    public ResponseEntity<UserDTO> getUserEditDetails(@PathVariable Long id) {
+        return ResponseEntity.ok(userServices.getUserDetails(id));
+    }
+
+    @GetMapping("/{id}/view")
+    public ResponseEntity<UserDTO> getUserViewDetails(@PathVariable Long id) {
+        return ResponseEntity.ok(userServices.getUserDetails(id));
+    }
+
+
 }

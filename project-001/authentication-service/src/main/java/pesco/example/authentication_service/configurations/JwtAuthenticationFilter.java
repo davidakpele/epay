@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AdminServiceClient adminServiceClient;
     private final ObjectMapper objectMapper;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService, 
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService,
                                    ObjectMapper objectMapper, AdminServiceClient adminServiceClient) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
@@ -60,26 +60,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             final String jwt = authHeader.substring(7).trim();
-            final String username = jwtService.extractUsername(jwt); 
-            final List<String> roles = jwtService.extractRoles(jwt); 
+            final String username = jwtService.extractUsername(jwt);
+            final List<String> roles = jwtService.extractRoles(jwt);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UserDetails userDetails;
 
-                if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_SUPER_ADMIN")) {
-                    // Admin verification via microservice
+                if (roles.contains("ADMIN") || roles.contains("SUPER_ADMIN")) {
                     boolean verified = adminServiceClient.verifyUser(username);
                     if (!verified) {
                         handleAuthenticationError(response, "User not verified by admin service");
                         return;
                     }
 
-                    // Build UserDetails from JWT roles
                     userDetails = org.springframework.security.core.userdetails.User.builder()
                             .username(username)
-                            .password("") // password not needed for JWT auth
-                            .authorities(roles.stream().map(SimpleGrantedAuthority::new).toList())
+                            .password("")
+                            .authorities(roles.stream()
+                                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                                    .toList())
                             .accountExpired(false)
                             .accountLocked(false)
                             .credentialsExpired(false)
@@ -87,7 +87,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             .build();
 
                 } else {
-                    // Local user verification
                     userDetails = userDetailsService.loadUserByUsername(username);
                     if (!jwtService.isTokenValid(jwt, userDetails)) {
                         handleAuthenticationError(response, "Invalid or expired token");
@@ -95,7 +94,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
                 }
 
-                // Set authentication
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
@@ -115,11 +113,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             handleAuthenticationError(response, "Authentication failed");
         }
     }
-    
 
     private boolean isPublicEndpoint(HttpServletRequest request) {
         String path = request.getRequestURI();
-        
+
         return path.startsWith("/auth/") ||
                path.startsWith("/error/") ||
                path.equals("/actuator/health") ||
@@ -141,16 +138,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             String message
     ) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Changed from 403 to 401
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        
+
         Map<String, Object> errorDetails = new HashMap<>();
         errorDetails.put("error", "Authentication Failed");
         errorDetails.put("message", message);
         errorDetails.put("timestamp", System.currentTimeMillis());
         errorDetails.put("status", 401);
-        
+
         response.getWriter().write(objectMapper.writeValueAsString(errorDetails));
     }
 }

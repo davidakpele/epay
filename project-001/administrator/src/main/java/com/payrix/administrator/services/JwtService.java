@@ -31,7 +31,7 @@ import io.jsonwebtoken.security.InvalidKeyException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import io.jsonwebtoken.security.WeakKeyException;
- 
+
 @Service
 public class JwtService {
 
@@ -43,14 +43,13 @@ public class JwtService {
         this.signingKey = getSigningKey();
     }
 
-
     public String extractUsername(String token) {
         try {
             return extractClaim(token, Claims::getSubject);
         } catch (JwtAuthenticationException e) {
             throw e;
         } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to extract username from token", 
+            throw new JwtAuthenticationException("Failed to extract username from token",
                 HttpStatus.UNAUTHORIZED, e);
         }
     }
@@ -62,7 +61,7 @@ public class JwtService {
         } catch (JwtAuthenticationException e) {
             throw e;
         } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to extract user ID from token", 
+            throw new JwtAuthenticationException("Failed to extract user ID from token",
                 HttpStatus.UNAUTHORIZED, e);
         }
     }
@@ -76,7 +75,7 @@ public class JwtService {
         } catch (JwtAuthenticationException e) {
             throw e;
         } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to extract roles from token", 
+            throw new JwtAuthenticationException("Failed to extract roles from token",
                 HttpStatus.UNAUTHORIZED, e);
         }
     }
@@ -88,65 +87,61 @@ public class JwtService {
         } catch (JwtAuthenticationException e) {
             throw e;
         } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to extract claim from token", 
+            throw new JwtAuthenticationException("Failed to extract claim from token",
                 HttpStatus.UNAUTHORIZED, e);
         }
     }
 
     public Claims extractAllClaims(String token) {
         try {
-            // Validate and sanitize token first
             if (token == null || token.trim().isEmpty()) {
-                throw new JwtAuthenticationException("Token is null or empty", 
+                throw new JwtAuthenticationException("Token is null or empty",
                     HttpStatus.UNAUTHORIZED, "EMPTY_TOKEN");
             }
-            
-            // Remove "Bearer " prefix if present
+
             token = token.trim();
             if (token.startsWith("Bearer ")) {
                 token = token.substring(7).trim();
             }
-            
-            // Basic JWT format validation
+
             String[] parts = token.split("\\.");
             if (parts.length != 3) {
-                throw new JwtAuthenticationException("Invalid JWT structure", 
+                throw new JwtAuthenticationException("Invalid JWT structure",
                     HttpStatus.UNAUTHORIZED, "INVALID_TOKEN_STRUCTURE");
             }
-            
-            // Check if all parts are non-empty
+
             for (String part : parts) {
                 if (part.isEmpty()) {
-                    throw new JwtAuthenticationException("Invalid JWT: empty part", 
+                    throw new JwtAuthenticationException("Invalid JWT: empty part",
                         HttpStatus.UNAUTHORIZED, "INVALID_TOKEN_FORMAT");
                 }
             }
-            
+
             return Jwts.parserBuilder()
                     .setSigningKey(signingKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
         } catch (MalformedJwtException e) {
-            throw new JwtAuthenticationException("Invalid JWT token format", 
+            throw new JwtAuthenticationException("Invalid JWT token format",
                 HttpStatus.UNAUTHORIZED, "INVALID_TOKEN_FORMAT", e);
         } catch (ExpiredJwtException e) {
-            throw new JwtAuthenticationException("JWT token is expired", 
+            throw new JwtAuthenticationException("JWT token is expired",
                 HttpStatus.UNAUTHORIZED, "TOKEN_EXPIRED", e);
         } catch (UnsupportedJwtException e) {
-            throw new JwtAuthenticationException("JWT token is unsupported", 
+            throw new JwtAuthenticationException("JWT token is unsupported",
                 HttpStatus.UNAUTHORIZED, "UNSUPPORTED_TOKEN", e);
         } catch (IllegalArgumentException e) {
-            throw new JwtAuthenticationException("JWT claims string is empty", 
+            throw new JwtAuthenticationException("JWT claims string is empty",
                 HttpStatus.BAD_REQUEST, "EMPTY_TOKEN", e);
         } catch (SignatureException e) {
-            throw new JwtAuthenticationException("JWT signature does not match", 
+            throw new JwtAuthenticationException("JWT signature does not match",
                 HttpStatus.UNAUTHORIZED, "INVALID_SIGNATURE", e);
         } catch (JwtException e) {
-            throw new JwtAuthenticationException("JWT validation failed", 
+            throw new JwtAuthenticationException("JWT validation failed",
                 HttpStatus.UNAUTHORIZED, "TOKEN_VALIDATION_FAILED", e);
         } catch (JwtAuthenticationException e) {
-            throw new JwtAuthenticationException("Failed to parse JWT token", 
+            throw new JwtAuthenticationException("Failed to parse JWT token",
                 HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_PARSING_ERROR", e);
         }
     }
@@ -171,45 +166,16 @@ public class JwtService {
             Map<String, Object> claims = new HashMap<>();
             List<String> roles = userDetails.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
+                    .map(role -> role.startsWith("ROLE_") ? role.substring(5) : role)
                     .collect(Collectors.toList());
             claims.put("roles", roles);
             claims.put("userId", userId);
             claims.put("iss", jwtProperties.getIssuer());
             claims.put("aud", jwtProperties.getAudience());
-            
-            Instant now = Instant.now();
-            Instant expiry = now.plus(jwtProperties.getExpirationMinutes(), ChronoUnit.MINUTES);
-            
-            return Jwts.builder()
-                    .setHeaderParam("typ", "JWT")
-                    .setHeaderParam("alg", "HS256")
-                    .setClaims(claims)
-                    .setSubject(userDetails.getUsername())
-                    .setIssuer(jwtProperties.getIssuer())
-                    .setAudience(jwtProperties.getAudience())
-                    .setIssuedAt(Date.from(now))
-                    .setExpiration(Date.from(expiry))
-                    .setNotBefore(Date.from(now))
-                    .signWith(signingKey, SignatureAlgorithm.HS256)
-                    .compact();
-        } catch (InvalidKeyException e) {
-            throw new JwtAuthenticationException("Failed to generate JWT token", 
-                HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_GENERATION_ERROR", e);
-        }
-    }
 
-    public String generateToken(Map<String, Object> claims, UserDetails userDetails) {
-        try {
-            claims.putIfAbsent("roles", userDetails.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toList()));
-            
-            claims.putIfAbsent("iss", jwtProperties.getIssuer());
-            claims.putIfAbsent("aud", jwtProperties.getAudience());
-            
             Instant now = Instant.now();
             Instant expiry = now.plus(jwtProperties.getExpirationMinutes(), ChronoUnit.MINUTES);
-            
+
             return Jwts.builder()
                     .setHeaderParam("typ", "JWT")
                     .setHeaderParam("alg", "HS256")
@@ -223,7 +189,7 @@ public class JwtService {
                     .signWith(signingKey, SignatureAlgorithm.HS256)
                     .compact();
         } catch (InvalidKeyException e) {
-            throw new JwtAuthenticationException("Failed to generate custom JWT token", 
+            throw new JwtAuthenticationException("Failed to generate JWT token",
                 HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_GENERATION_ERROR", e);
         }
     }
@@ -245,7 +211,7 @@ public class JwtService {
                     .signWith(signingKey, SignatureAlgorithm.HS256)
                     .compact();
         } catch (InvalidKeyException e) {
-            throw new JwtAuthenticationException("Failed to generate refresh token", 
+            throw new JwtAuthenticationException("Failed to generate refresh token",
                 HttpStatus.INTERNAL_SERVER_ERROR, "REFRESH_TOKEN_GENERATION_ERROR", e);
         }
     }
@@ -253,7 +219,7 @@ public class JwtService {
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             final String username = extractUsername(token);
-            return username.equals(userDetails.getUsername()) && 
+            return username.equals(userDetails.getUsername()) &&
                    !isTokenExpired(token) &&
                    validateTokenClaims(token);
         } catch (JwtAuthenticationException e) {
@@ -279,16 +245,16 @@ public class JwtService {
             if (expectedIssuer != null && !expectedIssuer.equals(claims.getIssuer())) {
                 return false;
             }
-            
+
             String expectedAudience = jwtProperties.getAudience();
             if (expectedAudience != null && !expectedAudience.equals(claims.getAudience())) {
                 return false;
             }
-            
+
             if (claims.getNotBefore() != null && claims.getNotBefore().after(new Date())) {
                 return false;
             }
-            
+
             return true;
         } catch (JwtAuthenticationException e) {
             return false;
@@ -303,7 +269,7 @@ public class JwtService {
         } catch (JwtAuthenticationException e) {
             throw e;
         } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to get expiration date from token", 
+            throw new JwtAuthenticationException("Failed to get expiration date from token",
                 HttpStatus.UNAUTHORIZED, "EXPIRATION_EXTRACTION_ERROR", e);
         }
     }
@@ -339,7 +305,7 @@ public class JwtService {
         } catch (JwtAuthenticationException e) {
             throw e;
         } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to extract token type", 
+            throw new JwtAuthenticationException("Failed to extract token type",
                 HttpStatus.UNAUTHORIZED, "TOKEN_TYPE_EXTRACTION_ERROR", e);
         }
     }

@@ -166,9 +166,12 @@ public class SecurityConfiguration {
                 ).permitAll()
                 .requestMatchers("/css/**", "/js/**", "/image/**", "/favicon.ico").permitAll()
                 .requestMatchers("/actuator/health", "/health", "/ping").permitAll()
-             
-                .requestMatchers("/actuator/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
-                .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
+                .requestMatchers(HttpMethod.POST, "/user/{id}/block").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers(HttpMethod.POST, "/user/{id}/lock").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/user/{id}").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers(HttpMethod.GET, "/user/{id}/edit").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers(HttpMethod.GET, "/user/{id}/view").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
             

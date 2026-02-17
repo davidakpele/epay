@@ -29,4 +29,12 @@ public interface UserService {
     public Long countAllUsers();
 
     UserDTO findUserWithRecordById(Long id);
+
+    void deleteUserAccount(String id);
+
+    void lockUserAccount(Long id, boolean lock);
+
+    void blockUserAccount(Long id, boolean block);
+
+    UserDTO getUserDetails(Long id);
 }

@@ -1,5 +1,6 @@
 package pesco.example.authentication_service.servicesImplementation;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import pesco.example.authentication_service.clients.NotificationServiceClient;
 import pesco.example.authentication_service.dtos.PageResponse;
 import pesco.example.authentication_service.dtos.UserDTO;
+import pesco.example.authentication_service.dtos.UserRecordDTO;
+import pesco.example.authentication_service.exceptions.ApiException;
 import pesco.example.authentication_service.exceptions.Error;
 import pesco.example.authentication_service.models.UserRecord;
 import pesco.example.authentication_service.models.Users;
@@ -153,7 +156,7 @@ public class UserServiceImplementations implements UserService {
 
         UserRecord record = optionalUserRecord.get();
 
-        if (profilePath != null && profilePath != "") {
+        if (profilePath != null && !"".equals(profilePath)) {
             record.setPhoto(profilePath);
         }
         record.setGender(gender);
@@ -193,6 +196,61 @@ public class UserServiceImplementations implements UserService {
         Users user = userRepository.findUserWithRecordById(id);
         if (user == null) return null;
         return UserDTO.fromEntity(user); 
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserAccount(String id) {
+        Long userId = Long.valueOf(id);
+
+        
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("USER_NOT_FOUND", "User not found", HttpStatus.NOT_FOUND));
+
+        userRecordRepository.deleteByUserId(userId);
+        userRepository.delete(user);
+    }
+
+    @Override
+    @Transactional
+    public void lockUserAccount(Long id, boolean lock) {
+        Users user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiException("USER_NOT_FOUND", "User not found", HttpStatus.NOT_FOUND));
+
+        UserRecord record = user.getRecords().stream()
+                .findFirst()
+                .orElseThrow(() -> new ApiException("USER_RECORD_NOT_FOUND", "User record not found", HttpStatus.NOT_FOUND));
+
+        record.setLocked(lock);
+        record.setLockedAt(lock ? LocalDateTime.now() : null);
+
+        userRecordRepository.save(record);
+    }
+
+    @Override
+    @Transactional
+    public void blockUserAccount(Long id, boolean block) {
+        Users user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiException("USER_NOT_FOUND", "User not found", HttpStatus.NOT_FOUND));
+
+        UserRecord record = user.getRecords().stream()
+                .findFirst()
+                .orElseThrow(() -> new ApiException("USER_RECORD_NOT_FOUND", "User record not found", HttpStatus.NOT_FOUND));
+
+        record.setBlocked(block);
+        record.setBlockedReason(block ? "Admin block" : null);
+        record.setBlockedUntil(block ? LocalDateTime.now().plusDays(7).toString() : null);
+
+        userRecordRepository.save(record);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserDTO getUserDetails(Long id) {
+        Users user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiException("USER_NOT_FOUND", "User not found", HttpStatus.NOT_FOUND));
+
+        return UserDTO.fromEntity(user);
     }
 
 
