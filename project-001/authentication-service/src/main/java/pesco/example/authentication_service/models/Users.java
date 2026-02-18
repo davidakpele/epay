@@ -25,7 +25,6 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import pesco.example.authentication_service.enums.Role;
 
 @Data
@@ -55,8 +54,7 @@ public class Users implements UserDetails {
 
     private boolean enabled;
 
-    @Getter
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JsonManagedReference
     private List<UserRecord> records;
 

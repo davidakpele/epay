@@ -44,105 +44,71 @@ public class JwtService {
     }
 
     public String extractUsername(String token) {
-        try {
-            return extractClaim(token, Claims::getSubject);
-        } catch (JwtAuthenticationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to extract username from token",
-                HttpStatus.UNAUTHORIZED, e);
-        }
+        return extractClaim(token, Claims::getSubject);
     }
 
     public Long extractUserId(String token) {
-        try {
-            Claims claims = extractAllClaims(token);
-            return claims.get("userId", Long.class);
-        } catch (JwtAuthenticationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to extract user ID from token",
-                HttpStatus.UNAUTHORIZED, e);
-        }
+        return extractAllClaims(token).get("userId", Long.class);
     }
 
     public List<String> extractRoles(String token) {
-        try {
-            Claims claims = extractAllClaims(token);
-            @SuppressWarnings("unchecked")
-            List<String> roles = (List<String>) claims.get("roles");
-            return roles != null ? roles : List.of();
-        } catch (JwtAuthenticationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to extract roles from token",
-                HttpStatus.UNAUTHORIZED, e);
-        }
+        @SuppressWarnings("unchecked")
+        List<String> roles = (List<String>) extractAllClaims(token).get("roles");
+        return roles != null ? roles : List.of();
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        try {
-            final Claims claims = extractAllClaims(token);
-            return claimsResolver.apply(claims);
-        } catch (JwtAuthenticationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to extract claim from token",
-                HttpStatus.UNAUTHORIZED, e);
-        }
+        return claimsResolver.apply(extractAllClaims(token));
     }
 
     public Claims extractAllClaims(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new JwtAuthenticationException("Token is null or empty",
+                HttpStatus.UNAUTHORIZED, "EMPTY_TOKEN");
+        }
+
+        token = token.trim();
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7).trim();
+        }
+
+        String[] parts = token.split("\\.");
+        if (parts.length != 3) {
+            throw new JwtAuthenticationException("Invalid JWT structure",
+                HttpStatus.UNAUTHORIZED, "INVALID_TOKEN_STRUCTURE");
+        }
+
+        for (String part : parts) {
+            if (part.isEmpty()) {
+                throw new JwtAuthenticationException("Invalid JWT: empty part",
+                    HttpStatus.UNAUTHORIZED, "INVALID_TOKEN_FORMAT");
+            }
+        }
+
         try {
-            if (token == null || token.trim().isEmpty()) {
-                throw new JwtAuthenticationException("Token is null or empty",
-                    HttpStatus.UNAUTHORIZED, "EMPTY_TOKEN");
-            }
-
-            token = token.trim();
-            if (token.startsWith("Bearer ")) {
-                token = token.substring(7).trim();
-            }
-
-            String[] parts = token.split("\\.");
-            if (parts.length != 3) {
-                throw new JwtAuthenticationException("Invalid JWT structure",
-                    HttpStatus.UNAUTHORIZED, "INVALID_TOKEN_STRUCTURE");
-            }
-
-            for (String part : parts) {
-                if (part.isEmpty()) {
-                    throw new JwtAuthenticationException("Invalid JWT: empty part",
-                        HttpStatus.UNAUTHORIZED, "INVALID_TOKEN_FORMAT");
-                }
-            }
-
             return Jwts.parserBuilder()
                     .setSigningKey(signingKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-        } catch (MalformedJwtException e) {
-            throw new JwtAuthenticationException("Invalid JWT token format",
-                HttpStatus.UNAUTHORIZED, "INVALID_TOKEN_FORMAT", e);
         } catch (ExpiredJwtException e) {
             throw new JwtAuthenticationException("JWT token is expired",
                 HttpStatus.UNAUTHORIZED, "TOKEN_EXPIRED", e);
+        } catch (MalformedJwtException e) {
+            throw new JwtAuthenticationException("Invalid JWT token format",
+                HttpStatus.UNAUTHORIZED, "INVALID_TOKEN_FORMAT", e);
+        } catch (SignatureException e) {
+            throw new JwtAuthenticationException("JWT signature does not match",
+                HttpStatus.UNAUTHORIZED, "INVALID_SIGNATURE", e);
         } catch (UnsupportedJwtException e) {
             throw new JwtAuthenticationException("JWT token is unsupported",
                 HttpStatus.UNAUTHORIZED, "UNSUPPORTED_TOKEN", e);
         } catch (IllegalArgumentException e) {
             throw new JwtAuthenticationException("JWT claims string is empty",
                 HttpStatus.BAD_REQUEST, "EMPTY_TOKEN", e);
-        } catch (SignatureException e) {
-            throw new JwtAuthenticationException("JWT signature does not match",
-                HttpStatus.UNAUTHORIZED, "INVALID_SIGNATURE", e);
         } catch (JwtException e) {
             throw new JwtAuthenticationException("JWT validation failed",
                 HttpStatus.UNAUTHORIZED, "TOKEN_VALIDATION_FAILED", e);
-        } catch (JwtAuthenticationException e) {
-            throw new JwtAuthenticationException("Failed to parse JWT token",
-                HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_PARSING_ERROR", e);
         }
     }
 
@@ -154,9 +120,7 @@ public class JwtService {
             }
             byte[] keyBytes = Decoders.BASE64.decode(secretKey);
             return Keys.hmacShaKeyFor(keyBytes);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalStateException("Invalid JWT secret key format. Must be base64 encoded.", e);
-        } catch (DecodingException | WeakKeyException | IllegalStateException e) {
+        } catch (DecodingException | WeakKeyException e) {
             throw new IllegalStateException("Failed to initialize JWT signing key", e);
         }
     }
@@ -170,8 +134,6 @@ public class JwtService {
                     .collect(Collectors.toList());
             claims.put("roles", roles);
             claims.put("userId", userId);
-            claims.put("iss", jwtProperties.getIssuer());
-            claims.put("aud", jwtProperties.getAudience());
 
             Instant now = Instant.now();
             Instant expiry = now.plus(jwtProperties.getExpirationMinutes(), ChronoUnit.MINUTES);
@@ -224,16 +186,14 @@ public class JwtService {
                    validateTokenClaims(token);
         } catch (JwtAuthenticationException e) {
             return false;
-        } catch (Exception e) {
-            return false;
         }
     }
 
-    public boolean validateToken(String token) throws JwtException {
+    public boolean validateToken(String token) {
         try {
             extractAllClaims(token);
             return true;
-        } catch (JwtException e) {
+        } catch (JwtAuthenticationException e) {
             return false;
         }
     }
@@ -241,6 +201,7 @@ public class JwtService {
     public boolean validateTokenClaims(String token) {
         try {
             Claims claims = extractAllClaims(token);
+
             String expectedIssuer = jwtProperties.getIssuer();
             if (expectedIssuer != null && !expectedIssuer.equals(claims.getIssuer())) {
                 return false;
@@ -258,55 +219,32 @@ public class JwtService {
             return true;
         } catch (JwtAuthenticationException e) {
             return false;
-        } catch (Exception e) {
-            return false;
         }
     }
 
     public Date getExpirationDate(String token) {
-        try {
-            return extractClaim(token, Claims::getExpiration);
-        } catch (JwtAuthenticationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to get expiration date from token",
-                HttpStatus.UNAUTHORIZED, "EXPIRATION_EXTRACTION_ERROR", e);
-        }
+        return extractClaim(token, Claims::getExpiration);
     }
 
     public boolean isTokenExpired(String token) {
         try {
-            Date expiration = getExpirationDate(token);
-            return expiration.before(new Date());
+            return getExpirationDate(token).before(new Date());
         } catch (JwtAuthenticationException e) {
-            return true;
-        } catch (Exception e) {
             return true;
         }
     }
 
     public long getRemainingValidity(String token) {
         try {
-            Date expiration = getExpirationDate(token);
-            long remaining = expiration.getTime() - System.currentTimeMillis();
+            long remaining = getExpirationDate(token).getTime() - System.currentTimeMillis();
             return Math.max(remaining, 0);
         } catch (JwtAuthenticationException e) {
-            return 0;
-        } catch (Exception e) {
             return 0;
         }
     }
 
     public String getTokenType(String token) {
-        try {
-            Claims claims = extractAllClaims(token);
-            String tokenType = claims.get("tokenType", String.class);
-            return tokenType != null ? tokenType : "access";
-        } catch (JwtAuthenticationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JwtAuthenticationException("Failed to extract token type",
-                HttpStatus.UNAUTHORIZED, "TOKEN_TYPE_EXTRACTION_ERROR", e);
-        }
+        String tokenType = extractAllClaims(token).get("tokenType", String.class);
+        return tokenType != null ? tokenType : "access";
     }
 }

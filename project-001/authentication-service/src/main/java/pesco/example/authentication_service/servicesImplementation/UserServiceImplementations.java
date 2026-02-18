@@ -207,7 +207,6 @@ public class UserServiceImplementations implements UserService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("USER_NOT_FOUND", "User not found", HttpStatus.NOT_FOUND));
 
-        userRecordRepository.deleteByUserId(userId);
         userRepository.delete(user);
     }
 

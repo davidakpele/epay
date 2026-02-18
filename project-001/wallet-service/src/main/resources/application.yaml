@@ -86,6 +86,9 @@ history-service:
 
 notification-service:
   base-url: http://notification-service:8079
+
+administrator-service:
+  base-url: http://administrator:8109
   
 grpc:
   server:

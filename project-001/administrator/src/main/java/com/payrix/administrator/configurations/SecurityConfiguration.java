@@ -1,8 +1,5 @@
 package com.payrix.administrator.configurations;
 
-import com.payrix.administrator.components.JwtAuthenticationFilter;
-import com.payrix.administrator.services.CustomUserDetailsService;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,6 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.payrix.administrator.components.JwtAuthenticationFilter;
+import com.payrix.administrator.services.CustomUserDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -53,12 +53,13 @@ public class SecurityConfiguration {
                         "/admin/api/auth/register",
                         "/admin/api/auth/refresh",
                         "/admin/api/auth/logout",
-                        "/admin/api/verify-user"
+                        "/admin/api/verify-user",
+                        "/admin/api/username/**"  
                     ).permitAll()
                     .requestMatchers("/admin/dashboard").hasRole("ADMIN")
                     .requestMatchers("/admin/users").hasRole("ADMIN")
                     .requestMatchers("/admin/user/**").hasAnyRole("USER", "ADMIN")
-                    .requestMatchers("/admin/api/**").authenticated()
+                    .requestMatchers("/admin/api/**").hasAnyRole("USER", "ADMIN")
                     .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

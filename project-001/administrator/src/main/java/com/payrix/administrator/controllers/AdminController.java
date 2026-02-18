@@ -1,13 +1,10 @@
 package com.payrix.administrator.controllers;
 
-
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.payrix.administrator.dtos.DashboardData;
 import com.payrix.administrator.httpClients.DashboardAggregationService;
 import com.payrix.administrator.httpClients.UserServiceClient;
@@ -15,6 +12,9 @@ import com.payrix.administrator.models.User;
 import com.payrix.administrator.utils.SecurityUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.ui.Model;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 @RequestMapping("/admin")
@@ -28,7 +28,6 @@ public class AdminController {
         this.userService = userService;
         this.dashboardAggregationService = dashboardAggregationService;
     }
-
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasRole('ADMIN')")
@@ -114,6 +113,15 @@ public class AdminController {
         String username = SecurityUtil.getCurrentUsername();
         model.addAttribute("username", username != null ? username : "Admin");
         return "admin/currencySwap";
+    }
+
+    @GetMapping("/user/{id}/view")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String user(@PathVariable Long id, Model model){
+        String username = SecurityUtil.getCurrentUsername();
+        model.addAttribute("username", username != null ? username : "Admin");
+        model.addAttribute("userId", id);
+        return "admin/users/user-profile";
     }
 
 }

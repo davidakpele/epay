@@ -202,6 +202,7 @@ services:
       - banking-network
 
   wallet-service:
+    restart: unless-stopped
     build: ./wallet-service
     container_name: wallet-service
     ports:
@@ -493,6 +494,7 @@ services:
       - banking-network
   
   administrator:
+    restart: unless-stopped
     build: ./administrator
     container_name: administrator
     ports:
@@ -505,6 +507,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=banking_pass
     depends_on:
       - mysql
+      # - postgres
       - escrow-service
       - notification-service
       - wallet-service

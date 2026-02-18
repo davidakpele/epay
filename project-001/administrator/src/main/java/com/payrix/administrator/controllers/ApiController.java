@@ -1,11 +1,14 @@
 package com.payrix.administrator.controllers;
 
+import com.payrix.administrator.exceptions.Error;
+import com.payrix.administrator.dtos.AdminDTO;
 import com.payrix.administrator.dtos.AdminUserVerificationDTO;
 import com.payrix.administrator.payloads.LoginRequest;
 import com.payrix.administrator.services.AuthService;
 import com.payrix.administrator.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,4 +40,17 @@ public class ApiController {
         return ResponseEntity.ok(verified);
     }
     
+    @GetMapping("/username/{username}")
+    public ResponseEntity<?> findUserByUsername(@PathVariable String username) {
+        if (username == null || username.isEmpty()) {
+            return Error.createResponse("Username is require.*", HttpStatus.BAD_REQUEST, "Username is require.*");
+        } else if (adminUserService.getUserByUsername(username) == null) {
+            return Error.createResponse("User with username " + username + " does not exist.", HttpStatus.BAD_REQUEST,
+                    "User does not exist");
+        }
+        AdminDTO userDTO = adminUserService.findPublicUserByUsername(username);
+
+        return ResponseEntity.ok(userDTO);
+    }
+
 }

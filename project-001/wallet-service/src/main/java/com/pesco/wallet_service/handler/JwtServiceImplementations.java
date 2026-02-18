@@ -1,7 +1,8 @@
 package com.pesco.wallet_service.handler;
 
-
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.pesco.wallet_service.services.JwtService;
 import com.pesco.wallet_service.util.JwtProperties;
 import java.security.Key;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +37,7 @@ public class JwtServiceImplementations implements JwtService {
 
     @Override
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+        return claimsResolver.apply(extractAllClaims(token));
     }
 
     @Override
@@ -48,17 +49,42 @@ public class JwtServiceImplementations implements JwtService {
                 .getBody();
     }
 
-    private Key getSigninKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecretKey());
-        return Keys.hmacShaKeyFor(keyBytes);
+    @Override
+    public List<String> extractRoles(String token) {
+        Object rolesObj = extractAllClaims(token).get("roles");
+        if (rolesObj instanceof List<?> list) {
+            return list.stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+    @Override
+    public boolean isTokenValid(String token) {
+        try {
+            extractAllClaims(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            return false;
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return username.equals(userDetails.getUsername()) && isTokenValid(token);
     }
 
     @Override
     public String generateToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
+                .map(role -> role.startsWith("ROLE_") ? role.substring(5) : role)
                 .collect(Collectors.toList());
+
+        Map<String, Object> claims = new HashMap<>();
         claims.put("roles", roles);
         return generateToken(claims, userDetails);
     }
@@ -70,22 +96,13 @@ public class JwtServiceImplementations implements JwtService {
                 .setClaims(claims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24))
                 .signWith(getSigninKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    @Override
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    private Key getSigninKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecretKey());
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

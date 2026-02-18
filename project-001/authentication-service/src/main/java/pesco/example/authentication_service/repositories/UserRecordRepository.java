@@ -25,13 +25,9 @@ public interface UserRecordRepository extends JpaRepository<UserRecord, Long> {
     @Modifying
     @Transactional
     @Query("DELETE FROM UserRecord r WHERE r.user.id IN :ids")
-    void deleteUserRecordByIds(@Param("ids") List<Long> ids);
+    void deleteUserRecordByIxds(@Param("ids") List<Long> ids);
 
     @Query("SELECT r FROM UserRecord r WHERE r.telephone = :telephone")
     Optional<UserRecord> findByTelephone(@Param("telephone") String telephone);
 
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM UserRecord r WHERE r.user.id=:userId")
-    void deleteByUserId(Long userId);
 }

@@ -22,19 +22,19 @@ public class WebClientConfig {
     @Value("${authentication-service.base-url}")
     private String authServiceBaseUrl;
 
+    @Value("${administrator-service.base-url}")
+    private String adminServiceUrl;
+
     @Value("${notification-service.base-url}")
     private String notificationServiceBaseUrl;
 
     @Bean
     public WebClient.Builder webClientBuilder() {
-        // Configure TcpClient with timeouts
         TcpClient tcpClient = TcpClient.create()
                 .doOnConnected(connection -> {
                     connection.addHandlerLast(new ReadTimeoutHandler(10, TimeUnit.SECONDS));
                     connection.addHandlerLast(new WriteTimeoutHandler(10, TimeUnit.SECONDS));
-                });
-
-        // Use DefaultAddressResolverGroup to resolve DNS issues
+        });
         @SuppressWarnings("deprecation")
         HttpClient httpClient = HttpClient.from(tcpClient)
                 .resolver(DefaultAddressResolverGroup.INSTANCE)
@@ -58,10 +58,17 @@ public class WebClientConfig {
                 .build();
     }
 
-     @Bean
+    @Bean
     public WebClient notificationServiceWebClient(WebClient.Builder webClientBuilder) {
         return webClientBuilder
                 .baseUrl(notificationServiceBaseUrl) 
+                .build();
+    }
+
+    @Bean
+    public WebClient adminServiceWebClient(WebClient.Builder webClientBuilder) {
+        return webClientBuilder
+                .baseUrl(adminServiceUrl) 
                 .build();
     }
 
