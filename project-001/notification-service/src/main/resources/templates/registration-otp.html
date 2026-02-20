@@ -1,171 +1,211 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-        }
-        .email-wrapper {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-        }
-        .header {
-            background: linear-gradient(135deg, #166701 0%, #1a7d01 100%);
-            padding: 40px 30px;
-            text-align: center;
-        }
-        .header h1 {
-            color: #ffffff;
-            margin: 0;
-            font-size: 28px;
-            font-weight: 600;
-        }
-        .content {
-            padding: 40px 30px;
-            background-color: #ffffff;
-        }
-        .greeting {
-            font-size: 18px;
-            color: #333333;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-        .message-text {
-            font-size: 15px;
-            color: #555555;
-            margin-bottom: 30px;
-            line-height: 1.8;
-        }
-        .otp-container {
-            background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);
-            border: 2px dashed #166701;
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            margin: 30px 0;
-        }
-        .otp-label {
-            font-size: 14px;
-            color: #666666;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-        .otp-code {
-            font-size: 36px;
-            font-weight: 700;
-            color: #166701;
-            letter-spacing: 8px;
-            margin: 15px 0;
-            font-family: 'Courier New', monospace;
-        }
-        .validity {
-            font-size: 13px;
-            color: #888888;
-            margin-top: 10px;
-        }
-        .validity strong {
-            color: #166701;
-        }
-        .security-notice {
-            background-color: #fff9e6;
-            border-left: 4px solid #ffc107;
-            padding: 15px 20px;
-            margin: 25px 0;
-            border-radius: 4px;
-        }
-        .security-notice p {
-            margin: 0;
-            font-size: 13px;
-            color: #666666;
-        }
-        .security-icon {
-            display: inline-block;
-            margin-right: 8px;
-            font-size: 16px;
-        }
-        .footer {
-            background-color: #f9f9f9;
-            padding: 30px;
-            text-align: center;
-            border-top: 1px solid #e0e0e0;
-        }
-        .footer-text {
-            font-size: 13px;
-            color: #888888;
-            margin: 5px 0;
-        }
-        .company-name {
-            color: #166701;
-            font-weight: 600;
-        }
-        .divider {
-            height: 1px;
-            background: linear-gradient(to right, transparent, #e0e0e0, transparent);
-            margin: 25px 0;
-        }
-        @media only screen and (max-width: 600px) {
-            .content {
-                padding: 30px 20px;
-            }
-            .otp-code {
-                font-size: 28px;
-                letter-spacing: 4px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+  <title>ePay – Your OTP Code</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+  <style>
+    * { box-sizing: border-box; }
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; display: block; }
+    body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+    u + #body a { color: inherit; text-decoration: none; font-size: inherit; font-family: inherit; font-weight: inherit; line-height: inherit; }
+    @media screen and (max-width: 520px) {
+      .email-card { width: 100% !important; }
+      .otp-code-text { font-size: 34px !important; letter-spacing: 8px !important; }
+      .card-padding { padding: 28px 20px 24px !important; }
+    }
+  </style>
 </head>
-<body>
-    <div class="email-wrapper">
-        <div class="header">
-            <h1>✓ Verification Required</h1>
-        </div>
-        
-        <div class="content">
-            <p class="greeting">Hello,</p>
-            
-            <p class="message-text">
-                Thank you for registering with us. To complete your account setup and verify your email address, 
-                please use the One-Time Password (OTP) below:
-            </p>
-            
-            <div class="otp-container">
-                <div class="otp-label">Your Verification Code</div>
-                <div class="otp-code" th:text="${message}"></div>
-                <div class="validity">Valid for <strong>15 minutes</strong></div>
-            </div>
-            
-            <div class="security-notice">
-                <p>
-                    <span class="security-icon">🔒</span>
-                    <strong>Security Notice:</strong> Never share this code with anyone. Our team will never ask for your OTP.
-                </p>
-            </div>
-            
-            <div class="divider"></div>
-            
-            <p class="message-text" style="margin-bottom: 0; font-size: 13px;">
-                If you didn't request this code, please ignore this email or contact our support team if you have concerns.
-            </p>
-        </div>
-        
-        <div class="footer">
-            <p class="footer-text">
-                <span class="company-name">Our Bank</span> - Secure Banking Solutions
-            </p>
-            <p class="footer-text">
-                &copy; 2024 Our Bank. All rights reserved.
-            </p>
-        </div>
-    </div>
+<body id="body" style="margin:0; padding:0; background-color:#eef0f2; width:100%; font-family:Arial, Helvetica, sans-serif;">
+
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#eef0f2;">
+    <tr>
+      <td align="center" style="padding:48px 16px;">
+
+        <!-- ═══ BRAND ═══ -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:28px;">
+          <tr>
+            <td valign="middle" style="padding-right:10px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+                style="height:44px;v-text-anchor:middle;width:44px;" arcsize="27%" stroke="f" fillcolor="#1a4d2e">
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:Georgia,serif;font-size:20px;font-weight:bold;">e</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td align="center" valign="middle" style="width:44px; height:44px; background-color:#1a4d2e; border-radius:12px;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="3" y="5" width="18" height="14" rx="2" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M3 10h18" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                  </td>
+                </tr>
+              </table>
+              <!--<![endif]-->
+            </td>
+            <td valign="middle">
+              <span style="font-family:Georgia, 'Times New Roman', serif; font-size:26px; font-weight:bold; color:#1a4d2e; letter-spacing:-0.5px; line-height:1;">ePay</span>
+            </td>
+          </tr>
+        </table>
+
+        <!-- ═══ CARD ═══ -->
+        <table class="email-card" role="presentation" cellspacing="0" cellpadding="0" border="0" width="480" style="background-color:#ffffff; border-radius:20px; width:480px; max-width:480px; box-shadow:0 4px 32px rgba(0,0,0,.08);">
+          <tr>
+            <td class="card-padding" style="padding:40px 36px 36px 36px;">
+
+              <!-- Heading -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom:16px;">
+                    <h1 style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:26px; font-weight:bold; color:#1a4d2e; line-height:1.2; text-align:center;">Your OTP Code</h1>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Body text -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="padding-bottom:4px;">
+                    <p style="margin:0 0 6px 0; font-family:Arial, Helvetica, sans-serif; font-size:14px; color:#374151; line-height:1.7; text-align:left;">
+                      Thank you for registering with us. To complete your account setup and verify your email address.
+                    </p>
+                    <p style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:13px; color:#6b7280; line-height:1.65; text-align:left;">
+                      This code is valid for a limited time and should not be shared with anyone.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- ── OTP Box ── -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:24px 0; border:1px solid #e8e2d5; border-radius:14px;">
+                <!-- OTP Title -->
+                <tr>
+                  <td align="center" style="background-color:#f2ece0; border-radius:14px 14px 0 0; padding:13px 16px; border-bottom:1px solid #e8e2d5;">
+                    <span style="font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:700; color:#1a4d2e; letter-spacing:0.03em;">One-Time Password</span>
+                  </td>
+                </tr>
+                <!-- OTP Body -->
+                <tr>
+                  <td align="center" style="padding:32px 24px 28px 24px; background-color:#f9f7f2; border-radius:0 0 14px 14px;">
+                    <!-- Label -->
+                    <p style="margin:0 0 14px 0; font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#9ca3af; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; text-align:center;">Your Verification Code</p>
+                    <!-- OTP Code -->
+                    <p class="otp-code-text" th:text="${message}" style="margin:0 0 20px 0; font-family:Georgia, 'Times New Roman', serif; font-size:42px; font-weight:bold; color:#1a4d2e; letter-spacing:12px; text-align:center; line-height:1.2; padding-left:12px;">482916</p>
+                    <!-- Expiry badge -->
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;">
+                      <tr>
+                        <td align="center" style="background-color:#fef3c7; border:1px solid #fde68a; border-radius:20px; padding:6px 16px;">
+                          <span style="font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#92400e;">Expires in &nbsp;<strong style="color:#78350f;">10 minutes</strong></span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Support note -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="padding-bottom:24px;">
+                    <p style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:13px; color:#6b7280; line-height:1.65; text-align:left;">
+                      If you did not request this OTP, please ignore this email or contact our support team immediately to secure your account.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:24px;">
+                <tr>
+                  <td align="center">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+                      href="mailto:support@epay.com" style="height:50px;v-text-anchor:middle;width:408px;" arcsize="10%" stroke="f" fillcolor="#1a4d2e">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;">Contact Support</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-->
+                    <a href="mailto:support@epay.com"
+                      style="display:block; background-color:#1a4d2e; color:#ffffff; font-family:Arial, Helvetica, sans-serif; font-size:15px; font-weight:700; text-align:center; padding:16px 20px; border-radius:10px; text-decoration:none; letter-spacing:0.02em;">
+                      Contact Support
+                    </a>
+                    <!--<![endif]-->
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:20px;">
+                <tr>
+                  <td style="height:1px; background-color:#f3f4f6; font-size:0; line-height:0;">&nbsp;</td>
+                </tr>
+              </table>
+
+              <!-- Thank you -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom:20px;">
+                    <p style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:700; color:#1f2937; text-align:center;">Thank you for using ePay!</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Socials -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 16px auto;">
+                <tr>
+                  <!-- Facebook -->
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block; width:36px; height:36px; border:1.5px solid #d1d5db; border-radius:18px; text-align:center; line-height:33px; text-decoration:none; color:#6b7280; font-family:Arial,sans-serif; font-size:14px; font-weight:bold;">f</a>
+                  </td>
+                  <!-- Twitter/X -->
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block; width:36px; height:36px; border:1.5px solid #d1d5db; border-radius:18px; text-align:center; line-height:33px; text-decoration:none; color:#6b7280; font-family:Arial,sans-serif; font-size:13px; font-weight:bold;">&#120143;</a>
+                  </td>
+                  <!-- Instagram -->
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block; width:36px; height:36px; border:1.5px solid #d1d5db; border-radius:18px; text-align:center; line-height:33px; text-decoration:none; color:#6b7280; font-family:Arial,sans-serif; font-size:17px; line-height:34px;">&#9632;</a>
+                  </td>
+                  <!-- Web -->
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block; width:36px; height:36px; border:1.5px solid #d1d5db; border-radius:18px; text-align:center; line-height:33px; text-decoration:none; color:#6b7280; font-family:Arial,sans-serif; font-size:15px;">&#9679;</a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Footer contact -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <p style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#9ca3af; line-height:1.8; text-align:center;">
+                      <strong style="color:#1a4d2e;">ePay</strong> &nbsp;support@epay.com<br>
+                      +1 (234) 567-890
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+        <!-- /CARD -->
+
+      </td>
+    </tr>
+  </table>
+
 </body>
 </html>

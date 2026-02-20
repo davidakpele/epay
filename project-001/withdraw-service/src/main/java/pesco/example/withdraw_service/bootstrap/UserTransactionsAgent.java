@@ -57,7 +57,7 @@ public class UserTransactionsAgent {
         
         if (user == null)
             return false;
-        return !user.isEnabled() || user.getCreatedOn().isAfter(LocalDateTime.now().minusMinutes(3));
+        return !user.isEnabled() || user.getCreatedOn().isAfter(LocalDateTime.now().minusMinutes(1));
     }
 
     // Check for fraudulent activity

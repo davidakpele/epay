@@ -103,12 +103,11 @@ public class UserRecordImplementations implements UserRecordService {
 
     @Override
     public UserDTO findPublicUserByUsername(String username) {
-        Optional<Users> GetUser = userRepository.findByUsername(username);
+         Optional<Users> GetUser = userRepository.findByUsername(username);
         if (GetUser.isPresent()) {
             Users user = userRepository.findUserWithRecordById(GetUser.get().getId());
             return UserDTO.fromEntity(user);
         }
-
         return null;
     }
 

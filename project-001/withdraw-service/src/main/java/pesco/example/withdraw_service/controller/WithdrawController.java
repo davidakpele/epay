@@ -52,7 +52,6 @@ public class WithdrawController {
             return Error.createResponse("Access Denied", HttpStatus.FORBIDDEN,
                     "You are not authorized to operate this wallet.");
         }
-        
         return walletService.processWithdraw(dto, token, httpServletRequest);
     }
 

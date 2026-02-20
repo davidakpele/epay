@@ -1,173 +1,416 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deposit Receipt</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ePay – Deposit Successful</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-dark:   #1a4d2e;
+      --green-mid:    #2d7a4f;
+      --green-accent: #3a9e63;
+      --green-light:  #e8f5ee;
+      --green-pale:   #f2faf5;
+      --text-body:    #2c3a30;
+      --text-muted:   #6b8074;
+      --border:       #d5e8dc;
+      --white:        #ffffff;
+      --bg:           #eef4f0;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 16px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(58,158,99,.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(26,77,46,.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* ── Brand ── */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+      animation: slideDown .6s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    .brand-logo {
+      width: 44px; height: 44px;
+      background: var(--green-dark);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(26,77,46,.35);
+    }
+
+    .brand-logo svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+    .brand-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      color: var(--green-dark);
+      letter-spacing: -.5px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--white);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      padding: 40px 36px 36px;
+      box-shadow: 0 8px 48px rgba(26,77,46,.12), 0 2px 8px rgba(26,77,46,.06);
+      animation: rise .7s cubic-bezier(.22,1,.36,1) .1s both;
+    }
+
+    /* ── Success icon ── */
+    .check-wrap {
+      display: flex; justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .check-circle {
+      width: 68px; height: 68px;
+      background: var(--green-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      animation: popIn .5s cubic-bezier(.34,1.56,.64,1) .4s both;
+      box-shadow: 0 0 0 8px rgba(232,245,238,.5);
+    }
+
+    .check-circle svg {
+      width: 30px; height: 30px;
+      stroke: var(--green-mid);
+      stroke-width: 2.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 40;
+      stroke-dashoffset: 40;
+      animation: drawCheck .4s ease-out .75s forwards;
+    }
+
+    /* ── Heading ── */
+    .heading {
+      font-family: 'DM Serif Display', serif;
+      font-size: 30px;
+      color: var(--green-dark);
+      text-align: center;
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+
+    /* ── Intro ── */
+    .intro {
+      font-size: 14.5px;
+      color: var(--text-body);
+      line-height: 1.65;
+      margin-bottom: 28px;
+    }
+
+    /* ── Receipt table ── */
+    .receipt {
+      background: var(--green-pale);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    .receipt-title {
+      background: var(--green-light);
+      text-align: center;
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 13.5px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--green-dark);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .receipt-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+
+    .receipt-row:last-child { border-bottom: none; }
+    .receipt-row:hover { background: rgba(58,158,99,.04); }
+
+    .receipt-row .label,
+    .receipt-row .value {
+      padding: 13px 16px;
+      font-size: 13.5px;
+      line-height: 1.4;
+    }
+
+    .receipt-row .label {
+      color: var(--text-muted);
+      font-weight: 500;
+      border-right: 1px solid var(--border);
+    }
+
+    .receipt-row .value { color: var(--text-body); font-weight: 400; }
+
+    .receipt-row .value.amount,
+    .receipt-row .value.balance {
+      color: var(--green-mid);
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    /* ── Support note ── */
+    .support-note {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    /* ── CTA button ── */
+    .btn {
+      display: block;
+      width: 100%;
+      background: var(--green-dark);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      letter-spacing: .02em;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 4px 16px rgba(26,77,46,.28);
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,.08), transparent);
+      transform: translateX(-100%);
+      transition: transform .45s ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(26,77,46,.35); }
+    .btn:hover::after { transform: translateX(100%); }
+    .btn:active { transform: translateY(0); }
+
+    /* ── Thank you ── */
+    .thankyou {
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-body);
+      margin-bottom: 20px;
+    }
+
+    /* ── Socials ── */
+    .socials {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .social-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      transition: border-color .2s, color .2s, transform .2s;
+      cursor: pointer;
+    }
+
+    .social-icon:hover {
+      border-color: var(--green-mid);
+      color: var(--green-mid);
+      transform: translateY(-2px);
+    }
+
+    .social-icon svg { width: 15px; height: 15px; fill: currentColor; }
+
+    /* ── Footer ── */
+    .footer-contact {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    .footer-contact span { color: var(--green-dark); font-weight: 700; }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* ── Animations ── */
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.4); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+  </style>
 </head>
-<body style="margin: 0; padding: 20px; background-color: #f2f4f7; font-family: Arial, Helvetica, sans-serif;">
-    <!-- Main Container -->
-    <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#f2f4f7">
-        <tr>
-            <td align="center">
-                <!-- Greeting Section -->
-                <table width="600" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
-                    <tr>
-                        <td bgcolor="#ffffff" style="padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                            <h2 style="color: #0f4c81; margin: 0 0 10px 0; font-size: 18px;">Hello <span th:text="${accountHolder}"></span>,</h2>
-                            <p style="color: #374151; margin: 0 0 8px 0; font-size: 14px; line-height: 1.5;">
-                                Your deposit has been successfully processed. Below is your official receipt for this transaction.
-                            </p>
-                            <p style="color: #374151; margin: 0; font-size: 14px; line-height: 1.5;">
-                                Thank you for banking with us!
-                            </p>
-                        </td>
-                    </tr>
-                </table>
+<body>
 
-                <!-- Receipt Section -->
-                <table width="600" border="0" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                    <!-- Header -->
-                    <tr>
-                        <td bgcolor="#764ba2" style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td width="80" style="padding-right: 15px; vertical-align: top;">
-                                        <div style="width: 70px; height: 70px; background: #c441ef71; border-radius: 8px; display: block; text-align: center; line-height: 70px; font-weight: bold; font-size: 20px; color: white;">
-                                            BNK
-                                        </div>
-                                    </td>
-                                    <td style="vertical-align: top;">
-                                        <h1 style="font-size: 18px; margin: 0 0 5px 0; color: white; font-weight: bold;">Payrix</h1>
-                                    </td>
-                                    <td width="150" align="right" style="vertical-align: top;">
-                                        <div style="font-size: 12px; color: white;">
-                                            <div style="margin-bottom: 3px;"><strong>Receipt No:</strong> <span th:text="${receiptNo}">RCT-20251010-0042</span></div>
-                                            <div style="margin-bottom: 3px;"><strong>Date:</strong> <span th:text="${transactionDate}">Oct 10, 2025</span></div>
-                                            <div style="margin-bottom: 3px;"><strong>Time:</strong> <span th:text="${transactionTime}">14:01</span></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+  <!-- Brand -->
+  <div class="brand">
+    <div class="brand-logo">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+    </div>
+    <div class="brand-name">ePay</div>
+  </div>
 
-                    <!-- Title Section -->
-                    <tr>
-                        <td style="padding: 20px;">
-                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td>
-                                        <h2 style="font-size: 16px; margin: 0; color: #0f1724; font-weight: bold;">Deposit Receipt</h2>
-                                    </td>
-                                    <td align="right" width="120">
-                                        <span style="background: #e6f4ff; color: #764ba2; padding: 6px 10px; border-radius: 12px; font-weight: 600; font-size: 12px; display: inline-block;">
-                                            PAID — CONFIRMED
-                                        </span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+  <!-- Card -->
+  <div class="card">
 
-                    <!-- Transaction Details Grid -->
-                    <tr>
-                        <td style="padding: 0 20px;">
-                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td width="50%" style="padding: 0 5px 10px 0;">
-                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
-                                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">Depositor Name</div>
-                                            <div style="font-size: 13px; font-weight: 600; color: #111827;" th:text="${accountHolder}">User</div>
-                                        </div>
-                                    </td>
-                                    <td width="50%" style="padding: 0 0 10px 5px;">
-                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
-                                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">Transaction Type</div>
-                                            <div style="font-size: 13px; font-weight: 600; color: #111827;">Cash Deposit</div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td width="50%" style="padding: 0 5px 0 0;">
-                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
-                                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">Teller / Officer</div>
-                                            <div style="font-size: 13px; font-weight: 600; color: #111827;" th:text="${terminalNumber}">Teller 007</div>
-                                        </div>
-                                    </td>
-                                    <td width="50%" style="padding: 0 0 0 5px;">
-                                        <div style="background: #fbfdff; border: 1px solid #eef6ff; padding: 12px; border-radius: 8px;">
-                                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">Branch</div>
-                                            <div style="font-size: 13px; font-weight: 600; color: #111827;">Downtown Branch</div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+    <!-- Check icon -->
+    <div class="check-wrap">
+      <div class="check-circle">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+    </div>
 
-                    <!-- Amount Section -->
-                    <tr>
-                        <td style="padding: 20px;">
-                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td bgcolor="#fbfdff" style="border: 1px solid #e6eefc; padding: 16px; border-radius: 8px;">
-                                        <div style="font-size: 11px; color: #6b7280; margin-bottom: 5px;">Amount Deposited</div>
-                                        <div style="font-size: 24px; font-weight: 800; color: #764ba2; margin-bottom: 8px;"><span th:text="${currencySymbol}"></span><span th:text="${amount}">150,000.00</span></div>
-                                        <div style="font-size: 12px; color: #374151; margin-bottom: 15px;" th:text="${amountInWords}">One Hundred Fifty Thousand Naira Only</div>
-                                        
-                                        <!-- Transaction Table -->
-                                        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
-                                            <tr>
-                                                <td style="padding: 8px 0; border-bottom: 1px dashed #eef2ff;">
-                                                    <strong style="font-size: 12px; color: #475569;">Description</strong>
-                                                </td>
-                                                <td align="right" style="padding: 8px 0; border-bottom: 1px dashed #eef2ff;">
-                                                    <strong style="font-size: 12px; color: #475569;">Amount</strong>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0; border-bottom: 1px dashed #eef2ff; font-size: 12px;">Deposit</td>
-                                                <td align="right" style="padding: 8px 0; border-bottom: 1px dashed #eef2ff; font-size: 12px; font-weight: 600; color: #0b3a66;"><span th:text="${currencySymbol}"></span><span th:text="${amount}">150,000.00</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0; border-bottom: 1px dashed #eef2ff; font-size: 12px;">Previous Balance</td>
-                                                <td align="right" style="padding: 8px 0; border-bottom: 1px dashed #eef2ff; font-size: 12px; font-weight: 600; color: #0b3a66;"><span th:text="${currencySymbol}"></span><span th:text="${previousBalance}">25,400.00</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0; font-size: 12px;"><strong>New Balance</strong></td>
-                                                <td align="right" style="padding: 8px 0; font-size: 12px; font-weight: 600; color: #0b3a66;"><strong><span th:text="${currencySymbol}"></span><span th:text="${availableBalance}">175,400.00</span></strong></td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+    <h1 class="heading">Deposit Successful!</h1>
 
-                    <!-- Footer -->
-                    <tr>
-                        <td bgcolor="#fbfdff" style="border-top: 1px solid #eef2ff; padding: 15px 20px;">
-                            <table width="100%" border="0" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td width="60%">
-                                        <div style="font-size: 11px; color: #6b7280;">
-                                            <div style="font-weight: 700; color: #0b3a66; margin-bottom: 3px;">Need help?</div>
-                                            <div>Call +234 800 000 000 or email service@acme-bank.example</div>
-                                        </div>
-                                    </td>
-                                    <td width="40%" align="center">
-                                        <div style="font-size: 11px; color: #6b7280;">
-                                            This is a system-generated receipt and does not require a physical signature.
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+    <p class="intro">
+      Dear <span th:text="${accountHolder}"></span>,<br><br>
+      Your account has been successfully credited. Here are the
+      details of your deposit:
+    </p>
+
+    <!-- Receipt -->
+    <div class="receipt">
+      <div class="receipt-title">Transaction Receipt</div>
+
+      <div class="receipt-row">
+        <span class="label">Amount Deposited</span>
+        <span class="value amount">NGN 100,000.00</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Depositor</span>
+        <span class="value">John Michael</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Date</span>
+        <span class="value" th:text="${transactionDate}">April 25, 2024 </span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Time</span>
+        <span class="value" th:text="${transactionTime}">10:45 AM</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Transaction Type</span>
+        <span class="value">Bank Deposit</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Description</span>
+        <span class="value">Transfer from Savings</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Transaction ID</span>
+        <span th:text="${receiptNo}" class="value">RCT-20251010-0042</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Teller / Officer</span>
+        <span th:text="${terminalNumber}" class="value">Teller 007</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Amount Deposited</span>
+          <span class="value balance" th:text="${currencySymbol}"></span>
+          <span class="value balance" th:text="${amount}">150,000.00</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Previous Balance</span>
+          <span class="value balance" th:text="${currencySymbol}"></span>
+          <span class="value balance" th:text="${previousBalance}">150,000.00</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">New Balance</span>
+          <span class="value balance" th:text="${currencySymbol}"></span>
+          <span class="value balance" th:text="${availableBalance}">150,000.00</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">In-Words</span>
+        <span class="value balance" th:text="${amountInWords}">One Hundred Fifty Thousand Naira Only</span>
+      </div>
+    </div>
+
+    <p class="support-note">
+      If you have any questions or need further assistance, please don't hesitate
+      to contact our support team.
+    </p>
+
+    <button class="btn">Contact Support</button>
+
+    <div class="divider"></div>
+
+    <p class="thankyou">Thank you for using ePay!</p>
+
+    <!-- Socials -->
+    <div class="socials">
+      <div class="social-icon">
+        <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+      </div>
+      <div class="social-icon">
+        <svg viewBox="0 0 24 24"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+      </div>
+      <div class="social-icon">
+        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      </div>
+      <div class="social-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+    </div>
+
+    <div class="footer-contact">
+      <span>ePay</span> &nbsp;support@epay.com<br>
+      +1 (234) 567-890
+    </div>
+
+  </div>
+
 </body>
 </html>

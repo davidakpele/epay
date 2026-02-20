@@ -1,219 +1,389 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Statement - <span th:text="${bankName}">PESCO BANK</span></title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f9f9f9;
-            padding: 20px;
-        }
-        
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-        
-        .bank-logo {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .bank-slogan {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-        
-        .content {
-            padding: 40px 30px;
-        }
-        
-        .greeting {
-            font-size: 18px;
-            margin-bottom: 25px;
-            color: #2c3e50;
-        }
-        
-        .customer-name {
-            font-weight: bold;
-            color: #1a3a8f;
-        }
-        
-        .message {
-            font-size: 16px;
-            line-height: 1.8;
-            margin-bottom: 30px;
-            color: #555;
-        }
-        
-        .receipt-section {
-            background: #f8f9fa;
-            border-left: 4px solid #764ba2;
-            padding: 20px;
-            margin: 30px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .receipt-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1a3a8f;
-            margin-bottom: 15px;
-        }
-        
-        .bank-info {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.6;
-        }
-        
-        .attachment-notice {
-            background: #e8f4fd;
-            border: 1px solid #b6d7f8;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 25px 0;
-            text-align: center;
-        }
-        
-        .attachment-icon {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #1a3a8f;
-        }
-        
-        .footer {
-            background: #2c3e50;
-            color: white;
-            padding: 25px 30px;
-            text-align: center;
-        }
-        
-        .contact-info {
-            font-size: 14px;
-            margin-bottom: 15px;
-            opacity: 0.9;
-        }
-        
-        .disclaimer {
-            font-size: 12px;
-            opacity: 0.7;
-            line-height: 1.5;
-            margin-top: 15px;
-        }
-        
-        .divider {
-            height: 1px;
-            background: #e0e0e0;
-            margin: 25px 0;
-        }
-        
-        .statement-period {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 5px;
-            padding: 10px 15px;
-            margin: 15px 0;
-            text-align: center;
-            font-weight: bold;
-            color: #856404;
-        }
-        
-        @media (max-width: 600px) {
-            .content {
-                padding: 30px 20px;
-            }
-            
-            .header {
-                padding: 20px 15px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title th:text="'Account Statement - ' + ${bankName}">Account Statement</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #EDECEA;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .email-wrapper {
+    width: 100%;
+    max-width: 520px;
+    animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Brand ──────────────────────────────────── */
+  .brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 28px;
+    animation: rise 0.5s 0.05s both;
+  }
+
+  .brand-icon {
+    width: 38px;
+    height: 38px;
+    background: #1C4A1C;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .brand-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: #1C4A1C;
+    letter-spacing: -0.3px;
+  }
+
+  /* ── Card ───────────────────────────────────── */
+  .card {
+    background: #FFFFFF;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow:
+      0 2px 4px rgba(0,0,0,0.04),
+      0 12px 40px rgba(0,0,0,0.08);
+    animation: rise 0.55s 0.1s both;
+  }
+
+  /* ── Header ─────────────────────────────────── */
+  .card-header {
+    padding: 40px 40px 24px;
+    text-align: center;
+  }
+
+  .pdf-icon-wrap {
+    width: 72px;
+    height: 72px;
+    background: #D1E8D1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 22px;
+    animation: pop 0.5s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .page-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: #1C4A1C;
+    letter-spacing: -0.2px;
+  }
+
+  /* ── Body ───────────────────────────────────── */
+  .card-body {
+    padding: 4px 40px 36px;
+  }
+
+  .greeting {
+    font-size: 15px;
+    color: #374151;
+    font-weight: 500;
+    margin-bottom: 14px;
+  }
+
+  .intro {
+    font-size: 14.5px;
+    color: #6B7280;
+    line-height: 1.7;
+    margin-bottom: 26px;
+  }
+
+  /* ── Attachment Card ────────────────────────── */
+  .attachment-card {
+    background: #F9F7F4;
+    border: 1px solid #E8E4DF;
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 26px;
+  }
+
+  .attachment-card .file-icon {
+    width: 46px;
+    height: 46px;
+    background: #1C4A1C;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .attachment-card .file-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .file-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1C4A1C;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+
+  .file-size {
+    font-size: 12px;
+    color: #9CA3AF;
+  }
+
+  .attachment-card .download-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .file-size-badge {
+    font-size: 12px;
+    color: #9CA3AF;
+    font-weight: 500;
+  }
+
+  .download-btn {
+    display: inline-block;
+    padding: 9px 18px;
+    background: #1C4A1C;
+    color: #FFFFFF;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 3px 10px rgba(28, 74, 28, 0.25);
+    white-space: nowrap;
+  }
+
+  .download-btn:hover {
+    background: #163A16;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(28, 74, 28, 0.32);
+  }
+
+  .download-btn:active { transform: translateY(0); }
+
+  /* ── Note ───────────────────────────────────── */
+  .note {
+    font-size: 13.5px;
+    color: #6B7280;
+    line-height: 1.65;
+  }
+
+  /* ── Footer ─────────────────────────────────── */
+  .footer {
+    padding: 22px 40px 32px;
+    text-align: center;
+    border-top: 1px solid #F3F0EC;
+  }
+
+  .footer-tagline {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    color: #374151;
+    font-weight: 700;
+    margin-bottom: 18px;
+  }
+
+  .social-links {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .social-link {
+    width: 34px;
+    height: 34px;
+    background: #1C4A1C;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: transform 0.2s, background 0.2s;
+  }
+
+  .social-link:hover {
+    background: #2D6A2D;
+    transform: translateY(-2px);
+  }
+
+  .footer-meta {
+    font-size: 12px;
+    color: #B0AAA3;
+    line-height: 1.7;
+  }
+
+  .footer-meta a {
+    color: #9CA3AF;
+    text-decoration: none;
+  }
+
+  .disclaimer {
+    font-size: 11px;
+    color: #C4BFBA;
+    line-height: 1.6;
+    margin-top: 14px;
+    border-top: 1px solid #F0EDEA;
+    padding-top: 14px;
+  }
+</style>
 </head>
 <body>
-    <div class="email-container">
-        <!-- Header Section -->
-        <div class="header">
-            <div class="bank-logo" th:text="${bankName}">PESCO BANK</div>
-            <div class="bank-slogan">Secure Banking for Your Future</div>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="content">
-            <div class="greeting">
-                Dear <span class="customer-name" th:text="${username}">Customer</span>,
-            </div>
-            
-            <div class="message">
-                Thank you for using <span th:text="${bankName}">PESCO BANK</span>.<br><br>
-                Please find attached your e-statement as requested.
-            </div>
-            
-            <div class="statement-period">
-                Statement Period: <span th:text="${period}">Period</span>
-            </div>
-            
-            <div class="divider"></div>
-            
-            <!-- Receipt Section -->
-            <div class="receipt-section">
-                <div class="receipt-title">Transaction Receipt</div>
-                <div class="bank-info">
-                    <span th:text="${bankAddress}">123 Financial District, Cityville</span><br>
-                    Tel: <span th:text="${bankPhone}">(555) 123-4567</span><br>
-                    Email: <span th:text="${bankEmail}">support@pescobank.com</span><br>
-                    Website: www.pescobank.com
-                </div>
-            </div>
-            
-            <!-- Attachment Notice -->
-            <div class="attachment-notice">
-                <div class="attachment-icon">📎</div>
-                <div><strong>Your account statement is attached</strong></div>
-                <div style="font-size: 14px; margin-top: 8px; color: #666;">
-                    File: bank-statement.pdf
-                </div>
-            </div>
-            
-            <div class="message">
-                If you have any questions about your statement or need further assistance, 
-                please don't hesitate to contact our customer service team.
-            </div>
-        </div>
-        
-        <!-- Footer -->
-        <div class="footer">
-            <div class="contact-info">
-                <span th:text="${bankName}">PESCO BANK</span> Customer Service<br>
-                Available 24/7 | Phone: <span th:text="${bankPhone}">(555) 123-4567</span>
-            </div>
-            <div class="disclaimer">
-                This email and any attachments are confidential and intended solely for the use of the individual to whom they are addressed. 
-                If you are not the intended recipient, please notify us immediately and delete this email.
-            </div>
-        </div>
+
+<div class="email-wrapper">
+
+  <!-- Brand -->
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect x="2" y="2" width="7" height="7" rx="1.5" fill="white"/>
+        <rect x="11" y="2" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/>
+        <rect x="2" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/>
+        <rect x="11" y="11" width="7" height="7" rx="1.5" fill="white"/>
+      </svg>
     </div>
+    <span class="brand-name" th:text="${bankName}">ePay</span>
+  </div>
+
+  <!-- Card -->
+  <div class="card">
+
+    <!-- Header -->
+    <div class="card-header">
+      <div class="pdf-icon-wrap">
+        <!-- PDF file icon -->
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Page body -->
+          <rect x="5" y="2" width="20" height="26" rx="3" fill="#1C4A1C"/>
+          <!-- Folded corner -->
+          <path d="M19 2l6 6h-6V2z" fill="#4A7C4A"/>
+          <!-- PDF label background -->
+          <rect x="3" y="20" width="20" height="10" rx="2" fill="#4A7C4A"/>
+          <!-- PDF text -->
+          <text x="13" y="28" font-family="Arial" font-size="6" font-weight="bold" fill="white" text-anchor="middle">PDF</text>
+        </svg>
+      </div>
+      <h1 class="page-title">Your Account Statement</h1>
+    </div>
+
+    <!-- Body -->
+    <div class="card-body">
+      <p class="greeting">Dear <span th:text="${username}">David</span>.</p>
+      <p class="intro">
+        We have generated your recent account statement.
+        Please find the attached PDF document with your
+        <span th:text="${bankName}">ePay</span> account activity for
+        <span th:text="${period}">April 2024</span>.
+      </p>
+
+      <!-- Attachment Card -->
+      <div class="attachment-card">
+        <div class="file-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 2v6h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="7" y="19" font-family="Arial" font-size="4.5" font-weight="bold" fill="white">PDF</text>
+          </svg>
+        </div>
+
+        <div class="file-info">
+          <p class="file-name"
+             th:text="${bankName.replaceAll(' ', '_') + '_Account_Statement_' + period.replaceAll(' ', '_') + '.pdf'}">
+            ePay_Account_Statement_April_2024.pdf
+          </p>
+          <p class="file-size">850 KB</p>
+        </div>
+
+        <div class="download-col">
+          <span class="file-size-badge">850 KB</span>
+          <a href="#" class="download-btn">Download PDF</a>
+        </div>
+      </div>
+
+      <p class="note">If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p class="footer-tagline">Thank you for using <span th:text="${bankName}">ePay</span>!</p>
+
+      <div class="social-links">
+        <a href="#" class="social-link" aria-label="Facebook">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+            <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+          </svg>
+        </a>
+        <a href="#" class="social-link" aria-label="Twitter">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="white">
+            <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
+          </svg>
+        </a>
+        <a href="#" class="social-link" aria-label="Instagram">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+            <circle cx="12" cy="12" r="3"/>
+            <circle cx="17.5" cy="6.5" r="0.5" fill="white" stroke="none"/>
+          </svg>
+        </a>
+        <a href="#" class="social-link" aria-label="Website">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+          </svg>
+        </a>
+      </div>
+
+      <p class="footer-meta">
+        <span th:text="${bankName}">ePay</span> &nbsp;·&nbsp;
+        <a th:href="'mailto:' + ${bankEmail}" th:text="${bankEmail}">support@epay.com</a><br>
+        <span th:text="${bankPhone}">+1 (234) 567-890</span>
+      </p>
+
+      <p class="disclaimer">
+        This email and any attachments are confidential and intended solely for the use of the individual
+        to whom they are addressed. If you are not the intended recipient, please notify us immediately
+        and delete this email. &nbsp;·&nbsp; <span th:text="${bankAddress}">123 Financial District, Cityville</span>
+      </p>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>

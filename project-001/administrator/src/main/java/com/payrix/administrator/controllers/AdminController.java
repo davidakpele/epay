@@ -124,4 +124,13 @@ public class AdminController {
         return "admin/users/user-profile";
     }
 
+    @GetMapping("/user/{id}/edit")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String editUser(@PathVariable Long id, Model model){
+        String username = SecurityUtil.getCurrentUsername();
+        model.addAttribute("username", username != null ? username : "Admin");
+        model.addAttribute("userId", id);
+        return "admin/users/edit-user-profile";
+    }
+
 }

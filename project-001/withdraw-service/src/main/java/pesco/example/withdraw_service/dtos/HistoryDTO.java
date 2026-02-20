@@ -3,10 +3,6 @@ package pesco.example.withdraw_service.dtos;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import pesco.example.withdraw_service.enums.CurrencyStructType;
 import pesco.example.withdraw_service.enums.TransactionType;
 import lombok.Builder;
