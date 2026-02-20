@@ -4,491 +4,260 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ePay – Maintenance Fee Charged</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: #EDECEA;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 16px;
-    }
-
-    .email-wrapper {
-      width: 100%;
-      max-width: 520px;
-      animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(28px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Brand ── */
-    .brand {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 28px;
-      animation: rise 0.5s 0.05s both;
-    }
-
-    .brand-icon {
-      width: 38px;
-      height: 38px;
-      background: #1C4A1C;
-      border-radius: 9px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .brand-icon svg { display: block; }
-
-    .brand-name {
-      font-family: 'DM Serif Display', serif;
-      font-size: 26px;
-      color: #1C4A1C;
-      letter-spacing: -0.3px;
-    }
-
-    /* ── Card ── */
-    .card {
-      background: #FFFFFF;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow:
-        0 2px 4px rgba(0,0,0,0.04),
-        0 12px 40px rgba(0,0,0,0.08);
-      animation: rise 0.55s 0.1s both;
-    }
-
-    /* ── Alert Banner ── */
-    .alert-banner {
-      background: #FFFBEB;
-      border-bottom: 1px solid #FDE68A;
-      padding: 32px 40px 28px;
-      text-align: center;
-    }
-
-    .alert-icon-wrap {
-      width: 60px;
-      height: 60px;
-      background: #FEF3C7;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 18px;
-      animation: pulse 2.5s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.18); }
-      50%       { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
-    }
-
-    .alert-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 24px;
-      color: #1C4A1C;
-      line-height: 1.2;
-    }
-
-    /* ── Body ── */
-    .card-body {
-      padding: 32px 40px 36px;
-    }
-
-    .greeting {
-      font-size: 15px;
-      color: #374151;
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-
-    .intro {
-      font-size: 14.5px;
-      color: #6B7280;
-      line-height: 1.65;
-      margin-bottom: 28px;
-    }
-
-    /* ── Ref bar ── */
-    .ref-bar {
-      background: #F2EDE7;
-      border: 1px solid #E8E4DF;
-      border-radius: 10px;
-      padding: 10px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: #9CA3AF;
-      margin-bottom: 20px;
-    }
-
-    .ref-bar strong { color: #1C4A1C; font-size: 12px; }
-
-    /* ── Receipt Table ── */
-    .receipt {
-      background: #F9F7F4;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid #E8E4DF;
-      margin-bottom: 24px;
-    }
-
-    .receipt-header {
-      background: #F2EDE7;
-      padding: 14px 22px;
-      text-align: center;
-      border-bottom: 1px solid #E8E4DF;
-    }
-
-    .receipt-header h2 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 16px;
-      color: #1C4A1C;
-      letter-spacing: 0.2px;
-    }
-
-    .receipt-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 13px 22px;
-      border-bottom: 1px solid #EDE9E4;
-      transition: background 0.15s;
-    }
-
-    .receipt-row:last-child { border-bottom: none; }
-    .receipt-row:hover { background: #F4F0EB; }
-
-    .row-label {
-      font-size: 13.5px;
-      color: #9CA3AF;
-      font-weight: 400;
-      white-space: nowrap;
-    }
-
-    .row-value {
-      font-size: 13.5px;
-      color: #374151;
-      font-weight: 500;
-      text-align: right;
-    }
-
-    .row-value.debit {
-      color: #b91c1c;
-      font-weight: 700;
-      font-size: 14.5px;
-    }
-
-    .row-value.balance {
-      color: #1C4A1C;
-      font-weight: 700;
-      font-size: 15px;
-    }
-
-    /* ── Balance summary ── */
-    .balance-box {
-      background: #F9F7F4;
-      border: 1px solid #E8E4DF;
-      border-radius: 12px;
-      padding: 14px 16px;
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .balance-item { flex: 1; text-align: center; }
-
-    .balance-item:not(:last-child) {
-      border-right: 1px solid #E8E4DF;
-      padding-right: 12px;
-      margin-right: 4px;
-    }
-
-    .balance-label {
-      font-size: 11px;
-      color: #9CA3AF;
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-
-    .balance-value {
-      font-size: 13px;
-      font-weight: 700;
-      color: #374151;
-    }
-
-    .balance-value.spent { color: #b91c1c; }
-    .balance-value.new   { color: #1C4A1C; font-size: 14px; }
-
-    /* ── Note ── */
-    .note {
-      font-size: 13.5px;
-      color: #6B7280;
-      line-height: 1.65;
-      margin-bottom: 24px;
-    }
-
-    /* ── CTA ── */
-    .cta-btn {
-      display: block;
-      width: 100%;
-      padding: 15px;
-      background: #1C4A1C;
-      color: #FFFFFF;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14.5px;
-      font-weight: 600;
-      letter-spacing: 0.2px;
-      text-align: center;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-      box-shadow: 0 4px 12px rgba(28, 74, 28, 0.25);
-    }
-
-    .cta-btn:hover {
-      background: #163A16;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(28, 74, 28, 0.32);
-    }
-
-    .cta-btn:active { transform: translateY(0); }
-
-    /* ── Footer ── */
-    .footer {
-      padding: 26px 40px 32px;
-      text-align: center;
-      border-top: 1px solid #F3F0EC;
-    }
-
-    .footer-tagline {
-      font-family: 'DM Serif Display', serif;
-      font-size: 14px;
-      color: #9CA3AF;
-      margin-bottom: 18px;
-      font-style: italic;
-    }
-
-    .social-links {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    .social-link {
-      width: 34px;
-      height: 34px;
-      background: #1C4A1C;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      transition: transform 0.2s, background 0.2s;
-    }
-
-    .social-link:hover {
-      background: #2D6A2D;
-      transform: translateY(-2px);
-    }
-
-    .social-link svg { display: block; }
-
-    .footer-meta {
-      font-size: 12px;
-      color: #B0AAA3;
-      line-height: 1.7;
-    }
-
-    .footer-meta a {
-      color: #9CA3AF;
-      text-decoration: none;
-    }
-  </style>
 </head>
-<body>
+<body style="margin:0;padding:0;background-color:#EDECEA;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
 
-<div class="email-wrapper">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#EDECEA;padding:40px 16px;">
+    <tr>
+      <td align="center">
 
-  <!-- Brand -->
-  <div class="brand">
-    <div class="brand-icon">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <rect x="2" y="2" width="7" height="7" rx="1.5" fill="white"/>
-        <rect x="11" y="2" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/>
-        <rect x="2" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/>
-        <rect x="11" y="11" width="7" height="7" rx="1.5" fill="white"/>
-      </svg>
-    </div>
-    <span class="brand-name">ePay</span>
-  </div>
+        <!-- Brand -->
+        <table width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;margin-bottom:28px;">
+          <tr>
+            <td align="center">
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <!-- Logo box -->
+                  <td style="padding-right:10px;vertical-align:middle;">
+                    <div style="width:38px;height:38px;background-color:##166701;border-radius:9px;display:inline-block;text-align:center;line-height:38px;">
+                      <span style="color:#ffffff;font-size:18px;font-weight:bold;">e</span>
+                    </div>
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <span style="font-family:Georgia,'Times New Roman',serif;font-size:26px;color:##166701;font-weight:bold;letter-spacing:-0.3px;">ePay</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <!-- /Brand -->
 
-  <!-- Card -->
-  <div class="card">
+        <!-- Card -->
+        <table width="520" cellpadding="0" cellspacing="0" border="0"
+          style="max-width:520px;background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.08);">
 
-    <!-- Alert Banner -->
-    <div class="alert-banner">
-      <div class="alert-icon-wrap">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2L2 20h20L12 2z" fill="#F59E0B" stroke="#F59E0B" stroke-width="1" stroke-linejoin="round"/>
-          <path d="M12 9v5" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="12" cy="17" r="1" fill="white"/>
-        </svg>
-      </div>
-      <h1 class="alert-title">Maintenance Fee Charged!</h1>
-    </div>
+          <!-- ── Alert Banner ── -->
+          <tr>
+            <td align="center" style="background-color:#FFFBEB;border-bottom:1px solid #FDE68A;padding:32px 40px 28px;">
 
-    <!-- Body -->
-    <div class="card-body">
+              <!-- Alert icon -->
+              <div style="width:60px;height:60px;background-color:#FEF3C7;border-radius:50%;display:inline-block;text-align:center;line-height:60px;margin-bottom:18px;">
+                <span style="font-size:28px;line-height:60px;">⚠️</span>
+              </div>
+              <br>
+              <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:24px;color:##166701;line-height:1.2;font-weight:normal;">
+                Maintenance Fee Charged!
+              </h1>
+            </td>
+          </tr>
 
-      <p class="greeting">Dear <span th:text="${userFirstName}">David</span>,</p>
-      <p class="intro">
-        A maintenance fee has been debited from your account for this month. Here are the details of the fee:
-      </p>
+          <!-- ── Card Body ── -->
+          <tr>
+            <td style="padding:32px 40px 0 40px;">
 
-      <!-- Ref / Date bar -->
-      <div class="ref-bar">
-        <div>Receipt No: &nbsp;<strong th:text="${receiptNo}">RCT-20251031-001</strong></div>
-        <div th:text="${timestamp}">April 25, 2024 at 9:00 AM</div>
-      </div>
+              <!-- Greeting -->
+              <p style="margin:0 0 6px 0;font-size:15px;color:#374151;font-weight:500;">
+                Dear <span th:text="${userFirstName}">David</span>,
+              </p>
 
-      <!-- Receipt Table -->
-      <div class="receipt">
-        <div class="receipt-header">
-          <h2>Transaction Receipt</h2>
-        </div>
+              <!-- Intro -->
+              <p style="margin:0 0 24px 0;font-size:14.5px;color:#6B7280;line-height:1.65;">
+                A maintenance fee has been debited from your account for this month. Here are the details of the fee:
+              </p>
 
-        <!-- Fee Amount -->
-        <div class="receipt-row">
-          <span class="row-label">Fee Amount</span>
-          <span class="row-value debit">
-            -<span th:text="${currencySymbol}">₦</span><span th:text="${feeAmount}">500.00</span>
-          </span>
-        </div>
+              <!-- Ref / Date bar -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                style="background-color:#F2EDE7;border:1px solid #E8E4DF;border-radius:10px;margin-bottom:20px;">
+                <tr>
+                  <td style="padding:10px 16px;font-size:12px;color:#9CA3AF;">
+                    Receipt No: &nbsp;<strong style="color:##166701;" th:text="${receiptNo}">RCT-20251031-001</strong>
+                  </td>
+                  <td align="right" style="padding:10px 16px;font-size:12px;color:#9CA3AF;">
+                    <span th:text="${timestamp}">April 25, 2024 at 9:00 AM</span>
+                  </td>
+                </tr>
+              </table>
 
-        <!-- Account Holder -->
-        <div class="receipt-row">
-          <span class="row-label">Account Holder</span>
-          <span class="row-value" th:text="${username}">John Doe</span>
-        </div>
+              <!-- Receipt Table -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                style="background-color:#F9F7F4;border-radius:14px;border:1px solid #E8E4DF;margin-bottom:24px;">
 
-        <!-- Fee Type / Reason -->
-        <div class="receipt-row">
-          <span class="row-label">Fee Type</span>
-          <span class="row-value" th:text="${reason}">Monthly Maintenance Fee</span>
-        </div>
+                <!-- Receipt header -->
+                <tr>
+                  <td colspan="2" align="center"
+                    style="background-color:#F2EDE7;padding:14px 22px;border-radius:14px 14px 0 0;border-bottom:1px solid #E8E4DF;">
+                    <span style="font-family:Georgia,'Times New Roman',serif;font-size:16px;color:##166701;letter-spacing:0.2px;">
+                      Transaction Receipt
+                    </span>
+                  </td>
+                </tr>
 
-        <!-- Date & Time -->
-        <div class="receipt-row">
-          <span class="row-label">Date &amp; Time</span>
-          <span class="row-value" th:text="${timestamp}">April 25, 2024 at 9:00 AM</span>
-        </div>
+                <!-- Fee Amount -->
+                <tr>
+                  <td style="padding:13px 22px;font-size:13.5px;color:#9CA3AF;border-bottom:1px solid #EDE9E4;border-right:1px solid #EDE9E4;white-space:nowrap;">
+                    Fee Amount
+                  </td>
+                  <td align="right" style="padding:13px 22px;font-size:14.5px;color:#b91c1c;font-weight:700;border-bottom:1px solid #EDE9E4;">
+                    -<span th:text="${currencySymbol}">₦</span><span th:text="${feeAmount}">500.00</span>
+                  </td>
+                </tr>
 
-        <!-- Transaction Type -->
-        <div class="receipt-row">
-          <span class="row-label">Transaction Type</span>
-          <span class="row-value">Account Maintenance Charge</span>
-        </div>
+                <!-- Account Holder -->
+                <tr>
+                  <td style="padding:13px 22px;font-size:13.5px;color:#9CA3AF;border-bottom:1px solid #EDE9E4;border-right:1px solid #EDE9E4;white-space:nowrap;">
+                    Account Holder
+                  </td>
+                  <td align="right" style="padding:13px 22px;font-size:13.5px;color:#374151;font-weight:500;border-bottom:1px solid #EDE9E4;">
+                    <span th:text="${username}">John Doe</span>
+                  </td>
+                </tr>
 
-        <!-- Currency -->
-        <div class="receipt-row">
-          <span class="row-label">Currency</span>
-          <span class="row-value" th:text="${currency}">NGN</span>
-        </div>
+                <!-- Fee Type -->
+                <tr>
+                  <td style="padding:13px 22px;font-size:13.5px;color:#9CA3AF;border-bottom:1px solid #EDE9E4;border-right:1px solid #EDE9E4;white-space:nowrap;">
+                    Fee Type
+                  </td>
+                  <td align="right" style="padding:13px 22px;font-size:13.5px;color:#374151;font-weight:500;border-bottom:1px solid #EDE9E4;">
+                    <span th:text="${reason}">Monthly Maintenance Fee</span>
+                  </td>
+                </tr>
 
-        <!-- Receipt No -->
-        <div class="receipt-row">
-          <span class="row-label">Receipt No</span>
-          <span class="row-value" th:text="${receiptNo}">RCT-20251031-001</span>
-        </div>
-      </div>
+                <!-- Date & Time -->
+                <tr>
+                  <td style="padding:13px 22px;font-size:13.5px;color:#9CA3AF;border-bottom:1px solid #EDE9E4;border-right:1px solid #EDE9E4;white-space:nowrap;">
+                    Date &amp; Time
+                  </td>
+                  <td align="right" style="padding:13px 22px;font-size:13.5px;color:#374151;font-weight:500;border-bottom:1px solid #EDE9E4;">
+                    <span th:text="${timestamp}">April 25, 2024 at 9:00 AM</span>
+                  </td>
+                </tr>
 
-      <!-- Balance Summary -->
-      <div class="balance-box">
-        <div class="balance-item">
-          <div class="balance-label">Previous Balance</div>
-          <div class="balance-value">
-            <span th:text="${currencySymbol}">₦</span><span th:text="${previousBalance}">10,000.00</span>
-          </div>
-        </div>
-        <div class="balance-item">
-          <div class="balance-label">Fee Charged</div>
-          <div class="balance-value spent">
-            -<span th:text="${currencySymbol}">₦</span><span th:text="${totalAmountSpent}">500.00</span>
-          </div>
-        </div>
-        <div class="balance-item">
-          <div class="balance-label">New Balance</div>
-          <div class="balance-value new">
-            <span th:text="${currencySymbol}">₦</span><span th:text="${availableBalance}">9,500.00</span>
-          </div>
-        </div>
-      </div>
+                <!-- Transaction Type -->
+                <tr>
+                  <td style="padding:13px 22px;font-size:13.5px;color:#9CA3AF;border-bottom:1px solid #EDE9E4;border-right:1px solid #EDE9E4;white-space:nowrap;">
+                    Transaction Type
+                  </td>
+                  <td align="right" style="padding:13px 22px;font-size:13.5px;color:#374151;font-weight:500;border-bottom:1px solid #EDE9E4;">
+                    Account Maintenance Charge
+                  </td>
+                </tr>
 
-      <p class="note">
-        If you have any questions or believe this fee has been charged in error,
-        please contact our support team immediately.
-      </p>
+                <!-- Currency -->
+                <tr>
+                  <td style="padding:13px 22px;font-size:13.5px;color:#9CA3AF;border-bottom:1px solid #EDE9E4;border-right:1px solid #EDE9E4;white-space:nowrap;">
+                    Currency
+                  </td>
+                  <td align="right" style="padding:13px 22px;font-size:13.5px;color:#374151;font-weight:500;border-bottom:1px solid #EDE9E4;">
+                    <span th:text="${currency}">NGN</span>
+                  </td>
+                </tr>
 
-      <a href="#" class="cta-btn">Contact Support</a>
-    </div>
+                <!-- Receipt No -->
+                <tr>
+                  <td style="padding:13px 22px;font-size:13.5px;color:#9CA3AF;border-right:1px solid #EDE9E4;white-space:nowrap;">
+                    Receipt No
+                  </td>
+                  <td align="right" style="padding:13px 22px;font-size:13.5px;color:#374151;font-weight:500;">
+                    <span th:text="${receiptNo}">RCT-20251031-001</span>
+                  </td>
+                </tr>
 
-    <!-- Footer -->
-    <div class="footer">
-      <p class="footer-tagline">Thank you for using ePay!</p>
+              </table>
+              <!-- /Receipt Table -->
 
-      <div class="social-links">
-        <a href="#" class="social-link" aria-label="Facebook">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-            <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
-          </svg>
-        </a>
-        <a href="#" class="social-link" aria-label="Twitter">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="white">
-            <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
-          </svg>
-        </a>
-        <a href="#" class="social-link" aria-label="Instagram">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-            <circle cx="12" cy="12" r="3"/>
-            <circle cx="17.5" cy="6.5" r="0.5" fill="white" stroke="none"/>
-          </svg>
-        </a>
-        <a href="#" class="social-link" aria-label="Website">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-          </svg>
-        </a>
-      </div>
+              <!-- Balance Summary -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                style="background-color:#F9F7F4;border:1px solid #E8E4DF;border-radius:12px;margin-bottom:24px;">
+                <tr>
+                  <!-- Previous Balance -->
+                  <td width="33%" align="center" style="padding:14px 10px;border-right:1px solid #E8E4DF;">
+                    <div style="font-size:11px;color:#9CA3AF;font-weight:500;margin-bottom:4px;">Previous Balance</div>
+                    <div style="font-size:13px;font-weight:700;color:#374151;">
+                      <span th:text="${currencySymbol}">₦</span><span th:text="${previousBalance}">10,000.00</span>
+                    </div>
+                  </td>
+                  <!-- Fee Charged -->
+                  <td width="33%" align="center" style="padding:14px 10px;border-right:1px solid #E8E4DF;">
+                    <div style="font-size:11px;color:#9CA3AF;font-weight:500;margin-bottom:4px;">Fee Charged</div>
+                    <div style="font-size:13px;font-weight:700;color:#b91c1c;">
+                      -<span th:text="${currencySymbol}">₦</span><span th:text="${totalAmountSpent}">500.00</span>
+                    </div>
+                  </td>
+                  <!-- New Balance -->
+                  <td width="33%" align="center" style="padding:14px 10px;">
+                    <div style="font-size:11px;color:#9CA3AF;font-weight:500;margin-bottom:4px;">New Balance</div>
+                    <div style="font-size:14px;font-weight:700;color:##166701;">
+                      <span th:text="${currencySymbol}">₦</span><span th:text="${availableBalance}">9,500.00</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              <!-- /Balance Summary -->
 
-      <p class="footer-meta">
-        ePay &nbsp;·&nbsp; <a href="mailto:support@epay.com">support@epay.com</a><br>
-        +1 (234) 567-890
-      </p>
-    </div>
+              <!-- Note -->
+              <p style="margin:0 0 24px 0;font-size:13.5px;color:#6B7280;line-height:1.65;">
+                If you have any questions or believe this fee has been charged in error,
+                please contact our support team immediately.
+              </p>
 
-  </div>
-</div>
+              <!-- CTA Button -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:0;">
+                <tr>
+                  <td align="center">
+                    <a href="mailto:support@epay.com"
+                      style="display:block;width:100%;background-color:##166701;color:#ffffff;font-size:14.5px;font-weight:600;text-align:center;padding:15px 0;border-radius:12px;text-decoration:none;letter-spacing:0.2px;box-sizing:border-box;">
+                      Contact Support
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- ── Footer ── -->
+          <tr>
+            <td align="center" style="padding:26px 40px 32px;border-top:1px solid #F3F0EC;margin-top:32px;">
+
+              <!-- Tagline -->
+              <p style="margin:0 0 18px 0;font-family:Georgia,'Times New Roman',serif;font-size:14px;color:#9CA3AF;font-style:italic;">
+                Thank you for using ePay!
+              </p>
+
+              <!-- Socials -->
+              <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 18px auto;">
+                <tr>
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block;width:34px;height:34px;background-color:##166701;border-radius:50%;text-align:center;line-height:34px;text-decoration:none;color:#ffffff;font-size:13px;font-weight:bold;">f</a>
+                  </td>
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block;width:34px;height:34px;background-color:##166701;border-radius:50%;text-align:center;line-height:34px;text-decoration:none;color:#ffffff;font-size:12px;font-weight:bold;">t</a>
+                  </td>
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block;width:34px;height:34px;background-color:##166701;border-radius:50%;text-align:center;line-height:34px;text-decoration:none;color:#ffffff;font-size:11px;font-weight:bold;">in</a>
+                  </td>
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block;width:34px;height:34px;background-color:##166701;border-radius:50%;text-align:center;line-height:34px;text-decoration:none;color:#ffffff;font-size:13px;font-weight:bold;">@</a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Footer meta -->
+              <p style="margin:0;font-size:12px;color:#B0AAA3;line-height:1.7;">
+                ePay &nbsp;&middot;&nbsp; <a href="mailto:support@epay.com" style="color:#9CA3AF;text-decoration:none;">support@epay.com</a><br>
+                +1 (234) 567-890
+              </p>
+
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Card -->
+
+      </td>
+    </tr>
+  </table>
 
 </body>
 </html>

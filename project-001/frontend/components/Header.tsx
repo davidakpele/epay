@@ -406,7 +406,7 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
                 </div>
                 <span className="mobile-logo-text">ePay</span>
               </div>
-              <button className={`sidebar-close ${theme === 'dark' ? 'color-light' : 'color-dark'}`} onClick={() => setIsSidebarOpen(false)}>
+              <button className={`sidebar-close`} onClick={() => setIsSidebarOpen(false)}>
                 <X size={24} />
               </button>
             </div>

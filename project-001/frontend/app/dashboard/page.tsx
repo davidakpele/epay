@@ -208,8 +208,8 @@ const Dashboard = () => {
   };
 
   const quickActions = [
-    { icon: <Smartphone />, label: 'Buy Airtime', color: '#ff7a5c' },
-    { icon: <Wifi />, label: 'Buy Data', color: '#5ecdbf' },
+    { icon: <Smartphone />, label: 'Airtime', color: '#ff7a5c' },
+    { icon: <Wifi />, label: 'Data', color: '#5ecdbf' },
     { icon: <Tv />, label: 'CableTv', color: '#5eb7cd' },
     { icon: <Lightbulb />, label: 'Electricity', color: '#ffac7a' },
     { icon: <CreditCard />, label: 'Virtual Card', color: '#9adbb9' },
@@ -308,17 +308,20 @@ const Dashboard = () => {
           </section>
 
           <KycCheckProgress />
-
-          <section className={`feature-grid ${theme === "dark" ? "color-light" : "color-dark"}`}>
-            {quickActions.map((action, idx) => (
-              <div key={idx} className="feature-card">
-                <div className="feature-icon-wrapper" style={{ background: action.color }}>
-                  {React.cloneElement(action.icon as React.ReactElement<LucideProps>, { size: 22 })}
+         <div className="service-container">
+          <span className='service-header'>Service</span>
+            <section className={`feature-grid ${theme === "dark" ? "color-light" : "color-dark"}`}>
+              {quickActions.map((action, idx) => (
+                <div key={idx} className="feature-card">
+                  <div className="feature-icon-wrapper" style={{ background: action.color }}>
+                    {React.cloneElement(action.icon as React.ReactElement<LucideProps>, { size: 22 })}
+                  </div>
+                  <span className="feature-label">{action.label}</span>
                 </div>
-                <span className="feature-label">{action.label}</span>
-              </div>
-            ))}
-          </section>
+              ))}
+            </section>
+          </div>         
+          
 
           <div className="bottom-sections-grid">
             <div className="history-column">

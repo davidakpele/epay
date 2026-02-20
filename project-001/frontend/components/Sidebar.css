@@ -11,7 +11,8 @@
 }
 
 .logo-section {
-  padding: 32px 24px;
+  background-color: var(--bg-main);
+  padding: 17px 24px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -28,7 +29,7 @@
 .logo-text {
   font-size: 20px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--background);
 }
 
 .sidebar-nav-scrollable {
@@ -39,6 +40,7 @@
 
 .nav-group {
   margin-bottom: 24px;
+  margin-top:20px;
 }
 
 .group-title {
