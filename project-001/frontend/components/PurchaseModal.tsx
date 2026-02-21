@@ -57,7 +57,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       setErrors(prev => ({ ...prev, recipient: 'Recipient is required' }));
       return false;
     }
-    // Add additional validation if needed (e.g., phone number format, email format)
     setErrors(prev => ({ ...prev, recipient: undefined }));
     return true;
   };

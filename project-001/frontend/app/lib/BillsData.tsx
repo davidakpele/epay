@@ -1,19 +1,3 @@
-import { Service } from "../types/utils";
-import { 
-  Smartphone, 
-  Wifi, 
-  Tv, 
-  Lightbulb, 
-  CreditCard, 
-  Hospital, 
-  Trophy, 
-  RefreshCw, 
-  Plane, 
-  ShoppingBag,
-  Search
-} from 'lucide-react';
-
-
 export const filters = [
   { id: 'all', label: 'All Services' },
   { id: 'airtime', label: 'Airtime' },
@@ -91,3 +75,5 @@ export const providers = [
     logo: './assets/images/smile.png'
   }
 ];
+
+

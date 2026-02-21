@@ -215,7 +215,7 @@ const ForgotPassword = () => {
     const checkStrength = (req: boolean) => (req ? 'valid' : 'invalid');
 
     const filteredCountries = countries.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+        c.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
   return (

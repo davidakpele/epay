@@ -208,16 +208,16 @@ const Dashboard = () => {
   };
 
   const quickActions = [
-    { icon: <Smartphone />, label: 'Airtime', color: '#ff7a5c' },
-    { icon: <Wifi />, label: 'Data', color: '#5ecdbf' },
-    { icon: <Tv />, label: 'CableTv', color: '#5eb7cd' },
-    { icon: <Lightbulb />, label: 'Electricity', color: '#ffac7a' },
-    { icon: <CreditCard />, label: 'Virtual Card', color: '#9adbb9' },
-    { icon: <Hospital />, label: 'Hospital', color: '#f5d671' },
-    { icon: <Trophy />, label: 'Betting', color: '#b5a1d5' },
-    { icon: <Repeat />, label: 'Swap', color: '#8ec5ed' },
-    { icon: <Plane />, label: 'Book Flight', color: '#f7c978' },
-    { icon: <ShoppingBag />, label: 'Shopping', color: '#88e0a3' },
+    { icon: <Smartphone />, label: 'Airtime', color: '#ff7a5c', route: '/services/bills/airtime' },
+    { icon: <Wifi />, label: 'Data', color: '#5ecdbf', route: '/services/bills/data' },
+    { icon: <Tv />, label: 'CableTv', color: '#5eb7cd', route: '/services/bills/cabletv' },
+    { icon: <Lightbulb />, label: 'Electricity', color: '#ffac7a', route: '/services/bills/electricity' },
+    { icon: <CreditCard />, label: 'Virtual Card', color: '#9adbb9', route: '/cards' },
+    { icon: <Hospital />, label: 'Hospital', color: '#f5d671', route: '/services/bills/hospital' },
+    { icon: <Trophy />, label: 'Betting', color: '#b5a1d5', route: '/services/bills/betting' },
+    { icon: <Repeat />, label: 'Swap', color: '#8ec5ed', route: '/exchange' },
+    { icon: <Plane />, label: 'Book Flight', color: '#f7c978', route: '/services/bills/flight' },
+    { icon: <ShoppingBag />, label: 'Shopping', color: '#88e0a3', route: '/services/bills/shopping' },
   ];
 
   if (isPageLoading) {
@@ -312,7 +312,11 @@ const Dashboard = () => {
           <span className='service-header'>Service</span>
             <section className={`feature-grid ${theme === "dark" ? "color-light" : "color-dark"}`}>
               {quickActions.map((action, idx) => (
-                <div key={idx} className="feature-card">
+                <div 
+                  key={idx} 
+                  className="feature-card" 
+                  onClick={() => router.push(action.route)}  
+                >
                   <div className="feature-icon-wrapper" style={{ background: action.color }}>
                     {React.cloneElement(action.icon as React.ReactElement<LucideProps>, { size: 22 })}
                   </div>

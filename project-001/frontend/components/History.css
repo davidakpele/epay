@@ -97,7 +97,7 @@
 
 .tx-amount { font-size: 14px; font-weight: 700; margin: 0; }
 .tx-amount.credit { color: #10b981; }
-.tx-amount.debit { color: #1e293b; }
+.tx-amount.debit { color: #10b981 !important }
 .dark .tx-amount.debit { color: #f8fafc; }
 
 .tx-modal-overlay {

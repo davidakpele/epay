@@ -241,6 +241,17 @@ export interface CardTheme {
   label: string;
 };
 
+export interface CountryCode {
+  name: string;
+  code: string;
+  dialCode: string;
+  flag: string;
+  iso2: string;
+  iso3: string;
+  priority?: number; 
+  minLength?: number; 
+  maxLength?: number; 
+}
 
 export type TransactionType = "deposit" | "withdrawal" | "swap" | "transfer" | "credited";
 export type TransactionStatus = "completed" | "pending" | "failed";

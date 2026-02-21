@@ -36,6 +36,7 @@ html, body {
   --primary-green: #388e3c;
   --success-bg: #dcedc8;
   --success-border: #8bc34a;
+  --tm-rog: linear-gradient(160deg, rgb(240, 250, 242) 0%, rgb(230, 244, 234) 100%);
   --warning-red: #ef9a9a;
   --select-card: #10b981;
   --debit-amount: #dfb70a;
