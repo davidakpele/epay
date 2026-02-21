@@ -1,187 +1,128 @@
 'use client';
 
-import { useState, useEffect, FormEvent, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Select from 'react-select';
-import { ArrowLeft, User, CheckCircle, Search } from 'lucide-react';
-import Image from 'next/image';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import Sidebar from '@/components/Sidebar';
-import MobileNav from '@/components/MobileNav';
+import { useState, useEffect } from 'react';
 import DepositModal from '@/components/DepositModal';
-import "./CreateCard.css";
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
+import MobileNav from '@/components/MobileNav';
+import Sidebar from '@/components/Sidebar';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import { eventEmitter } from '@/app/utils/eventEmitter';
-import { getFiat, getToken, getUserFullName, getUserId, getUsername, setActiveWallet, setFiat, setWalletContainer, virtualCardService, walletService } from '@/app/api';
-import { Currency } from '@/app/types/api';
+import Link from 'next/link';
+import { ChevronRight, Plus, CreditCard, Eye, EyeOff, Info, ArrowUpRight, ArrowDownLeft, ChevronDown } from 'lucide-react';
+import './VirtualCards.css';
+import { Toast } from '@/app/types/auth';
 
-// Extended Currency interface with balance
-interface CurrencyWithBalance extends Currency {
-  balance?: string;
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type CardStatus = 'Active' | 'Pending' | 'On Review';
+type CardNetwork = 'Visa' | 'Mastercard';
+type WalletType = 'USD' | 'EUR' | 'GBP';
+
+interface VirtualCard {
+  id: string;
+  network: CardNetwork;
+  currency: WalletType;
+  label: string;
+  last4: string;
+  expiry: string;
+  holder: string;
+  status: CardStatus;
+  balance: number;
+  flag: string;
 }
 
-interface WalletOption {
-  value: string;
-  label: string;
+interface CardRequest {
+  id: string;
+  currency: WalletType;
+  network: CardNetwork;
+  amount: number;
+  status: CardStatus;
+  requestedOn: string;
+  approvedOn?: string;
+  flag: string;
 }
 
 interface Wallet {
-  currency_code: string;
-  symbol: string;
-  balance: string;
-}
-
-interface FormData {
-  accountCurrency: string;
-  cardType: 'MASTER' | 'VISA';
-  spendingLimit: string;
-  cardTheme: string;
-  cardHolderName: string;
-}
-
-interface FormErrors {
-  accountCurrency?: string;
-  cardHolderName?: string;
-}
-
-interface CardTheme {
-  name: string;
-  imageUrl: any;
+  code: WalletType;
   label: string;
+  balance: number;
+  symbol: string;
+  flag: string;
 }
 
-interface Toast {
-  id: number;
-  message: string;
-  type: 'warning' | 'success';
-  exiting: boolean;
-}
+// ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const mastercardThemes: CardTheme[] = [
-  { name: 'theme1', imageUrl: '/assets/images/darkcard.png', label: 'Black' },
-  { name: 'theme2', imageUrl: '/assets/images/greenCard.png', label: 'Green' },
-  { name: 'theme3', imageUrl: '/assets/images/darkGreenCard.png', label: 'Dark Green' },
+const wallets: Wallet[] = [
+  { code: 'USD', label: 'USD Wallet', balance: 3280.50,  symbol: '$',  flag: '🇺🇸' },
+  { code: 'EUR', label: 'EUR Wallet', balance: 2450.00,  symbol: '€',  flag: '🇪🇺' },
+  { code: 'GBP', label: 'GBP Wallet', balance: 1820.75,  symbol: '£',  flag: '🇬🇧' },
 ];
 
-const visaThemes: CardTheme[] = [
-  { name: 'theme1', imageUrl: '/assets/images/visaCardBlur.png', label: 'Green' },
-  { name: 'theme2', imageUrl: '/assets/images/visaCardBlue.png', label: 'Blue' },
+const initialCards: VirtualCard[] = [
+  { id: '1', network: 'Visa',       currency: 'USD', label: 'USD Virtual Card', last4: '4521', expiry: '08/26', holder: 'JOHN A. DOE',   status: 'Active',    balance: 1200, flag: '🇺🇸' },
+  { id: '2', network: 'Mastercard', currency: 'EUR', label: 'EUR Virtual Card', last4: '7890', expiry: '09/26', holder: 'EMILY R.',       status: 'Pending',   balance: 300,  flag: '🇪🇺' },
+  { id: '3', network: 'Visa',       currency: 'USD', label: 'USD Virtual Card', last4: '9632', expiry: '09/26', holder: 'MICHAEL T.',     status: 'Active',    balance: 850,  flag: '🇺🇸' },
+  { id: '4', network: 'Visa',       currency: 'GBP', label: 'GBP Virtual Card', last4: '2210', expiry: '11/26', holder: 'SARAH K.',       status: 'On Review', balance: 0,    flag: '🇬🇧' },
 ];
 
-const CreateCard = () => {
-  const router = useRouter();
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [cardType, setCardType] = useState<'MASTER' | 'VISA'>('MASTER');
-  const [selectedTheme, setSelectedTheme] = useState('theme1');
-  const [options, setOptions] = useState<WalletOption[]>([]);
-  const [isLoader, setIsLoader] = useState(true);
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [walletData, setWalletData] = useState<Wallet[]>([]);
-  const [isDepositOpen, setIsDepositOpen] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [userHandle, setUserHandle] = useState('');
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const [wallet, setWallet] = useState<any>(null);
-  const [currencies, setCurrencies] = useState<CurrencyWithBalance[]>([]);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyWithBalance | null>(null);
-  const [isPageLoading, setIsPageLoading] = useState(true);
-  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
-  const [formData, setFormData] = useState<FormData>({
-    accountCurrency: '',
-    cardType: 'MASTER',
-    spendingLimit: '10000.00',
-    cardTheme: 'theme1',
-    cardHolderName: '',
-  });
+const requestHistory: CardRequest[] = [
+  { id: 'r1', currency: 'USD', network: 'Visa',       amount: 500,  status: 'Pending',   requestedOn: 'Apr 20, 2024',                    flag: '🇺🇸' },
+  { id: 'r2', currency: 'EUR', network: 'Mastercard', amount: 300,  status: 'On Review', requestedOn: 'Apr 18, 2024',                    flag: '🇪🇺' },
+  { id: 'r3', currency: 'USD', network: 'Visa',       amount: 1200, status: 'Active',    requestedOn: 'Apr 15, 2024', approvedOn: 'Apr 15, 2024', flag: '🇺🇸' },
+];
 
-  const refreshBalance = useCallback(async () => {
-      try {
-        const token = getToken();
-        const userId = getUserId();
-        
-        if (!token || !userId) {
-          return;
-        }
-        
-        const response = await walletService.getByUserId(userId, token);
-        if (!response || response.status === 401 || response.status === 500) {
-          router.push('/auth/logout');
-          return;
-        }
-        setWallet(response);
-        
-        if (response && response.wallet_balances) {
-          const apiCurrencies: CurrencyWithBalance[] = response.wallet_balances.map((balance: any) => {
-            return {
-              name: balance.currency_code,
-              code: balance.currency_code,
-              symbol: balance.symbol,
-              balance: balance.balance
-            };
-          });
-          
-          setCurrencies(apiCurrencies);
-          if (getFiat() !== '' && getFiat() != null) {
-            const fiatCurrency = apiCurrencies.find(c => c.code === getFiat());
-            if (fiatCurrency) {
-              setSelectedCurrency(fiatCurrency);
-              setFormData(prev => ({...prev, accountCurrency: fiatCurrency.code}));
-            }
-          }
-          else {
-            if (!selectedCurrency && apiCurrencies.length > 0) {
-              const defaultCurrency = apiCurrencies.find(c => c.code === 'NGN') || apiCurrencies[0];
-              setSelectedCurrency(defaultCurrency);
-              setActiveWallet(defaultCurrency.code);
-              setFiat(defaultCurrency.code);
-              setFormData(prev => ({...prev, accountCurrency: defaultCurrency.code}));
-            }
-          }
-            
-          setWalletContainer(response.wallet_balances, response.hasTransferPin, response.walletId);
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    }, []); 
-  
+const statusCounts = { Pending: 2, 'On Review': 1, Active: 3 };
 
-   useEffect(() => {
-      document.title = 'Create Card - ePay Online Business Banking';
-      const handleBalanceRefresh = () => {
-        refreshBalance();
-      };
-  
-      eventEmitter.on('refreshBalance', handleBalanceRefresh);
-      
-      return () => {
-        eventEmitter.off('refreshBalance', handleBalanceRefresh);
-      };
-    }, [refreshBalance]);
+const cardCurrencyOptions = [
+  { code: 'USD', symbol: '$', label: 'USD ($)', flag: '🇺🇸' },
+  { code: 'EUR', symbol: '€', label: 'EUR (€)', flag: '🇪🇺' },
+  { code: 'GBP', symbol: '£', label: 'GBP (£)', flag: '🇬🇧' },
+];
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+const VirtualCardsPage = () => {
+  const [isDepositOpen, setIsDepositOpen]       = useState(false);
+  const [theme, setTheme]                       = useState<'light' | 'dark'>('light');
+  const [isPageLoading, setIsPageLoading]       = useState(true);
+  const [toasts, setToasts]                     = useState<Toast[]>([]);
+
+  // Cards
+  const [cards, setCards]                       = useState<VirtualCard[]>(initialCards);
+  const [activeTab, setActiveTab]               = useState<'All Cards' | 'Active' | 'Pending' | 'On Review'>('All Cards');
+  const [hiddenCards, setHiddenCards]           = useState<Set<string>>(new Set());
+  const [selectedCardDetail, setSelectedCardDetail] = useState<VirtualCard | null>(null);
+
+  // Wallet visibility
+  const [showBalances, setShowBalances]         = useState(true);
+  const [selectedWallet, setSelectedWallet]     = useState<Wallet>(wallets[0]);
+  const [isWalletDropOpen, setIsWalletDropOpen] = useState(false);
+
+  // Request form
+  const [formWallet, setFormWallet]             = useState<Wallet>(wallets[0]);
+  const [isFormWalletOpen, setIsFormWalletOpen] = useState(false);
+  const [cardNetwork, setCardNetwork]           = useState<CardNetwork>('Visa');
+  const [cardCurrency, setCardCurrency]         = useState(cardCurrencyOptions[0]);
+  const [isCurrencyDropOpen, setIsCurrencyDropOpen] = useState(false);
+  const [fundAmount, setFundAmount]             = useState('');
+  const [isSubmitting, setIsSubmitting]         = useState(false);
+
+  // Fund / Withdraw modals
+  const [fundModal, setFundModal]               = useState<{ open: boolean; card: VirtualCard | null }>({ open: false, card: null });
+  const [withdrawModal, setWithdrawModal]       = useState<{ open: boolean; card: VirtualCard | null }>({ open: false, card: null });
+  const [modalAmount, setModalAmount]           = useState('');
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────────
 
   const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
     setToasts((prev) => {
       if (prev.length >= 5) return prev;
-
       const id = Date.now();
       const newToast: Toast = { id, message: msg, type, exiting: false };
-
       setTimeout(() => {
-        setToasts((currentToasts) =>
-          currentToasts.map((t) => (t.id === id ? { ...t, exiting: true } : t))
-        );
-
-        setTimeout(() => {
-          setToasts((currentToasts) => currentToasts.filter((t) => t.id !== id));
-        }, 300);
-      }, 3000);
-
+        setToasts((cur) => cur.map((t) => (t.id === id ? { ...t, exiting: true } : t)));
+        setTimeout(() => setToasts((cur) => cur.filter((t) => t.id !== id)), 300);
+      }, 4000);
       return [...prev, newToast];
     });
   };
@@ -191,366 +132,509 @@ const CreateCard = () => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
-    document.body.classList.toggle('dark-theme', newTheme === 'dark');
   };
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-
-    if (formErrors[field as keyof FormErrors]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
-  };
-
-  const validateForm = () => {
-    const errors: FormErrors = {};
-
-    if (!formData.accountCurrency) {
-      errors.accountCurrency = 'Please select an account currency';
-    }
-
-    if (!getUserFullName()?.toString().trim() ) {
-      errors.cardHolderName = 'Card holder name is required';
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const getSelectedWalletBalance = () => {
-    if (!wallet || !wallet.wallet_balances || !selectedCurrency) return '0.00';
-    
-    const balanceData = wallet.wallet_balances.find(
-      (item: any) => item.currency_code === selectedCurrency.code
-    );
-    
-    return balanceData ? balanceData.balance : '0.00';
-  };
-
-  const formatBalance = (balance: string) => {
-    const numBalance = parseFloat(balance);
-    if (isNaN(numBalance)) return '0.00';
-    
-    return numBalance.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+  const toggleCardVisibility = (id: string) => {
+    setHiddenCards((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
     });
   };
 
-  const generateMerchantId = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 15; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  const generateMerchantCategoryCode = () => {
-    return Math.floor(1000 + Math.random() * 9000).toString();
-  };
-
-  const preparePayload = async () => {
-    const userId = getUserId();
-    const fullName = getUserFullName();
-    
-    const payload = {
-      userId: userId,
-      accountHolderName: fullName?.toUpperCase() || formData.cardHolderName.toUpperCase(),
-      cardType: formData.cardType,
-      currency: formData.accountCurrency,
-      initialBalance: parseFloat(getSelectedWalletBalance()),
-      spendingLimit: parseFloat(formData.spendingLimit),
-      limitPeriod: "TRANSACTION",
-      plan: "SINGLE_USE",
-      allowInternational: true,
-      allowOnline: true,
-      allowAtm: true,
-      allowContactless: true,
-      merchantName: "Standard Chartered Bank",
-      merchantId: generateMerchantId(),
-      merchantCategoryCode: generateMerchantCategoryCode(),
-      merchantCountry: "US",
-      merchantCity: "Washington DC"
-    };
-    try {
-  
-      const response = await virtualCardService.createCard(payload)
-    } catch (error) {
-      showToast('Sorry, something went wrong!', 'warning');
+  const getStatusColor = (status: CardStatus) => {
+    switch (status) {
+      case 'Active':    return 'status-active';
+      case 'Pending':   return 'status-pending';
+      case 'On Review': return 'status-review';
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) {
-      showToast('Please fix the form errors before submitting', 'warning');
+  const getCardGradient = (card: VirtualCard) => {
+    if (card.status === 'Pending' || card.status === 'On Review') return 'card-gradient-dark';
+    if (card.currency === 'EUR') return 'card-gradient-blue';
+    if (card.currency === 'GBP') return 'card-gradient-purple';
+    return 'card-gradient-green';
+  };
+
+  const getCurrencySymbol = (code: WalletType) => {
+    return wallets.find((w) => w.code === code)?.symbol || '$';
+  };
+
+  const filteredCards = activeTab === 'All Cards'
+    ? cards
+    : cards.filter((c) => c.status === activeTab);
+
+  // ─── Handlers ─────────────────────────────────────────────────────────────────
+
+  const handleRequestCard = async () => {
+    if (!fundAmount && Number(fundAmount) < 0) {
+      showToast('Please enter a valid amount', 'warning');
       return;
     }
-    preparePayload();
+    setIsSubmitting(true);
+    await new Promise((r) => setTimeout(r, 2000));
+    const newCard: VirtualCard = {
+      id: String(Date.now()),
+      network: cardNetwork,
+      currency: formWallet.code,
+      label: `${formWallet.code} Virtual Card`,
+      last4: String(Math.floor(1000 + Math.random() * 9000)),
+      expiry: '12/27',
+      holder: 'YOU',
+      status: 'Pending',
+      balance: Number(fundAmount) || 0,
+      flag: formWallet.flag,
+    };
+    setCards((prev) => [newCard, ...prev]);
+    setFundAmount('');
+    setIsSubmitting(false);
+    showToast('Card request submitted successfully!', 'success');
+  };
+
+  const handleFundCard = async () => {
+    const amt = Number(modalAmount);
+    if (!amt || amt <= 0) { showToast('Enter a valid amount', 'warning'); return; }
+    setIsSubmitting(true);
+    await new Promise((r) => setTimeout(r, 1500));
+    setCards((prev) => prev.map((c) => c.id === fundModal.card?.id ? { ...c, balance: c.balance + amt } : c));
+    setFundModal({ open: false, card: null });
+    setModalAmount('');
+    setIsSubmitting(false);
+    showToast(`Card funded with ${getCurrencySymbol(fundModal.card!.currency)}${amt.toLocaleString()}!`, 'success');
+  };
+
+  const handleWithdraw = async () => {
+    const amt = Number(modalAmount);
+    if (!amt || amt <= 0) { showToast('Enter a valid amount', 'warning'); return; }
+    if (amt > (withdrawModal.card?.balance || 0)) { showToast('Insufficient card balance', 'warning'); return; }
+    setIsSubmitting(true);
+    await new Promise((r) => setTimeout(r, 1500));
+    setCards((prev) => prev.map((c) => c.id === withdrawModal.card?.id ? { ...c, balance: c.balance - amt } : c));
+    setWithdrawModal({ open: false, card: null });
+    setModalAmount('');
+    setIsSubmitting(false);
+    showToast(`${getCurrencySymbol(withdrawModal.card!.currency)}${amt.toLocaleString()} withdrawn successfully!`, 'success');
   };
 
   useEffect(() => {
-    refreshBalance();
-    const storedUserName = getUserFullName()?.toString() || '';
-    const storedUserHandle = getUsername() || '';
-    const userDataString = localStorage.getItem('data');
-    
-    let storedVerified = false;
-    
-    if (userDataString) {
-      try {
-        
-        const userData = JSON.parse(userDataString);
-        storedVerified = userData.user?.is_verify === true;
-      } catch (e) {
-        console.error('Error parsing user data:', e);
-      }
-    }
-    
-    setUserName(storedUserName);
-    setUserHandle(storedUserHandle);
-    setIsVerified(storedVerified);
+    const t = setTimeout(() => setIsPageLoading(false), 2000);
+    return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    handleInputChange('cardType', cardType);
-  }, [cardType]);
+  if (isPageLoading) return <LoadingScreen />;
 
-  useEffect(() => {
-    handleInputChange('cardTheme', selectedTheme);
-  }, [selectedTheme]);
-
-  const handleThemeChange = (theme: string) => {
-    setSelectedTheme(theme);
-  };
-
-  const handleGoBack = () => {
-    router.back();
-  };
-
-  const hasError = (field: keyof FormErrors) => {
-    return formErrors[field] && formErrors[field] !== '';
-  };
-  
-  const handleScroll = () => {
-    setIsScrolling(true);
-    if (scrollTimer.current) clearTimeout(scrollTimer.current);
-    scrollTimer.current = setTimeout(() => setIsScrolling(false), 1000);
-  };
-
-  const filteredCurrencies = currencies.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  useEffect(() => {
-    const loadingTimer = setTimeout(() => {
-      setIsPageLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(loadingTimer);
-  }, []);
-
-  if (isPageLoading) {
-    return <LoadingScreen />;
-  }
+  // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <>
-      <div className="dashboard-container">
-        <Sidebar />
-        <main className={`main-content ${isDepositOpen ? 'blur-sm' : ''}`}>
-          <Header theme={theme} toggleTheme={toggleTheme} />
-          <div className="scrollable-content">
-            <div className="toastrs">
-              {toasts.map((toast) => (
-                <div
-                  key={toast.id}
-                  className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}>
-                  <div className="toast-icon">
-                    <i className={`fa ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} aria-hidden="true"></i>
-                  </div>
-                  <div className="toast-message">{toast.message}</div>
+    <div className={`dashboard-container ${theme === 'dark' ? 'dark' : ''}`}>
+      <Sidebar />
+
+      <main className={`main-content ${isDepositOpen ? 'dashboard-blur' : ''}`}>
+        <Header theme={theme} toggleTheme={toggleTheme} />
+
+        <div className="scrollable-content">
+
+          {/* ── Toasts ── */}
+          <div className="toastrs">
+            {toasts.map((toast) => (
+              <div key={toast.id} className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}>
+                <i className={`fa ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} />
+                <span>{toast.message}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="main-container">
+
+            {/* ── Breadcrumb + Title ── */}
+            <div className="vc-topbar">
+              <div>
+                <div className="airtime-breadcrumb">
+                  <Link href="/dashboard" className="breadcrumb-link">Dashboard</Link>
+                  <ChevronRight size={14} className="breadcrumb-sep" />
+                  <span className="breadcrumb-current">Virtual Cards</span>
                 </div>
-              ))}
+                <h1 className="vc-title"><span className="title-green">Virtual</span> Cards</h1>
+                <p className="vc-subtitle">Request and manage your virtual cards (USD, EUR, GBP)</p>
+              </div>
+              <button className="vc-request-btn" onClick={() => document.getElementById('request-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                <Plus size={16} /> Request Virtual Card
+              </button>
             </div>
-            
-            <div className="create-card-container">
-              <form onSubmit={handleSubmit} className="form-content">
-                <div className="card-header-title">
-                  <button type="button" className="back-button" onClick={handleGoBack}>
-                    <ArrowLeft size={24} />
+
+            {/* ── Top Row ── */}
+            <div className="vc-top-row">
+
+              {/* Wallet Balances */}
+              <div className="vc-wallets-card">
+                <div className="vc-wallets-header">
+                  <span className="vc-wallets-title">Available Wallet Balance</span>
+                  <button className="vc-eye-btn" onClick={() => setShowBalances(!showBalances)}>
+                    {showBalances ? <Eye size={16} /> : <EyeOff size={16} />}
                   </button>
-                  <h1 className="title">Create new card</h1>
+                  <Info size={14} className="vc-info-icon" />
                 </div>
-                <p className="info-text">
-                  There is a $4.00 (NGN 6,170.00) fee to create a card and KYC verified to be eligible to create a virtual card.
-                </p>
-
-                <div className="section">
-                  <label htmlFor="accountCurrency" className="section-title">
-                    Select account
-                  </label>
-                  <div className="account-selector-container" onClick={() => {setIsModalOpen(true)}}>
-                    <span>{selectedCurrency ? `${selectedCurrency.name} (${selectedCurrency.code})` : 'Select Wallet'}</span>
-                  </div>
-                
-                  {formErrors.accountCurrency && (
-                    <div className="error-message">{formErrors.accountCurrency}</div>
-                  )}
-                  <div className="account-selector" style={{ marginTop: "10px" }}>
-                    <span>Selected account balance:</span>
-                    <span className="balance-amount">
-                      {selectedCurrency?.symbol}{formatBalance(getSelectedWalletBalance())} {formData.accountCurrency}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="section">
-                  <div className="user-profile-box">
-                    <span className="user-icon">
-                      <User size={24} />
-                    </span>
-                    <div className="user-details">
-                      <p className="user-name">{userName}</p>
-                      <p className="username">@{userHandle}</p>
+                <div className="vc-wallets-row">
+                  {wallets.map((w, i) => (
+                    <div
+                      key={w.code}
+                      className={`vc-wallet-item ${selectedWallet.code === w.code ? 'vc-wallet-selected' : ''}`}
+                      onClick={() => setSelectedWallet(w)}
+                    >
+                      <span className="vc-wallet-flag">{w.flag}</span>
+                      <span className="vc-wallet-label">{w.label}</span>
+                      {i < wallets.length - 1 && <span className="vc-wallet-dots">•••</span>}
                     </div>
-                    {isVerified ? (
-                      <div className="verification-status">
-                        Verified
-                      </div>
-                    ) : (
-                      <div className="unverification-status">
-                        Unverified
+                  ))}
+                  <div className="vc-wallet-balance">
+                    <span className="vc-balance-currency">{selectedWallet.flag}</span>
+                    <span className="vc-balance-amount">
+                      {showBalances
+                        ? `${selectedWallet.symbol} ${selectedWallet.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                        : `${selectedWallet.symbol} ••••••`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Request Status */}
+              <div className="vc-status-card">
+                <h3 className="vc-status-title">Card Request Status</h3>
+                <div className="vc-status-row">
+                  <div className="vc-status-item status-pending-bg">
+                    <span className="vc-status-count">{statusCounts.Pending}</span>
+                    <div className="flex-status-tag">
+                      <span className="vc-status-dot dot-pending" />
+                      <span className="vc-status-label">Pending</span>
+                     </div>
+                  </div>
+                  <div className="vc-status-item status-review-bg">
+                    <span className="vc-status-count">{statusCounts['On Review']}</span>
+                    <div className="flex-status-tag">
+                      <span className="vc-status-dot dot-review" />
+                      <span className="vc-status-label">On Review</span>
+                    </div>
+                  </div>
+                  <div className="vc-status-item status-active-bg">
+                    <span className="vc-status-count">{statusCounts.Active}</span>
+                    <div className="flex-status-tag">
+                      <span className="vc-status-dot dot-active" />
+                      <span className="vc-status-label">Approved</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* ── Middle Row ── */}
+            <div className="vc-mid-row">
+
+              {/* Request New Card */}
+              <div className="vc-request-card" id="request-section">
+                <h3 className="vc-request-title"><span className="title-green">Request</span> New Card</h3>
+                <div className="vc-request-form">
+
+                  {/* Select Wallet */}
+                  <div className="vc-form-col">
+                    <label className="vc-form-label">Select Wallet</label>
+                    <div className="vc-dropdown" onClick={() => setIsFormWalletOpen(!isFormWalletOpen)}>
+                      <span>{formWallet.flag}</span>
+                      <span>{formWallet.label}</span>
+                      <ChevronDown size={14} className="vc-dropdown-chevron" />
+                    </div>
+                    {isFormWalletOpen && (
+                      <div className="vc-dropdown-menu">
+                        {wallets.map((w) => (
+                          <div key={w.code} className="vc-dropdown-item" onClick={() => { setFormWallet(w); setIsFormWalletOpen(false); setCardCurrency(cardCurrencyOptions.find(c => c.code === w.code) || cardCurrencyOptions[0]); }}>
+                            <span>{w.flag}</span> <span>{w.label}</span>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
-                </div>
 
-                <div className="section">
-                  <p className="section-title">Card type</p>
-                  <div className="radio-group">
-                    <label className="radio-option">
-                      <input
-                        type="radio"
-                        name="cardType"
-                        value="MASTER"
-                        checked={cardType === 'MASTER'}
-                        onChange={(e) => setCardType(e.target.value as 'MASTER' | 'VISA')}
-                      />
-                      <span className="radio-custom"></span>
-                      <span>Master card</span>
-                    </label>
-                    <label className="radio-option">
-                      <input
-                        type="radio"
-                        name="cardType"
-                        value="VISA"
-                        checked={cardType === 'VISA'}
-                        onChange={(e) => setCardType(e.target.value as 'MASTER' | 'VISA')}
-                      />
-                      <span className="radio-custom"></span>
-                      <span>Visa card</span>
-                    </label>
+                  {/* Card Details */}
+                  <div className="vc-form-col vc-form-details">
+                    <div>
+                      <label className="vc-form-label">Card Details</label>
+                      <div className="vc-details-row">
+                        {/* Card Type */}
+                        <div className="vc-detail-group">
+                          <span className="vc-detail-sub">Card Type:</span>
+                          <div className="vc-network-btns">
+                            {(['Visa', 'Mastercard'] as CardNetwork[]).map((n) => (
+                              <button
+                                key={n}
+                                className={`vc-network-btn ${cardNetwork === n ? 'vc-network-selected' : ''}`}
+                                onClick={() => setCardNetwork(n)}
+                              >
+                                {n === 'Visa'
+                                  ? <span className="vc-visa-logo">VISA</span>
+                                  : <span className="vc-mc-logo"><span className="mc-left" /><span className="mc-right" /></span>
+                                }
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Card Currency */}
+                        <div className="vc-detail-group">
+                          <span className="vc-detail-sub">Card Currency:</span>
+                          <div className="vc-dropdown vc-currency-drop" onClick={() => setIsCurrencyDropOpen(!isCurrencyDropOpen)}>
+                            <span>{cardCurrency.flag} {cardCurrency.label}</span>
+                            <ChevronDown size={13} />
+                          </div>
+                          {isCurrencyDropOpen && (
+                            <div className="vc-dropdown-menu">
+                              {cardCurrencyOptions.map((c) => (
+                                <div key={c.code} className="vc-dropdown-item" onClick={() => { setCardCurrency(c); setIsCurrencyDropOpen(false); }}>
+                                  {c.flag} {c.label}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="vc-amount-row">
+                      <div className="vc-amount-field">
+                        <label className="vc-detail-sub">Amount <span className="vc-optional">(Optional):</span></label>
+                        <div className="vc-amount-input-wrap">
+                          <span className="vc-amount-symbol">{cardCurrency.symbol}</span>
+                          <input
+                            type="number"
+                            className="vc-amount-input"
+                            placeholder="Enter amount"
+                            value={fundAmount}
+                            onChange={(e) => setFundAmount(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <button className="vc-submit-btn" onClick={handleRequestCard} disabled={isSubmitting}>
+                        {isSubmitting ? <span className="btn-spinner-sm" /> : null}
+                        Request Card
+                      </button>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="section">
-                  <p className="section-title">Card alias</p>
-                  <input
-                    type="text"
-                    className={`alias-input ${hasError('cardHolderName') ? 'error-form' : ''}`}
-                    placeholder="Enter card alias"
-                    value={getUserFullName()?.toString()}
-                    onChange={(e) => handleInputChange('cardHolderName', e.target.value)}
-                  />
-                  {formErrors.cardHolderName && (
-                    <div className="error-message">{formErrors.cardHolderName}</div>
-                  )}
+              {/* Request History */}
+              <div className="vc-history-card">
+                <h3 className="vc-status-title">Request History</h3>
+                <div className="vc-history-list">
+                  {requestHistory.map((r) => (
+                    <div key={r.id} className="vc-history-item">
+                      <div className="vc-history-left">
+                        <span className="vc-history-flag">{r.flag}</span>
+                        <div>
+                          <p className="vc-history-name">{r.currency} Virtual Card</p>
+                          <p className="vc-history-meta">
+                            <span className="vc-history-network">
+                              {r.network === 'Visa'
+                                ? <span className="vc-visa-sm">VISA</span>
+                                : <span className="vc-mc-sm"><span /><span /></span>
+                              }
+                            </span>
+                            {getCurrencySymbol(r.currency)}{r.amount.toLocaleString()} •{' '}
+                            {r.approvedOn ? `Approved on: ${r.approvedOn}` : `Requested on: ${r.requestedOn}`}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`vc-history-status ${getStatusColor(r.status)}`}>
+                        {r.status === 'Active' ? 'Approved' : r.status}
+                        <span className={`vc-status-dot-sm ${getStatusColor(r.status)}`} />
+                      </span>
+                    </div>
+                  ))}
                 </div>
+              </div>
 
-                <div className="section">
-                  <p className="section-title">Choose card theme</p>
-                  <div className="theme-selector">
-                    {(cardType === 'MASTER' ? mastercardThemes : visaThemes).map((themeOption) => (
-                      <div
-                        key={themeOption.name}
-                        className={`card-preview ${selectedTheme === themeOption.name ? 'selected' : ''}`}
-                        onClick={() => handleThemeChange(themeOption.name)}
-                      >
-                        <Image
-                          src={themeOption.imageUrl}
-                          alt={themeOption.label}
-                          fill
-                          className="card-theme-image"
-                          style={{ objectFit: 'cover' }}
-                        />
-                        {selectedTheme === themeOption.name && (
-                          <div className="check-icon-overlay">
-                            <CheckCircle size={24} color="white" />
+            </div>
+
+            {/* ── My Virtual Cards ── */}
+            <div className="vc-cards-section">
+              <div className="vc-cards-header">
+                <h3 className="vc-cards-title">My <span className="title-green">Virtual Cards</span></h3>
+                <div className="vc-tabs">
+                  {(['All Cards', 'Active', 'Pending', 'On Review'] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      className={`vc-tab ${activeTab === tab ? 'vc-tab-active' : ''}`}
+                      onClick={() => setActiveTab(tab)}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+                <button className="vc-view-all">View All <ChevronRight size={14} /></button>
+              </div>
+
+              <div className="vc-cards-grid">
+                {filteredCards.map((card) => {
+                  const hidden = hiddenCards.has(card.id);
+                  return (
+                    <div key={card.id} className="vc-card-wrapper">
+                      {/* Card face */}
+                      <div className={`vc-card ${getCardGradient(card)}`}>
+                        <div className="vc-card-top">
+                          <span className={`vc-card-network ${card.network === 'Visa' ? 'vc-card-visa' : 'vc-card-mc'}`}>
+                            {card.network === 'Visa' ? 'VISA' : (
+                              <span className="vc-mc-card"><span /><span /></span>
+                            )}
+                          </span>
+                          <span className={`vc-card-badge ${getStatusColor(card.status)}`}>
+                            {card.status === 'Active' ? '▲' : '●'} {card.status}
+                          </span>
+                        </div>
+                        <div className="vc-card-label">{card.label}</div>
+                        <div className="vc-card-number">
+                          **** **** **** {hidden ? '••••' : card.last4}
+                        </div>
+                        <div className="vc-card-bottom">
+                          <div>
+                            <p className="vc-card-holder">{card.holder}</p>
+                            <p className="vc-card-expiry-label">Expiry<br /><strong>{card.expiry}</strong></p>
+                          </div>
+                          <div className="vc-card-flag-wrap">
+                            <span className="vc-card-flag">{card.flag}</span>
+                            <button className="vc-eye-card-btn" onClick={() => toggleCardVisibility(card.id)}>
+                              {hidden ? <Eye size={13} /> : <EyeOff size={13} />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Review overlay */}
+                        {card.status === 'On Review' && (
+                          <div className="vc-card-overlay">
+                            <span>🔍 On Review by Admin</span>
                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                <button type="submit" className="cta-button">
-                  Proceed to verification
-                </button>
-              </form>
+                      {/* Card actions */}
+                      <div className="vc-card-actions">
+                        {card.status === 'Active' ? (
+                          <>
+                            <button className="vc-action-btn vc-action-outline" onClick={() => setSelectedCardDetail(card)}>
+                              View Details
+                            </button>
+                            <button className="vc-action-btn vc-action-fund" onClick={() => { setFundModal({ open: true, card }); setModalAmount(''); }}>
+                              <ArrowDownLeft size={14} /> Fund Card
+                            </button>
+                            <button className="vc-action-btn vc-action-outline" onClick={() => { setWithdrawModal({ open: true, card }); setModalAmount(''); }}>
+                              <ArrowUpRight size={14} /> Withdraw
+                            </button>
+                          </>
+                        ) : (
+                          <button className="vc-action-btn vc-action-outline" onClick={() => setSelectedCardDetail(card)}>
+                            View Details
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            
-             {isModalOpen && (
-                <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-                  <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                    <div className="modal-header"><h3>Select Currency</h3></div>
-                    <div className="search-container">
-                      <span className="search-icon-inside"><Search size={16} /></span>
-                      <input type="text" placeholder="Search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                    </div>
-                    <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
-                      {filteredCurrencies.map((c) => (
-                        <div key={c.code} className="country-item" onClick={() => { 
-                          setSelectedCurrency(c); 
-                          setIsModalOpen(false);
-                          setFiat(c.code); 
-                          setActiveWallet(c.code);
-                          setFormData(prev => ({...prev, accountCurrency: c.code}));
-                          setSearchTerm('') 
-                          setIsDropdownOpen(false);
-                        }}>
-                          <span>{c.name} ({c.code})</span>
-                          <div className={`radio-outer ${selectedCurrency?.code === c.code ? 'checked' : ''}`}>
-                            <div className="radio-inner"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+
+          </div>
+
+          {/* ── Fund Card Modal ── */}
+          {fundModal.open && fundModal.card && (
+            <div className="modal-overlay" onClick={() => setFundModal({ open: false, card: null })}>
+              <div className="vc-modal" onClick={(e) => e.stopPropagation()}>
+                <h3 className="vc-modal-title"><ArrowDownLeft size={18} /> Fund Card</h3>
+                <p className="vc-modal-sub">Add funds to your {fundModal.card.currency} Virtual Card ending in {fundModal.card.last4}</p>
+                <div className="vc-modal-field">
+                  <label>Amount ({getCurrencySymbol(fundModal.card.currency)})</label>
+                  <div className="vc-amount-input-wrap">
+                    <span className="vc-amount-symbol">{getCurrencySymbol(fundModal.card.currency)}</span>
+                    <input type="number" className="vc-amount-input" placeholder="0.00" value={modalAmount} onChange={(e) => setModalAmount(e.target.value)} />
                   </div>
                 </div>
-              )}
-            <Footer theme={theme} />
-          </div>
-        </main>
+                <div className="vc-modal-actions">
+                  <button className="vc-action-btn vc-action-outline" onClick={() => setFundModal({ open: false, card: null })}>Cancel</button>
+                  <button className="vc-action-btn vc-action-fund" onClick={handleFundCard} disabled={isSubmitting}>
+                    {isSubmitting ? <span className="btn-spinner-sm" /> : <ArrowDownLeft size={14} />} Fund Card
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
-        <MobileNav activeTab="none" onPlusClick={() => setIsDepositOpen(true)} />
+          {/* ── Withdraw Modal ── */}
+          {withdrawModal.open && withdrawModal.card && (
+            <div className="modal-overlay" onClick={() => setWithdrawModal({ open: false, card: null })}>
+              <div className="vc-modal" onClick={(e) => e.stopPropagation()}>
+                <h3 className="vc-modal-title"><ArrowUpRight size={18} /> Withdraw Funds</h3>
+                <p className="vc-modal-sub">
+                  Withdraw from your {withdrawModal.card.currency} Card •••• {withdrawModal.card.last4}
+                  <br /><span className="vc-modal-balance">Available: {getCurrencySymbol(withdrawModal.card.currency)}{withdrawModal.card.balance.toLocaleString()}</span>
+                </p>
+                <div className="vc-modal-field">
+                  <label>Amount ({getCurrencySymbol(withdrawModal.card.currency)})</label>
+                  <div className="vc-amount-input-wrap">
+                    <span className="vc-amount-symbol">{getCurrencySymbol(withdrawModal.card.currency)}</span>
+                    <input type="number" className="vc-amount-input" placeholder="0.00" value={modalAmount} onChange={(e) => setModalAmount(e.target.value)} />
+                  </div>
+                </div>
+                <div className="vc-modal-actions">
+                  <button className="vc-action-btn vc-action-outline" onClick={() => setWithdrawModal({ open: false, card: null })}>Cancel</button>
+                  <button className="vc-action-btn vc-action-submit" onClick={handleWithdraw} disabled={isSubmitting}>
+                    {isSubmitting ? <span className="btn-spinner-sm" /> : <ArrowUpRight size={14} />} Withdraw
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
-        <DepositModal
-          isOpen={isDepositOpen}
-          onClose={() => setIsDepositOpen(false)}
-          theme={theme}
-        />
-      </div>
-    </>
+          {/* ── Card Detail Modal ── */}
+          {selectedCardDetail && (
+            <div className="modal-overlay" onClick={() => setSelectedCardDetail(null)}>
+              <div className="vc-modal vc-detail-modal" onClick={(e) => e.stopPropagation()}>
+                <h3 className="vc-modal-title"><CreditCard size={18} /> Card Details</h3>
+                <div className={`vc-detail-card-preview ${getCardGradient(selectedCardDetail)}`}>
+                  <div className="vc-card-top">
+                    <span className={`vc-card-network ${selectedCardDetail.network === 'Visa' ? 'vc-card-visa' : 'vc-card-mc'}`}>
+                      {selectedCardDetail.network === 'Visa' ? 'VISA' : <span className="vc-mc-card"><span /><span /></span>}
+                    </span>
+                    <span className={`vc-card-badge ${getStatusColor(selectedCardDetail.status)}`}>
+                      {selectedCardDetail.status}
+                    </span>
+                  </div>
+                  <div className="vc-card-number">**** **** **** {selectedCardDetail.last4}</div>
+                  <div className="vc-card-bottom">
+                    <p className="vc-card-holder">{selectedCardDetail.holder}</p>
+                    <p className="vc-card-expiry-label">Expiry <strong>{selectedCardDetail.expiry}</strong></p>
+                  </div>
+                </div>
+                <div className="vc-detail-rows">
+                  <div className="vc-detail-row"><span>Card Number</span><span>**** **** **** {selectedCardDetail.last4}</span></div>
+                  <div className="vc-detail-row"><span>Currency</span><span>{selectedCardDetail.flag} {selectedCardDetail.currency}</span></div>
+                  <div className="vc-detail-row"><span>Network</span><span>{selectedCardDetail.network}</span></div>
+                  <div className="vc-detail-row"><span>Balance</span><span>{getCurrencySymbol(selectedCardDetail.currency)}{selectedCardDetail.balance.toLocaleString()}</span></div>
+                  <div className="vc-detail-row"><span>Expiry</span><span>{selectedCardDetail.expiry}</span></div>
+                  <div className="vc-detail-row"><span>Status</span><span className={`vc-history-status ${getStatusColor(selectedCardDetail.status)}`}>{selectedCardDetail.status}</span></div>
+                </div>
+                <button className="vc-action-btn vc-action-submit" style={{ width: '100%' }} onClick={() => setSelectedCardDetail(null)}>Close</button>
+              </div>
+            </div>
+          )}
+
+          <Footer theme={theme} />
+        </div>
+      </main>
+
+      <MobileNav activeTab="none" onPlusClick={() => setIsDepositOpen(true)} />
+      <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} theme={theme} />
+    </div>
   );
 };
 
-export default CreateCard;
+export default VirtualCardsPage;

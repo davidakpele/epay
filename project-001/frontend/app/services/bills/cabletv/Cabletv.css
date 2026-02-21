@@ -586,7 +586,7 @@
   border-right: 1px solid #e2ede5;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 1000px) {
   .airtime-card {
     grid-template-columns: 1fr;
     margin: 0 16px 20px;

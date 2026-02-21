@@ -81,7 +81,11 @@ const DataBundle = () => {
 
     const getFormattedAmount = () => {
         if (!amount) return '';
-        return Number(amount).toLocaleString('en-US');
+        try {
+        return BigInt(amount).toLocaleString('en-US');
+        } catch {
+        return amount;
+        }
     };
     
     const handleSubmit = async () => {

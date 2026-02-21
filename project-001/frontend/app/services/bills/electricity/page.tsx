@@ -76,8 +76,12 @@ const ElectricitySubscription = () => {
     };
 
     const getFormattedAmount = () => {
-        if (!amount) return '';
-        return Number(amount).toLocaleString('en-US');
+      if (!amount) return '';
+      try {
+        return BigInt(amount).toLocaleString('en-US');
+      } catch {
+        return amount;
+      }
     };
     
     const handleSubmit = async () => {

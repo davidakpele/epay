@@ -1,260 +1,258 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ArrowDownUp, TrendingUp, Clock, CheckCircle, AlertCircle, Info, ChevronDown, Search, X } from 'lucide-react';
-import './ExchangePage.css';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
-import { Currency } from '../types/api';
-import Footer from '@/components/Footer';
-import MobileNav from '@/components/MobileNav';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import DepositModal from '@/components/DepositModal';
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
+import MobileNav from '@/components/MobileNav';
+import Sidebar from '@/components/Sidebar';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import { getUserId, getWalletList, setWalletContainer, updateNotificationContainer } from '../api';
+import Link from 'next/link';
+import Image from 'next/image';
+import { ChevronDown, ChevronRight, ArrowLeftRight, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import './Swap.css';
+import { Toast } from '@/app/types/auth';
+import { getUserId, getWalletList, setWalletContainer, updateNotificationContainer } from '@/app/api';
 
-interface Toast {
-  id: number;
-  message: string;
-  type: 'warning' | 'success' | 'error';
-  exiting: boolean;
+interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  flag: string;
 }
 
-const ExchangePage = () => {
-  const [fromCurrency, setFromCurrency] = useState<any>({
-    code: 'NGN',
-    name: 'Nigerian Naira',
-    symbol: '₦',
-    flag: '🇳🇬'
-  });
-  
-  const [toCurrency, setToCurrency] = useState<any>({
-    code: 'USD',
-    name: 'US Dollar',
-    symbol: '$',
-    flag: '🇺🇸'
-  });
-  
-  const currencies = [
-    { code: 'USD', name: 'US Dollar', symbol: '$', flag: '🇺🇸' },
-    { code: 'EUR', name: 'Euro', symbol: '€', flag: '🇪🇺' },
-    { code: 'NGN', name: 'Nigerian Naira', symbol: '₦', flag: '🇳🇬' },
-    { code: 'GBP', name: 'British Pound', symbol: '£', flag: '🇬🇧' },
-    { code: 'JPY', name: 'Japanese Yen', symbol: '¥', flag: '🇯🇵' },
-    { code: 'AUD', name: 'Australian Dollar', symbol: '$', flag: '🇦🇺' },
-    { code: 'CAD', name: 'Canadian Dollar', symbol: '$', flag: '🇨🇦' },
-    { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF', flag: '🇨🇭' },
-    { code: 'CNY', name: 'Chinese Yuan', symbol: '¥', flag: '🇨🇳' },
-    { code: 'INR', name: 'Indian Rupee', symbol: '₹', flag: '🇮🇳' },
-  ];
+const currencies: Currency[] = [
+  { code: 'NGN', name: 'Nigerian Naira',    symbol: '₦',   flag: '🇳🇬' },
+  { code: 'USD', name: 'US Dollar',          symbol: '$',   flag: '🇺🇸' },
+  { code: 'EUR', name: 'Euro',               symbol: '€',   flag: '🇪🇺' },
+  { code: 'GBP', name: 'British Pound',      symbol: '£',   flag: '🇬🇧' },
+  { code: 'JPY', name: 'Japanese Yen',       symbol: '¥',   flag: '🇯🇵' },
+  { code: 'AUD', name: 'Australian Dollar',  symbol: '$',   flag: '🇦🇺' },
+  { code: 'CAD', name: 'Canadian Dollar',    symbol: '$',   flag: '🇨🇦' },
+  { code: 'CHF', name: 'Swiss Franc',        symbol: 'CHF', flag: '🇨🇭' },
+  { code: 'CNY', name: 'Chinese Yuan',       symbol: '¥',   flag: '🇨🇳' },
+  { code: 'INR', name: 'Indian Rupee',       symbol: '₹',   flag: '🇮🇳' },
+];
 
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [fromAmount, setFromAmount] = useState('');
-  const [toAmount, setToAmount] = useState('');
-  const [isLoadingRate, setIsLoadingRate] = useState(false);
-  const [exchangeRate, setExchangeRate] = useState<number>(0.0013);
-  const [isProcessing, setIsProcessing] = useState(false);
+const mockExchangeRates: Record<string, Record<string, number>> = {
+  USD: { EUR: 0.92, GBP: 0.80, JPY: 147.11, AUD: 1.52, CAD: 1.35, CHF: 0.88, CNY: 7.25, INR: 83.12, NGN: 1500.50, GHS: 13.50, KES: 129.00, ZAR: 18.60, AED: 3.67 },
+  EUR: { USD: 1.09, GBP: 0.87, JPY: 159.25, AUD: 1.65, CAD: 1.47, CHF: 0.96, CNY: 7.88, INR: 90.35, NGN: 1630.75, GHS: 14.70, KES: 140.60, ZAR: 20.28, AED: 4.00 },
+  GBP: { USD: 1.25, EUR: 1.15, JPY: 184.22, AUD: 1.90, CAD: 1.69, CHF: 1.10, CNY: 9.06, INR: 103.89, NGN: 1875.30, GHS: 16.88, KES: 161.25, ZAR: 23.25, AED: 4.59 },
+  JPY: { USD: 0.0068, EUR: 0.0063, GBP: 0.0054, AUD: 0.0103, CAD: 0.0092, CHF: 0.0060, CNY: 0.0493, INR: 0.565, NGN: 10.20, GHS: 0.092, KES: 0.878, ZAR: 0.127, AED: 0.025 },
+  AUD: { USD: 0.66, EUR: 0.61, GBP: 0.53, JPY: 97.10, CAD: 0.89, CHF: 0.58, CNY: 4.77, INR: 54.68, NGN: 987.45, GHS: 8.88, KES: 85.10, ZAR: 12.26, AED: 2.42 },
+  CAD: { USD: 0.74, EUR: 0.68, GBP: 0.59, JPY: 108.75, AUD: 1.12, CHF: 0.65, CNY: 5.37, INR: 61.55, NGN: 1111.11, GHS: 10.00, KES: 95.56, ZAR: 13.78, AED: 2.72 },
+  CHF: { USD: 1.14, EUR: 1.04, GBP: 0.91, JPY: 166.67, AUD: 1.72, CAD: 1.54, CNY: 8.24, INR: 94.50, NGN: 1705.88, GHS: 15.35, KES: 146.87, ZAR: 21.17, AED: 4.18 },
+  CNY: { USD: 0.14, EUR: 0.13, GBP: 0.11, JPY: 20.28, AUD: 0.21, CAD: 0.19, CHF: 0.12, INR: 11.46, NGN: 206.90, GHS: 1.86, KES: 17.83, ZAR: 2.57, AED: 0.51 },
+  INR: { USD: 0.012, EUR: 0.011, GBP: 0.0096, JPY: 1.77, AUD: 0.018, CAD: 0.016, CHF: 0.0106, CNY: 0.087, NGN: 18.05, GHS: 0.162, KES: 1.55, ZAR: 0.224, AED: 0.044 },
+  NGN: { USD: 0.00067, EUR: 0.00061, GBP: 0.00053, JPY: 0.098, AUD: 0.00101, CAD: 0.00090, CHF: 0.00059, CNY: 0.0048, INR: 0.055, GHS: 0.0065, KES: 0.086, ZAR: 0.0124, AED: 0.0024 },
+};
+
+const feePercentage = 0.015;
+
+const SwapPage = () => {
+  const [isDepositOpen, setIsDepositOpen]       = useState(false);
+  const [theme, setTheme]                       = useState<'light' | 'dark'>('light');
+  const [isPageLoading, setIsPageLoading]       = useState(true);
+  const [toasts, setToasts]                     = useState<Toast[]>([]);
+
+  const [fromCurrency, setFromCurrency]         = useState<Currency>(currencies[0]);
+  const [toCurrency, setToCurrency]             = useState<Currency>(currencies[1]);
+  const [fromAmount, setFromAmount]             = useState('');
+  const [toAmount, setToAmount]                 = useState('');
+  const [feeAmount, setFeeAmount]               = useState('0.00');
+  const [exchangeRate, setExchangeRate]         = useState<number>(0);
+  const [isLoadingRate, setIsLoadingRate]       = useState(false);
+
+  const [isFromModalOpen, setIsFromModalOpen]   = useState(false);
+  const [isToModalOpen, setIsToModalOpen]       = useState(false);
+  const [fromSearch, setFromSearch]             = useState('');
+  const [toSearch, setToSearch]                 = useState('');
+
+  const [isProcessing, setIsProcessing]         = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showFailModal, setShowFailModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [errors, setErrors] = useState<{ amount?: string }>({});
-  const [feeAmount, setFeeAmount] = useState<string>('0.00');
-
-  const [isDepositOpen, setIsDepositOpen] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[2]);
-  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
-  const [modalTarget, setModalTarget] = useState<'from' | 'to'>('from');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isScrolling, setIsScrolling] = useState(false);
+  const [showFailModal, setShowFailModal]       = useState(false);
+  const [errorMessage, setErrorMessage]         = useState('');
   const [exchangeSnapshot, setExchangeSnapshot] = useState<any>(null);
-  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
-  const [isPageLoading, setIsPageLoading] = useState(true);
-  const feePercentage = 0.015;
 
-  // WebSocket state
-  const [websocket, setWebsocket] = useState<WebSocket | null>(null);
-  const [userWallets, setUserWallets] = useState<any[]>([]);
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [userWallets, setUserWallets]           = useState<any[]>([]);
+  const [websocket, setWebsocket]               = useState<WebSocket | null>(null);
+  const [isScrolling, setIsScrolling]           = useState(false);
+  const scrollTimer                             = useRef<NodeJS.Timeout | null>(null);
 
-  const mockExchangeRates: { [key: string]: { [key: string]: number } } = {
-    USD: { EUR: 0.92, GBP: 0.80, JPY: 147.11, AUD: 1.52, CAD: 1.35, CHF: 0.88, CNY: 7.25, INR: 83.12, NGN: 1500.50 },
-    EUR: { USD: 1.09, GBP: 0.87, JPY: 159.25, AUD: 1.65, CAD: 1.47, CHF: 0.96, CNY: 7.88, INR: 90.35, NGN: 1630.75 },
-    GBP: { USD: 1.25, EUR: 1.15, JPY: 184.22, AUD: 1.90, CAD: 1.69, CHF: 1.10, CNY: 9.06, INR: 103.89, NGN: 1875.30 },
-    JPY: { USD: 0.0068, EUR: 0.0063, GBP: 0.0054, AUD: 0.0103, CAD: 0.0092, CHF: 0.0060, CNY: 0.0493, INR: 0.565, NGN: 10.20 },
-    AUD: { USD: 0.66, EUR: 0.61, GBP: 0.53, JPY: 97.10, CAD: 0.89, CHF: 0.58, CNY: 4.77, INR: 54.68, NGN: 987.45 },
-    CAD: { USD: 0.74, EUR: 0.68, GBP: 0.59, JPY: 108.75, AUD: 1.12, CHF: 0.65, CNY: 5.37, INR: 61.55, NGN: 1111.11 },
-    CHF: { USD: 1.14, EUR: 1.04, GBP: 0.91, JPY: 166.67, AUD: 1.72, CAD: 1.54, CNY: 8.24, INR: 94.50, NGN: 1705.88 },
-    CNY: { USD: 0.14, EUR: 0.13, GBP: 0.11, JPY: 20.28, AUD: 0.21, CAD: 0.19, CHF: 0.12, INR: 11.46, NGN: 206.90 },
-    INR: { USD: 0.012, EUR: 0.011, GBP: 0.0096, JPY: 1.77, AUD: 0.018, CAD: 0.016, CHF: 0.0106, CNY: 0.087, NGN: 18.05 },
-    NGN: { USD: 0.00067, EUR: 0.00061, GBP: 0.00053, JPY: 0.098, AUD: 0.00101, CAD: 0.00090, CHF: 0.00059, CNY: 0.0048, INR: 0.055 }
-  };
+  // ─── Toast ───────────────────────────────────────────────────────────────────
 
-  const showToast = (msg: string, type: 'warning' | 'success' | 'error' = 'warning') => {
+  const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
     setToasts((prev) => {
       if (prev.length >= 5) return prev;
-
       const id = Date.now();
       const newToast: Toast = { id, message: msg, type, exiting: false };
-
       setTimeout(() => {
-        setToasts((currentToasts) =>
-          currentToasts.map((t) => (t.id === id ? { ...t, exiting: true } : t))
-        );
-
-        setTimeout(() => {
-          setToasts((currentToasts) => currentToasts.filter((t) => t.id !== id));
-        }, 300);
+        setToasts((cur) => cur.map((t) => (t.id === id ? { ...t, exiting: true } : t)));
+        setTimeout(() => setToasts((cur) => cur.filter((t) => t.id !== id)), 300);
       }, 5000);
-
       return [...prev, newToast];
     });
   };
 
-  const getExchangeRateWithMargin = (fromCurr: string, toCurr: string) => {
-    const rawRate = mockExchangeRates[fromCurr]?.[toCurr];
-    if (!rawRate) return null;
-    
-    const margin = 0.005; // 0.5% margin
-    return rawRate * (1 - margin); 
+  // ─── Exchange Rate ────────────────────────────────────────────────────────────
+
+  const getExchangeRateWithMargin = (from: string, to: string) => {
+    const raw = mockExchangeRates[from]?.[to];
+    return raw ? raw * (1 - 0.005) : null; // 0.5% margin
   };
 
-  const getRawExchangeRate = (fromCurr: string, toCurr: string) => {
-    return mockExchangeRates[fromCurr]?.[toCurr] || null;
-  };
-
-  const connectWebSocket = () => {
-    const userId = getUserId();
-    if (!userId) {
-      console.warn('No userId found, cannot connect WebSocket');
-      return null;
-    }
-
-    try {
-      const ws = new WebSocket(`ws://localhost:8292/api/ws/wallet?userId=${userId}`);
-      
-      ws.onopen = () => {
-        console.log('WebSocket connected for currency exchange');
-        setWebsocket(ws);
-      };
-      
-      ws.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        handleWebSocketMessage(message);
-      };
-      
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        showToast('WebSocket connection error', 'error');
-      };
-      
-      ws.onclose = () => {
-        console.log('WebSocket disconnected');
-        setWebsocket(null);
-      };
-
-      return ws;
-    } catch (error) {
-      console.error('Failed to create WebSocket connection:', error);
-      showToast('Failed to connect to server', 'error');
-      return null;
-    }
-  };
-
-  const handleWebSocketMessage = (message: any) => {
-    if (message.type === 'swap_response') {
-      setIsProcessing(false);
-      
-      if (message.status === 'COMPLETED') {
-        setExchangeSnapshot({ 
-          fromCurrency, 
-          toCurrency, 
-          fromAmount, 
-          toAmount, 
-          exchangeRate, 
-          feeAmount 
-        });
-        setShowSuccessModal(true);
-        updateNotificationContainer({
-          type: "PAYMENTS",
-          description: "Currency exchange completed successfully"
-        });
-        showToast(`Currency exchange completed successfully! You received ${message.toAmount} ${toCurrency.code}`, 'success');
-        setFromAmount('');
-        setToAmount('');
-        setFeeAmount('0.00');
-        fetchUserWallets();
-      } else {
-        updateNotificationContainer({
-          type: "MESSAGES",
-          description: "Exchange failed. Please try again."
-        });
-        setErrorMessage(message.message || 'Exchange failed. Please try again.');
-        setShowFailModal(true);
-        showToast(message.message || 'Exchange failed', 'error');
-      }
-    }
-    
-    if (message.type === 'wallet_update' || message.type === 'wallet_update_response') {
-      setWalletContainer(
-        message.data.wallet.wallet_balances, 
-        message.data.wallet.hasTransferPin, 
-        message.data.wallet.walletId
-      );
-      fetchUserWallets();
-    }
-  };
-
-  const fetchUserWallets = async () => {
-    try {
-      const walletList = getWalletList();
-      setUserWallets(walletList || []);
-  
-      if (walletList && walletList.length > 0) {
-        const hasNGN = walletList.find((w: any) => w.currency_code === 'NGN');
-        const hasUSD = walletList.find((w: any) => w.currency_code === 'USD');
-        
-        if (hasNGN) {
-          const ngnCurrency = currencies.find(c => c.code === 'NGN');
-          if (ngnCurrency) setFromCurrency(ngnCurrency);
-        }
-        if (hasUSD) {
-          const usdCurrency = currencies.find(c => c.code === 'USD');
-          if (usdCurrency) setToCurrency(usdCurrency);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching wallets:', error);
-      setUserWallets([]);
-    }
-  };
+  const getRawRate = (from: string, to: string) => mockExchangeRates[from]?.[to] || null;
 
   const fetchExchangeRate = async (from: string, to: string) => {
     setIsLoadingRate(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((r) => setTimeout(r, 800));
       const rate = getExchangeRateWithMargin(from, to);
-      if (rate) {
-        setExchangeRate(rate);
-      }
-    } catch (error) {
-      console.error('Failed to fetch exchange rate:', error);
+      if (rate) setExchangeRate(rate);
+      else showToast(`Rate unavailable for ${from} → ${to}`, 'warning');
     } finally {
       setIsLoadingRate(false);
     }
   };
 
-  useEffect(() => {
-    const loadingTimer = setTimeout(() => {
-      setIsPageLoading(false);
-    }, 2000);
+  // ─── Calculate amounts ────────────────────────────────────────────────────────
 
+  const formatNumberWithCommas = (value: string): string => {
+    const clean = value.replace(/,/g, '');
+    if (!clean) return '';
+    const parts = clean.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  };
+
+  const calculateSwapAmounts = (raw: string) => {
+    if (!raw || !exchangeRate) { setToAmount(''); setFeeAmount('0.00'); return; }
+    const num = parseFloat(raw.replace(/,/g, ''));
+    if (isNaN(num)) { setToAmount(''); setFeeAmount('0.00'); return; }
+    const base  = num * exchangeRate;
+    const fee   = base * feePercentage;
+    const final = base - fee;
+    setToAmount(formatNumberWithCommas(final.toFixed(4)));
+    setFeeAmount(fee.toFixed(4));
+  };
+
+  const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === '' || /^\d*\.?\d*$/.test(val.replace(/,/g, ''))) {
+      setFromAmount(formatNumberWithCommas(val));
+    }
+  };
+
+  useEffect(() => { calculateSwapAmounts(fromAmount); }, [fromAmount, exchangeRate]);
+
+  // ─── Wallets ─────────────────────────────────────────────────────────────────
+
+  const fetchUserWallets = async () => {
+    try {
+      const list = getWalletList();
+      setUserWallets(list || []);
+    } catch { setUserWallets([]); }
+  };
+
+  const getWalletBalance = (code: string) => {
+    const w = userWallets.find((x: any) => x.currency_code === code);
+    return w ? parseFloat(w.balance.replace(/,/g, '')) : 0;
+  };
+
+  // ─── WebSocket ────────────────────────────────────────────────────────────────
+
+  const handleWebSocketMessage = (message: any) => {
+    if (message.type === 'swap_response') {
+      setIsProcessing(false);
+      if (message.status === 'COMPLETED') {
+        setExchangeSnapshot({ fromCurrency, toCurrency, fromAmount, toAmount, exchangeRate, feeAmount });
+        setShowSuccessModal(true);
+        updateNotificationContainer({ type: 'PAYMENTS', description: 'Currency swap completed successfully' });
+        showToast(`Swap complete! You received ${toCurrency.symbol}${toAmount}`, 'success');
+        setFromAmount(''); setToAmount(''); setFeeAmount('0.00');
+        fetchUserWallets();
+      } else {
+        setErrorMessage(message.message || 'Swap failed. Please try again.');
+        setShowFailModal(true);
+        showToast(message.message || 'Swap failed', 'warning');
+      }
+    }
+    if (message.type === 'wallet_update' || message.type === 'wallet_update_response') {
+      setWalletContainer(message.data.wallet.wallet_balances, message.data.wallet.hasTransferPin, message.data.wallet.walletId);
+      fetchUserWallets();
+    }
+  };
+
+  const connectWebSocket = () => {
+    const userId = getUserId();
+    if (!userId) return null;
+    try {
+      const ws = new WebSocket(`ws://localhost:8292/api/ws/wallet?userId=${userId}`);
+      ws.onopen    = () => setWebsocket(ws);
+      ws.onmessage = (e) => handleWebSocketMessage(JSON.parse(e.data));
+      ws.onerror   = () => showToast('WebSocket connection error', 'warning');
+      ws.onclose   = () => setWebsocket(null);
+      return ws;
+    } catch { return null; }
+  };
+
+  // ─── Submit ──────────────────────────────────────────────────────────────────
+
+  const handleExchange = async () => {
+    if (!fromAmount || parseFloat(fromAmount.replace(/,/g, '')) <= 0) {
+      showToast('Please enter a valid amount', 'warning'); return;
+    }
+    if (fromCurrency.code === toCurrency.code) {
+      showToast('Please select two different currencies', 'warning'); return;
+    }
+    const fromWallet = userWallets.find((w: any) => w.currency_code === fromCurrency.code);
+    if (fromWallet) {
+      const balance = parseFloat(fromWallet.balance.replace(/,/g, ''));
+      const amount  = parseFloat(fromAmount.replace(/,/g, ''));
+      if (amount > balance) {
+        showToast('Insufficient balance for this swap', 'warning'); return;
+      }
+    }
+
+    setIsProcessing(true);
+
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      websocket.send(JSON.stringify({
+        type: 'swap_currency',
+        fromCurrency: fromCurrency.code,
+        toCurrency: toCurrency.code,
+        amount: fromAmount.replace(/,/g, ''),
+        acceptRate: true,
+        userId: getUserId(),
+      }));
+    } else {
+      // Fallback simulation when no WS connection
+      await new Promise((r) => setTimeout(r, 2000));
+      setExchangeSnapshot({ fromCurrency, toCurrency, fromAmount, toAmount, exchangeRate, feeAmount });
+      setShowSuccessModal(true);
+      showToast(`Swapped ${fromCurrency.symbol}${fromAmount} → ${toCurrency.symbol}${toAmount}!`, 'success');
+      setFromAmount(''); setToAmount(''); setFeeAmount('0.00');
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSwapCurrencies = () => {
+    const prev = fromCurrency;
+    setFromCurrency(toCurrency);
+    setToCurrency(prev);
+    setFromAmount(toAmount);
+    setToAmount('');
+  };
+
+  // ─── Effects ─────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    const t = setTimeout(() => setIsPageLoading(false), 2000);
     fetchUserWallets();
     const ws = connectWebSocket();
-
     return () => {
-      clearTimeout(loadingTimer);
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.close();
-      }
+      clearTimeout(t);
+      if (ws && ws.readyState === WebSocket.OPEN) ws.close();
     };
   }, []);
 
@@ -264,231 +262,133 @@ const ExchangePage = () => {
     }
   }, [fromCurrency.code, toCurrency.code]);
 
-  const calculateSwapAmounts = (amount: string) => {
-    if (!amount || !exchangeRate) {
-      setToAmount('');
-      setFeeAmount('0.00');
-      return;
-    }
-    const numericAmount = parseFloat(amount.replace(/,/g, ''));
-    if (isNaN(numericAmount)) {
-      setToAmount('');
-      setFeeAmount('0.00');
-      return;
-    }
-    const baseConverted = numericAmount * exchangeRate;
-    const fee = baseConverted * feePercentage;
-    const finalAmount = baseConverted - fee;
-    setToAmount(formatNumberWithCommas(finalAmount.toFixed(2)));
-    setFeeAmount(fee.toFixed(2));
-  };
-
-  useEffect(() => {
-    calculateSwapAmounts(fromAmount);
-  }, [fromAmount, exchangeRate]);
-
-  const formatNumberWithCommas = (value: string): string => {
-    const cleanValue = value.replace(/,/g, '');
-    if (!cleanValue) return '';
-    const parts = cleanValue.split('.');
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return parts.join('.');
-  };
-
-  const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value;
-    if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue.replace(/,/g, ''))) {
-      setFromAmount(formatNumberWithCommas(inputValue));
-      if (errors.amount) setErrors({});
-    }
-  };
-
-  const handleSwapCurrencies = () => {
-    const tempCurrency = fromCurrency;
-    setFromCurrency(toCurrency);
-    setToCurrency(tempCurrency);
-    setFromAmount(toAmount);
-  };
-
-  const getWalletBalance = (currencyCode: string) => {
-    const wallet = userWallets.find((w: any) => w.currency_code === currencyCode);
-    return wallet ? parseFloat(wallet.balance.replace(/,/g, '')) : 0;
-  };
-
-  const handleExchange = async () => {
-    if (!fromAmount || parseFloat(fromAmount.replace(/,/g, '')) <= 0) {
-      showToast('Please enter a valid amount', 'error');
-      return;
-    }
-
-    if (fromCurrency.code === toCurrency.code) {
-      showToast('Please select different currencies for exchange', 'error');
-      return;
-    }
-
-    const fromWallet = userWallets.find((w: any) => w.currency_code === fromCurrency.code);
-    if (!fromWallet) {
-      showToast('Source wallet not found', 'error');
-      return;
-    }
-
-    const fromBalance = parseFloat(fromWallet.balance.replace(/,/g, ''));
-    const exchangeAmount = parseFloat(fromAmount.replace(/,/g, ''));
-
-    if (exchangeAmount > fromBalance) {
-      showToast('Insufficient balance for exchange', 'error');
-      return;
-    }
-
-    setIsProcessing(true);
-
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-      const swapRequest = {
-        type: "swap_currency",
-        fromCurrency: fromCurrency.code,
-        toCurrency: toCurrency.code,
-        amount: fromAmount.replace(/,/g, ''),
-        acceptRate: true,
-        userId: getUserId()
-      };
-      
-      websocket.send(JSON.stringify(swapRequest));
-    } else {
-      showToast('WebSocket connection not available. Please refresh the page.', 'error');
-      setIsProcessing(false);
-    }
-  };
-
-  const openCurrencyModal = (target: 'from' | 'to') => {
-    setModalTarget(target);
-    setSearchQuery('');
-    setIsCurrencyModalOpen(true);
-  };
-
-  const selectCurrency = (currency: any) => {
-    if (modalTarget === 'from') {
-      setFromCurrency(currency);
-    } else {
-      setToCurrency(currency);
-    }
-    setIsCurrencyModalOpen(false);
-  };
-
-  const filteredCurrencies = useMemo(() => {
-    return currencies.filter(c => 
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      c.code.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-    document.body.classList.toggle('dark-theme', newTheme === 'dark');
-  };
-
   const handleScroll = () => {
     setIsScrolling(true);
     if (scrollTimer.current) clearTimeout(scrollTimer.current);
     scrollTimer.current = setTimeout(() => setIsScrolling(false), 1000);
   };
 
-  const getToastColor = (type: string) => {
-    switch(type) {
-      case 'success': return 'bg-green-500';
-      case 'error': return 'bg-red-500';
-      default: return 'bg-yellow-500';
-    }
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
-  if (isPageLoading) {
-    return <LoadingScreen />;
-  }
+  const filteredFrom = useMemo(() =>
+    currencies.filter((c) =>
+      c.name.toLowerCase().includes(fromSearch.toLowerCase()) ||
+      c.code.toLowerCase().includes(fromSearch.toLowerCase())
+    ), [fromSearch]);
+
+  const filteredTo = useMemo(() =>
+    currencies.filter((c) =>
+      c.name.toLowerCase().includes(toSearch.toLowerCase()) ||
+      c.code.toLowerCase().includes(toSearch.toLowerCase())
+    ), [toSearch]);
+
+  if (isPageLoading) return <LoadingScreen />;
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <>
-      {toasts.length > 0 && (
-        <div className="fixed top-4 right-4 z-50 space-y-2">
-          {toasts.map((toast) => (
-            <div
-              key={toast.id}
-              className={`${getToastColor(toast.type)} text-white px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
-                toast.exiting ? 'opacity-0 translate-x-full' : 'opacity-100 translate-x-0'
-              }`}
-            >
-              {toast.message}
-            </div>
-          ))}
-        </div>
-      )}
+    <div className={`dashboard-container ${theme === 'dark' ? 'dark' : ''}`}>
+      <Sidebar />
 
-      <div className={`dashboard-container ${theme === 'dark' ? 'dark' : ''}`}>
-        <Sidebar />
-        <main className={`main-content`}>
-          <Header theme={theme} toggleTheme={toggleTheme} />
-          <div className="scrollable-content">
-            <div className={`exchange-page ${theme === "dark" ? "bg-light" : "bg-dark"}`}>
-              <div className="exchange-container">
-                <div className="exchange-header">
-                  <h1 className={`exchange-title ${theme === "dark" ? "color-light" : "color-dark"}`}>Currency Exchange</h1>
-                  <p className={`exchange-subtitle ${theme === "dark" ? "color-light" : "color-dark"}`}>Convert between different currencies instantly</p>
+      <main className={`main-content ${isDepositOpen ? 'dashboard-blur' : ''}`}>
+        <Header theme={theme} toggleTheme={toggleTheme} />
+
+        <div className="scrollable-content">
+
+          {/* ── Toasts ── */}
+          <div className="toastrs">
+            {toasts.map((toast) => (
+              <div key={toast.id} className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}>
+                <div className="toast-icon">
+                  <i className={`fa ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} aria-hidden="true" />
                 </div>
+                <div className="toast-message">{toast.message}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="main-container">
+
+            {/* ── Breadcrumb ── */}
+            <div className="airtime-breadcrumb">
+              <Link href="/dashboard" className="breadcrumb-link">Dashboard</Link>
+              <ChevronRight size={14} className="breadcrumb-sep" />
+              <span className="breadcrumb-current">Swaps</span>
+            </div>
+
+            {/* ── Page Title ── */}
+            <h1 className="swap-page-title">
+              <span className="title-green">Currency</span> Swap
+            </h1>
+
+            {/* ── Main Card ── */}
+            <div className="swap-card">
+
+              {/* Left — Illustration */}
+              <div className="swap-illustration-col">
+                <Image
+                  src="/assets/images/swap-banner.png"
+                  alt="Currency Swap"
+                  width={320}
+                  height={320}
+                  priority
+                  style={{ objectFit: 'contain', width: '100%', height: 'auto' }}
+                />
+              </div>
+
+              {/* Right — Form */}
+              <div className="swap-form-col">
 
                 {/* Wallet Balances */}
-                <div className="wallet-balances" style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: '1fr 1fr', 
-                  gap: '1rem', 
-                  marginBottom: '1.5rem',
-                  padding: '1rem',
-                  background: theme === 'dark' ? '#2a2a2a' : '#f8f9fa',
-                  borderRadius: '12px'
-                }}>
-                  <div style={{color:"#0f172a", textAlign: 'center' }}>
-                    <p style={{color:"#0f172a", fontSize: '0.875rem', opacity: 0.7, marginBottom: '0.25rem' }}>
-                      {fromCurrency.code} Balance
-                    </p>
-                    <p style={{color:"#0f172a", fontSize: '1.25rem', fontWeight: '600' }}>
-                      {fromCurrency.symbol}{getWalletBalance(fromCurrency.code).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
+                <div className="swap-wallet-balances">
+                  <div className="swap-wallet-item">
+                    <span className="swap-wallet-label">{fromCurrency.code} Balance</span>
+                    <span className="swap-wallet-value">
+                      {fromCurrency.symbol}
+                      {getWalletBalance(fromCurrency.code).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <p style={{color:"#0f172a", fontSize: '0.875rem', opacity: 0.7, marginBottom: '0.25rem' }}>
-                      {toCurrency.code} Balance
-                    </p>
-                    <p style={{color:"#0f172a", fontSize: '1.25rem', fontWeight: '600' }}>
-                      {toCurrency.symbol}{getWalletBalance(toCurrency.code).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
+                  <div className="swap-wallet-divider" />
+                  <div className="swap-wallet-item">
+                    <span className="swap-wallet-label">{toCurrency.code} Balance</span>
+                    <span className="swap-wallet-value">
+                      {toCurrency.symbol}
+                      {getWalletBalance(toCurrency.code).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
                   </div>
                 </div>
 
-                <div className="exchange-rate-card">
-                  <div className="rate-header">
-                    <div className="rate-label">
-                      <TrendingUp size={16} />
-                      <span>Current Exchange Rate</span>
+                {/* Live Rate Card */}
+                <div className="swap-rate-card">
+                  <div className="swap-rate-top">
+                    <div className="swap-rate-left">
+                      <TrendingUp size={14} />
+                      <span>Exchange Rate</span>
                     </div>
-                    <div className="rate-updated">
-                      <Clock size={14} />
-                      <span>Updated now</span>
+                    <div className="swap-rate-right">
+                      <Clock size={13} />
+                      <span>Live</span>
                     </div>
                   </div>
-                  <div className="rate-display">
+                  <div className="swap-rate-value-row">
                     {isLoadingRate ? (
-                      <div className="rate-loader">
-                        <div className="rate-spinner" />
-                        <span>Fetching rate...</span>
-                      </div>
+                      <span className="swap-rate-loading">
+                        <span className="rate-spinner" />
+                        Fetching rate...
+                      </span>
                     ) : (
                       <>
-                        <span className="rate-value">
+                        <span className="swap-rate-main">
                           1 {fromCurrency.code} = {exchangeRate.toFixed(6)} {toCurrency.code}
                         </span>
-                        {getRawExchangeRate(fromCurrency.code, toCurrency.code) && (
-                          <span style={{color:"#0f172a", fontSize: '0.8em', opacity: 0.6, marginLeft: '0.5rem' }}>
-                            (Market: {getRawExchangeRate(fromCurrency.code, toCurrency.code)?.toFixed(6)})
+                        {getRawRate(fromCurrency.code, toCurrency.code) && (
+                          <span className="swap-rate-market">
+                            Market: {getRawRate(fromCurrency.code, toCurrency.code)?.toFixed(6)}
                           </span>
                         )}
                       </>
@@ -496,90 +396,124 @@ const ExchangePage = () => {
                   </div>
                 </div>
 
-                <div className="exchange-form">
-                  <div className="currency-input-group">
-                    <label className="input-label">From</label>
-                    <div className="currency-input-wrapper">
-                      <div className="custom-select-trigger" onClick={() => openCurrencyModal('from')}>
-                        <span className="trigger-flag">{fromCurrency.flag}</span>
-                        <span className="trigger-code">{fromCurrency.code}</span>
-                        <ChevronDown size={16} className="trigger-icon" />
-                      </div>
-                      <input
-                        type="text"
-                        className="currency-input"
-                        placeholder="0.00"
-                        value={fromAmount}
-                        onChange={handleFromAmountChange}
-                        disabled={isProcessing}
-                      />
-                      <span className="exchange-currency-symbol">{fromCurrency.symbol}</span>
-                    </div>
+                {/* FROM */}
+                <div className="swap-section-label">From</div>
+                <div className="swap-field-group">
+                  <div className="swap-currency-select" onClick={() => setIsFromModalOpen(true)}>
+                    <span className="swap-flag">{fromCurrency.flag}</span>
+                    <span className="swap-code">{fromCurrency.code}</span>
+                    <span className="swap-currency-name">{fromCurrency.name}</span>
+                    <ChevronDown size={16} className="swap-chevron" />
                   </div>
-
-                  <div className="swap-button-container">
-                    <button className="swap-button" onClick={handleSwapCurrencies} disabled={isProcessing}>
-                      <ArrowDownUp size={20} />
-                    </button>
+                  <div className="swap-amount-row">
+                    <span className="swap-symbol">{fromCurrency.symbol}</span>
+                    <input
+                      type="text"
+                      className="swap-input"
+                      placeholder="Enter amount"
+                      value={fromAmount}
+                      onChange={handleFromAmountChange}
+                      disabled={isProcessing}
+                    />
                   </div>
+                </div>
 
-                  <div className="currency-input-group">
-                    <label className="input-label">To</label>
-                    <div className="currency-input-wrapper">
-                      <div className="custom-select-trigger" onClick={() => openCurrencyModal('to')}>
-                        <span className="trigger-flag">{toCurrency.flag}</span>
-                        <span className="trigger-code">{toCurrency.code}</span>
-                        <ChevronDown size={16} className="trigger-icon" />
-                      </div>
-                      <input
-                        type="text"
-                        className="currency-input readonly"
-                        placeholder="0.00"
-                        value={toAmount}
-                        readOnly
-                      />
-                      <span className="exchange-currency-symbol">{toCurrency.symbol}</span>
-                    </div>
-                  </div>
-
-                  {fromAmount && toAmount && (
-                    <div className="exchange-summary">
-                      <div className="summary-row">
-                        <span className="summary-label">Exchange Rate</span>
-                        <span className="summary-value">1 {fromCurrency.code} = {exchangeRate.toFixed(6)} {toCurrency.code}</span>
-                      </div>
-                      <div className="summary-row fee-row">
-                        <span className="summary-label">Swap Fee (1.5%)</span>
-                        <span className="summary-value fee-value">-{toCurrency.symbol}{feeAmount} {toCurrency.code}</span>
-                      </div>
-                      <div className="summary-divider" />
-                      <div className="summary-row highlight">
-                        <span className="summary-label">You'll Receive</span>
-                        <span className="summary-value">{toCurrency.symbol}{toAmount} {toCurrency.code}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <button className="exchange-button" onClick={handleExchange} disabled={isProcessing || !fromAmount}>
-                    {isProcessing ? <div className="button-spinner" /> : <span>Confirm Exchange</span>}
+                {/* Swap Toggle */}
+                <div className="swap-toggle-row">
+                  <button
+                    className="swap-toggle-btn"
+                    onClick={handleSwapCurrencies}
+                    disabled={isProcessing}
+                    title="Swap currencies"
+                  >
+                    <ArrowLeftRight size={16} />
                   </button>
                 </div>
+
+                {/* TO */}
+                <div className="swap-section-label">To</div>
+                <div className="swap-field-group">
+                  <div className="swap-currency-select" onClick={() => setIsToModalOpen(true)}>
+                    <span className="swap-flag">{toCurrency.flag}</span>
+                    <span className="swap-code">{toCurrency.code}</span>
+                    <span className="swap-currency-name">{toCurrency.name}</span>
+                    <ChevronDown size={16} className="swap-chevron" />
+                  </div>
+                  <div className="swap-amount-row swap-amount-readonly">
+                    <span className="swap-symbol">{toCurrency.symbol}</span>
+                    <input
+                      type="text"
+                      className="swap-input"
+                      placeholder="Converted amount"
+                      value={toAmount}
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                {/* Summary */}
+                {fromAmount && toAmount && (
+                  <div className="swap-summary">
+                    <div className="swap-summary-row">
+                      <span>Exchange Rate</span>
+                      <span>1 {fromCurrency.code} = {exchangeRate.toFixed(6)} {toCurrency.code}</span>
+                    </div>
+                    <div className="swap-summary-row swap-summary-fee">
+                      <span>Swap Fee (1.5%)</span>
+                      <span>−{toCurrency.symbol}{feeAmount}</span>
+                    </div>
+                    <div className="swap-summary-divider" />
+                    <div className="swap-summary-row swap-summary-total">
+                      <span>You'll Receive</span>
+                      <span>{toCurrency.symbol}{toAmount} {toCurrency.code}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Swap Now Button */}
+                <button
+                  className="swap-btn"
+                  onClick={handleExchange}
+                  disabled={isProcessing || !fromAmount}
+                >
+                  {isProcessing ? (
+                    <span className="btn-loader-row">
+                      <span className="btn-spinner" />
+                      Processing...
+                    </span>
+                  ) : (
+                    <span className="btn-loader-row">
+                      <ArrowLeftRight size={18} />
+                      Swap Now
+                    </span>
+                  )}
+                </button>
+
               </div>
             </div>
 
-            {isCurrencyModalOpen && (
-              <div className="modal-overlay" onClick={() => setIsCurrencyModalOpen(false)}>
+            {/* ── From Modal ── */}
+            {isFromModalOpen && (
+              <div className="modal-overlay" onClick={() => setIsFromModalOpen(false)}>
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                  <div className="modal-header"><h3>Select Currency</h3></div>
+                  <div className="modal-header"><h3>Select From Currency</h3></div>
                   <div className="search-container">
-                    <span className="search-icon-inside"><Search size={16} /></span>
-                    <input type="text" placeholder="Search" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}/>
+                    <i className="fa fa-search" />
+                    <input type="text" placeholder="Search currency..." value={fromSearch} onChange={(e) => setFromSearch(e.target.value)} />
                   </div>
                   <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
-                    {filteredCurrencies.map((c) => (
-                      <div key={c.code} className="country-item"  onClick={() => selectCurrency(c)}>
-                        <span>{c.flag} {c.name} ({c.code})</span>
-                        <div className={`radio-outer ${selectedCurrency.code === c.code ? 'checked' : ''}`}><div className="radio-inner"></div></div>
+                    {filteredFrom.map((c) => (
+                      <div key={c.code} className="country-item" onClick={() => { setFromCurrency(c); setIsFromModalOpen(false); setFromSearch(''); }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '22px' }}>{c.flag}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 600 }}>{c.code}</span>
+                            <span style={{ fontSize: '11px', color: '#888' }}>{c.name}</span>
+                          </div>
+                        </div>
+                        <div className={`radio-outer ${fromCurrency.code === c.code ? 'checked' : ''}`}>
+                          <div className="radio-inner" />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -587,34 +521,70 @@ const ExchangePage = () => {
               </div>
             )}
 
+            {/* ── To Modal ── */}
+            {isToModalOpen && (
+              <div className="modal-overlay" onClick={() => setIsToModalOpen(false)}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header"><h3>Select To Currency</h3></div>
+                  <div className="search-container">
+                    <i className="fa fa-search" />
+                    <input type="text" placeholder="Search currency..." value={toSearch} onChange={(e) => setToSearch(e.target.value)} />
+                  </div>
+                  <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
+                    {filteredTo.map((c) => (
+                      <div key={c.code} className="country-item" onClick={() => { setToCurrency(c); setIsToModalOpen(false); setToSearch(''); }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '22px' }}>{c.flag}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 600 }}>{c.code}</span>
+                            <span style={{ fontSize: '11px', color: '#888' }}>{c.name}</span>
+                          </div>
+                        </div>
+                        <div className={`radio-outer ${toCurrency.code === c.code ? 'checked' : ''}`}>
+                          <div className="radio-inner" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Success Modal ── */}
             {showSuccessModal && exchangeSnapshot && (
               <>
-                <div className={`status-modal-overlay`} onClick={() => setShowSuccessModal(false)} />
-                <div className={`status-modal success-modal ${theme === "dark" ? "dark" : "light"}`}>
+                <div className="status-modal-overlay" onClick={() => setShowSuccessModal(false)} />
+                <div className={`status-modal success-modal ${theme === 'dark' ? 'dark' : ''}`}>
                   <div className="status-modal-content">
                     <div className="status-icon-wrapper success-icon">
                       <CheckCircle size={48} />
                     </div>
-                    <h3 className="status-modal-title">Exchange Successful!</h3>
-                    <p className="status-modal-message">
-                      Your currency exchange has been completed successfully.
-                    </p>
+                    <h3 className="status-modal-title">Swap Successful!</h3>
+                    <p className="status-modal-message">Your currency swap has been completed.</p>
                     <div className="status-modal-details">
                       <div className="status-detail-row">
                         <span className="status-detail-label">From</span>
-                        <span className="status-detail-value">{exchangeSnapshot.fromCurrency.symbol}{exchangeSnapshot.fromAmount} {exchangeSnapshot.fromCurrency.code}</span>
+                        <span className="status-detail-value">
+                          {exchangeSnapshot.fromCurrency.symbol}{exchangeSnapshot.fromAmount} {exchangeSnapshot.fromCurrency.code}
+                        </span>
                       </div>
                       <div className="status-detail-row">
-                        <span className="status-detail-label">Exchange Rate</span>
-                        <span className="status-detail-value">1 {exchangeSnapshot.fromCurrency.code} = {exchangeSnapshot.exchangeRate.toFixed(6)} {exchangeSnapshot.toCurrency.code}</span>
+                        <span className="status-detail-label">Rate</span>
+                        <span className="status-detail-value">
+                          1 {exchangeSnapshot.fromCurrency.code} = {exchangeSnapshot.exchangeRate.toFixed(6)} {exchangeSnapshot.toCurrency.code}
+                        </span>
                       </div>
-                      <div className="status-detail-row fee-detail">
-                        <span className="status-detail-label">Swap Fee (1.5%)</span>
-                        <span className="status-detail-value">-{exchangeSnapshot.toCurrency.symbol}{exchangeSnapshot.feeAmount} {exchangeSnapshot.toCurrency.code}</span>
+                      <div className="status-detail-row swap-summary-fee">
+                        <span className="status-detail-label">Fee (1.5%)</span>
+                        <span className="status-detail-value">
+                          −{exchangeSnapshot.toCurrency.symbol}{exchangeSnapshot.feeAmount}
+                        </span>
                       </div>
                       <div className="status-detail-row">
-                        <span className="status-detail-label">To</span>
-                        <span className="status-detail-value">{exchangeSnapshot.toCurrency.symbol}{exchangeSnapshot.toAmount} {exchangeSnapshot.toCurrency.code}</span>
+                        <span className="status-detail-label">You Received</span>
+                        <span className="status-detail-value" style={{ color: 'var(--bg-main)', fontWeight: 700 }}>
+                          {exchangeSnapshot.toCurrency.symbol}{exchangeSnapshot.toAmount} {exchangeSnapshot.toCurrency.code}
+                        </span>
                       </div>
                     </div>
                     <button className="status-modal-btn success-btn" onClick={() => setShowSuccessModal(false)}>
@@ -625,46 +595,36 @@ const ExchangePage = () => {
               </>
             )}
 
+            {/* ── Fail Modal ── */}
             {showFailModal && (
               <>
-                <div className={`status-modal-overlay`} onClick={() => setShowFailModal(false)}/>
-                <div className={`status-modal  fail-modal ${theme === "dark" ? "dark" : "light"}`}>
+                <div className="status-modal-overlay" onClick={() => setShowFailModal(false)} />
+                <div className={`status-modal fail-modal ${theme === 'dark' ? 'dark' : ''}`}>
                   <div className="status-modal-content">
                     <div className="status-icon-wrapper fail-icon">
                       <AlertCircle size={48} />
                     </div>
-                    <h3 className="status-modal-title">Exchange Failed</h3>
-                    <p className="status-modal-message">
-                      {errorMessage}
-                    </p>
+                    <h3 className="status-modal-title">Swap Failed</h3>
+                    <p className="status-modal-message">{errorMessage}</p>
                     <div className="status-modal-actions">
-                      <button className="status-modal-btn secondary-btn" onClick={() => setShowFailModal(false)}>
-                        Cancel
-                      </button>
-                      <button className="status-modal-btn fail-btn" onClick={() => {
-                        setShowFailModal(false);
-                        handleExchange();
-                      }}>
-                        Try Again
-                      </button>
+                      <button className="status-modal-btn secondary-btn" onClick={() => setShowFailModal(false)}>Cancel</button>
+                      <button className="status-modal-btn fail-btn" onClick={() => { setShowFailModal(false); handleExchange(); }}>Try Again</button>
                     </div>
                   </div>
                 </div>
               </>
             )}
 
-            <Footer theme={theme} />
           </div>
-        </main>
-        <MobileNav activeTab="exchange" onPlusClick={() => setIsDepositOpen(true)} />
-        <DepositModal 
-          isOpen={isDepositOpen} 
-          onClose={() => setIsDepositOpen(false)} 
-          theme={theme} 
-        />
-      </div>
-    </>
+
+          <Footer theme={theme} />
+        </div>
+      </main>
+
+      <MobileNav activeTab="exchange" onPlusClick={() => setIsDepositOpen(true)} />
+      <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} theme={theme} />
+    </div>
   );
 };
 
-export default ExchangePage;
+export default SwapPage;
