@@ -5,7 +5,7 @@ export const filters = [
   { id: 'tv', label: 'Cable TV' },
   { id: 'electricity', label: 'Electricity' },
   { id: 'betting', label: 'Betting' },
-  { id: 'epin', label: 'E-Pin' },
+  { id: 'shopping', label: 'Shopping' },
 ];
 
 export const services = [
@@ -13,37 +13,43 @@ export const services = [
     id: 1,
     name: 'Airtime',
     category: 'airtime',
-    color: 'green'
+    color: 'green',
+    href: '/services/bills/airtime'       // ← add this
   },
   {
     id: 2,
     name: 'Betting',
     category: 'betting',
-    color: 'blue'
+    color: 'blue',
+    href: '/services/bills/betting'       // ← add this
   },
   {
     id: 3,
     name: 'Cable TV',
     category: 'tv',
-    color: 'cyan'
+    color: 'cyan',
+    href: '/services/bills/cabletv'      // ← add this
   },
   {
     id: 4,
     name: 'Data',
     category: 'data',
-    color: 'black'
+    color: 'black',
+    href: '/services/bills/data'          // ← add this
   },
   {
     id: 5,
-    name: 'EPin',
-    category: 'epin',
-    color: 'purple'
+    name: 'Shopping',
+    category: 'shopping',
+    color: 'purple',
+    href: '/services/bills/shopping'          // ← add this
   },
   {
     id: 6,
     name: 'Electricity',
     category: 'electricity',
-    color: 'orange'
+    color: 'green',
+    href: '/services/bills/electricity'   // ← add this
   }
 ];
 
