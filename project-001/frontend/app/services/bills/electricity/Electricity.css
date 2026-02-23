@@ -660,7 +660,7 @@
   object-fit: contain;
 }
 
-.modal-overlay {
+.eletricity-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
@@ -671,7 +671,7 @@
   font-family: "Karla", sans-serif !important;
 }
 
-.modal-content {
+.eletricity-modal-content {
   background: #fff;
   width: 22rem;
   height: 30rem;
@@ -683,14 +683,14 @@
   max-height: 100%; 
 }
 
-.modal-header h3 {
+.eletricity-modal-header h3 {
   font-size: 15px;
   margin: 0 0 16px 0;
   color: #333;
   font-family: "Karla", sans-serif !important;
 }
 
-.search-container {
+.eletricity-search-container {
   position: sticky;
   top: 0;
   background: white;
@@ -700,38 +700,38 @@
   border-bottom: 1px solid #f8f9fa;
 }
 
-.search-container i {
+.eletricity-search-container i {
   position: absolute;
   left: 12px;
   top: 15px;
   color: var(--bg-main);
 }
 
-.search-container input {
-    width: 100%;
-    padding: 5px 5px 5px 36px;
-    border: 1px solid var(--bg-main);
-    border-radius: 8px;
-    font-size: 13px;
-    color: #888c92;
-    font-family: "Karla", sans-serif;
-    box-sizing: border-box; 
-    outline: none;
-    height:45px
+.eletricity-search-container input {
+  width: 100%;
+  padding: 5px 5px 5px 36px;
+  border: 1px solid var(--bg-main);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #888c92;
+  font-family: "Karla", sans-serif;
+  box-sizing: border-box; 
+  outline: none;
+  height:45px
 }
 
-.search-container input:focus {
+.eletricity-search-container input:focus {
   border: 1px solid var(--bg-main);
   outline: none;
 }
 
-.country-list {
+.eletricity-country-list {
   display: block;
   max-height: 400px; 
   overflow-y: auto; 
   padding-right: 8px;
 }
-.country-item {
+.eletricity-country-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -743,7 +743,7 @@
   font-family: "Karla", sans-serif !important;
 }
 
-.radio-outer {
+.eletricity-radio-outer {
   width: 20px;
   height: 20px;
   border: 2px solid #ddd;
@@ -754,11 +754,11 @@
   flex-shrink: 0;
 }
 
-.radio-outer.checked {
+.eletricity-radio-outer.checked {
   border-color: var(--bg-main);
 }
 
-.radio-inner {
+.eletricity-radio-inner {
   width: 10px;
   height: 10px;
   background: var(--bg-main);
@@ -770,27 +770,27 @@
   display: block;
 }
 
-.country-list::-webkit-scrollbar {
+.eletricity-country-list::-webkit-scrollbar {
   width: 2px !important;
 }
 
-.country-list::-webkit-scrollbar-track {
+.eletricity-country-list::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 10px;
 }
 
-.country-list::-webkit-scrollbar-thumb {
+.eletricity-country-list::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 10px;
   transition: background 0.3s ease;
 }
 
-.country-list.is-scrolling::-webkit-scrollbar-thumb,
-.country-list::-webkit-scrollbar-thumb:hover {
+.eletricity-country-list.is-scrolling::-webkit-scrollbar-thumb,
+.eletricity-country-list::-webkit-scrollbar-thumb:hover {
   background: var(--bg-main);
 }
 
-.no-results {
+.eletricity-no-results {
   text-align: center;
   padding: 20px;
   color: #adb5bd;
@@ -798,17 +798,17 @@
 }
 
 @media (max-width: 992px) {
-    .modal-overlay {
+    .eletricity-modal-overlay {
         padding: 20px;
     }
 }
 .subtitle-header{
-    font-size: 10px;
-    justify-content: center;
-    justify-items: center;
-    font-weight: 600;
-    font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    color:#333;
+  font-size: 10px;
+  justify-content: center;
+  justify-items: center;
+  font-weight: 600;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color:#333;
 }
 
 .platform-card-active .platform-logo-img {

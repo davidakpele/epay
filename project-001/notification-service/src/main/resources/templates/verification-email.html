@@ -3,318 +3,256 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>ePay – Verify Your Email Address</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Resets — must stay in <head> */
+    body, table, td, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; display: block; }
+    body { margin: 0 !important; padding: 0 !important; background-color: #f0f4f1; }
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: #eef0f2;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 48px 16px;
+    /* Hover states — only functional in <head> */
+    .btn-verify:hover { background-color: #145c2e !important; }
+    .social-icon:hover { background-color: #145c2e !important; transform: translateY(-2px); }
+    .ignore-link:hover { color: #374151 !important; border-bottom-color: #9ca3af !important; }
+
+    /* Animations — only for webmail / browser previews */
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
-    /* ── Brand ── */
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 32px;
-      animation: slideDown .6s cubic-bezier(.22,1,.36,1) both;
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
-    .brand-logo {
-      width: 44px; height: 44px;
-      background: ##166701;
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 14px rgba(26,77,46,.35);
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.4); }
+      to   { opacity: 1; transform: scale(1); }
     }
-
-    .brand-logo svg {
-      width: 22px; height: 22px;
-      fill: none; stroke: #fff;
-      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
     }
-
-    .brand-name {
-      font-family: 'DM Serif Display', serif;
-      font-size: 28px;
-      color: ##166701;
-      letter-spacing: -.5px;
-    }
-
-    /* ── Card ── */
-    .card {
-      background: #ffffff;
-      border-radius: 20px;
-      width: 100%;
-      max-width: 480px;
-      padding: 40px 36px 36px;
-      box-shadow: 0 4px 32px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
-      animation: rise .7s cubic-bezier(.22,1,.36,1) .1s both;
-    }
-
-    /* ── Check icon ── */
-    .icon-wrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .icon-circle {
-      width: 72px; height: 72px;
-      background: #e8f5ee;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      animation: popIn .5s cubic-bezier(.34,1.56,.64,1) .35s both;
-      box-shadow: 0 0 0 8px rgba(232,245,238,.5);
-    }
-
-    .icon-circle svg {
-      width: 30px; height: 30px;
-      stroke: #2d7a4f;
-      stroke-width: 2.8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
+    .brand-anim   { animation: slideDown .6s cubic-bezier(.22,1,.36,1) both; }
+    .card-anim    { animation: rise .7s cubic-bezier(.22,1,.36,1) .1s both; }
+    .icon-anim    { animation: popIn .5s cubic-bezier(.34,1.56,.64,1) .35s both; }
+    .check-anim   {
       stroke-dasharray: 40;
       stroke-dashoffset: 40;
       animation: drawCheck .4s ease-out .75s forwards;
     }
 
-    /* ── Heading ── */
-    .heading {
-      font-family: 'DM Serif Display', serif;
-      font-size: 26px;
-      color: ##166701;
-      text-align: center;
-      margin-bottom: 24px;
-      line-height: 1.2;
-    }
-
-    /* ── Body text ── */
-    .body-text {
-      font-size: 14.5px;
-      color: #374151;
-      line-height: 1.7;
-      margin-bottom: 16px;
-    }
-
-    /* ── Verify button ── */
-    .btn-wrap {
-      margin: 28px 0;
-    }
-
-    .btn {
-      display: block;
-      width: 100%;
-      background: ##166701;
-      color: #fff;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      text-align: center;
-      padding: 16px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      letter-spacing: .02em;
-      position: relative;
-      overflow: hidden;
-      transition: transform .15s, box-shadow .15s;
-      box-shadow: 0 4px 16px rgba(26,77,46,.28);
-      text-decoration: none;
-    }
-
-    .btn::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(to right, transparent, rgba(255,255,255,.08), transparent);
-      transform: translateX(-100%);
-      transition: transform .45s ease;
-    }
-
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(26,77,46,.35); }
-    .btn:hover::after { transform: translateX(100%); }
-    .btn:active { transform: translateY(0); }
-
-    /* ── Ignore note ── */
-    .ignore-note {
-      font-size: 14px;
-      color: #6b7280;
-      line-height: 1.65;
-      margin-bottom: 28px;
-    }
-
-    .ignore-note a {
-      color: #9ca3af;
-      text-decoration: none;
-      border-bottom: 1px solid #e5e7eb;
-      transition: color .2s, border-color .2s;
-    }
-
-    .ignore-note a:hover {
-      color: #6b7280;
-      border-color: #9ca3af;
-    }
-
-    /* ── Divider ── */
-    .divider { height: 1px; background: #f3f4f6; margin: 0 0 24px; }
-
-    /* ── Support note ── */
-    .support-note {
-      font-size: 14px;
-      color: #6b7280;
-      line-height: 1.65;
-      margin-bottom: 20px;
-    }
-
-    /* ── Thank you ── */
-    .thankyou {
-      text-align: center;
-      font-weight: 700;
-      font-size: 15px;
-      color: ##166701;
-      margin-bottom: 20px;
-    }
-
-    /* ── Socials ── */
-    .socials {
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-
-    .social-icon {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: #2d7a4f;
-      display: flex; align-items: center; justify-content: center;
-      color: #fff;
-      transition: background .2s, transform .2s;
-      cursor: pointer;
-    }
-
-    .social-icon:hover {
-      background: ##166701;
-      transform: translateY(-2px);
-    }
-
-    .social-icon svg { width: 15px; height: 15px; fill: currentColor; }
-
-    /* ── Footer ── */
-    .footer-contact {
-      text-align: center;
-      font-size: 12px;
-      color: #9ca3af;
-      line-height: 1.8;
-    }
-
-    .footer-contact span { color: ##166701; font-weight: 700; }
-
-    /* ── Animations ── */
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(30px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(.4); }
-      to   { opacity: 1; transform: scale(1); }
-    }
-
-    @keyframes drawCheck {
-      to { stroke-dashoffset: 0; }
+    /* Mobile */
+    @media only screen and (max-width: 520px) {
+      .email-wrapper { padding: 24px 12px !important; }
+      .card-td       { padding: 32px 20px 28px !important; }
+      .heading       { font-size: 22px !important; }
+      .btn-verify    { font-size: 14px !important; padding: 14px !important; }
     }
   </style>
 </head>
-<body>
+<body style="margin:0;padding:0;background-color:#f0f4f1;font-family:'DM Sans',Arial,sans-serif;">
 
-  <!-- Brand -->
-  <div class="brand">
-    <div class="brand-logo">
-      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
-    </div>
-    <div class="brand-name">ePay</div>
-  </div>
+<!-- Page wrapper -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color:#f0f4f1;min-height:100vh;">
+  <tr>
+    <td align="center" class="email-wrapper" style="padding:48px 16px;">
 
-  <!-- Card -->
-  <div class="card">
+      <!-- ══ Brand ══ -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+             class="brand-anim" style="margin-bottom:28px;">
+        <tr>
+          <!-- Logo box -->
+          <td style="padding-right:10px;vertical-align:middle;">
+            <table role="presentation" width="44" height="44" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" valign="middle"
+                    style="width:44px;height:44px;background-color:#166701;border-radius:12px;box-shadow:0 4px 14px rgba(22,103,1,.35);">
+                  <!-- Card / payment icon -->
+                  <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSIzIiB5PSI1IiB3aWR0aD0iMTgiIGhlaWdodD0iMTQiIHJ4PSIyIi8+PHBhdGggZD0iTTMgMTBoMTgiLz48L3N2Zz4="
+                       width="22" height="22" alt="ePay" style="display:block;">
+                </td>
+              </tr>
+            </table>
+          </td>
+          <!-- Brand name -->
+          <td style="vertical-align:middle;">
+            <span style="font-family:'DM Serif Display',Georgia,serif;font-size:28px;color:#166701;letter-spacing:-0.5px;line-height:1;">ePay</span>
+          </td>
+        </tr>
+      </table>
 
-    <!-- Check icon -->
-    <div class="icon-wrap">
-      <div class="icon-circle">
-        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-    </div>
+      <!-- ══ Card ══ -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+             width="100%" style="max-width:480px;" class="card-anim">
+        <tr>
+          <td class="card-td"
+              style="background-color:#ffffff;border-radius:20px;padding:40px 36px 36px;box-shadow:0 4px 32px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);">
 
-    <!-- Heading -->
-    <h1 class="heading">Verify Your Email Address</h1>
+            <!-- ── Check icon ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td align="center" style="padding-bottom:22px;">
+                  <div class="icon-anim"
+                       style="display:inline-block;width:72px;height:72px;background-color:#e8f5ee;border-radius:50%;box-shadow:0 0 0 8px rgba(232,245,238,0.55);">
+                    <table role="presentation" width="72" height="72" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" valign="middle"
+                            style="width:72px;height:72px;background-color:#e8f5ee;border-radius:50%;">
+                          <!-- Animated checkmark for webmail; static fallback img for Outlook -->
+                          <!--[if !mso]><!-->
+                          <svg viewBox="0 0 24 24" width="30" height="30"
+                               fill="none" stroke="#2d7a4f" stroke-width="2.8"
+                               stroke-linecap="round" stroke-linejoin="round"
+                               style="display:block;margin:0 auto;">
+                            <polyline class="check-anim" points="20 6 9 17 4 12"/>
+                          </svg>
+                          <!--<![endif]-->
+                          <!--[if mso]>
+                          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmQ3YTRmIiBzdHJva2Utd2lkdGg9IjIuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSIyMCA2IDkgMTcgNCAxMiIvPjwvc3ZnPg=="
+                               width="30" height="30" alt="verified">
+                          <![endif]-->
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
 
-    <!-- Body -->
-    <p class="body-text">Hi <span th:text="${username}">David</span>,</p>
+            <!-- ── Heading ── -->
+            <h1 class="heading"
+                style="font-family:'DM Serif Display',Georgia,serif;font-size:26px;color:#166701;text-align:center;margin:0 0 22px;line-height:1.2;font-weight:400;">
+              Verify Your Email Address
+            </h1>
 
-    <p class="body-text" th:text="${content}">
-      Thank you for signing up with ePay!
-    </p>
+            <!-- ── Greeting ── -->
+            <p style="font-size:14.5px;color:#374151;line-height:1.7;margin:0 0 12px;font-family:'DM Sans',Arial,sans-serif;">
+              Hi <span th:text="${username}">David</span>,
+            </p>
 
-    <p class="body-text">
-      To complete your registration, click the button below.
-    </p>
+            <!-- ── Body copy ── -->
+            <p style="font-size:14.5px;color:#374151;line-height:1.7;margin:0 0 12px;font-family:'DM Sans',Arial,sans-serif;"
+               th:text="${content}">
+              Thank you for signing up with ePay! We're excited to have you on board.
+            </p>
 
-    <!-- CTA -->
-    <div class="btn-wrap">
-      <a th:href="${link}" href="#" class="btn">Verify Email Now</a>
-    </div>
+            <p style="font-size:14.5px;color:#374151;line-height:1.7;margin:0 0 28px;font-family:'DM Sans',Arial,sans-serif;">
+              To complete your registration, please click the button below to verify your email address.
+            </p>
 
-    <!-- Ignore note -->
-    <p class="ignore-note">
-      If you did not sign up with ePay, please <a href="#">ignore this email</a>.
-    </p>
+            <!-- ── CTA button ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="margin-bottom:24px;">
+              <tr>
+                <td align="center">
+                  <a th:href="${link}" href="#" class="btn-verify"
+                     style="display:block;background-color:#166701;color:#ffffff;font-family:'DM Sans',Arial,sans-serif;font-size:15px;font-weight:600;text-align:center;padding:16px 24px;border-radius:12px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(22,103,1,.3);transition:background-color .2s;">
+                    Verify Email Now
+                  </a>
+                </td>
+              </tr>
+            </table>
 
-    <div class="divider"></div>
+            <!-- ── Ignore note ── -->
+            <p style="font-size:14px;color:#6b7280;line-height:1.65;margin:0 0 28px;font-family:'DM Sans',Arial,sans-serif;">
+              If you did not sign up with ePay, please
+              <a href="#" class="ignore-link"
+                 style="color:#9ca3af;text-decoration:none;border-bottom:1px solid #e5e7eb;transition:color .2s,border-color .2s;">
+                ignore this email
+              </a>.
+              This link will expire in <strong style="color:#374151;">24 hours</strong>.
+            </p>
 
-    <!-- Support -->
-    <p class="support-note">
-      If you have any questions or need assistance, please don't
-      hesitate to contact our support team.
-    </p>
+            <!-- ── Divider ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="margin-bottom:24px;">
+              <tr>
+                <td style="height:1px;background-color:#f3f4f6;font-size:0;line-height:0;">&nbsp;</td>
+              </tr>
+            </table>
 
-    <p class="thankyou">Thank you for using ePay!</p>
+            <!-- ── Support note ── -->
+            <p style="font-size:14px;color:#6b7280;line-height:1.65;margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;">
+              If you have any questions or need assistance, please don't hesitate to contact our support team.
+            </p>
 
-    <!-- Socials -->
-    <div class="socials">
-      <div class="social-icon">
-        <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-      </div>
-      <div class="social-icon">
-        <svg viewBox="0 0 24 24"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
-      </div>
-      <div class="social-icon">
-        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-      </div>
-      <div class="social-icon">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-      </div>
-    </div>
+            <!-- ── Thank you ── -->
+            <p style="text-align:center;font-weight:700;font-size:15px;color:#166701;margin:0 0 22px;font-family:'DM Sans',Arial,sans-serif;">
+              Thank you for using ePay!
+            </p>
 
-    <div class="footer-contact">
-      <span>ePay</span> &nbsp;support@epay.com<br>
-      +1 (234) 567-890
-    </div>
+            <!-- ── Socials ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                   align="center" style="margin:0 auto 18px;">
+              <tr>
+                <!-- Facebook -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-icon"
+                     style="display:inline-block;width:36px;height:36px;background-color:#2d7a4f;border-radius:50%;text-align:center;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle" style="background-color:#2d7a4f;border-radius:50%;width:36px;height:36px;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTE4IDJoLTNhNSA1IDAgMCAwLTUgNXYzSDd2NGgzdjhoNHYtOGgzbDEtNGgtNFY3YTEgMSAwIDAgMSAxLTFoM3oiLz48L3N2Zz4="
+                             width="15" height="15" alt="Facebook" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+                <!-- Twitter / X -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-icon"
+                     style="display:inline-block;width:36px;height:36px;background-color:#2d7a4f;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle" style="background-color:#2d7a4f;border-radius:50%;width:36px;height:36px;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTIyIDRzLS43IDIuMS0yIDMuNGMxLjYgMTAtOS40IDE3LjMtMTggMTEuNiAyLjIuMSA0LjQtLjYgNi0yQzMgMTUuNS41IDkuNiAzIDVjMi4yIDIuNiA1LjYgNC4xIDkgNC0uOS00LjIgNC02LjYgNy0zLjggMS4xIDAgMy0xLjIgMy0xLjJ6Ii8+PC9zdmc+"
+                             width="15" height="15" alt="Twitter" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+                <!-- Instagram -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-icon"
+                     style="display:inline-block;width:36px;height:36px;background-color:#2d7a4f;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle" style="background-color:#2d7a4f;border-radius:50%;width:36px;height:36px;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiByeD0iNSIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiIGZpbGw9IiMyZDdhNGYiLz48Y2lyY2xlIGN4PSIxNy41IiBjeT0iNi41IiByPSIxIiBmaWxsPSIjMmQ3YTRmIi8+PC9zdmc+"
+                             width="15" height="15" alt="Instagram" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+                <!-- Website -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-icon"
+                     style="display:inline-block;width:36px;height:36px;background-color:#2d7a4f;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle" style="background-color:#2d7a4f;border-radius:50%;width:36px;height:36px;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiLz48bGluZSB4MT0iMiIgeTE9IjEyIiB4Mj0iMjIiIHkyPSIxMiIvPjxwYXRoIGQ9Ik0xMiAyYTE1LjMgMTUuMyAwIDAgMSA0IDEwIDE1LjMgMTUuMyAwIDAgMS00IDEwIDE1LjMgMTUuMyAwIDAgMS00LTEwIDE1LjMgMTUuMyAwIDAgMSA0LTEweiIvPjwvc3ZnPg=="
+                             width="15" height="15" alt="Website" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+              </tr>
+            </table>
 
-  </div>
+            <!-- ── Footer contact ── -->
+            <p style="text-align:center;font-size:12px;color:#9ca3af;line-height:1.8;margin:0;font-family:'DM Sans',Arial,sans-serif;">
+              <strong style="color:#166701;font-weight:700;">ePay</strong>&nbsp;&nbsp;support@epay.com<br>
+              +1 (234) 567-890
+            </p>
+
+          </td>
+        </tr>
+      </table>
+      <!-- /Card -->
+
+    </td>
+  </tr>
+</table>
 
 </body>
 </html>

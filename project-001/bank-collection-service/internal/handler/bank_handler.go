@@ -11,9 +11,9 @@ import (
 	"io"
 	"net/http"
 	"os"
+
 	"github.com/gin-gonic/gin"
 )
-
 
 type BankHandler struct {
 	service         services.BankService
@@ -29,7 +29,6 @@ func NewBankHandler(service services.BankService) *BankHandler {
 	}
 }
 
-// Create a new bank record
 func (h *BankHandler) CreateBank(c *gin.Context, bank *model.UserBankList) {
 	if bank.BankCode == "" {
 		c.JSON(http.StatusBadRequest, exceptions.ErrorResponse{
@@ -60,7 +59,7 @@ func (h *BankHandler) CreateBank(c *gin.Context, bank *model.UserBankList) {
 		return
 	}
 
-	exists, err := h.service.FindByAccountNumberAndBankCode(bank.AccountNumber, bank.BankCode)
+	exists, err := h.service.FindByAccountNumberAndBankNameForUser(bank.AccountNumber, bank.BankName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, exceptions.ErrorResponse{
 			Message: "Failed to check bank record",
@@ -68,15 +67,15 @@ func (h *BankHandler) CreateBank(c *gin.Context, bank *model.UserBankList) {
 		})
 		return
 	}
-
 	if exists {
 		c.JSON(http.StatusBadRequest, exceptions.ErrorResponse{
-			Message: "Bank with this account number and bank code already exists",
-			Details: "Bank details already been used.",
-			Status: 400,
+			Message: "This bank details is already registered to a user in this platform",
+			Details: "This bank details is already registered to a user in this platform",
+			Status:  400,
 		})
 		return
 	}
+
 	if err := h.service.CreateBank(bank); err != nil {
 		c.JSON(http.StatusInternalServerError, exceptions.ErrorResponse{
 			Message: "Failed to create bank",
@@ -88,11 +87,10 @@ func (h *BankHandler) CreateBank(c *gin.Context, bank *model.UserBankList) {
 	c.JSON(http.StatusCreated, responses.SuccessResponse{
 		Message: "Bank created successfully",
 		Data:    nil,
-		Status: 201,
+		Status:  201,
 	})
 }
 
-// Find bank by ID
 func (h *BankHandler) GetBankById(c *gin.Context, id uint) (*model.UserBankList, error) {
 	if id == 0 {
 		return nil, fmt.Errorf("invalid bank ID")
@@ -163,7 +161,7 @@ func (h *BankHandler) FetchAllBanks() ([]payloads.PayStackBankList, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
-	
+
 	req.Header.Set("Authorization", "Bearer "+h.paystackAPIKey)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -212,39 +210,37 @@ func (h *BankHandler) VerifyInternal(accountNumber string, bankCode string) (*pa
 	return nil, nil
 }
 
-
 func (h *BankHandler) VerifyExternal(accountNumber string, bankCode string) (*payloads.PaystackAccountData, error) {
-    url := fmt.Sprintf("%s/bank/resolve?account_number=%s&bank_code=%s", h.paystackBaseURL, accountNumber, bankCode)
+	url := fmt.Sprintf("%s/bank/resolve?account_number=%s&bank_code=%s", h.paystackBaseURL, accountNumber, bankCode)
 
-    req, err := http.NewRequest("GET", url, nil)
-    if err != nil {
-        return nil, fmt.Errorf("failed to create request: %v", err)
-    }
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
 
-    req.Header.Set("Authorization", "Bearer "+h.paystackAPIKey)
-    req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+h.paystackAPIKey)
+	req.Header.Set("Content-Type", "application/json")
 
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-        return nil, fmt.Errorf("failed to make request: %v", err)
-    }
-    defer resp.Body.Close()
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
 
-    body, err := io.ReadAll(resp.Body)
-    if err != nil {
-        return nil, fmt.Errorf("failed to read response: %v", err)
-    }
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %v", err)
+	}
 
-    var paystackResponse payloads.PaystackAccountResponse
-    if err := json.Unmarshal(body, &paystackResponse); err != nil {
-        return nil, fmt.Errorf("failed to parse response: %v", err)
-    }
+	var paystackResponse payloads.PaystackAccountResponse
+	if err := json.Unmarshal(body, &paystackResponse); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %v", err)
+	}
 
-    if !paystackResponse.Status {
-        return nil, fmt.Errorf("paystack API error: %s", paystackResponse.Message)
-    }
+	if !paystackResponse.Status {
+		return nil, fmt.Errorf("paystack API error: %s", paystackResponse.Message)
+	}
 
-    return &paystackResponse.Data, nil
+	return &paystackResponse.Data, nil
 }
-

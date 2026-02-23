@@ -162,21 +162,21 @@ const BettingPage = () => {
           <div className="main-container">
 
             {/* ── Breadcrumb ── */}
-            <div className="airtime-breadcrumb">
+            <div className="betting-breadcrumb">
               <Link href="/dashboard" className="breadcrumb-link">Dashboard</Link>
               <ChevronRight size={14} className="breadcrumb-sep" />
               <span className="breadcrumb-current">Betting</span>
             </div>
 
             {/* ── Page Title ── */}
-            <h1 className="airtime-page-title">Fund Betting Account</h1>
+            <h1 className="betting-page-title">Fund Betting Account</h1>
 
             {/* ── Main Card ── */}
-            <div className="airtime-card">
+            <div className="betting-card">
 
               {/* Left — Illustration */}
-              <div className="airtime-illustration-col">
-                <div className="airtime-illustration-img">
+              <div className="betting-illustration-col">
+                <div className="betting-illustration-img">
                   <Image
                     src="/assets/images/betting-background.png"
                     alt="Fund Betting Account"
@@ -184,7 +184,7 @@ const BettingPage = () => {
                     height={300}
                     priority
                   />
-                  <div className="airtime-promo-banner">
+                  <div className="betting-promo-banner">
                     <span>🏆</span>
                     <div>
                       <p className="promo-text">
@@ -197,14 +197,14 @@ const BettingPage = () => {
               </div>
 
               {/* Right — Form */}
-              <div className="airtime-form-col">
+              <div className="betting-form-col">
 
                 {/* Select Provider */}
-                <div className="airtime-field">
-                  <label className="airtime-label">
+                <div className="betting-field">
+                  <label className="betting-label">
                     <Trophy size={14} /> Select Betting Provider
                   </label>
-                  <div className="airtime-select-box" onClick={() => setIsModalOpen(true)}>
+                  <div className="betting-select-box" onClick={() => setIsModalOpen(true)}>
                     <div
                       className="platform-logo-img"
                       style={{ width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0 }}
@@ -223,13 +223,13 @@ const BettingPage = () => {
                 </div>
 
                 {/* User ID / Account Number */}
-                <div className="airtime-field">
-                  <label className="airtime-label">
+                <div className="betting-field">
+                  <label className="betting-label">
                     <span>🎯</span> User ID / Account Number
                   </label>
                   <input
                     type="text"
-                    className="airtime-input"
+                    className="betting-input"
                     placeholder={`Enter your ${selectedProvider2.name} user ID`}
                     value={recipient}
                     onChange={(e) => setRecipient(e.target.value)}
@@ -242,11 +242,11 @@ const BettingPage = () => {
                 </div>
 
                 {/* Amount */}
-                <div className="airtime-field">
-                  <label className="airtime-label">
+                <div className="betting-field">
+                  <label className="betting-label">
                     <CircleDollarSign size={14} /> Amount
                   </label>
-                  <div className="airtime-quick-amounts">
+                  <div className="betting-quick-amounts">
                     {quickAmounts.map((q) => (
                       <button
                         key={q}
@@ -259,7 +259,7 @@ const BettingPage = () => {
                   </div>
                   <input
                     type="text"
-                    className="airtime-input amount-input"
+                    className="betting-input amount-input"
                     placeholder="Or enter custom amount"
                     value={getFormattedAmount()}
                     onChange={handleAmountChange}
@@ -268,7 +268,7 @@ const BettingPage = () => {
 
                 {/* Fund Button */}
                 <button
-                  className="airtime-buy-btn"
+                  className="betting-buy-btn"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >
@@ -282,7 +282,7 @@ const BettingPage = () => {
                   )}
                 </button>
 
-                <p className="airtime-cashback-note">
+                <p className="betting-cashback-note">
                   Instant funding — available 24/7.{' '}
                   <a href="#">Learn more</a>
                 </p>
@@ -290,7 +290,7 @@ const BettingPage = () => {
             </div>
 
             {/* ── Common Platforms ── */}
-            <div className="airtime-platforms">
+            <div className="betting-platforms">
               <h3 className="platforms-title">Common Platforms</h3>
               <div className="platforms-grid">
                 {BettingProviders.map((provider) => (
@@ -321,10 +321,10 @@ const BettingPage = () => {
 
             {/* ── Provider Modal ── */}
             {isModalOpen && (
-              <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                  <div className="modal-header"><h3>Select Betting Provider</h3></div>
-                  <div className="search-container">
+              <div className="betting-modal-overlay" onClick={() => setIsModalOpen(false)}>
+                <div className="betting-modal-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="betting-modal-header"><h3>Select Betting Provider</h3></div>
+                  <div className="betting-search-container">
                     <i className="fa fa-search" />
                     <input
                       type="text"
@@ -334,7 +334,7 @@ const BettingPage = () => {
                     />
                   </div>
                   <div
-                    className={`country-list ${isScrolling ? 'is-scrolling' : ''}`}
+                    className={`betting-country-list ${isScrolling ? 'is-scrolling' : ''}`}
                     onScroll={handleScroll}
                   >
                     {BettingProviders
@@ -342,7 +342,7 @@ const BettingPage = () => {
                       .map((p) => (
                         <div
                           key={p.id}
-                          className="country-item"
+                          className="betting-country-item"
                           onClick={() => {
                             setSelectedProvider2(p);
                             setSelectedProvider(p.id);
@@ -365,7 +365,7 @@ const BettingPage = () => {
                             </div>
                             <span>{p.name}</span>
                           </div>
-                          <div className={`radio-outer ${selectedProvider2.id === p.id ? 'checked' : ''}`}>
+                          <div className={`betting-radio-outer ${selectedProvider2.id === p.id ? 'checked' : ''}`}>
                             <div className="radio-inner" />
                           </div>
                         </div>

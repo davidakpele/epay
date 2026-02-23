@@ -140,21 +140,21 @@ const CableSubscription = () => {
                 ))}
             </div>
             {/* ── Breadcrumb ── */}
-            <div className="airtime-breadcrumb">
+            <div className="cabletv-breadcrumb">
               <Link href="/dashboard" className="breadcrumb-link">Dashboard</Link>
               <ChevronRight size={14} className="breadcrumb-sep" />
               <span className="breadcrumb-current">Cable TV</span>
             </div>
 
             {/* ── Page Title ── */}
-            <h1 className="airtime-page-title">Cable TV Subscription</h1>
+            <h1 className="cabletv-page-title">Cable TV Subscription</h1>
 
             {/* ── Main Card ── */}
-            <div className="airtime-card">
+            <div className="cabletv-card">
 
               {/* Left — Illustration */}
-              <div className="airtime-illustration-col">
-                <div className="airtime-illustration-img">
+              <div className="cabletv-illustration-col">
+                <div className="cabletv-illustration-img">
                   <Image
                     src="/assets/images/cabletv-banner.png"
                     alt="Cable TV Subscription"
@@ -162,7 +162,7 @@ const CableSubscription = () => {
                     height={300}
                     priority
                   />
-                  <div className="airtime-promo-banner">
+                  <div className="cabletv-promo-banner">
                     <span>🎁</span>
                     <div>
                       <p className="promo-text">
@@ -175,14 +175,14 @@ const CableSubscription = () => {
               </div>
 
               {/* Right — Form */}
-              <div className="airtime-form-col">
+              <div className="cabletv-form-col">
 
                 {/* Select Provider */}
-                <div className="airtime-field">
-                  <label className="airtime-label">
+                <div className="cabletv-field">
+                  <label className="cabletv-label">
                     <Tv size={14} /> Select Provider
                   </label>
-                  <div className="airtime-select-box" onClick={() => setIsModalOpen(true)}>
+                  <div className="cabletv-select-box" onClick={() => setIsModalOpen(true)}>
                     <div
                       className="platform-logo-img"
                       style={{ width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0 }}
@@ -201,11 +201,11 @@ const CableSubscription = () => {
                 </div>
 
                 {/* Select Plan */}
-                <div className="airtime-field">
-                  <label className="airtime-label">
+                <div className="cabletv-field">
+                  <label className="cabletv-label">
                     <CircleDollarSign size={14} /> Select Plan
                   </label>
-                  <div className="airtime-select-box" onClick={() => setIsPlanModalOpen(true)}>
+                  <div className="cabletv-select-box" onClick={() => setIsPlanModalOpen(true)}>
                     <span
                       className="network-name"
                       style={{ color: selectedPlan ? '#333' : '#bbb' }}
@@ -218,13 +218,13 @@ const CableSubscription = () => {
                   </div>
                 </div>
                  {/* Smart Card Number */}
-                <div className="airtime-field">
-                  <label className="airtime-label">
+                <div className="cabletv-field">
+                  <label className="cabletv-label">
                     <span>💳</span> Smart Card / IUC Number
                   </label>
                   <input
                     type="text"
-                    className="airtime-input"
+                    className="cabletv-input"
                     placeholder="Enter smart card number"
                     value={smartCardNumber}
                     onChange={(e) => setSmartCardNumber(e.target.value.replace(/\D/g, ''))}
@@ -238,9 +238,9 @@ const CableSubscription = () => {
 
                 {/* Amount (read-only, populated from plan) */}
                 {selectedPlan && (
-                  <div className="airtime-field">
-                    <label className="airtime-label">Amount</label>
-                    <div className="airtime-input amount-display">
+                  <div className="cabletv-field">
+                    <label className="cabletv-label">Amount</label>
+                    <div className="cabletv-input amount-display">
                       ₦ {selectedPlan.price.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
                     </div>
                   </div>
@@ -248,7 +248,7 @@ const CableSubscription = () => {
 
                 {/* Subscribe Button */}
                 <button
-                  className="airtime-buy-btn"
+                  className="cabletv-buy-btn"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >
@@ -262,7 +262,7 @@ const CableSubscription = () => {
                   )}
                 </button>
 
-                <p className="airtime-cashback-note">
+                <p className="cabletv-cashback-note">
                   Earn up to 3% cashback on subscriptions!{' '}
                   <a href="#">Learn more</a>
                 </p>
@@ -270,7 +270,7 @@ const CableSubscription = () => {
             </div>
 
             {/* ── Common Platforms ── */}
-            <div className="airtime-platforms">
+            <div className="cabletv-platforms">
               <h3 className="platforms-title">Common Platforms</h3>
               <div className="platforms-grid">
                 {CableProviders.map((provider) => (
@@ -302,10 +302,10 @@ const CableSubscription = () => {
 
             {/* ── Provider Modal ── */}
             {isModalOpen && (
-              <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                  <div className="modal-header"><h3>Select Provider</h3></div>
-                  <div className="search-container">
+              <div className="cable-modal-overlay" onClick={() => setIsModalOpen(false)}>
+                <div className="cable-modal-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="cable-modal-header"><h3>Select Provider</h3></div>
+                  <div className="cable-search-container">
                     <i className="fa fa-search" />
                     <input
                       type="text"
@@ -315,7 +315,7 @@ const CableSubscription = () => {
                     />
                   </div>
                   <div
-                    className={`country-list ${isScrolling ? 'is-scrolling' : ''}`}
+                    className={`cable-country-list ${isScrolling ? 'is-scrolling' : ''}`}
                     onScroll={handleScroll}
                   >
                     {CableProviders
@@ -323,7 +323,7 @@ const CableSubscription = () => {
                       .map((p) => (
                         <div
                           key={p.id}
-                          className="country-item"
+                          className="cable-country-item"
                           onClick={() => {
                             setSelectedProvider2(p);
                             setSelectedProvider(p.id);
@@ -347,8 +347,8 @@ const CableSubscription = () => {
                             </div>
                             <span>{p.name}</span>
                           </div>
-                          <div className={`radio-outer ${selectedProvider2.id === p.id ? 'checked' : ''}`}>
-                            <div className="radio-inner" />
+                          <div className={`cable-radio-outer ${selectedProvider2.id === p.id ? 'checked' : ''}`}>
+                            <div className="cable-radio-inner" />
                           </div>
                         </div>
                       ))}
@@ -359,12 +359,12 @@ const CableSubscription = () => {
 
             {/* ── Plan Modal ── */}
             {isPlanModalOpen && (
-              <div className="modal-overlay" onClick={() => setIsPlanModalOpen(false)}>
-                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                  <div className="modal-header">
+              <div className="cable-modal-overlay" onClick={() => setIsPlanModalOpen(false)}>
+                <div className="cable-modal-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="cable-modal-header">
                     <h3>Select Plan — {selectedProvider2.name}</h3>
                   </div>
-                  <div className="search-container">
+                  <div className="cable-search-container">
                     <i className="fa fa-search" />
                     <input
                       type="text"
@@ -374,7 +374,7 @@ const CableSubscription = () => {
                     />
                   </div>
                   <div
-                    className={`country-list ${isScrolling ? 'is-scrolling' : ''}`}
+                    className={`cable-country-list ${isScrolling ? 'is-scrolling' : ''}`}
                     onScroll={handleScroll}
                   >
                     {getPlansForProvider()
@@ -382,7 +382,7 @@ const CableSubscription = () => {
                       .map((p) => (
                         <div
                           key={p.value}
-                          className="country-item"
+                          className="cable-country-item"
                           onClick={() => {
                             setSelectedPlan(p);
                             setIsPlanModalOpen(false);
@@ -395,8 +395,8 @@ const CableSubscription = () => {
                               ₦{p.price.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
                             </span>
                           </div>
-                          <div className={`radio-outer ${selectedPlan?.value === p.value ? 'checked' : ''}`}>
-                            <div className="radio-inner" />
+                          <div className={`cable-radio-outer ${selectedPlan?.value === p.value ? 'checked' : ''}`}>
+                            <div className="cable-radio-inner" />
                           </div>
                         </div>
                       ))}

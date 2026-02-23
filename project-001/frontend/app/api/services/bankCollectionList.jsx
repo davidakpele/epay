@@ -30,7 +30,8 @@ export const bankCollectionService = {
     
     // Delete bank collection by ID
     delete: (id) => {
-        return makeAuthenticatedRequest(API_URLS.BANKCOLLECTIONLIST.DELETE(id), 'DELETE');
+        const request = { ids: [id] } 
+        return makeAuthenticatedRequest(API_URLS.BANKCOLLECTIONLIST.DELETE(id), 'DELETE', request);
     },
 
     getBankList: () => {

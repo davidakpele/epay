@@ -163,7 +163,7 @@ const DataBundle = () => {
             </div>
             <div className="main-container">
                 {/* Breadcrumb */}
-                <div className="airtime-breadcrumb">
+                <div className="data-breadcrumb">
                     <Link href="/dashboard" className="breadcrumb-link">
                     Dashboard
                     </Link>
@@ -172,14 +172,14 @@ const DataBundle = () => {
                 </div>
 
                 {/* Page Title */}
-                <h1 className="airtime-page-title">Buy Data</h1>
+                <h1 className="data-page-title">Buy Data</h1>
 
                 {/* Main Card */}
-                <div className="airtime-card">
+                <div className="data-card">
 
                     {/* Left — Illustration */}
-                    <div className="airtime-illustration-col">
-                        <div className="airtime-illustration-img">
+                    <div className="data-illustration-col">
+                        <div className="data-illustration-img">
                             <Image
                             src="/assets/images/airtime-banner.png"
                             alt="Buy Data Bundle"
@@ -188,7 +188,7 @@ const DataBundle = () => {
                             priority
                             />
                             {/* Banner overlaid ON TOP of image */}
-                            <div className="airtime-promo-banner">
+                            <div className="data-promo-banner">
                             <span>🎁</span>
                             <div>
                                 <p className="promo-text">Earn up to <strong>3% cashback</strong> when you buy airtime!</p>
@@ -199,14 +199,14 @@ const DataBundle = () => {
                     </div>
 
                     {/* Right — Form */}
-                    <div className="airtime-form-col">
+                    <div className="data-form-col">
 
                   {/* Select Network */}
-                    <div className="airtime-field">
-                        <label className="airtime-label">
+                    <div className="data-field">
+                        <label className="data-label">
                             <span className="label-icon">📡</span> Select Network
                         </label>
-                        <div className="airtime-select-box" onClick={() => setIsModalOpen(true)}>
+                        <div className="data-select-box" onClick={() => setIsModalOpen(true)}>
                             <span
                             className="network-logo-pill"
                             style={{ background: selectedNetwork.bg, color: selectedNetwork.color }}
@@ -219,18 +219,18 @@ const DataBundle = () => {
                     </div>
 
                     {/* Phone Number */}
-                    <div className="airtime-field">
-                        <label className="airtime-label">
+                    <div className="data-field">
+                        <label className="data-label">
                             <Phone size={14} /> Phone Number
                         </label>
-                        <div className="airtime-phone-row">
+                        <div className="data-phone-row">
                             <div className="phone-prefix" onClick={() => setIsCountryModalOpen(true)}>
                             <span>{selectedCountryCode.flag} {selectedCountryCode.code}</span>
                             <ChevronDown size={14} />
                             </div>
                             <input
                             type="tel"
-                            className="airtime-input"
+                            className="data-input"
                             placeholder={getPhonePlaceholder(selectedCountryCode)}
                             value={phone}
                             maxLength={getMaxPhoneLength(selectedCountryCode)}
@@ -249,11 +249,11 @@ const DataBundle = () => {
                     </div>
 
                     {/* Amount */}
-                    <div className="airtime-field">
-                        <label className="airtime-label">
+                    <div className="data-field">
+                        <label className="data-label">
                         <CircleDollarSign size={14} /> Amount
                         </label>
-                        <div className="airtime-quick-amounts">
+                        <div className="data-quick-amounts">
                         {quickAmounts.map(q => (
                             <button
                             key={q}
@@ -266,7 +266,7 @@ const DataBundle = () => {
                         </div>
                         <input
                             type="text"
-                            className="airtime-input amount-input"
+                            className="data-input amount-input"
                             placeholder="Or enter custom amount"
                             value={getFormattedAmount()}
                             onChange={handleAmountChange}
@@ -275,7 +275,7 @@ const DataBundle = () => {
 
                     {/* Buy Button */}
                     <button
-                        className="airtime-buy-btn"
+                        className="data-buy-btn"
                         onClick={handleSubmit}
                         disabled={isSubmitting}
                         >
@@ -289,14 +289,14 @@ const DataBundle = () => {
                         )}
                     </button>
 
-                    <p className="airtime-cashback-note">
+                    <p className="data-cashback-note">
                         Earn up to 3% cashback when you buy airtime! <a href="#">Learn more</a>
                     </p>
                     </div>
                 </div>
 
                 {/* Common Platforms */}
-                <div className="airtime-platforms">
+                <div className="data-platforms">
                     <h3 className="platforms-title">Common Platforms</h3>
                     <div className="platforms-grid">
                         {providers.map(provider => (
@@ -324,18 +324,18 @@ const DataBundle = () => {
                 </div>
 
                  {isModalOpen && (
-                    <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header"><h3>Select Network</h3></div>
-                        <div className="search-container">
-                            <div className="search-container">
+                    <div className="data-modal-overlay" onClick={() => setIsModalOpen(false)}>
+                        <div className="data-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="data-modal-header"><h3>Select Network</h3></div>
+                        <div className="data-search-container">
+                            <div className="data-search-container">
                                 <i className="fa fa-search"></i>
                                 <input type="text" placeholder="Search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                                 </div>
                         
                         </div>
                         <div
-                            className={`country-list ${isScrolling ? 'is-scrolling' : ''}`}
+                            className={`data-country-list ${isScrolling ? 'is-scrolling' : ''}`}
                             onScroll={handleScroll}
                         >
                             {networks
@@ -343,7 +343,7 @@ const DataBundle = () => {
                             .map((n) => (
                                 <div
                                 key={n.id}
-                                className="country-item"
+                                className="data-country-item"
                                 onClick={() => {
                                     setSelectedNetwork(n);
                                     setIsModalOpen(false);
@@ -359,8 +359,8 @@ const DataBundle = () => {
                                     </span>
                                     <span>{n.name}</span>
                                 </div>
-                                <div className={`radio-outer ${selectedNetwork.id === n.id ? 'checked' : ''}`}>
-                                    <div className="radio-inner"></div>
+                                <div className={`data-radio-outer ${selectedNetwork.id === n.id ? 'checked' : ''}`}>
+                                    <div className="data-radio-inner"></div>
                                 </div>
                                 </div>
                             ))}
@@ -370,10 +370,10 @@ const DataBundle = () => {
                 )}
 
                 {isCountryModalOpen && (
-                    <div className="modal-overlay" onClick={() => setIsCountryModalOpen(false)}>
-                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header"><h3>Select Country Code</h3></div>
-                        <div className="search-container">
+                    <div className="data-modal-overlay" onClick={() => setIsCountryModalOpen(false)}>
+                        <div className="data-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="data-modal-header"><h3>Select Country Code</h3></div>
+                        <div className="data-search-container">
                             <i className="fa fa-search"></i>
                             <input
                             type="text"
@@ -381,7 +381,7 @@ const DataBundle = () => {
                             value={countrySearchTerm}
                             onChange={(e) => setCountrySearchTerm(e.target.value)}/>
                         </div>
-                        <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
+                        <div className={`data-country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
                         {countryCodes
                             .filter(c =>
                                 c.name.toLowerCase().includes(countrySearchTerm.toLowerCase()) ||
@@ -390,7 +390,7 @@ const DataBundle = () => {
                             .map((c) => (
                                 <div
                                 key={`${c.name}-${c.code}`}
-                                className="country-item"
+                                className="data-country-item"
                                 onClick={() => {
                                     setSelectedCountryCode(c);
                                     setIsCountryModalOpen(false);
@@ -407,8 +407,8 @@ const DataBundle = () => {
                                     </div>
                                     <span style={{ color: '#888', fontSize: '12px', marginLeft: 'auto', marginRight:"-10" }}>{c.code}</span>
                                 </div>
-                                <div className={`radio-outer ${selectedCountryCode.name === c.name ? 'checked' : ''}`}>
-                                    <div className="radio-inner"></div>
+                                <div className={`data-radio-outer ${selectedCountryCode.name === c.name ? 'checked' : ''}`}>
+                                    <div className="data-radio-inner"></div>
                                 </div>
                                 </div>
                             ))}

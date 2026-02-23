@@ -1,416 +1,393 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>ePay – Deposit Successful</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --green-dark:   #166701;
-      --green-mid:    #2d7a4f;
-      --green-accent: #3a9e63;
-      --green-light:  #e8f5ee;
-      --green-pale:   #f2faf5;
-      --text-body:    #2c3a30;
-      --text-muted:   #6b8074;
-      --border:       #d5e8dc;
-      --white:        #ffffff;
-      --bg:           #eef4f0;
+    /* Resets */
+    body, table, td, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; display: block; }
+    body { margin: 0 !important; padding: 0 !important; background-color: #eef4f0; }
+
+    /* Hover — must stay in <head> */
+    .btn-cta:hover     { background-color: #145c2e !important; }
+    .social-a:hover    { border-color: #2d7a4f !important; color: #2d7a4f !important; }
+    .receipt-row:hover td { background-color: rgba(58,158,99,.04) !important; }
+    .footer-a:hover    { color: #6b7280 !important; }
+
+    /* Animations — webmail / browser preview only */
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 48px 16px;
-      position: relative;
-      overflow-x: hidden;
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        radial-gradient(circle at 20% 20%, rgba(58,158,99,.08) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(26,77,46,.06) 0%, transparent 50%);
-      pointer-events: none;
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.4); }
+      to   { opacity: 1; transform: scale(1); }
     }
-
-    /* ── Brand ── */
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 32px;
-      animation: slideDown .6s cubic-bezier(.22,1,.36,1) both;
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
     }
-
-    .brand-logo {
-      width: 44px; height: 44px;
-      background: var(--green-dark);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 14px rgba(26,77,46,.35);
-    }
-
-    .brand-logo svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-
-    .brand-name {
-      font-family: 'DM Serif Display', serif;
-      font-size: 28px;
-      color: var(--green-dark);
-      letter-spacing: -.5px;
-    }
-
-    /* ── Card ── */
-    .card {
-      background: var(--white);
-      border-radius: 24px;
-      width: 100%;
-      max-width: 480px;
-      padding: 40px 36px 36px;
-      box-shadow: 0 8px 48px rgba(26,77,46,.12), 0 2px 8px rgba(26,77,46,.06);
-      animation: rise .7s cubic-bezier(.22,1,.36,1) .1s both;
-    }
-
-    /* ── Success icon ── */
-    .check-wrap {
-      display: flex; justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .check-circle {
-      width: 68px; height: 68px;
-      background: var(--green-light);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      animation: popIn .5s cubic-bezier(.34,1.56,.64,1) .4s both;
-      box-shadow: 0 0 0 8px rgba(232,245,238,.5);
-    }
-
-    .check-circle svg {
-      width: 30px; height: 30px;
-      stroke: var(--green-mid);
-      stroke-width: 2.8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
+    .brand-anim { animation: slideDown .6s cubic-bezier(.22,1,.36,1) both; }
+    .card-anim  { animation: rise .7s cubic-bezier(.22,1,.36,1) .1s both; }
+    .icon-anim  { animation: popIn .5s cubic-bezier(.34,1.56,.64,1) .4s both; }
+    .check-anim {
       stroke-dasharray: 40;
       stroke-dashoffset: 40;
       animation: drawCheck .4s ease-out .75s forwards;
     }
 
-    /* ── Heading ── */
-    .heading {
-      font-family: 'DM Serif Display', serif;
-      font-size: 30px;
-      color: var(--green-dark);
-      text-align: center;
-      margin-bottom: 16px;
-      line-height: 1.1;
-    }
-
-    /* ── Intro ── */
-    .intro {
-      font-size: 14.5px;
-      color: var(--text-body);
-      line-height: 1.65;
-      margin-bottom: 28px;
-    }
-
-    /* ── Receipt table ── */
-    .receipt {
-      background: var(--green-pale);
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      margin-bottom: 28px;
-    }
-
-    .receipt-title {
-      background: var(--green-light);
-      text-align: center;
-      padding: 14px 16px;
-      font-weight: 700;
-      font-size: 13.5px;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--green-dark);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .receipt-row {
-      display: grid;
-      grid-template-columns: 160px 1fr;
-      border-bottom: 1px solid var(--border);
-      transition: background .15s;
-    }
-
-    .receipt-row:last-child { border-bottom: none; }
-    .receipt-row:hover { background: rgba(58,158,99,.04); }
-
-    .receipt-row .label,
-    .receipt-row .value {
-      padding: 13px 16px;
-      font-size: 13.5px;
-      line-height: 1.4;
-    }
-
-    .receipt-row .label {
-      color: var(--text-muted);
-      font-weight: 500;
-      border-right: 1px solid var(--border);
-    }
-
-    .receipt-row .value { color: var(--text-body); font-weight: 400; }
-
-    .receipt-row .value.amount,
-    .receipt-row .value.balance {
-      color: var(--green-mid);
-      font-weight: 700;
-      font-size: 15px;
-    }
-
-    /* ── Support note ── */
-    .support-note {
-      font-size: 13.5px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-
-    /* ── CTA button ── */
-    .btn {
-      display: block;
-      width: 100%;
-      background: var(--green-dark);
-      color: #fff;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      text-align: center;
-      padding: 15px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      letter-spacing: .02em;
-      margin-bottom: 24px;
-      position: relative;
-      overflow: hidden;
-      transition: transform .15s, box-shadow .15s;
-      box-shadow: 0 4px 16px rgba(26,77,46,.28);
-    }
-
-    .btn::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to right, transparent, rgba(255,255,255,.08), transparent);
-      transform: translateX(-100%);
-      transition: transform .45s ease;
-    }
-
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(26,77,46,.35); }
-    .btn:hover::after { transform: translateX(100%); }
-    .btn:active { transform: translateY(0); }
-
-    /* ── Thank you ── */
-    .thankyou {
-      text-align: center;
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text-body);
-      margin-bottom: 20px;
-    }
-
-    /* ── Socials ── */
-    .socials {
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-
-    .social-icon {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      border: 1.5px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-muted);
-      transition: border-color .2s, color .2s, transform .2s;
-      cursor: pointer;
-    }
-
-    .social-icon:hover {
-      border-color: var(--green-mid);
-      color: var(--green-mid);
-      transform: translateY(-2px);
-    }
-
-    .social-icon svg { width: 15px; height: 15px; fill: currentColor; }
-
-    /* ── Footer ── */
-    .footer-contact {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-muted);
-      line-height: 1.8;
-    }
-
-    .footer-contact span { color: var(--green-dark); font-weight: 700; }
-
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 20px 0;
-    }
-
-    /* ── Animations ── */
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(30px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(.4); }
-      to   { opacity: 1; transform: scale(1); }
-    }
-
-    @keyframes drawCheck {
-      to { stroke-dashoffset: 0; }
+    /* Mobile */
+    @media only screen and (max-width: 520px) {
+      .email-wrap  { padding: 24px 12px !important; }
+      .card-td     { padding: 28px 20px 24px !important; }
+      .heading     { font-size: 24px !important; }
+      .btn-cta     { font-size: 14px !important; padding: 14px !important; }
+      .receipt-label { width: 120px !important; }
     }
   </style>
 </head>
-<body>
+<body style="margin:0;padding:0;background-color:#eef4f0;font-family:'DM Sans',Arial,sans-serif;">
 
-  <!-- Brand -->
-  <div class="brand">
-    <div class="brand-logo">
-      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
-    </div>
-    <div class="brand-name">ePay</div>
-  </div>
+<!-- ═══ Page wrapper ═══ -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color:#eef4f0;background-image:radial-gradient(circle at 20% 20%,rgba(58,158,99,.07) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(26,77,46,.05) 0%,transparent 50%);">
+  <tr>
+    <td align="center" class="email-wrap" style="padding:48px 16px;">
 
-  <!-- Card -->
-  <div class="card">
+      <!-- ══ Brand ══ -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+             class="brand-anim" style="margin-bottom:32px;">
+        <tr>
+          <td style="padding-right:10px;vertical-align:middle;">
+            <table role="presentation" width="44" height="44" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" valign="middle"
+                    style="width:44px;height:44px;background-color:#166701;border-radius:12px;box-shadow:0 4px 14px rgba(26,77,46,.35);">
+                  <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSIzIiB5PSI1IiB3aWR0aD0iMTgiIGhlaWdodD0iMTQiIHJ4PSIyIi8+PHBhdGggZD0iTTMgMTBoMTgiLz48L3N2Zz4="
+                       width="22" height="22" alt="ePay">
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="font-family:'DM Serif Display',Georgia,serif;font-size:28px;color:#166701;letter-spacing:-0.5px;line-height:1;">ePay</span>
+          </td>
+        </tr>
+      </table>
 
-    <!-- Check icon -->
-    <div class="check-wrap">
-      <div class="check-circle">
-        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-    </div>
+      <!-- ══ Card ══ -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+             width="100%" style="max-width:480px;" class="card-anim">
+        <tr>
+          <td class="card-td"
+              style="background-color:#ffffff;border-radius:24px;padding:40px 36px 36px;box-shadow:0 8px 48px rgba(26,77,46,.12),0 2px 8px rgba(26,77,46,.06);">
 
-    <h1 class="heading">Deposit Successful!</h1>
+            <!-- ── Check icon ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td align="center" style="padding-bottom:20px;">
+                  <div class="icon-anim"
+                       style="display:inline-block;width:68px;height:68px;background-color:#e8f5ee;border-radius:50%;box-shadow:0 0 0 8px rgba(232,245,238,0.5);">
+                    <table role="presentation" width="68" height="68" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" valign="middle"
+                            style="width:68px;height:68px;background-color:#e8f5ee;border-radius:50%;">
+                          <!--[if !mso]><!-->
+                          <svg viewBox="0 0 24 24" width="30" height="30"
+                               fill="none" stroke="#2d7a4f" stroke-width="2.8"
+                               stroke-linecap="round" stroke-linejoin="round"
+                               style="display:block;margin:0 auto;">
+                            <polyline class="check-anim" points="20 6 9 17 4 12"/>
+                          </svg>
+                          <!--<![endif]-->
+                          <!--[if mso]>
+                          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmQ3YTRmIiBzdHJva2Utd2lkdGg9IjIuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSIyMCA2IDkgMTcgNCAxMiIvPjwvc3ZnPg=="
+                               width="30" height="30" alt="success">
+                          <![endif]-->
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
 
-    <p class="intro">
-      Dear <span th:text="${accountHolder}"></span>,<br><br>
-      Your account has been successfully credited. Here are the
-      details of your deposit:
-    </p>
+            <!-- ── Heading ── -->
+            <h1 class="heading"
+                style="font-family:'DM Serif Display',Georgia,serif;font-size:30px;color:#166701;text-align:center;margin:0 0 16px;line-height:1.1;font-weight:400;">
+              Deposit Successful!
+            </h1>
 
-    <!-- Receipt -->
-    <div class="receipt">
-      <div class="receipt-title">Transaction Receipt</div>
+            <!-- ── Intro ── -->
+            <p style="font-size:14.5px;color:#2c3a30;line-height:1.65;margin:0 0 28px;font-family:'DM Sans',Arial,sans-serif;">
+              Dear <span th:text="${accountHolder}">John</span>,<br><br>
+              Your account has been successfully credited. Here are the details of your deposit:
+            </p>
 
-      <div class="receipt-row">
-        <span class="label">Amount Deposited</span>
-        <span class="value amount">NGN 100,000.00</span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">Depositor</span>
-        <span class="value">John Michael</span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">Date</span>
-        <span class="value" th:text="${transactionDate}">April 25, 2024 </span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">Time</span>
-        <span class="value" th:text="${transactionTime}">10:45 AM</span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">Transaction Type</span>
-        <span class="value">Bank Deposit</span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">Description</span>
-        <span class="value">Transfer from Savings</span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">Transaction ID</span>
-        <span th:text="${receiptNo}" class="value">RCT-20251010-0042</span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">Teller / Officer</span>
-        <span th:text="${terminalNumber}" class="value">Teller 007</span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">Amount Deposited</span>
-          <span class="value balance" th:text="${currencySymbol}"></span>
-          <span class="value balance" th:text="${amount}">150,000.00</span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">Previous Balance</span>
-          <span class="value balance" th:text="${currencySymbol}"></span>
-          <span class="value balance" th:text="${previousBalance}">150,000.00</span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">New Balance</span>
-          <span class="value balance" th:text="${currencySymbol}"></span>
-          <span class="value balance" th:text="${availableBalance}">150,000.00</span>
-      </div>
-      <div class="receipt-row">
-        <span class="label">In-Words</span>
-        <span class="value balance" th:text="${amountInWords}">One Hundred Fifty Thousand Naira Only</span>
-      </div>
-    </div>
+            <!-- ── Receipt ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="background-color:#f2faf5;border:1px solid #d5e8dc;border-radius:16px;overflow:hidden;margin-bottom:28px;">
 
-    <p class="support-note">
-      If you have any questions or need further assistance, please don't hesitate
-      to contact our support team.
-    </p>
+              <!-- Receipt title -->
+              <tr>
+                <td colspan="2"
+                    style="background-color:#e8f5ee;text-align:center;padding:13px 16px;font-weight:700;font-size:12px;letter-spacing:0.07em;text-transform:uppercase;color:#166701;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;">
+                  Transaction Receipt
+                </td>
+              </tr>
 
-    <button class="btn">Contact Support</button>
+              <!-- Amount Deposited (header row) -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  Amount Deposited
+                </td>
+                <td style="padding:12px 16px;font-size:15px;color:#2d7a4f;font-weight:700;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;">
+                  NGN 100,000.00
+                </td>
+              </tr>
 
-    <div class="divider"></div>
+              <!-- Depositor -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  Depositor
+                </td>
+                <td style="padding:12px 16px;font-size:13.5px;color:#2c3a30;font-weight:400;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;">
+                  John Michael
+                </td>
+              </tr>
 
-    <p class="thankyou">Thank you for using ePay!</p>
+              <!-- Date -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  Date
+                </td>
+                <td style="padding:12px 16px;font-size:13.5px;color:#2c3a30;font-weight:400;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;"
+                    th:text="${transactionDate}">
+                  April 25, 2024
+                </td>
+              </tr>
 
-    <!-- Socials -->
-    <div class="socials">
-      <div class="social-icon">
-        <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-      </div>
-      <div class="social-icon">
-        <svg viewBox="0 0 24 24"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
-      </div>
-      <div class="social-icon">
-        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-      </div>
-      <div class="social-icon">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-      </div>
-    </div>
+              <!-- Time -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  Time
+                </td>
+                <td style="padding:12px 16px;font-size:13.5px;color:#2c3a30;font-weight:400;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;"
+                    th:text="${transactionTime}">
+                  10:45 AM
+                </td>
+              </tr>
 
-    <div class="footer-contact">
-      <span>ePay</span> &nbsp;support@epay.com<br>
-      +1 (234) 567-890
-    </div>
+              <!-- Transaction Type -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  Transaction Type
+                </td>
+                <td style="padding:12px 16px;font-size:13.5px;color:#2c3a30;font-weight:400;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;">
+                  Bank Deposit
+                </td>
+              </tr>
 
-  </div>
+              <!-- Description -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  Description
+                </td>
+                <td style="padding:12px 16px;font-size:13.5px;color:#2c3a30;font-weight:400;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;">
+                  Transfer from Savings
+                </td>
+              </tr>
+
+              <!-- Transaction ID -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  Transaction ID
+                </td>
+                <td style="padding:12px 16px;font-size:13.5px;color:#2c3a30;font-weight:400;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;"
+                    th:text="${receiptNo}">
+                  RCT-20251010-0042
+                </td>
+              </tr>
+
+              <!-- Teller / Officer -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  Teller / Officer
+                </td>
+                <td style="padding:12px 16px;font-size:13.5px;color:#2c3a30;font-weight:400;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;"
+                    th:text="${terminalNumber}">
+                  Teller 007
+                </td>
+              </tr>
+
+              <!-- Amount (with currency symbol — fixed: combined into one cell) -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  Amount
+                </td>
+                <td style="padding:12px 16px;font-size:15px;color:#2d7a4f;font-weight:700;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;">
+                  <span th:text="${currencySymbol}">₦</span><span th:text="${amount}">150,000.00</span>
+                </td>
+              </tr>
+
+              <!-- Previous Balance -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  Previous Balance
+                </td>
+                <td style="padding:12px 16px;font-size:15px;color:#2d7a4f;font-weight:700;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;">
+                  <span th:text="${currencySymbol}">₦</span><span th:text="${previousBalance}">150,000.00</span>
+                </td>
+              </tr>
+
+              <!-- New Balance -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;border-bottom:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  New Balance
+                </td>
+                <td style="padding:12px 16px;font-size:15px;color:#2d7a4f;font-weight:700;border-bottom:1px solid #d5e8dc;font-family:'DM Sans',Arial,sans-serif;">
+                  <span th:text="${currencySymbol}">₦</span><span th:text="${availableBalance}">250,000.00</span>
+                </td>
+              </tr>
+
+              <!-- In Words (last row — no bottom border) -->
+              <tr class="receipt-row">
+                <td class="receipt-label"
+                    style="padding:12px 16px;font-size:13px;color:#6b8074;font-weight:500;border-right:1px solid #d5e8dc;width:160px;font-family:'DM Sans',Arial,sans-serif;">
+                  In-Words
+                </td>
+                <td style="padding:12px 16px;font-size:13.5px;color:#2d7a4f;font-weight:700;font-style:italic;font-family:'DM Sans',Arial,sans-serif;"
+                    th:text="${amountInWords}">
+                  One Hundred Fifty Thousand Naira Only
+                </td>
+              </tr>
+
+            </table>
+
+            <!-- ── Support note ── -->
+            <p style="font-size:13.5px;color:#6b8074;line-height:1.6;margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;">
+              If you have any questions or need further assistance, please don't hesitate
+              to contact our support team.
+            </p>
+
+            <!-- ── CTA button ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="margin-bottom:24px;">
+              <tr>
+                <td align="center">
+                  <a href="#" class="btn-cta"
+                     style="display:block;background-color:#166701;color:#ffffff;font-family:'DM Sans',Arial,sans-serif;font-size:15px;font-weight:600;text-align:center;padding:15px 24px;border-radius:12px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(26,77,46,.28);transition:background-color .2s;">
+                    Contact Support
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- ── Divider ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="margin:4px 0 20px;">
+              <tr>
+                <td style="height:1px;background-color:#d5e8dc;font-size:0;line-height:0;">&nbsp;</td>
+              </tr>
+            </table>
+
+            <!-- ── Thank you ── -->
+            <p style="text-align:center;font-weight:600;font-size:14px;color:#2c3a30;margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;">
+              Thank you for using ePay!
+            </p>
+
+            <!-- ── Socials ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                   align="center" style="margin:0 auto 16px;">
+              <tr>
+                <!-- Facebook -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-a"
+                     style="display:inline-block;width:36px;height:36px;border-radius:50%;border:1.5px solid #d5e8dc;text-decoration:none;transition:border-color .2s,color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle"
+                              style="width:36px;height:36px;border-radius:50%;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzZiODA3NCI+PHBhdGggZD0iTTE4IDJoLTNhNSA1IDAgMCAwLTUgNXYzSDd2NGgzdjhoNHYtOGgzbDEtNGgtNFY3YTEgMSAwIDAgMSAxLTFoM3oiLz48L3N2Zz4="
+                             width="15" height="15" alt="Facebook" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+                <!-- Twitter -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-a"
+                     style="display:inline-block;width:36px;height:36px;border-radius:50%;border:1.5px solid #d5e8dc;text-decoration:none;transition:border-color .2s,color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle"
+                              style="width:36px;height:36px;border-radius:50%;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzZiODA3NCI+PHBhdGggZD0iTTIyIDRzLS43IDIuMS0yIDMuNGMxLjYgMTAtOS40IDE3LjMtMTggMTEuNiAyLjIuMSA0LjQtLjYgNi0yQzMgMTUuNS41IDkuNiAzIDVjMi4yIDIuNiA1LjYgNC4xIDkgNC0uOS00LjIgNC02LjYgNy0zLjggMS4xIDAgMy0xLjIgMy0xLjJ6Ii8+PC9zdmc+"
+                             width="15" height="15" alt="Twitter" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+                <!-- Instagram -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-a"
+                     style="display:inline-block;width:36px;height:36px;border-radius:50%;border:1.5px solid #d5e8dc;text-decoration:none;transition:border-color .2s,color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle"
+                              style="width:36px;height:36px;border-radius:50%;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzZiODA3NCI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiByeD0iNSIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiIGZpbGw9IiNmMmZhZjUiLz48Y2lyY2xlIGN4PSIxNy41IiBjeT0iNi41IiByPSIxIiBmaWxsPSIjZjJmYWY1Ii8+PC9zdmc+"
+                             width="15" height="15" alt="Instagram" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+                <!-- Website -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-a"
+                     style="display:inline-block;width:36px;height:36px;border-radius:50%;border:1.5px solid #d5e8dc;text-decoration:none;transition:border-color .2s,color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle"
+                              style="width:36px;height:36px;border-radius:50%;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNmI4MDc0IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiLz48bGluZSB4MT0iMiIgeTE9IjEyIiB4Mj0iMjIiIHkyPSIxMiIvPjxwYXRoIGQ9Ik0xMiAyYTE1LjMgMTUuMyAwIDAgMSA0IDEwIDE1LjMgMTUuMyAwIDAgMS00IDEwIDE1LjMgMTUuMyAwIDAgMS00LTEwIDE1LjMgMTUuMyAwIDAgMSA0LTEweiIvPjwvc3ZnPg=="
+                             width="15" height="15" alt="Website" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- ── Footer contact ── -->
+            <p style="text-align:center;font-size:12px;color:#6b8074;line-height:1.8;margin:0;font-family:'DM Sans',Arial,sans-serif;">
+              <strong style="color:#166701;font-weight:700;">ePay</strong>&nbsp;&nbsp;support@epay.com<br>
+              +1 (234) 567-890
+            </p>
+
+          </td>
+        </tr>
+      </table>
+      <!-- /Card -->
+
+    </td>
+  </tr>
+</table>
 
 </body>
 </html>

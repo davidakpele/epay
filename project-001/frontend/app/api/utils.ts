@@ -367,8 +367,8 @@ export const updateProfileImageInStorage = (imageUrl: string) => {
   }
   
   const updatedData = JSON.stringify(existingData);
-  localStorage.setItem('data', updatedData);
-  sessionStorage.setItem('data', updatedData);
-  document.cookie = `data=${encodeURIComponent(updatedData)}; path=/; secure; samesite=None`;
-  window.dispatchEvent(new Event('profileImageUpdated'));
+    localStorage.setItem('data', updatedData);
+    sessionStorage.setItem('data', updatedData);
+    document.cookie = `data=${encodeURIComponent(updatedData)}; path=/; secure; samesite=None`;
+    window.dispatchEvent(new Event('profileImageUpdated'));
 };

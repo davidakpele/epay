@@ -56,7 +56,7 @@ public class PDFService {
     private static final Color DARK_GRAY = new DeviceRgb(80, 80, 80);
     private static final Color HEADER_COLOR = new DeviceRgb(240, 240, 240);
     private static final Color WATERMARK_COLOR = new DeviceRgb(100, 100, 100);
-    private static final Color BORDER_COLOR = new DeviceRgb(180, 180, 180);
+    // private static final Color BORDER_COLOR = new DeviceRgb(180, 180, 180);
 
     @Autowired
     private NotificationServiceClient notificationServiceClient;

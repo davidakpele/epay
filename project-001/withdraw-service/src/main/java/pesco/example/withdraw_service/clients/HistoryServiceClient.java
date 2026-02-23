@@ -27,7 +27,6 @@ public class HistoryServiceClient {
     public HistoryServiceClient(WebClient historyServiceWebClient) {
         this.historyServiceWebClient = historyServiceWebClient;
     }
-
     
     public List<HistoryDTO> FindRecentTransactionsByUserId(Long id, LocalDateTime minusMinutes, String token) {
         System.out.println("[HistoryClient] FindRecentTransactionsByUserId - START | userId=" + id + ", from=" + minusMinutes);

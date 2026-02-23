@@ -2,7 +2,7 @@
     margin-bottom: 100px;
 }
 
-.airtime-breadcrumb {
+.betting-breadcrumb {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -38,7 +38,7 @@
   font-weight: 600;
 }
 
-.airtime-page-title {
+.betting-page-title {
   font-size: 22px;
   font-weight: 700;
   color: var(--bg-main);
@@ -46,7 +46,7 @@
   font-family: 'Segoe UI', sans-serif;
   margin: 0;
 }
-.airtime-card {
+.betting-card {
   display: grid;
   grid-template-columns: 1fr 1.4fr;
   gap: 0;
@@ -58,16 +58,16 @@
   border: 1px solid #eef2f7;
 }
 
-.dark .airtime-card {
+.dark .betting-card {
   background: var(--dark-effect-bg, #1e293b);
   border-color: #2d3748;
 }
-.dark .airtime-illustration-col {
+.dark .betting-illustration-col {
   background: linear-gradient(160deg, #1a2e1f 0%, #1c3422 100%);
   border-right-color: #2d4a35;
 }
 
-.airtime-illustration {
+.betting-illustration {
   position: relative;
   width: 220px;
   height: 230px;
@@ -181,7 +181,7 @@
   to   { opacity: 0.8; transform: scale(1.2); }
 }
 
-.airtime-promo-banner {
+.betting-promo-banner {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -194,9 +194,9 @@
   font-family: 'Segoe UI', sans-serif;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
-.airtime-promo-banner {
+.betting-promo-banner {
   position: absolute;  
-  bottom: -100px;
+  bottom: 0px;
   left: 0;
   right: 0;
   margin: 0 12px;
@@ -212,18 +212,18 @@
   font-family: 'Segoe UI', sans-serif;
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
-.airtime-illustration-img {
+.betting-illustration-img {
   width: 100%;
   width: 100%;
   position: relative;
 }
-.airtime-illustration-img > img{
+.betting-illustration-img > img{
     margin: 0 auto; 
     height: 280px !important;
     margin-top: 30px;
 }
 
-.dark .airtime-promo-banner {
+.dark .betting-promo-banner {
   background: #1a2e1f;
   border-color: #2d4a35;
 }
@@ -245,20 +245,20 @@
 
 .promo-link:hover { text-decoration: underline; }
 
-.airtime-form-col {
+.betting-form-col {
   padding: 32px 28px;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
-.airtime-field {
+.betting-field {
   display: flex;
   flex-direction: column;
   gap: 8px;
   position: relative;
 }
 
-.airtime-label {
+.betting-label {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -268,9 +268,9 @@
   font-family: 'Segoe UI', sans-serif;
 }
 
-.dark .airtime-label { color: #aaa; }
+.dark .betting-label { color: #aaa; }
 
-.airtime-select-box {
+.betting-select-box {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -285,12 +285,12 @@
   color: #333;
 }
 
-.airtime-select-box:hover {
+.betting-select-box:hover {
   border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(46,125,50,0.08);
 }
 
-.dark .airtime-select-box {
+.dark .betting-select-box {
   background: #253340;
   border-color: #2d3748;
   color: #e2e8f0;
@@ -321,7 +321,7 @@
 }
 .select-chevron.open { transform: rotate(180deg); }
 
-.airtime-dropdown {
+.betting-dropdown {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -334,12 +334,12 @@
   overflow: hidden;
 }
 
-.dark .airtime-dropdown {
+.dark .betting-dropdown {
   background: #253340;
   border-color: #2d3748;
 }
 
-.airtime-dropdown-item {
+.betting-dropdown-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -351,23 +351,23 @@
   transition: background 0.15s;
 }
 
-.dark .airtime-dropdown-item { color: #e2e8f0; }
+.dark .betting-dropdown-item { color: #e2e8f0; }
 
-.airtime-dropdown-item:hover {
+.betting-dropdown-item:hover {
   background: #f0faf2;
 }
 
-.dark .airtime-dropdown-item:hover { background: #1a2e1f; }
+.dark .betting-dropdown-item:hover { background: #1a2e1f; }
 
-.airtime-dropdown-item.active {
+.betting-dropdown-item.active {
   background: #e8f5e9;
   font-weight: 600;
   color: var(--bg-main);
 }
 
-.dark .airtime-dropdown-item.active { background: #1a3a22; }
+.dark .betting-dropdown-item.active { background: #1a3a22; }
 
-.airtime-phone-row {
+.betting-phone-row {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -398,7 +398,7 @@
   color: #e2e8f0;
 }
 
-.airtime-input {
+.betting-input {
   flex: 1;
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
@@ -413,14 +413,14 @@
   box-sizing: border-box;
 }
 
-.airtime-input:focus {
+.betting-input:focus {
   border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(46,125,50,0.1);
 }
 
-.airtime-input::placeholder { color: #bbb; }
+.betting-input::placeholder { color: #bbb; }
 
-.dark .airtime-input {
+.dark .betting-input {
   background: #253340;
   border-color: #2d3748;
   color: #e2e8f0;
@@ -430,7 +430,7 @@
   margin-top: 8px;
 }
 
-.airtime-quick-amounts {
+.betting-quick-amounts {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -473,7 +473,7 @@
   color: #fff;
 }
 
-.airtime-buy-btn {
+.betting-buy-btn {
   width: 100%;
   padding: 15px;
   background: var(--bg-main, #1b5e20);
@@ -489,17 +489,17 @@
   letter-spacing: 0.3px;
 }
 
-.airtime-buy-btn:hover {
+.betting-buy-btn:hover {
   background: #155724;
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(46,125,50,0.4);
 }
 
-.airtime-buy-btn:active {
+.betting-buy-btn:active {
   transform: translateY(0);
 }
 
-.airtime-cashback-note {
+.betting-cashback-note {
   font-size: 12px;
   color: #888;
   text-align: center;
@@ -507,15 +507,15 @@
   font-family: 'Segoe UI', sans-serif;
 }
 
-.airtime-cashback-note a {
+.betting-cashback-note a {
   color: var(--bg-main);
   font-weight: 600;
   text-decoration: none;
 }
 
-.airtime-cashback-note a:hover { text-decoration: underline; }
+.betting-cashback-note a:hover { text-decoration: underline; }
 
-.airtime-platforms {
+.betting-platforms {
   margin: 0 24px 24px;
   background: var(--tm-rog);
   border-radius: 16px;
@@ -523,7 +523,7 @@
   border: 1px solid var(--tm-rog);
 }
 
-.dark .airtime-platforms {
+.dark .betting-platforms {
   background: var(--dark-effect-bg, #1e293b);
   border-color: #2d3748;
 }
@@ -576,7 +576,7 @@
 }
 
 .dark .platform-name { color: #aaa; }
-.airtime-illustration-col {
+.betting-illustration-col {
   background: linear-gradient(160deg, #f0faf2 0%, #e6f4ea 100%);
   padding: 32px 24px;
   display: flex;
@@ -588,37 +588,37 @@
 }
 
 @media (max-width: 1000px) {
-  .airtime-card {
+  .betting-card {
     grid-template-columns: 1fr;
     margin: 0 16px 20px;
   }
 
-  .airtime-illustration-col {
+  .betting-illustration-col {
     border-right: none;
     border-bottom: 1px solid #e2ede5;
     padding: 24px 20px;
   }
 
-  .airtime-form-col {
+  .betting-form-col {
     padding: 24px 20px;
   }
 
-  .airtime-page-title {
+  .betting-page-title {
     padding: 8px 16px 12px;
   }
 
-  .airtime-breadcrumb {
+  .betting-breadcrumb {
     padding: 12px 16px 0;
   }
 
-  .airtime-platforms {
+  .betting-platforms {
     margin: 0 16px 20px;
     padding: 18px;
   }
 }
 
 @media (max-width: 480px) {
-  .airtime-quick-amounts {
+  .betting-quick-amounts {
     gap: 6px;
   }
 
@@ -627,7 +627,7 @@
     font-size: 12px;
   }
 
-  .airtime-illustration {
+  .betting-illustration {
     width: 180px;
     height: 190px;
   }
@@ -662,7 +662,7 @@
   object-fit: contain;
 }
 
-.modal-overlay {
+.betting-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
@@ -673,7 +673,7 @@
   font-family: "Karla", sans-serif !important;
 }
 
-.modal-content {
+.betting-modal-content {
   background: #fff;
   width: 22rem;
   height: 30rem;
@@ -685,14 +685,14 @@
   max-height: 100%; 
 }
 
-.modal-header h3 {
+.betting-modal-header h3 {
   font-size: 15px;
   margin: 0 0 16px 0;
   color: #333;
   font-family: "Karla", sans-serif !important;
 }
 
-.search-container {
+.betting-search-container {
   position: sticky;
   top: 0;
   background: white;
@@ -702,14 +702,14 @@
   border-bottom: 1px solid #f8f9fa;
 }
 
-.search-container i {
+.betting-search-container i {
   position: absolute;
   left: 12px;
   top: 15px;
   color: var(--bg-main);
 }
 
-.search-container input {
+.betting-search-container input {
     width: 100%;
     padding: 5px 5px 5px 36px;
     border: 1px solid var(--bg-main);
@@ -722,18 +722,18 @@
     height:45px
 }
 
-.search-container input:focus {
+.betting-search-container input:focus {
   border: 1px solid var(--bg-main);
   outline: none;
 }
 
-.country-list {
+.betting-country-list {
   display: block;
   max-height: 400px; 
   overflow-y: auto; 
   padding-right: 8px;
 }
-.country-item {
+.betting-country-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -745,7 +745,7 @@
   font-family: "Karla", sans-serif !important;
 }
 
-.radio-outer {
+.betting-radio-outer {
   width: 20px;
   height: 20px;
   border: 2px solid #ddd;
@@ -756,11 +756,11 @@
   flex-shrink: 0;
 }
 
-.radio-outer.checked {
+.betting-radio-outer.checked {
   border-color: var(--bg-main);
 }
 
-.radio-inner {
+.betting-radio-inner {
   width: 10px;
   height: 10px;
   background: var(--bg-main);
@@ -768,31 +768,31 @@
   display: none;
 }
 
-.radio-outer.checked .radio-inner {
+.betting-radio-outer.checked .radio-inner {
   display: block;
 }
 
-.country-list::-webkit-scrollbar {
+.betting-country-list::-webkit-scrollbar {
   width: 2px !important;
 }
 
-.country-list::-webkit-scrollbar-track {
+.betting-country-list::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 10px;
 }
 
-.country-list::-webkit-scrollbar-thumb {
+.betting-country-list::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 10px;
   transition: background 0.3s ease;
 }
 
-.country-list.is-scrolling::-webkit-scrollbar-thumb,
-.country-list::-webkit-scrollbar-thumb:hover {
+.betting-country-list.is-scrolling::-webkit-scrollbar-thumb,
+.betting-country-list::-webkit-scrollbar-thumb:hover {
   background: var(--bg-main);
 }
 
-.no-results {
+.betting-no-results {
   text-align: center;
   padding: 20px;
   color: #adb5bd;
@@ -800,7 +800,7 @@
 }
 
 @media (max-width: 992px) {
-    .modal-overlay {
+    .betting-modal-overlay {
         padding: 20px;
     }
 }
@@ -828,7 +828,7 @@
   margin-top: -4px;
   font-family: 'Segoe UI', sans-serif;
 }
-.airtime-buy-btn:disabled {
+.betting-buy-btn:disabled {
   opacity: 0.75;
   cursor: not-allowed;
   transform: none;

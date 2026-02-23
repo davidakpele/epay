@@ -311,10 +311,10 @@ const ElectricitySubscription = () => {
                 </div>
 
                  {isModalOpen && (
-                    <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-                      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header"><h3>Select Provider</h3></div>
-                        <div className="search-container">
+                    <div className="eletricity-modal-overlay" onClick={() => setIsModalOpen(false)}>
+                      <div className="eletricity-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="eletricity-modal-header"><h3>Select Provider</h3></div>
+                        <div className="eletricity-search-container">
                           <i className="fa fa-search"></i>
                           <input
                             type="text"
@@ -324,15 +324,14 @@ const ElectricitySubscription = () => {
                           />
                         </div>
                         <div
-                          className={`country-list ${isScrolling ? 'is-scrolling' : ''}`}
-                          onScroll={handleScroll}
-                        >
+                          className={`eletricity-country-list ${isScrolling ? 'is-scrolling' : ''}`}
+                          onScroll={handleScroll}>
                           {ElectricyProviders
                             .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
                             .map((p) => (
                               <div
                                 key={p.id}
-                                className="country-item"
+                                className="eletricity-country-item"
                                 onClick={() => {
                                   setSelectedProvider2(p);
                                   setSelectedProvider(p.id);
@@ -352,8 +351,8 @@ const ElectricitySubscription = () => {
                                   </div>
                                   <span>{p.name}</span>
                                 </div>
-                                <div className={`radio-outer ${selectedProvider2.id === p.id ? 'checked' : ''}`}>
-                                  <div className="radio-inner"></div>
+                                <div className={`eletricity-radio-outer ${selectedProvider2.id === p.id ? 'checked' : ''}`}>
+                                  <div className="eletricity-radio-inner"></div>
                                 </div>
                               </div>
                             ))}
@@ -361,8 +360,6 @@ const ElectricitySubscription = () => {
                       </div>
                     </div>
                   )}
-
-            
            </div>      
           <Footer theme={theme} />
         </div>

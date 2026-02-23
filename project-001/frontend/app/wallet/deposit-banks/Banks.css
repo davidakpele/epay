@@ -18,7 +18,7 @@
 
 @media (min-width: 1024px) {
   .banks-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 2fr 3fr;
   }
 }
 
@@ -27,12 +27,13 @@
   background-color: white;
   border-radius: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
+  padding: 1rem;
+  margin-bottom: -30px;
 }
 
 /* Typography */
 .banks-title {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 600;
   color: #374151;
   margin: 0;
@@ -56,48 +57,44 @@
 
 /* Add Bank Placeholder */
 .add-bank-placeholder {
-  margin-top: 2rem;
-  width: 100%;
-  max-width: 20rem;
-  border: 2px dashed #9ca3af;
-  border-radius: 0.75rem;
-  padding: 4rem 3rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
-  background-color: transparent;
-  color: #6b7280;
+  color: var(--bg-main);
+  background-color: rgba(0, 0, 0, 0);
+  border: 2px dashed var(--bg-main);
+  border-radius: 0.75rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 15rem;
+  height:15rem;
+  margin-top: 2rem;
+  padding: 0rem 1rem;
   transition: border-color 0.3s;
+  display: flex;
 }
-
-.add-bank-placeholder:hover {
-  border-color: #6b7280;
-}
-
 .placeholder-plus {
   font-size: 3rem;
-  color: #9ca3af;
+  color: var(--bg-main);
 }
 
 .placeholder-title {
   margin-top: 1rem;
   font-size: 1.125rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--bg-main);
 }
 
 .placeholder-subtitle {
   margin-top: 0.5rem;
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: var(--bg-main);
 }
 
 .placeholder-count {
   margin-top: 0.25rem;
   font-size: 0.75rem;
-  color: #d1d5db;
+  color: var(--bg-main);
 }
 
 /* Add Bank Form */
@@ -205,20 +202,47 @@
 .mt-3 {
   margin-top: 1rem;
 }
-
-/* Banks List */
 .banks-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.banks-list-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.banks-list-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .bank-count {
   font-size: 0.875rem;
   color: #9ca3af;
 }
-
+.linked-bank-footer {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  font-family:Arial, Helvetica, sans-serif;
+}
+.linked-bank-counter {
+  padding: 5px 20px;
+  border: 1px solid #a7a7a88e;
+  border-radius: 4px;
+  display: flex;
+  font-style: normal;
+  align-items: center;
+}
 .empty-state {
   text-align: center;
   padding: 3rem;
@@ -273,6 +297,16 @@
 
 .currency1:hover {
   background-color: #e5e7eb;
+}
+
+/* Selected state for bank item */
+.bank-item--selected {
+  background-color: #f0ebff !important;
+  border: 1.5px solid var(--bg-main);
+}
+
+.bank-item--selected:hover {
+  background-color: #e8e0ff !important;
 }
 
 .delete-icon-wrapper {
@@ -590,4 +624,78 @@
         align-items: stretch;
         margin-bottom: 16px;
     }
+    .banks-page{
+      margin-bottom: 90px;
+    }
+}
+
+/* ─── Checkbox styles ─── */
+.bank-checkbox {
+  position: absolute;
+  top: 50%;
+  left: 0.875rem;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid #d1d5db;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.currency1:hover .bank-checkbox {
+  opacity: 1;
+}
+
+.bank-checkbox--checked {
+  opacity: 1 !important;
+  border-color: var(--bg-main);
+  background-color: var(--bg-main);
+}
+
+/* When checkbox is visible, push img-block right to avoid overlap */
+.currency1:hover .currency1__img-block,
+.bank-item--selected .currency1__img-block {
+  margin-left: 1.75rem;
+}
+
+/* ─── Bulk delete button ─── */
+.bulk-delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: 1.5px solid var(--bg-main);
+  background-color: transparent;
+  color: var(--bg-main);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+  animation: fadeSlideIn 0.2s ease;
+}
+
+.bulk-delete-btn:hover {
+  background-color: var(--bg-main);
+  color: white;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }

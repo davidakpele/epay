@@ -324,18 +324,18 @@ const AirtimePage = () => {
                 </div>
 
                  {isModalOpen && (
-                    <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header"><h3>Select Network</h3></div>
-                        <div className="search-container">
-                            <div className="search-container">
+                    <div className="airtime-modal-overlay" onClick={() => setIsModalOpen(false)}>
+                        <div className="airtime-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="airtime-modal-header"><h3>Select Network</h3></div>
+                        <div className="airtime-search-container">
+                            <div className="airtime-search-container">
                                 <i className="fa fa-search"></i>
                                 <input type="text" placeholder="Search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                                 </div>
                         
                         </div>
                         <div
-                            className={`country-list ${isScrolling ? 'is-scrolling' : ''}`}
+                            className={`airtime-country-list ${isScrolling ? 'is-scrolling' : ''}`}
                             onScroll={handleScroll}
                         >
                             {networks
@@ -343,7 +343,7 @@ const AirtimePage = () => {
                             .map((n) => (
                                 <div
                                 key={n.id}
-                                className="country-item"
+                                className="airtime-country-item"
                                 onClick={() => {
                                     setSelectedNetwork(n);
                                     setIsModalOpen(false);
@@ -359,8 +359,8 @@ const AirtimePage = () => {
                                     </span>
                                     <span>{n.name}</span>
                                 </div>
-                                <div className={`radio-outer ${selectedNetwork.id === n.id ? 'checked' : ''}`}>
-                                    <div className="radio-inner"></div>
+                                <div className={`airtime-radio-outer ${selectedNetwork.id === n.id ? 'checked' : ''}`}>
+                                    <div className="airtime-radio-inner"></div>
                                 </div>
                                 </div>
                             ))}
@@ -370,10 +370,10 @@ const AirtimePage = () => {
                 )}
 
                 {isCountryModalOpen && (
-                    <div className="modal-overlay" onClick={() => setIsCountryModalOpen(false)}>
-                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header"><h3>Select Country Code</h3></div>
-                        <div className="search-container">
+                    <div className="airtime-modal-overlay" onClick={() => setIsCountryModalOpen(false)}>
+                        <div className="airtime-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="airtime-modal-header"><h3>Select Country Code</h3></div>
+                        <div className="airtime-search-container">
                             <i className="fa fa-search"></i>
                             <input
                             type="text"
@@ -381,7 +381,7 @@ const AirtimePage = () => {
                             value={countrySearchTerm}
                             onChange={(e) => setCountrySearchTerm(e.target.value)}/>
                         </div>
-                        <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
+                        <div className={`airtime-country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
                         {countryCodes
                             .filter(c =>
                                 c.name.toLowerCase().includes(countrySearchTerm.toLowerCase()) ||
@@ -390,7 +390,7 @@ const AirtimePage = () => {
                             .map((c) => (
                                 <div
                                 key={`${c.name}-${c.code}`}
-                                className="country-item"
+                                className="airtime-country-item"
                                 onClick={() => {
                                     setSelectedCountryCode(c);
                                     setIsCountryModalOpen(false);
@@ -407,8 +407,8 @@ const AirtimePage = () => {
                                     </div>
                                     <span style={{ color: '#888', fontSize: '12px', marginLeft: 'auto', marginRight:"-10" }}>{c.code}</span>
                                 </div>
-                                <div className={`radio-outer ${selectedCountryCode.name === c.name ? 'checked' : ''}`}>
-                                    <div className="radio-inner"></div>
+                                <div className={`airtime-radio-outer ${selectedCountryCode.name === c.name ? 'checked' : ''}`}>
+                                    <div className="airtime-radio-inner"></div>
                                 </div>
                                 </div>
                             ))}

@@ -1,389 +1,321 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title th:text="'Account Statement - ' + ${bankName}">Account Statement</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title th:text="'Account Statement - ' + ${bankName}">Account Statement</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Resets */
+    body, table, td, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; display: block; }
+    body { margin: 0 !important; padding: 0 !important; background-color: #edecea; }
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: #EDECEA;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 16px;
-  }
+    /* Hover — must stay in <head> */
+    .download-btn:hover { background-color: #163a16 !important; }
+    .social-a:hover     { background-color: #2d6a2d !important; transform: translateY(-2px); }
+    .footer-a:hover     { color: #6b7280 !important; }
 
-  .email-wrapper {
-    width: 100%;
-    max-width: 520px;
-    animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
+    /* Animations — webmail / browser preview only */
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pop {
+      from { opacity: 0; transform: scale(0.6); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .brand-anim { animation: rise 0.5s 0.05s cubic-bezier(.22,1,.36,1) both; }
+    .card-anim  { animation: rise 0.55s 0.1s  cubic-bezier(.22,1,.36,1) both; }
+    .icon-anim  { animation: pop  0.5s 0.3s   cubic-bezier(.22,1,.36,1) both; }
 
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(28px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ── Brand ──────────────────────────────────── */
-  .brand {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 28px;
-    animation: rise 0.5s 0.05s both;
-  }
-
-  .brand-icon {
-    width: 38px;
-    height: 38px;
-    background: #1C4A1C;
-    border-radius: 9px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .brand-name {
-    font-family: 'DM Serif Display', serif;
-    font-size: 26px;
-    color: #1C4A1C;
-    letter-spacing: -0.3px;
-  }
-
-  /* ── Card ───────────────────────────────────── */
-  .card {
-    background: #FFFFFF;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow:
-      0 2px 4px rgba(0,0,0,0.04),
-      0 12px 40px rgba(0,0,0,0.08);
-    animation: rise 0.55s 0.1s both;
-  }
-
-  /* ── Header ─────────────────────────────────── */
-  .card-header {
-    padding: 40px 40px 24px;
-    text-align: center;
-  }
-
-  .pdf-icon-wrap {
-    width: 72px;
-    height: 72px;
-    background: #D1E8D1;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 22px;
-    animation: pop 0.5s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  @keyframes pop {
-    from { opacity: 0; transform: scale(0.6); }
-    to   { opacity: 1; transform: scale(1); }
-  }
-
-  .page-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 26px;
-    color: #1C4A1C;
-    letter-spacing: -0.2px;
-  }
-
-  /* ── Body ───────────────────────────────────── */
-  .card-body {
-    padding: 4px 40px 36px;
-  }
-
-  .greeting {
-    font-size: 15px;
-    color: #374151;
-    font-weight: 500;
-    margin-bottom: 14px;
-  }
-
-  .intro {
-    font-size: 14.5px;
-    color: #6B7280;
-    line-height: 1.7;
-    margin-bottom: 26px;
-  }
-
-  /* ── Attachment Card ────────────────────────── */
-  .attachment-card {
-    background: #F9F7F4;
-    border: 1px solid #E8E4DF;
-    border-radius: 14px;
-    padding: 18px 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 26px;
-  }
-
-  .attachment-card .file-icon {
-    width: 46px;
-    height: 46px;
-    background: #1C4A1C;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .attachment-card .file-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .file-name {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: #1C4A1C;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 3px;
-  }
-
-  .file-size {
-    font-size: 12px;
-    color: #9CA3AF;
-  }
-
-  .attachment-card .download-col {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .file-size-badge {
-    font-size: 12px;
-    color: #9CA3AF;
-    font-weight: 500;
-  }
-
-  .download-btn {
-    display: inline-block;
-    padding: 9px 18px;
-    background: #1C4A1C;
-    color: #FFFFFF;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-    box-shadow: 0 3px 10px rgba(28, 74, 28, 0.25);
-    white-space: nowrap;
-  }
-
-  .download-btn:hover {
-    background: #163A16;
-    transform: translateY(-1px);
-    box-shadow: 0 5px 14px rgba(28, 74, 28, 0.32);
-  }
-
-  .download-btn:active { transform: translateY(0); }
-
-  /* ── Note ───────────────────────────────────── */
-  .note {
-    font-size: 13.5px;
-    color: #6B7280;
-    line-height: 1.65;
-  }
-
-  /* ── Footer ─────────────────────────────────── */
-  .footer {
-    padding: 22px 40px 32px;
-    text-align: center;
-    border-top: 1px solid #F3F0EC;
-  }
-
-  .footer-tagline {
-    font-family: 'DM Serif Display', serif;
-    font-size: 15px;
-    color: #374151;
-    font-weight: 700;
-    margin-bottom: 18px;
-  }
-
-  .social-links {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-
-  .social-link {
-    width: 34px;
-    height: 34px;
-    background: #1C4A1C;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: transform 0.2s, background 0.2s;
-  }
-
-  .social-link:hover {
-    background: #2D6A2D;
-    transform: translateY(-2px);
-  }
-
-  .footer-meta {
-    font-size: 12px;
-    color: #B0AAA3;
-    line-height: 1.7;
-  }
-
-  .footer-meta a {
-    color: #9CA3AF;
-    text-decoration: none;
-  }
-
-  .disclaimer {
-    font-size: 11px;
-    color: #C4BFBA;
-    line-height: 1.6;
-    margin-top: 14px;
-    border-top: 1px solid #F0EDEA;
-    padding-top: 14px;
-  }
-</style>
+    /* Mobile */
+    @media only screen and (max-width: 560px) {
+      .email-wrap    { padding: 24px 12px !important; }
+      .card-header   { padding: 30px 22px 18px !important; }
+      .card-body     { padding: 4px 22px 28px !important; }
+      .card-footer   { padding: 20px 22px 28px !important; }
+      .page-title    { font-size: 22px !important; }
+      .attach-name   { font-size: 12px !important; }
+      .download-btn  { padding: 8px 14px !important; font-size: 12px !important; }
+    }
+  </style>
 </head>
-<body>
+<body style="margin:0;padding:0;background-color:#edecea;font-family:'DM Sans',Arial,sans-serif;">
 
-<div class="email-wrapper">
+<!-- ═══ Page wrapper ═══ -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color:#edecea;">
+  <tr>
+    <td align="center" class="email-wrap" style="padding:40px 16px;">
 
-  <!-- Brand -->
-  <div class="brand">
-    <div class="brand-icon">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <rect x="2" y="2" width="7" height="7" rx="1.5" fill="white"/>
-        <rect x="11" y="2" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/>
-        <rect x="2" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.5"/>
-        <rect x="11" y="11" width="7" height="7" rx="1.5" fill="white"/>
-      </svg>
-    </div>
-    <span class="brand-name" th:text="${bankName}">ePay</span>
-  </div>
+      <!-- ══ Brand ══ -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+             class="brand-anim" style="margin-bottom:26px;">
+        <tr>
+          <!-- Logo box -->
+          <td style="padding-right:10px;vertical-align:middle;">
+            <table role="presentation" width="38" height="38" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" valign="middle"
+                    style="width:38px;height:38px;background-color:#1c4a1c;border-radius:9px;">
+                  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iNyIgaGVpZ2h0PSI3IiByeD0iMS41IiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHg9IjExIiB5PSIyIiB3aWR0aD0iNyIgaGVpZ2h0PSI3IiByeD0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC41Ii8+PHJlY3QgeD0iMiIgeT0iMTEiIHdpZHRoPSI3IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjUiLz48cmVjdCB4PSIxMSIgeT0iMTEiIHdpZHRoPSI3IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IndoaXRlIi8+PC9zdmc+"
+                       width="20" height="20" alt="ePay logo">
+                </td>
+              </tr>
+            </table>
+          </td>
+          <!-- Brand name (dynamic) -->
+          <td style="vertical-align:middle;">
+            <span th:text="${bankName}"
+                  style="font-family:'DM Serif Display',Georgia,serif;font-size:26px;color:#1c4a1c;letter-spacing:-0.3px;line-height:1;">ePay</span>
+          </td>
+        </tr>
+      </table>
 
-  <!-- Card -->
-  <div class="card">
+      <!-- ══ Card ══ -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+             width="100%" style="max-width:520px;" class="card-anim">
+        <tr>
+          <td style="background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.04),0 12px 40px rgba(0,0,0,.08);">
 
-    <!-- Header -->
-    <div class="card-header">
-      <div class="pdf-icon-wrap">
-        <!-- PDF file icon -->
-        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Page body -->
-          <rect x="5" y="2" width="20" height="26" rx="3" fill="#1C4A1C"/>
-          <!-- Folded corner -->
-          <path d="M19 2l6 6h-6V2z" fill="#4A7C4A"/>
-          <!-- PDF label background -->
-          <rect x="3" y="20" width="20" height="10" rx="2" fill="#4A7C4A"/>
-          <!-- PDF text -->
-          <text x="13" y="28" font-family="Arial" font-size="6" font-weight="bold" fill="white" text-anchor="middle">PDF</text>
-        </svg>
-      </div>
-      <h1 class="page-title">Your Account Statement</h1>
-    </div>
+            <!-- ── Card header ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="card-header" align="center"
+                    style="padding:40px 40px 20px;text-align:center;">
 
-    <!-- Body -->
-    <div class="card-body">
-      <p class="greeting">Dear <span th:text="${username}">David</span>.</p>
-      <p class="intro">
-        We have generated your recent account statement.
-        Please find the attached PDF document with your
-        <span th:text="${bankName}">ePay</span> account activity for
-        <span th:text="${period}">April 2024</span>.
-      </p>
+                  <!-- PDF icon circle -->
+                  <div class="icon-anim"
+                       style="display:inline-block;width:72px;height:72px;background-color:#d1e8d1;border-radius:50%;margin-bottom:22px;">
+                    <table role="presentation" width="72" height="72" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" valign="middle"
+                            style="width:72px;height:72px;background-color:#d1e8d1;border-radius:50%;">
+                          <!--
+                            PDF icon: page body + folded corner + red label bar
+                            Built as a pure-shape SVG (no <text> element) for email client compatibility.
+                            The "PDF" label is rendered as three white rectangles approximating letters.
+                          -->
+                          <!--[if !mso]><!-->
+                          <svg width="34" height="38" viewBox="0 0 34 38" fill="none"
+                               xmlns="http://www.w3.org/2000/svg"
+                               style="display:block;margin:0 auto;">
+                            <!-- Page body -->
+                            <rect x="2" y="0" width="22" height="30" rx="3" fill="#1c4a1c"/>
+                            <!-- Folded corner cut-out -->
+                            <path d="M18 0 L24 6 L18 6 Z" fill="#4a7c4a"/>
+                            <!-- Red PDF label bar -->
+                            <rect x="0" y="22" width="26" height="11" rx="2" fill="#c0392b"/>
+                            <!-- "P" shape -->
+                            <rect x="3" y="25" width="2" height="5" rx="0.5" fill="white"/>
+                            <rect x="3" y="25" width="4" height="1.5" rx="0.5" fill="white"/>
+                            <rect x="5.5" y="25" width="1.5" height="2.5" rx="0.5" fill="white"/>
+                            <rect x="3" y="27" width="4" height="1.5" rx="0.5" fill="white"/>
+                            <!-- "D" shape -->
+                            <rect x="9" y="25" width="2" height="5" rx="0.5" fill="white"/>
+                            <rect x="9" y="25" width="4" height="1.5" rx="0.5" fill="white"/>
+                            <rect x="11.5" y="25" width="1.5" height="2" rx="0.5" fill="white"/>
+                            <rect x="9" y="28.5" width="4" height="1.5" rx="0.5" fill="white"/>
+                            <!-- "F" shape -->
+                            <rect x="15" y="25" width="2" height="5" rx="0.5" fill="white"/>
+                            <rect x="15" y="25" width="4" height="1.5" rx="0.5" fill="white"/>
+                            <rect x="15" y="27" width="3" height="1.5" rx="0.5" fill="white"/>
+                          </svg>
+                          <!--<![endif]-->
+                          <!--[if mso]>
+                          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzQiIGhlaWdodD0iMzgiIHZpZXdCb3g9IjAgMCAzNCAzOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIyIiB5PSIwIiB3aWR0aD0iMjIiIGhlaWdodD0iMzAiIHJ4PSIzIiBmaWxsPSIjMWM0YTFjIi8+PHBhdGggZD0iTTE4IDBMMTI0IDYgTDE4IDYgWiIgZmlsbD0iIzRhN2M0YSIvPjxyZWN0IHg9IjAiIHk9IjIyIiB3aWR0aD0iMjYiIGhlaWdodD0iMTEiIHJ4PSIyIiBmaWxsPSIjYzAzOTJiIi8+PC9zdmc+"
+                               width="34" height="38" alt="PDF">
+                          <![endif]-->
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
 
-      <!-- Attachment Card -->
-      <div class="attachment-card">
-        <div class="file-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M14 2v6h6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="7" y="19" font-family="Arial" font-size="4.5" font-weight="bold" fill="white">PDF</text>
-          </svg>
-        </div>
+                  <!-- Title -->
+                  <h1 class="page-title"
+                      style="font-family:'DM Serif Display',Georgia,serif;font-size:26px;color:#1c4a1c;letter-spacing:-0.2px;margin:0;line-height:1.2;font-weight:400;">
+                    Your Account Statement
+                  </h1>
 
-        <div class="file-info">
-          <p class="file-name"
-             th:text="${bankName.replaceAll(' ', '_') + '_Account_Statement_' + period.replaceAll(' ', '_') + '.pdf'}">
-            ePay_Account_Statement_April_2024.pdf
-          </p>
-          <p class="file-size">850 KB</p>
-        </div>
+                </td>
+              </tr>
+            </table>
 
-        <div class="download-col">
-          <span class="file-size-badge">850 KB</span>
-          <a href="#" class="download-btn">Download PDF</a>
-        </div>
-      </div>
+            <!-- ── Card body ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="card-body" style="padding:4px 40px 36px;">
 
-      <p class="note">If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
-    </div>
+                  <!-- Greeting -->
+                  <p style="font-size:15px;color:#374151;font-weight:500;margin:0 0 14px;font-family:'DM Sans',Arial,sans-serif;">
+                    Dear <span th:text="${username}">David</span>.
+                  </p>
 
-    <!-- Footer -->
-    <div class="footer">
-      <p class="footer-tagline">Thank you for using <span th:text="${bankName}">ePay</span>!</p>
+                  <!-- Intro -->
+                  <p style="font-size:14.5px;color:#6b7280;line-height:1.7;margin:0 0 26px;font-family:'DM Sans',Arial,sans-serif;">
+                    We have generated your recent account statement.
+                    Please find the attached PDF document with your
+                    <span th:text="${bankName}">ePay</span> account activity for
+                    <strong style="color:#374151;font-weight:600;" th:text="${period}">April 2024</strong>.
+                  </p>
 
-      <div class="social-links">
-        <a href="#" class="social-link" aria-label="Facebook">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-            <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
-          </svg>
-        </a>
-        <a href="#" class="social-link" aria-label="Twitter">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="white">
-            <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
-          </svg>
-        </a>
-        <a href="#" class="social-link" aria-label="Instagram">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-            <circle cx="12" cy="12" r="3"/>
-            <circle cx="17.5" cy="6.5" r="0.5" fill="white" stroke="none"/>
-          </svg>
-        </a>
-        <a href="#" class="social-link" aria-label="Website">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-          </svg>
-        </a>
-      </div>
+                  <!-- ── Attachment card ── -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                         style="background-color:#f9f7f4;border:1px solid #e8e4df;border-radius:14px;margin-bottom:26px;">
+                    <tr>
+                      <!-- File icon -->
+                      <td valign="middle" style="padding:18px 0 18px 18px;width:46px;">
+                        <table role="presentation" width="46" height="46" cellpadding="0" cellspacing="0" border="0">
+                          <tr>
+                            <td align="center" valign="middle"
+                                style="width:46px;height:46px;background-color:#1c4a1c;border-radius:10px;">
+                              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMkg2YTIgMiAwIDAwLTIgMnYxNmEyIDIgMCAwMDIgMmgxMmEyIDIgMCAwMDItMlY4bC02LTZ6Ii8+PHBhdGggZD0iTTE0IDJ2NmgzIi8+PC9zdmc+"
+                                   width="22" height="22" alt="PDF file">
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
 
-      <p class="footer-meta">
-        <span th:text="${bankName}">ePay</span> &nbsp;·&nbsp;
-        <a th:href="'mailto:' + ${bankEmail}" th:text="${bankEmail}">support@epay.com</a><br>
-        <span th:text="${bankPhone}">+1 (234) 567-890</span>
-      </p>
+                      <!-- File info -->
+                      <td valign="middle" style="padding:18px 12px 18px 14px;">
+                        <p class="attach-name"
+                           style="font-size:13.5px;font-weight:600;color:#1c4a1c;margin:0 0 3px;font-family:'DM Sans',Arial,sans-serif;word-break:break-all;"
+                           th:text="${bankName.replaceAll(' ', '_') + '_Account_Statement_' + period.replaceAll(' ', '_') + '.pdf'}">
+                          ePay_Account_Statement_April_2024.pdf
+                        </p>
+                        <p style="font-size:12px;color:#9ca3af;margin:0;font-family:'DM Sans',Arial,sans-serif;">
+                          PDF Document &nbsp;·&nbsp; 850 KB
+                        </p>
+                      </td>
 
-      <p class="disclaimer">
-        This email and any attachments are confidential and intended solely for the use of the individual
-        to whom they are addressed. If you are not the intended recipient, please notify us immediately
-        and delete this email. &nbsp;·&nbsp; <span th:text="${bankAddress}">123 Financial District, Cityville</span>
-      </p>
-    </div>
+                      <!-- Download button -->
+                      <td valign="middle" align="right" style="padding:18px 18px 18px 8px;white-space:nowrap;">
+                        <a href="#" class="download-btn"
+                           style="display:inline-block;padding:9px 18px;background-color:#1c4a1c;color:#ffffff;font-family:'DM Sans',Arial,sans-serif;font-size:13px;font-weight:600;border-radius:8px;text-decoration:none;box-shadow:0 3px 10px rgba(28,74,28,.25);transition:background-color .2s,transform .15s;white-space:nowrap;">
+                          Download PDF
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
 
-  </div>
-</div>
+                  <!-- Note -->
+                  <p style="font-size:13.5px;color:#6b7280;line-height:1.65;margin:0;font-family:'DM Sans',Arial,sans-serif;">
+                    If you have any questions or need assistance, please don't hesitate to contact our support team.
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!-- ── Card footer ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="border-top:1px solid #f3f0ec;">
+              <tr>
+                <td class="card-footer" align="center" style="padding:22px 40px 28px;text-align:center;">
+
+                  <!-- Tagline -->
+                  <p style="font-family:'DM Serif Display',Georgia,serif;font-size:15px;color:#374151;font-weight:400;margin:0 0 18px;">
+                    Thank you for using <span th:text="${bankName}">ePay</span>!
+                  </p>
+
+                  <!-- Social icons -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                         align="center" style="margin:0 auto 18px;">
+                    <tr>
+                      <!-- Facebook -->
+                      <td style="padding:0 5px;">
+                        <a href="#" class="social-a"
+                           style="display:inline-block;width:34px;height:34px;background-color:#1c4a1c;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                          <table role="presentation" width="34" height="34" cellpadding="0" cellspacing="0" border="0">
+                            <tr><td align="center" valign="middle"
+                                    style="width:34px;height:34px;background-color:#1c4a1c;border-radius:50%;">
+                              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTE4IDJoLTNhNSA1IDAgMCAwLTUgNXYzSDd2NGgzdjhoNHYtOGgzbDEtNGgtNFY3YTEgMSAwIDAgMSAxLTFoM3oiLz48L3N2Zz4="
+                                   width="16" height="16" alt="Facebook" style="display:block;margin:0 auto;">
+                            </td></tr>
+                          </table>
+                        </a>
+                      </td>
+                      <!-- Twitter -->
+                      <td style="padding:0 5px;">
+                        <a href="#" class="social-a"
+                           style="display:inline-block;width:34px;height:34px;background-color:#1c4a1c;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                          <table role="presentation" width="34" height="34" cellpadding="0" cellspacing="0" border="0">
+                            <tr><td align="center" valign="middle"
+                                    style="width:34px;height:34px;background-color:#1c4a1c;border-radius:50%;">
+                              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTIyIDRzLS43IDIuMS0yIDMuNGMxLjYgMTAtOS40IDE3LjMtMTggMTEuNiAyLjIuMSA0LjQtLjYgNi0yQzMgMTUuNS41IDkuNiAzIDVjMi4yIDIuNiA1LjYgNC4xIDkgNC0uOS00LjIgNC02LjYgNy0zLjggMS4xIDAgMy0xLjIgMy0xLjJ6Ii8+PC9zdmc+"
+                                   width="15" height="15" alt="Twitter" style="display:block;margin:0 auto;">
+                            </td></tr>
+                          </table>
+                        </a>
+                      </td>
+                      <!-- Instagram -->
+                      <td style="padding:0 5px;">
+                        <a href="#" class="social-a"
+                           style="display:inline-block;width:34px;height:34px;background-color:#1c4a1c;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                          <table role="presentation" width="34" height="34" cellpadding="0" cellspacing="0" border="0">
+                            <tr><td align="center" valign="middle"
+                                    style="width:34px;height:34px;background-color:#1c4a1c;border-radius:50%;">
+                              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiByeD0iNSIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjMiIGZpbGw9IiMxYzRhMWMiLz48Y2lyY2xlIGN4PSIxNy41IiBjeT0iNi41IiByPSIxIiBmaWxsPSIjMWM0YTFjIi8+PC9zdmc+"
+                                   width="15" height="15" alt="Instagram" style="display:block;margin:0 auto;">
+                            </td></tr>
+                          </table>
+                        </a>
+                      </td>
+                      <!-- Website -->
+                      <td style="padding:0 5px;">
+                        <a href="#" class="social-a"
+                           style="display:inline-block;width:34px;height:34px;background-color:#1c4a1c;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                          <table role="presentation" width="34" height="34" cellpadding="0" cellspacing="0" border="0">
+                            <tr><td align="center" valign="middle"
+                                    style="width:34px;height:34px;background-color:#1c4a1c;border-radius:50%;">
+                              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiLz48bGluZSB4MT0iMiIgeTE9IjEyIiB4Mj0iMjIiIHkyPSIxMiIvPjxwYXRoIGQ9Ik0xMiAyYTE1LjMgMTUuMyAwIDAgMSA0IDEwIDE1LjMgMTUuMyAwIDAgMS00IDEwIDE1LjMgMTUuMyAwIDAgMS00LTEwIDE1LjMgMTUuMyAwIDAgMSA0LTEweiIvPjwvc3ZnPg=="
+                                   width="15" height="15" alt="Website" style="display:block;margin:0 auto;">
+                            </td></tr>
+                          </table>
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Footer meta (all dynamic) -->
+                  <p style="font-size:12px;color:#b0aaa3;line-height:1.7;margin:0 0 0;font-family:'DM Sans',Arial,sans-serif;">
+                    <span th:text="${bankName}">ePay</span> &nbsp;·&nbsp;
+                    <a th:href="'mailto:' + ${bankEmail}" th:text="${bankEmail}" class="footer-a"
+                       style="color:#9ca3af;text-decoration:none;transition:color .2s;">support@epay.com</a><br>
+                    <span th:text="${bankPhone}">+1 (234) 567-890</span>
+                  </p>
+
+                  <!-- Disclaimer -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                         style="margin-top:14px;border-top:1px solid #f0edea;">
+                    <tr>
+                      <td style="padding-top:14px;">
+                        <p style="font-size:11px;color:#c4bfba;line-height:1.6;margin:0;font-family:'DM Sans',Arial,sans-serif;text-align:center;">
+                          This email and any attachments are confidential and intended solely for the use
+                          of the individual to whom they are addressed. If you are not the intended recipient,
+                          please notify us immediately and delete this email.
+                          &nbsp;·&nbsp;
+                          <span th:text="${bankAddress}">123 Financial District, Cityville</span>
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+      </table>
+      <!-- /Card -->
+
+    </td>
+  </tr>
+</table>
 
 </body>
-</html>
+</html> 

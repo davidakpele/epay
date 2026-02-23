@@ -23,7 +23,7 @@ import LoadingScreen from '@/components/loader/Loadingscreen';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Toast } from '@/app/types/auth';
-import { userService, getUserId, updateCompleteProfileDetails, updateNotificationContainer } from '@/app/api/index';
+import { userService, getUserId, updateCompleteProfileDetails, updateNotificationContainer, capitalizeFirstLetter } from '@/app/api/index';
 
 const UserProfile = () => {
   const [isPageLoading, setIsPageLoading] = useState(true);
@@ -631,8 +631,7 @@ const UserProfile = () => {
                             name='gender' 
                             id="gender" 
                             value={formData.gender}
-                            onChange={handleChange}
-                          >
+                            onChange={handleChange}>
                             <option value="">--Select--</option>
                             <option value="male">Male</option>
                             <option value="female">Female</option>
@@ -734,7 +733,7 @@ const UserProfile = () => {
                        <div className="user-profile-info-grid">
                           <div className="user-profile-info-item">
                             <label>FULL NAME</label>
-                            <p>{userData.fullName}</p>
+                            <p>{capitalizeFirstLetter(userData.fullName)}</p>
                           </div>
                           <div className="user-profile-info-item">
                             <label>EMAIL ADDRESS</label>
@@ -754,19 +753,19 @@ const UserProfile = () => {
                           </div>
                           <div className="user-profile-info-item">
                             <label>GENDER</label>
-                            <p>{userData.gender}</p>
+                            <p>{capitalizeFirstLetter(userData.gender)}</p>
                           </div>
                           <div className="user-profile-info-item">
                             <label>ADDRESS</label>
-                            <p>{userData.address}</p>
+                            <p>{capitalizeFirstLetter(userData.address)}</p>
                           </div>
                           <div className="user-profile-info-item">
                             <label>COUNTRY</label>
-                            <p>{userData.country}</p>
+                            <p>{capitalizeFirstLetter(userData.country)}</p>
                           </div>
                           <div className="user-profile-info-item">
                             <label>CITY/STATE</label>
-                            <p>{userData.city}</p>
+                            <p>{capitalizeFirstLetter(userData.city)}</p>
                           </div>
                           <div className="user-profile-info-item">
                             <label>REFERRAL NAME</label>

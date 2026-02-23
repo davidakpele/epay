@@ -54,15 +54,12 @@
 .retry-btn:hover {
   background: var(--bg-main);
 }
-
-/* Transactions List */
 .transactions-list {
   display: flex;
   flex-direction: column;
   gap: 1px;
   background: #e5e7eb;
 }
-
 
 .transaction-card {
   background: #ffffff;
@@ -78,7 +75,6 @@
   background: #f1f5f9;
 }
 
-/* Transaction Summary */
 .transaction-summary {
     cursor: pointer;
     align-items: flex-start;
@@ -123,7 +119,6 @@
   gap: 16px;
 }
 
-/* Text color changes when expanded */
 .transaction-card:not(.expanded) .transaction-type {
   font-size: 15px;
   font-weight: 700;

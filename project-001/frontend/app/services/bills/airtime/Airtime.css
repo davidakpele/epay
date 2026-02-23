@@ -660,7 +660,7 @@
   object-fit: contain;
 }
 
-.modal-overlay {
+.airtime-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
@@ -671,7 +671,7 @@
   font-family: "Karla", sans-serif !important;
 }
 
-.modal-content {
+.airtime-modal-content {
   background: #fff;
   width: 22rem;
   height: 30rem;
@@ -683,14 +683,14 @@
   max-height: 100%; 
 }
 
-.modal-header h3 {
+.airtime-modal-header h3 {
   font-size: 15px;
   margin: 0 0 16px 0;
   color: #333;
   font-family: "Karla", sans-serif !important;
 }
 
-.search-container {
+.airtime-search-container {
   position: sticky;
   top: 0;
   background: white;
@@ -700,38 +700,38 @@
   border-bottom: 1px solid #f8f9fa;
 }
 
-.search-container i {
+.airtime-search-container i {
   position: absolute;
   left: 12px;
   top: 15px;
   color: var(--bg-main);
 }
 
-.search-container input {
-    width: 100%;
-    padding: 5px 5px 5px 36px;
-    border: 1px solid var(--bg-main);
-    border-radius: 8px;
-    font-size: 13px;
-    color: #888c92;
-    font-family: "Karla", sans-serif;
-    box-sizing: border-box; 
-    outline: none;
-    height:45px
+.airtime-search-container input {
+  width: 100%;
+  padding: 5px 5px 5px 36px;
+  border: 1px solid var(--bg-main);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #888c92;
+  font-family: "Karla", sans-serif;
+  box-sizing: border-box; 
+  outline: none;
+  height:45px
 }
 
-.search-container input:focus {
+.airtime-search-container input:focus {
   border: 1px solid var(--bg-main);
   outline: none;
 }
 
-.country-list {
+.airtime-country-list {
   display: block;
   max-height: 400px; 
   overflow-y: auto; 
   padding-right: 8px;
 }
-.country-item {
+.airtime-country-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -743,7 +743,7 @@
   font-family: "Karla", sans-serif !important;
 }
 
-.radio-outer {
+.airtime-radio-outer {
   width: 20px;
   height: 20px;
   border: 2px solid #ddd;
@@ -754,11 +754,11 @@
   flex-shrink: 0;
 }
 
-.radio-outer.checked {
+.airtime-radio-outer.checked {
   border-color: var(--bg-main);
 }
 
-.radio-inner {
+.airtime-radio-inner {
   width: 10px;
   height: 10px;
   background: var(--bg-main);
@@ -766,31 +766,31 @@
   display: none;
 }
 
-.radio-outer.checked .radio-inner {
+.airtime-radio-outer.checked .radio-inner {
   display: block;
 }
 
-.country-list::-webkit-scrollbar {
+.airtime-country-list::-webkit-scrollbar {
   width: 2px !important;
 }
 
-.country-list::-webkit-scrollbar-track {
+.airtime-country-list::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 10px;
 }
 
-.country-list::-webkit-scrollbar-thumb {
+.airtime-country-list::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 10px;
   transition: background 0.3s ease;
 }
 
-.country-list.is-scrolling::-webkit-scrollbar-thumb,
-.country-list::-webkit-scrollbar-thumb:hover {
+.airtime-country-list.is-scrolling::-webkit-scrollbar-thumb,
+.airtime-country-list::-webkit-scrollbar-thumb:hover {
   background: var(--bg-main);
 }
 
-.no-results {
+.airtime-no-results {
   text-align: center;
   padding: 20px;
   color: #adb5bd;
@@ -798,7 +798,7 @@
 }
 
 @media (max-width: 992px) {
-    .modal-overlay {
+    .airtime-modal-overlay {
         padding: 20px;
     }
 }

@@ -14,6 +14,7 @@ type BankRepository interface {
 	FindByUserId(userId uint) ([]model.UserBankList, error)
 	DeleteByIds(ids []uint) error
 	FindByAccountNumberAndBankCode(accountNumber string, bankCode string) (bool, error)
+	FindByAccountNumberAndBankNameForUser(accountNumber string, bankName string) (bool, error)
 	FindInternal(accountNumber string, bankCode string) (*model.UserBankList, error)
 }
 
@@ -56,11 +57,24 @@ func (r *bankRepository) FindByAccountNumberAndBankCode(accountNumber string, ba
 	err := r.db.Model(&model.UserBankList{}).
 		Where("account_number = ? AND bank_code = ?", accountNumber, bankCode).
 		Count(&count).Error
-	
+
 	if err != nil {
 		return false, err
 	}
-	
+
+	return count > 0, nil
+}
+
+func (r *bankRepository) FindByAccountNumberAndBankNameForUser(accountNumber string, bankName string) (bool, error) {
+	var count int64
+	err := r.db.Model(&model.UserBankList{}).
+		Where("account_number = ? AND bank_name = ?", accountNumber, bankName).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
 	return count > 0, nil
 }
 
@@ -71,11 +85,11 @@ func (r *bankRepository) FindInternal(accountNumber string, bankCode string) (*m
 		First(&bank).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil 
+		return nil, nil
 	}
 
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 
 	return &bank, nil
