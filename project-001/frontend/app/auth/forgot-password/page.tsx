@@ -235,6 +235,24 @@ const ForgotPassword = () => {
       </div>
 
       <div className="register-card">
+         <div className="settings-avatar-wrapper">
+          <Link href="/dashboard">
+            <img
+            src={'../assets/images/logo.png'}
+            alt="User profile"
+            style={{
+              width: 'auto',
+              height: '37px',
+              maxWidth: '108px',
+              objectFit: 'contain',
+              display: 'block',
+              cursor: 'pointer',
+            }}
+            onError={(e) => {
+              e.currentTarget.src = '/assets/images/logo.jpg';
+            }}
+          /></Link>
+        </div>
         {!isNextStep && (
             <>
             <div className="step1">

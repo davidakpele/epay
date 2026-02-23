@@ -20,7 +20,7 @@ import MobileNav from '@/components/MobileNav';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import { getFiat, getToken, getUserId, setActiveWallet, setFiat, setWalletContainer, walletService, historyService, userService, capitalizeFirstLetter, getUserDetails, configService } from '../api';
+import { getFiat, getToken, getUserId, setActiveWallet, setFiat, setWalletContainer, walletService, historyService, userService, capitalizeFirstLetter, getUserDetails, configService, getUserFullName } from '../api';
 import { eventEmitter } from '../utils/eventEmitter';
 import KycCheckProgress from '@/components/Kyc/page';
 import { UserSettings } from '../types/utils';
@@ -445,7 +445,7 @@ const Dashboard = () => {
                 /> 
             </div>
             <span className={`user-name-out ${theme === "dark" ? "color-light" : "color-dark"}`}>
-              Welcome back, <span className='username-display'>David</span>
+              Welcome back <span className='username-display'>{getUserFullName()}</span>
             </span>
           </div>
           

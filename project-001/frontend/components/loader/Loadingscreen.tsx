@@ -13,7 +13,22 @@ const LoadingScreen: React.FC = () => {
         
 
         {/* Brand Name */}
-        <h1 className={styles.brandName}>ePay</h1>
+        <h1 className={styles.brandName}>
+          <img
+          src={'../assets/images/logo-ui2.png'}
+          alt="User profile"
+          style={{
+           width: 'auto',
+            height: '55px',
+            maxWidth: '108px',
+            objectFit: 'contain',
+            display: 'block',
+          }}
+          onError={(e) => {
+            e.currentTarget.src = '/assets/images/logo.jpg';
+          }}
+        />
+        </h1>
 
         {/* Tagline */}
         <p className={styles.tagline}>Business Banking</p>

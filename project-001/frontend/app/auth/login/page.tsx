@@ -155,6 +155,24 @@ const Login = () => {
       </div>
 
       <div className="login-card">
+        <div className="settings-avatar-wrapper">
+          <Link href="/dashboard">
+            <img
+            src={'../assets/images/logo.png'}
+            alt="User profile"
+            style={{
+              width: 'auto',
+              height: '37px',
+              maxWidth: '108px',
+              objectFit: 'contain',
+              display: 'block',
+              cursor: 'pointer',
+            }}
+            onError={(e) => {
+              e.currentTarget.src = '/assets/images/logo.jpg';
+            }}
+          /></Link>
+        </div>
         <div className="form-header-text">
           <h2>Login to your account</h2>
           <p className="signup-link-text">

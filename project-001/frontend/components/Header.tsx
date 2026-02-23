@@ -446,10 +446,24 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
           <div className={`mobile-sidebar ${theme === 'dark' ? 'dark-sidebar' : ''}`} ref={sidebarRef}>
             <div className="sidebar-header">
               <div className="sidebar-logo-container">
-                <div className="mobile-logo-icon">
-                  <Smartphone size={22} color="white" />
+                <div className="settings-avatar-wrapper">
+                  <Link href="/dashboard">
+                   <img
+                    src={'../assets/images/logo-ui2.png'}
+                    alt="User profile"
+                    style={{
+                      width: 'auto',
+                      height: '37px',
+                      maxWidth: '108px',
+                      objectFit: 'contain',
+                      display: 'block',
+                      cursor: 'pointer',
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.src = '/assets/images/logo.png';
+                    }}
+                  /></Link>
                 </div>
-                <span className="mobile-logo-text">ePay</span>
               </div>
               <button className={`sidebar-close`} onClick={() => setIsSidebarOpen(false)}>
                 <X size={24} />

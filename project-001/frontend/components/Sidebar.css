@@ -176,3 +176,19 @@
   padding: 16px;
   border: none;
 }
+
+
+
+
+.settings-avatar {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.settings-avatar:hover {
+  transform: scale(1.1);
+}

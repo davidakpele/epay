@@ -12,7 +12,7 @@ import { Currency, SendStatementPayload } from '../../types/api';
 import { AccountTransactionStatement } from '../../types/utils';
 import LoadingScreen from '@/components/loader/Loadingscreen';
 import {  ForwardAccountStatement, StatementItem } from '../../types/errors';
-import { formatAmount, getUserFullName, getUserId, getUsername, getWallet, historyService, userService } from '../../api';
+import { capitalizeFirstLetter, formatAmount, getUserFullName, getUserId, getUsername, getWallet, historyService, userService } from '../../api';
 
 interface Toast {
   id: number;
@@ -687,7 +687,7 @@ This is an official receipt for your records.
                 <div className="ah-account-card">
                   <div className="ah-account-info">
                     <div className="ah-account-details">
-                      <h2 className="ah-account-name">{getUserFullName()}</h2>
+                      <h2 className="ah-account-name" style={{ textTransform: 'uppercase' }}>{capitalizeFirstLetter(getUserFullName()?.toString())}</h2>
                       <p className="ah-account-number">Username:@{getUsername()}</p>
                     </div>
                     <div className="ah-balance-info">
