@@ -6,7 +6,7 @@ import {
   Mail,
   MessageCircle
 } from 'lucide-react';
-  // FAQs data
+
 export const faqs: FAQCategory[] = [
     {
       category: 'Account',

@@ -34,8 +34,6 @@ interface Beneficiary {
     recipientUsername?: string;
     isActive: boolean;
     createdOn: string;
-    updatedOn: string;
-    // UI-specific fields
     initial: string;
     detail: string;
     category: string;
@@ -53,9 +51,6 @@ const BeneficiaryManager = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
-    const [historyFilter, setHistoryFilter] = useState('all');
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
     const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
     const [isPageLoading, setIsPageLoading] = useState(true);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -177,14 +172,12 @@ const BeneficiaryManager = () => {
 
     const openHistoryModal = async (beneficiary: Beneficiary) => {
         try {
+            console.log(beneficiary)
             setSelectedBeneficiary({
                 ...beneficiary,
                 transactions: []
             });
             setShowHistoryModal(true);
-            setHistoryFilter('all');
-            setDateFrom('');
-            setDateTo('');
             setIsLoadingTransactions(true); 
             const minimumDelay = new Promise(resolve => setTimeout(resolve, 3000));
             const fetchData = historyService.getHistoryByBeneficiaryId(beneficiary.userId);
@@ -262,11 +255,10 @@ const BeneficiaryManager = () => {
     // Get frequent beneficiaries (top 5 by most recent)
     const frequentBeneficiaries = useMemo(() => {
         return [...beneficiaries]
-            .sort((a, b) => new Date(b.updatedOn).getTime() - new Date(a.updatedOn).getTime())
+            .sort((a, b) => new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime())
             .slice(0, 5);
     }, [beneficiaries]);
 
-    // Generate random gradient colors for frequent beneficiaries
     const getGradientColor = (index: number) => {
         const colors = [
             "bg-gradient-to-br from-orange-400 to-orange-600",

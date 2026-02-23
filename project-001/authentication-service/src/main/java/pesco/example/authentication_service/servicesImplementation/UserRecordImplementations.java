@@ -240,7 +240,7 @@ public class UserRecordImplementations implements UserRecordService {
             Files.deleteIfExists(filePath);
             Files.copy(image.getInputStream(), filePath);
 
-            String profilePath = "/image/" + fileName;
+            String profilePath = "/uploads/images/" + fileName;
 
             UserRecord userRecord = recordOpt.get();
             userRecord.setPhoto(profilePath);  

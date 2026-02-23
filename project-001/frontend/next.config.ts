@@ -7,7 +7,17 @@ const nextConfig: NextConfig = {
     appNavFailHandling:false,
     turbopackFileSystemCacheForDev: true,
     turbopackClientSideNestedAsyncChunking: true
-  }
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8292',
+        pathname: '/api/uploads/images/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

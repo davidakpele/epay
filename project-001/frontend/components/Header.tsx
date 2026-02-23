@@ -186,6 +186,42 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
     return notifications.filter(n => typesToInclude.includes(n.type)).length;
   };
 
+  useEffect(() => {
+    try {
+        const storedData = localStorage.getItem('data');
+        if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            const userPhoto = parsedData?.user?.photo;
+            if (userPhoto && userPhoto !== '/assets/images/user-profile.jpg') {
+                setProfileImage(userPhoto);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading profile image:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+        try {
+            const storedData = localStorage.getItem('data');
+            if (storedData) {
+                const parsedData = JSON.parse(storedData);
+                const userPhoto = parsedData?.user?.photo;
+                if (userPhoto && userPhoto !== '/assets/images/user-profile.jpg') {
+                    setProfileImage(userPhoto);
+                } else {
+                    setProfileImage('/assets/images/user-profile.jpg');
+                }
+            }
+        } catch (error) {
+            console.error('Error refreshing profile image:', error);
+        }
+    };
+    window.addEventListener('profileImageUpdated', handleStorageChange);
+    return () => window.removeEventListener('profileImageUpdated', handleStorageChange);
+  }, []);
+
   const desktopNavItems = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'bills', label: 'Paybills' },
@@ -304,7 +340,16 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
             <span className="notification-badge">{notifications.length > 0 ? notifications.length : '0'}</span>
           </button>
           <div className="user-avatar">
-            <Image src="/assets/images/user-profile.jpg" alt={'User profile'} width={21} height={21} className="settings-avatar" />
+            <img
+              src={profileImage}
+              alt="User profile"
+              width={21}
+              height={21}
+              className="settings-avatar"
+              onError={(e) => {
+                e.currentTarget.src = '/assets/images/user-profile.jpg';
+              }}
+            />
           </div>
         </div>
 

@@ -360,7 +360,6 @@ export const updateProfileImageInStorage = (imageUrl: string) => {
     console.error("Failed to parse data", e);
   }
   
-  // Update the photo field in user records
   if (!existingData.user) existingData.user = {};
   if (!existingData.user.records) existingData.user.records = [];
   if (existingData.user) {
@@ -371,4 +370,5 @@ export const updateProfileImageInStorage = (imageUrl: string) => {
   localStorage.setItem('data', updatedData);
   sessionStorage.setItem('data', updatedData);
   document.cookie = `data=${encodeURIComponent(updatedData)}; path=/; secure; samesite=None`;
+  window.dispatchEvent(new Event('profileImageUpdated'));
 };

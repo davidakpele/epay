@@ -48,6 +48,7 @@ const UserProfile = () => {
   const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [profileImage, setProfileImage] = useState('/assets/images/user-profile.jpg');
   const [metaMapErrors, setMetaMapErrors] = useState<MetaMapErrors>({});
 
   const [formData, setFormData] = useState({
@@ -101,8 +102,6 @@ const UserProfile = () => {
 
   useEffect(() => {
     fetchUserProfile();
-    
-    // Check if modal has been shown before
     const hasSeenMetaMap = localStorage.getItem('hasSeenMetaMap');
     if (!hasSeenMetaMap) {
       setTimeout(() => {
@@ -118,8 +117,6 @@ const UserProfile = () => {
       
       setUserProfile(response);
       const userRecord = response.records?.[0] || {};
-      
-      // Map API response to UserData structure
       const mappedUserData: UserData = {
         id: response.id || userId,
         fullName: `${userRecord.firstName || ''} ${userRecord.lastName || ''}`.trim(),
@@ -158,6 +155,42 @@ const UserProfile = () => {
   useEffect(() => {
     document.title = 'User Profile - ePay Online Business Banking';
   }, []);
+
+  useEffect(() => {
+      try {
+          const storedData = localStorage.getItem('data');
+          if (storedData) {
+              const parsedData = JSON.parse(storedData);
+              const userPhoto = parsedData?.user?.photo;
+              if (userPhoto && userPhoto !== '/assets/images/user-profile.jpg') {
+                  setProfileImage(userPhoto);
+              }
+          }
+      } catch (error) {
+          console.error('Error loading profile image:', error);
+      }
+    }, []);
+  
+    useEffect(() => {
+      const handleStorageChange = () => {
+          try {
+              const storedData = localStorage.getItem('data');
+              if (storedData) {
+                  const parsedData = JSON.parse(storedData);
+                  const userPhoto = parsedData?.user?.photo;
+                  if (userPhoto && userPhoto !== '/assets/images/user-profile.jpg') {
+                      setProfileImage(userPhoto);
+                  } else {
+                      setProfileImage('/assets/images/user-profile.jpg');
+                  }
+              }
+          } catch (error) {
+              console.error('Error refreshing profile image:', error);
+          }
+      };
+      window.addEventListener('profileImageUpdated', handleStorageChange);
+      return () => window.removeEventListener('profileImageUpdated', handleStorageChange);
+    }, []);
 
   const kycDocuments: KYCDocument[] = [
     {
@@ -381,7 +414,6 @@ const UserProfile = () => {
     }
   };
 
-  // MetaMap Modal Handlers
   const handleMetaMapChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -395,7 +427,6 @@ const UserProfile = () => {
       [name]: undefined
     }));
   };
-
 
   const handleMetaMapAgree = () => {
     setMetaMapStep(2);
@@ -431,7 +462,6 @@ const UserProfile = () => {
     setMetaMapStep(1);
     showToast('Verification submitted successfully!', 'success');
   };
-
 
   const handleMetaMapClose = () => {
     setShowMetaMapExit(true);
@@ -486,11 +516,15 @@ const UserProfile = () => {
               <div className="user-profile-info-card">
                 <div className="user-profile-info-left">
                   <div className="user-profile-avatar">
-                  <Image
-                    src="/assets/images/user-profile.jpg"
-                    alt={userData?.fullName ?? 'User profile'}
-                    width={48}
-                    height={48}
+                  <img
+                    src={profileImage}
+                    alt="User profile"
+                    width={21}
+                    height={21}
+                    className="settings-avatar"
+                    onError={(e) => {
+                      e.currentTarget.src = '/assets/images/user-profile.jpg';
+                    }}
                   />
                   </div>
                   <div className="user-profile-basic-info">

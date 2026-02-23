@@ -11,6 +11,7 @@ import Sidebar from '@/components/Sidebar'
 import "./Bills.css"
 import { filters, services } from '../lib/BillsData';
 import LoadingScreen from '@/components/loader/Loadingscreen';
+import { BILLS_HERO_IMAGE, getBillServiceImage } from '../lib/ImageProvider';
 
 const Bills = () => {
     const [isDepositOpen, setIsDepositOpen] = useState(false);
@@ -40,15 +41,6 @@ const Bills = () => {
         document.body.classList.toggle('dark-theme', newTheme === 'dark');
     };
 
-  const getServiceImage = (name: string) => {
-    const lowerName = name.toLowerCase();
-    if (lowerName.includes('electricity')) return { src: '../../assets/images/electricity_bill.png', alt: 'Electricity' };
-    if (lowerName.includes('internet') || lowerName.includes('data')) return { src: '../../assets/images/wifi.png', alt: 'Data' };
-    if (lowerName.includes('tv') || lowerName.includes('cable')) return { src: '../../assets/images/cabletv-banner.png', alt: 'Cable TV' };
-    if (lowerName.includes('airtime')) return { src: '../../assets/images/airtime-banner.png', alt: 'Airtime' };
-    if (lowerName.includes('betting')) return { src: '../../assets/images/betting-background.png', alt: 'Betting' };
-    return { src: '../../assets/images/shopping-banner.png', alt: 'Service' };
-  };
 
     if (isPageLoading) {
         return <LoadingScreen />;
@@ -75,8 +67,8 @@ const Bills = () => {
                 </div>
                 <div className="page-header-illustration">
                   <Image
-                    src="../../assets/images/bills-hero.png"
-                    alt="Pay Bills Illustration"
+                    src={BILLS_HERO_IMAGE.src}
+                    alt={BILLS_HERO_IMAGE.alt}
                     width={420}
                     height={240}
                     style={{ objectFit: 'contain', maxHeight: '220px' }}
@@ -116,7 +108,7 @@ const Bills = () => {
               {/* ---- Service Cards Grid ---- */}
               <div className="services-container">
                 {filteredServices.map((service) => {
-                  const img = getServiceImage(service.name);
+                  const img = getBillServiceImage(service.name);
                   return (
                     <Link
                       key={service.id}

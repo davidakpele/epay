@@ -17,7 +17,22 @@ spring:
       port: 6379
   web:
     resources:
-      add-mappings: false
+      add-mappings: true
+      static-locations:
+        - classpath:/static/
+        - file:/var/www/uploads/images/ 
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 2MB
+      max-request-size: 2MB
+      file-size-threshold: 0
+      location: /tmp
+  file:
+    upload-dir: ${FILE_UPLOAD_DIR:/var/www/uploads/images} 
+    max-file-size: 2MB
+    allowed-file-types: image/jpeg,image/png,image/gif,image/webp
+
   main:
     allow-bean-definition-overriding: true
   security:
@@ -56,13 +71,6 @@ spring:
     mode: HTML
     encoding: UTF-8
     cache: false
-  servlet:
-    multipart:
-      enabled: true
-      max-file-size: 2MB
-      max-request-size: 2MB
-      file-size-threshold: 0
-      location: /tmp
   sql:
     init:
       mode: never
@@ -99,10 +107,6 @@ jwt:
     expiration: 900000
   refresh-token:
     expiration: 604800000
-
-web:
-  resources:
-    static-locations: classpath:/static/
 
 notification-service:
   base-url: http://notification-service:8079

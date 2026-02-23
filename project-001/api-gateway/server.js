@@ -5,6 +5,8 @@ const axios = require('axios');
 const cors = require('cors');
 const crypto = require('crypto');
 const { URL } = require('url');
+const multer = require('multer');
+const FormData = require('form-data');
 const { Tracer, BatchRecorder, jsonEncoder: { JSON_V2 } } = require('zipkin');
 const { HttpLogger } = require('zipkin-transport-http');
 const CLSContext = require('zipkin-context-cls');
@@ -29,6 +31,7 @@ const BACKEND_WS_URL = process.env.BACKEND_WS_URL || 'ws://localhost:8000/v1';
 const RATE_LIMIT_PER_MINUTE = parseInt(process.env.RATE_LIMIT_PER_MINUTE || '100', 10);
 
 // ==================== Custom Zipkin Axios Wrapper ====================
+const upload = multer({ storage: multer.memoryStorage() });
 
 function createTracedAxiosClient(axiosInstance, tracer, remoteServiceName) {
     const tracedClient = async (config) => {
@@ -353,7 +356,7 @@ class SecurityScanner {
 
 class WAFRules {
     constructor() {
-        this.maxContentLength = 10 * 1024 * 1024;
+        this.maxContentLength = 5 * 1024 * 1024;
         this.allowedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
         this.blockedContentTypes = [
             'application/x-ms-application',
@@ -774,6 +777,75 @@ app.use((req, res, next) => {
 });
 
 // ==================== API Routes ====================
+app.post('/api/settings/upload-profile-image/:id', 
+    securityMiddleware,
+    upload.single('image'),
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+            if (!req.file) {
+                return res.status(400).json({ 
+                    error: 'No image provided', 
+                    message: 'Please include an image file in the request' 
+                });
+            }
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(req.file.mimetype)) {
+                return res.status(400).json({ 
+                    error: 'Invalid file type',
+                    message: 'Only JPEG, PNG, GIF and WebP images are allowed'
+                });
+            }
+
+            const formData = new FormData();
+            formData.append('image', req.file.buffer, {
+                filename: req.file.originalname,
+                contentType: req.file.mimetype,
+            });
+
+            const response = await baseAxiosClient.post(
+                `${BACKEND_URL}/settings/upload-profile-image/${id}`,
+                formData,
+                {
+                    headers: {
+                        ...formData.getHeaders(),
+                        'Authorization': req.headers['authorization'],
+                    },
+                    maxBodyLength: Infinity,   
+                    maxContentLength: Infinity, 
+                }
+            );
+
+            addSecurityHeaders(res);
+            res.status(response.status).json(response.data);
+
+        } catch (err) {
+            console.error('Upload error:', err.message);
+            res.status(500).json({ error: 'Upload failed', message: err.message });
+        }
+    }
+);
+
+// Serve uploaded profile images
+app.get('/api/uploads/images/:filename', async (req, res) => {
+    try {
+        const { filename } = req.params;
+        
+        const response = await baseAxiosClient.get(
+            `${BACKEND_URL}/uploads/images/${filename}`,
+            { responseType: 'stream' }  
+        );
+
+        res.set('Content-Type', response.headers['content-type']);
+        res.set('Cache-Control', 'public, max-age=86400');
+        
+        response.data.pipe(res); 
+
+    } catch (err) {
+        console.error('Image serve error:', err.message);
+        res.status(404).json({ error: 'Image not found' });
+    }
+});
 
 app.use('/api', securityMiddleware);
 
@@ -900,8 +972,6 @@ wss.on('connection', (clientSocket, request) => {
     const query = parsedUrl.search;
     const clientIp = getRealClientIp({ headers: request.headers, connection: request.socket });
     
-    // Extract the path after /api/ws/
-    // Example: /api/ws/wallet -> /wallet
     const backendPath = pathname.replace(/^\/api\/ws/, '');
     const backendWsUrl = `${BACKEND_WS_URL}${backendPath}${query}`;
     

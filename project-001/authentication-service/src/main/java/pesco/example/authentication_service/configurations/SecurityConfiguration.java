@@ -130,8 +130,6 @@ public class SecurityConfiguration {
                     .policy("geolocation=(self), microphone=(), camera=(), payment=()")
                 )
             )
-            
-            // Custom security filters
             .addFilterBefore(
                 new FirewallExceptionFilter(),
                 UsernamePasswordAuthenticationFilter.class
@@ -164,8 +162,8 @@ public class SecurityConfiguration {
                     "/swagger-resources/**",
                     "/webjars/**"
                 ).permitAll()
-                .requestMatchers("/css/**", "/js/**", "/image/**", "/favicon.ico").permitAll()
-                .requestMatchers("/actuator/health", "/health", "/ping").permitAll()
+                .requestMatchers("/uploads/images/**").permitAll()
+                .requestMatchers("/static/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/user/{id}/block").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/user/{id}/lock").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/user/{id}").hasAnyRole("ADMIN", "SUPER_ADMIN")
@@ -174,8 +172,6 @@ public class SecurityConfiguration {
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
-            
-            // OAuth2 JWT configuration
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
                     .jwtAuthenticationConverter(jwtAuthenticationConverter())
@@ -183,16 +179,11 @@ public class SecurityConfiguration {
                 )
                 .authenticationEntryPoint(authenticationEntryPoint)
             )
-            
             .authenticationProvider(authenticationProvider)
-            
-            // Exception handling
             .exceptionHandling(handling -> handling
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(customAccessDeniedHandler())
             )
-            
-            // Session management - stateless for JWT
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             );

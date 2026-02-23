@@ -64,16 +64,16 @@ export const CableProviders = [
     {
         id: 'dstv',
         name: 'DSTV',
-        logo: './assets/images/dstv.jpg'
+        logo: '/assets/images/dstv.jpg'
     },
     {
         id: 'Gotv',
         name: 'Gotv',
-        logo: './assets/images/gotv.png'
+        logo: '/assets/images/gotv.png'
     },
     {
         id: 'startimes',
         name: 'Start Times',
-        logo: './assets/images/startimes.png'
+        logo: '/assets/images/startimes.png'
     },
 ]

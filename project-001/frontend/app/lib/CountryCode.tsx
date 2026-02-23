@@ -2,15 +2,15 @@
 
 export interface CountryCode {
   name: string;
-  code: string;        // Display code (e.g., '+234')
-  dialCode: string;     // Same as code for compatibility
+  code: string; 
+  dialCode: string;
   flag: string;
   iso2: string;
-  iso3?: string;        // Made optional since you're not using it
-  minLength?: number;   // For phone validation
-  maxLength?: number;   // For phone validation
-  format?: string;      // Optional format hint (e.g., '### ### ####')
-  placeholder?: string; // Country-specific placeholder
+  iso3?: string;
+  minLength?: number;
+  maxLength?: number;
+  format?: string;
+  placeholder?: string;
 }
 
 export const countryCodes: CountryCode[] = [
@@ -120,40 +120,31 @@ export const countryCodes: CountryCode[] = [
   { name: 'Uruguay', code: '+598', dialCode: '+598', flag: '🇺🇾', iso2: 'UY', minLength: 8, maxLength: 8, placeholder: '91 234 567' },
 ];
 
-// Helper function to get placeholder based on selected country
 export const getPhonePlaceholder = (countryCode: CountryCode): string => {
   return countryCode.placeholder || 'Enter phone number';
 };
 
-// Helper function to validate phone number for selected country
 export const isValidPhoneForCountry = (phone: string, countryCode: CountryCode): boolean => {
   const digitsOnly = phone.replace(/\D/g, '');
   const length = digitsOnly.length;
   
   if (countryCode.minLength && length < countryCode.minLength) return false;
   if (countryCode.maxLength && length > countryCode.maxLength) return false;
-  
-  // Add more specific validation if needed
   return true;
 };
 
-// Helper to get max length for input
 export const getMaxPhoneLength = (countryCode: CountryCode): number => {
   return countryCode.maxLength || 15;
 };
 
-// Helper to format phone number as user types (basic version)
 export const formatPhoneNumberByCountry = (value: string, countryCode: CountryCode): string => {
-  // Remove all non-digits
   const digits = value.replace(/\D/g, '');
-  
-  // Apply country-specific formatting if available
+
   if (countryCode.iso2 === 'US' || countryCode.iso2 === 'CA') {
     if (digits.length <= 3) return digits;
     if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`;
     return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6,10)}`;
   }
   
-  // Default: just return digits
   return digits;
 };

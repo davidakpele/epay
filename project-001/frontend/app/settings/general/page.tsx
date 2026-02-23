@@ -21,7 +21,6 @@ import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MobileNav from '@/components/MobileNav';
-import Image from 'next/image';
 import DepositModal from '@/components/DepositModal';
 import { UserSettings } from '../../types/utils';
 import LoadingScreen from '@/components/loader/Loadingscreen';
@@ -174,7 +173,7 @@ const Settings = () => {
       });
 
       console.log('User records:', response.records);
-      console.log('Photo path:', userRecord.photo); // This should log "/image/1001.jpeg"
+      console.log('Photo path:', userRecord.photo);
       
       // Update settings with fetched data
       setSettings(prev => ({
@@ -184,9 +183,8 @@ const Settings = () => {
           email: response.email || '',
           phone: userRecord.telephone || '',
           username: response.username || '',
-          // CORRECTED: Access photo from userRecord, not response.records
           profileImage: userRecord.photo 
-            ? `${API_BASE_URL}${userRecord.photo}` 
+            ? `http://localhost:8292/api${userRecord.photo}` 
             : '/assets/images/user-profile.jpg'
         },
         security: {
@@ -202,13 +200,9 @@ const Settings = () => {
         }
       }));
 
-      // Also update the profileImage state if you have one
       if (userRecord.photo) {
-        setProfileImage(`${API_BASE_URL}${userRecord.photo}`);
-        setHasCustomImage(true);
+          setProfileImage(`http://localhost:8292/api${userRecord.photo}`);
       }
-
-      // Fetch user settings after profile is loaded
       await fetchUserSettings();
 
     } catch (error) {
@@ -539,7 +533,7 @@ const Settings = () => {
       formData.append('image', file);
       const id = getUserId();
 
-      const response = await fetch(`http://localhost:8187/settings/upload-profile-image/${id}`, {
+      const response = await fetch(`http://localhost:8292/api/settings/upload-profile-image/${id}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${getToken()}`,
@@ -549,7 +543,7 @@ const Settings = () => {
 
       const data = await response.json();
       if (data.status === 'success' && data.imageUrl) {
-        const fullImageUrl = `${API_BASE_URL}${data.imageUrl}`;
+        const fullImageUrl = `http://localhost:8292/api${data.imageUrl}`;
         URL.revokeObjectURL(previewUrl);
         setProfileImage(fullImageUrl);
         updateProfileImageInStorage(fullImageUrl);
@@ -783,14 +777,16 @@ const Settings = () => {
                             <div className="settings-spinner"></div>
                           </div>
                         ) : (
-                          <Image
+                          <img
                             src={profileImage}
                             alt="User profile"
                             width={100}
                             height={100}
                             className="settings-avatar"
-                            unoptimized={profileImage.startsWith('blob:')}
-                          />
+                            onError={(e) => {
+                                e.currentTarget.src = '/assets/images/user-profile.jpg';
+                            }}
+                        />
                         )}
                         
                         <button 

@@ -20,9 +20,11 @@ import MobileNav from '@/components/MobileNav';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import { getFiat, getToken, getUserId, setActiveWallet, setFiat, setWalletContainer, walletService, historyService } from '../api';
+import { getFiat, getToken, getUserId, setActiveWallet, setFiat, setWalletContainer, walletService, historyService, userService, capitalizeFirstLetter, getUserDetails, configService } from '../api';
 import { eventEmitter } from '../utils/eventEmitter';
 import KycCheckProgress from '@/components/Kyc/page';
+import { UserSettings } from '../types/utils';
+import { Toast } from '../types/auth';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(false);
@@ -32,7 +34,7 @@ const Dashboard = () => {
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [historyKey, setHistoryKey] = useState(0);
-
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [showBalance, setShowBalance] = useState(false);
@@ -44,7 +46,47 @@ const Dashboard = () => {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const scrollTimer = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [profileImage, setProfileImage] = useState('/assets/images/user-profile.jpg');
   const router = useRouter();
+  const user_details = getUserDetails();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    gender: '',
+    telephone: '',
+    dob: '',
+    email: ''
+  });
+
+  const [settings, setSettings] = useState<UserSettings>({
+    profile: {
+      fullName: '',
+      email: '',
+      phone: '',
+      username: '',
+      profileImage: '/assets/images/user-profile.jpg'
+    },
+    security: {
+      twoFactorEnabled: false,
+      biometricEnabled: false,
+      sessionTimeout: 30
+    },
+    notifications: {
+      email: true,
+      push: true,
+      sms: false,
+      transactionAlerts: true,
+      loginAlerts: true,
+      marketingEmails: false
+    },
+    preferences: {
+      language: 'English',
+      currency: 'NGN',
+      theme: 'light',
+      timezone: 'Africa/Lagos'
+    }
+  });
 
   const fetchHistory = useCallback(async () => {
       const userId = getUserId();
@@ -133,6 +175,7 @@ const Dashboard = () => {
   useEffect(() => {
     refreshBalance();
     fetchHistory();
+    fetchUserProfile();
   }, []);
 
   useEffect(() => {
@@ -159,7 +202,163 @@ const Dashboard = () => {
     };
   }, [isDropdownOpen]);
 
-  
+  useEffect(() => {
+    try {
+      const storedData = localStorage.getItem('data');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        const userPhoto = parsedData?.user?.photo;
+        if (userPhoto && userPhoto !== '/assets/images/user-profile.jpg') {
+          setProfileImage(userPhoto);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading profile image:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+        const storedData = localStorage.getItem('data');
+        if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            const userPhoto = parsedData?.user?.photo;
+            if (userPhoto && userPhoto !== '/assets/images/user-profile.jpg') {
+                setProfileImage(userPhoto);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading profile image:', error);
+    }
+  }, []);
+
+  const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
+    setToasts((prev) => {
+      if (prev.length >= 5) return prev;
+
+      const id = Date.now();
+      const newToast: Toast = { id, message: msg, type, exiting: false };
+
+      setTimeout(() => {
+        setToasts((currentToasts) =>
+          currentToasts.map((t) => (t.id === id ? { ...t, exiting: true } : t))
+        );
+
+        setTimeout(() => {
+          setToasts((currentToasts) => currentToasts.filter((t) => t.id !== id));
+        }, 300);
+      }, 3000);
+
+      return [...prev, newToast];
+    });
+  };
+
+  const fetchUserSettings = async () => {
+    try {
+      const userId = getUserId();
+      const response = await configService.getUserSettings(userId);
+      
+      if (response?.status === 'success' && response?.data) {
+        const settingsData = response.data;
+        setSettings(prev => ({
+          ...prev,
+          security: {
+            ...prev.security,
+            biometricEnabled: settingsData.isBiometric || false,
+            sessionTimeout: parseInt(settingsData.sessionTimeOut) || 30
+          },
+          notifications: {
+            email: settingsData.isEmailAlert || false,
+            push: prev.notifications.push,
+            sms: settingsData.isReceiveSmsMessage || false,
+            transactionAlerts: settingsData.isTransactionAlert || false,
+            loginAlerts: settingsData.isLoginAlert || false,
+            marketingEmails: settingsData.isReceiveMarketingNews || false
+          },
+          preferences: {
+            ...prev.preferences,
+            language: settingsData.preferredLanguage || 'English',
+            timezone: settingsData.timeZone || 'Africa/Lagos'
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching user settings:', error);
+      showToast("Error fetching user settings");
+    }
+  };
+    
+  const fetchUserProfile = async () => {
+    try {
+      const userId = getUserId();
+      
+      const response = await userService.getById(userId);
+      const API_BASE_URL = 'http://localhost:8187';  
+      setUserProfile(response);
+      const userRecord = response.records?.[0] || {};
+      
+      setFormData({
+        firstName: userRecord.firstName || '',
+        lastName: userRecord.lastName || '',
+        gender: userRecord.gender
+          ? capitalizeFirstLetter(userRecord.gender)
+          : '',
+        telephone: userRecord.telephone || '',
+        dob: userRecord.dob || user_details?.dob || '',
+        email: response.email || ''
+      });
+
+      setSettings(prev => ({
+        ...prev,
+        profile: {
+          fullName: `${userRecord.firstName || ''} ${userRecord.lastName || ''}`.trim(),
+          email: response.email || '',
+          phone: userRecord.telephone || '',
+          username: response.username || '',
+          profileImage: userRecord.photo 
+            ? `http://localhost:8292/api${userRecord.photo}` 
+            : '/assets/images/user-profile.jpg'
+        },
+        security: {
+          twoFactorEnabled: response.twoFactorAuth || false,
+          biometricEnabled: prev.security.biometricEnabled,
+          sessionTimeout: prev.security.sessionTimeout
+        },
+        preferences: {
+          language: userRecord.language || 'English',
+          currency: userRecord.currency || 'NGN',
+          theme: prev.preferences.theme,
+          timezone: userRecord.timezone || 'Africa/Lagos'
+        }
+      }));
+
+      if (userRecord.photo) {
+        const fullImageUrl = `http://localhost:8292/api${userRecord.photo}`;
+        setProfileImage(fullImageUrl);
+        
+        try {
+            const storedData = localStorage.getItem('data');
+            if (storedData) {
+                const parsedData = JSON.parse(storedData);
+                if (parsedData?.user) {
+                    parsedData.user.photo = fullImageUrl;
+                    localStorage.setItem('data', JSON.stringify(parsedData));
+                }
+            }
+        } catch (err) {
+            console.error('Error updating profile image in storage:', err);
+        }
+    }
+    await fetchUserSettings();
+
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      showToast("Failed to load profile data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
@@ -220,6 +419,8 @@ const Dashboard = () => {
     { icon: <ShoppingBag />, label: 'Shopping', color: '#88e0a3', route: '/services/bills/shopping' },
   ];
 
+  const userRecord = userProfile?.records?.[0] || {};
+
   if (isPageLoading) {
     return <LoadingScreen />;
   }
@@ -232,12 +433,15 @@ const Dashboard = () => {
         <div className="scrollable-content">
           <div className="welcome-message">
             <div className="user-avatar">
-                <Image
-                  src="/assets/images/user-profile.jpg"
-                  alt={'User profile'}
+              <img
+                  src={profileImage}
+                  alt="User profile"
                   width={21}
                   height={21}
                   className="settings-avatar"
+                  onError={(e) => {
+                    e.currentTarget.src = '/assets/images/user-profile.jpg';
+                  }}
                 /> 
             </div>
             <span className={`user-name-out ${theme === "dark" ? "color-light" : "color-dark"}`}>

@@ -20,6 +20,8 @@
     "axios": "^1.6.2",
     "cors": "^2.8.5",
     "express": "^5.2.0",
+    "form-data": "^4.0.5",
+    "multer": "^2.0.2",
     "ws": "^8.14.2",
     "zipkin": "^0.22.0",
     "zipkin-context-cls": "^0.22.0",

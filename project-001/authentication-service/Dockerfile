@@ -1,6 +1,9 @@
 FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
-RUN mkdir -p /app/uploads
+
+RUN mkdir -p /var/www/uploads/images && \
+    chmod -R 755 /var/www/uploads/images
+
 VOLUME /tmp
 COPY target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]

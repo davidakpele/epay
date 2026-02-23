@@ -9,17 +9,10 @@ import Sidebar from '@/components/Sidebar';
 import LoadingScreen from '@/components/loader/Loadingscreen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Building, Building2, ChevronDown, ChevronRight, CircleDollarSign, CreditCard, CreditCardIcon, Grip, ShoppingBag, ShoppingBasket, ShoppingCart, Wallet } from 'lucide-react';
+import { Building2, ChevronRight, CreditCard,  Grip, ShoppingBag, ShoppingCart, Wallet } from 'lucide-react';
 import './Shopping.css';
 import { Toast } from '@/app/types/auth';
-
-const shoppingProviders = [
-  { id: 'jumia',      name: 'Jumia',      logo: '../../assets/images/jumia.png' },
-  { id: 'aliexpress', name: 'AliExpress', logo: '../../assets/images/aliexpress.png' },
-  { id: 'amazon',     name: 'Amazon',     logo: '../../assets/images/amazon.jpg' },
-  { id: 'jiji',       name: 'Jiji',       logo: '../../assets/images/jiji.jpg' },
-  { id: 'ebay',       name: 'eBay',       logo: '../../assets/images/ebay.png' },
-];
+import { shoppingProviders } from '@/app/lib/ImageProvider';
 
 const paymentOptions = [
   { id: 'wallet',   label: 'Wallet Balance', icon: <Wallet style={{color:"var(--bg-main)"}}/> },

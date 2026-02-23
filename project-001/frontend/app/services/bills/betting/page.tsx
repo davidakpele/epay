@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { ChevronDown, ChevronRight, CircleDollarSign, Trophy } from 'lucide-react';
 import './Betting.css';
 import { Toast } from '@/app/types/auth';
-import { BettingProviders } from '@/app/lib/BettingProvider';
+import { BettingProviders } from '@/app/lib/ImageProvider';
 
 
 const quickAmounts = [500, 1000, 2000, 5000, 10000];
