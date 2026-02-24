@@ -17,7 +17,6 @@ func NewBeneficiaryHandler(service services.BeneficiaryService) *BeneficiaryHand
 	return &BeneficiaryHandler{service: service}
 }
 
-// CreateBeneficiary handles creating a new beneficiary (bank or user)
 func (h *BeneficiaryHandler) CreateBeneficiary(c *gin.Context, beneficiary *model.Beneficiary) error {
 	err := h.service.CreateBeneficiary(beneficiary)
 	if err != nil {
