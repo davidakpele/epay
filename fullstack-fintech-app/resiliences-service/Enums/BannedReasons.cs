@@ -1,0 +1,16 @@
+namespace resiliences_service.Enums
+{
+    public enum BannedReasons
+    {
+        SUSPICIOUS_ACTIVITY,
+        TERMS_OF_SERVICE_VIOLATION,
+        FRAUDULENT_ACTIVITY,
+        HARASSMENT_OR_BULLYING,
+        INAPPROPRIATE_CONTENT,
+        PLATFORM_MANIPULATION,
+        IDENTITY_VERIFICATION_FAILURE,
+        SPAMMING_OR_SOLICITATION,
+        MULTIPLE_USER_REPORTS,
+        MODERATOR_ACTION
+    }
+}

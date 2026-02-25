@@ -456,37 +456,37 @@ services:
     networks:
       - banking-network
   
-  administrator:
-    restart: unless-stopped
-    build: ./administrator
-    container_name: administrator
-    image: davidakpele/administrator:latest
-    ports:
-      - "8109:8109"
-    environment:
-      - SPRING_REDIS_HOST=redis
-      - SPRING_REDIS_PORT=6379
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/banking_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=banking_user
-      - SPRING_DATASOURCE_PASSWORD=banking_pass
-    depends_on:
-      - mysql
-      # - postgres
-      - escrow-service
-      - notification-service
-      - wallet-service
-      - history-service
-      - maintenance-service
-      - authentication-service
-      - blacklist-service
-      - deposit-service
-      - revenue-service
-      - bank-collection-service
-      - beneficiary-service
-      - withdraw-service
-      - redis
-    networks:
-      - banking-network
+  # administrator:
+  #   restart: unless-stopped
+  #   build: ./administrator
+  #   container_name: administrator
+  #   image: davidakpele/administrator:latest
+  #   ports:
+  #     - "8109:8109"
+  #   environment:
+  #     - SPRING_REDIS_HOST=redis
+  #     - SPRING_REDIS_PORT=6379
+  #     - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/banking_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+  #     - SPRING_DATASOURCE_USERNAME=banking_user
+  #     - SPRING_DATASOURCE_PASSWORD=banking_pass
+  #   depends_on:
+  #     - mysql
+  #     # - postgres
+  #     - escrow-service
+  #     - notification-service
+  #     - wallet-service
+  #     - history-service
+  #     - maintenance-service
+  #     - authentication-service
+  #     - blacklist-service
+  #     - deposit-service
+  #     - revenue-service
+  #     - bank-collection-service
+  #     - beneficiary-service
+  #     - withdraw-service
+  #     - redis
+  #   networks:
+  #     - banking-network
 
   frontend:
     build: ./frontend
