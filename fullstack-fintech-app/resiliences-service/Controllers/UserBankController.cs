@@ -7,7 +7,7 @@ using resiliences_service.Payloads;
 namespace resiliences_service.Controllers
 {
     [ApiController]
-    [Route("api/banks")]
+    [Route("bank")]
     [Authorize]
     public class UserBankController : ControllerBase
     {
@@ -20,7 +20,7 @@ namespace resiliences_service.Controllers
             _logger  = logger;
         }
 
-        [HttpPost]
+        [HttpPost("create")]
         public async Task<IActionResult> CreateBank([FromBody] CreateBankPayload payload)
         {
             if (!ModelState.IsValid)
@@ -62,6 +62,21 @@ namespace resiliences_service.Controllers
             }
         }
 
+        [HttpGet("bank-list")]
+        public async Task<IActionResult> FetchAllBanks()
+        {
+            try
+            {
+                var banks = await _service.FetchAllBanksAsync();
+                return Ok(banks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[UserBankController] FetchAllBanks failed");
+                return StatusCode(500, new { error = "Failed to fetch bank list" });
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(uint id)
         {
@@ -80,7 +95,7 @@ namespace resiliences_service.Controllers
                 : Ok(new { message = "Success", data = bank });
         }
 
-        [HttpGet("user/{id}")]
+        [HttpGet("users/{id}")]
         public async Task<IActionResult> GetByUserId(uint id)
         {
             try
@@ -110,21 +125,6 @@ namespace resiliences_service.Controllers
             {
                 _logger.LogError(ex, "[UserBankController] DeleteByIds failed");
                 return StatusCode(500, new { error = "Failed to delete banks" });
-            }
-        }
-
-        [HttpGet("list")]
-        public async Task<IActionResult> FetchAllBanks()
-        {
-            try
-            {
-                var banks = await _service.FetchAllBanksAsync();
-                return Ok(banks);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[UserBankController] FetchAllBanks failed");
-                return StatusCode(500, new { error = "Failed to fetch bank list" });
             }
         }
 
@@ -158,7 +158,7 @@ namespace resiliences_service.Controllers
             }
         }
 
-        [HttpGet("verify/external")]
+        [HttpGet("verify-user-bank-details")]
         public async Task<IActionResult> VerifyExternal(
             [FromQuery] string accountNumber,
             [FromQuery] string bankCode)
@@ -168,9 +168,8 @@ namespace resiliences_service.Controllers
                 var result = await _service.VerifyExternalAsync(accountNumber, bankCode);
                 return Ok(new { status = true, message = "Account number resolved", data = result });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "[UserBankController] VerifyExternal failed");
                 return StatusCode(500, new { error = "Error verifying bank account" });
             }
         }

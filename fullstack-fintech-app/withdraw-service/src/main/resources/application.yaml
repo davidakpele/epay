@@ -21,10 +21,10 @@ revenue-service:
   base-url: http://revenue-service:8083
   
 blacklist-service:
-  base-url: http://blacklist-service:8013
+  base-url: http://resiliences-service:8531
   
 history-service:
-  base-url: http://history-service:8390
+  base-url: http://resiliences-service:8531
 
 wallet-service:
   base-url: http://wallet-service:8035
@@ -36,7 +36,7 @@ auth-service:
   base-url: http://authentication-service:8187
 
 banklist-service:
-  base-url: http://banklist-service:8040
+  base-url: http://resiliences-service:8531
 
 notification-service:
   base-url: http://notification-service:8079

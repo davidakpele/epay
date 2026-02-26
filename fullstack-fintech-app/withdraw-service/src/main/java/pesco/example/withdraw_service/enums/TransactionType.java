@@ -10,7 +10,4 @@ public enum TransactionType {
     SELL,
     SEND,
     RECEIVE,
-    BANK_TO_WALLET_DEPOST,
-    WALLET_TO_BANK_TRANSFER,
-    WALLET_TO_WALLET_TRANSFER
 }

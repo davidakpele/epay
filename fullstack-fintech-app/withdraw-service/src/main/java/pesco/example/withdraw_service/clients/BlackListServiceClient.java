@@ -1,9 +1,12 @@
 package pesco.example.withdraw_service.clients;
 
 import java.util.Map;
+
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
 import pesco.example.withdraw_service.enums.BanActions;
 import reactor.core.publisher.Mono;
 
@@ -22,7 +25,13 @@ public class BlackListServiceClient {
                     .uri(uriBuilder -> uriBuilder.path("/blacklist/status/{id}").build(id))
                     .header("Authorization", "Bearer " + token)
                     .retrieve()
-                    .bodyToMono(Boolean.class)
+                    .onStatus(status -> status.value() == 404, response -> Mono.empty())
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .map(body -> {
+                        Object data = body.get("data");
+                        return data != null && Boolean.parseBoolean(data.toString());
+                    })
+                    .defaultIfEmpty(false)
                     .block();
         } catch (Exception ex) {
             System.err.println("Error finding wallet by ID: " + ex.getMessage());

@@ -7,7 +7,7 @@ using resiliences_service.Models;
 namespace resiliences_service.Controllers
 {
     [ApiController]
-    [Route("api/beneficiaries")]
+    [Route("beneficiaries")]
     [Authorize]
     public class BeneficiaryController : ControllerBase
     {

@@ -30,18 +30,6 @@ func (bc *BlackListedWalletController) AddToBlackList(c *gin.Context) {
 	bc.handler.AddToBlackList(c)
 }
 
-// defaultHome handles the default home route
-func (bc *BlackListedWalletController) DefaultHome(c *gin.Context) {
-    // Create a simple response
-    response := gin.H{
-        "message": "Welcome to the Black listed wallet Service!",
-        "status":  "success",
-    }
-    
-    // Return JSON response
-    c.JSON(http.StatusOK, response)
-}
-
 func (bc *BlackListedWalletController) CountBlacklistedWallets(c *gin.Context) {
     bc.handler.CountBlacklistedWallets(c)
 }

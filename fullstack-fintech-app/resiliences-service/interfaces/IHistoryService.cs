@@ -5,6 +5,7 @@ namespace resiliences_service.interfaces
     public interface IHistoryService
     {
         Task<History> CreateWithdrawalAsync(History history);
+        Task<History> CreateCreditAsync(History history);
         Task<History> CreateDepositAsync(History history);
         Task<History> CreateSwapAsync(History history);
         Task<History?> GetByIdAsync(string id);

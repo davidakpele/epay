@@ -42,7 +42,14 @@ namespace resiliences_service.Services
 
         public async Task<History> CreateWithdrawalAsync(History history)
         {
-            history.Type = TransactionType.WITHDRAW;
+            var created = await _repo.CreateAsync(history);
+            InvalidateCacheFireAndForget(history.UserId);
+            return created;
+        }
+
+        public async Task<History> CreateCreditAsync(History history)
+        {
+            history.Type = TransactionType.CREDITED;
             var created = await _repo.CreateAsync(history);
             InvalidateCacheFireAndForget(history.UserId);
             return created;
@@ -51,7 +58,7 @@ namespace resiliences_service.Services
         public async Task<History> CreateDepositAsync(History history)
         {
             AutoFill(history);
-            history.Type = TransactionType.DEPOSITED;
+            history.Type = TransactionType.DEPOSIT;
             var created = await _repo.CreateAsync(history);
             InvalidateCacheFireAndForget(history.UserId);
             return created;

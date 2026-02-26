@@ -82,7 +82,7 @@ authentication-service:
   base-url: http://authentication-service:8187
 
 history-service:
-  base-url: http://history-service:8390
+  base-url: http://resiliences-service:8531
 
 notification-service:
   base-url: http://notification-service:8079

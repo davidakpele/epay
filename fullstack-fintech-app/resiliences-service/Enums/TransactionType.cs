@@ -2,7 +2,7 @@ namespace resiliences_service.Enums
 {
     public enum TransactionType
     {
-        DEPOSITED,
+        DEPOSIT,
         WITHDRAW,
         TRANSFER,
         CREDITED,
@@ -10,5 +10,7 @@ namespace resiliences_service.Enums
         BUY,
         SELL,
         SWAP,
+        SEND,
+        RECEIVE
     }
 }

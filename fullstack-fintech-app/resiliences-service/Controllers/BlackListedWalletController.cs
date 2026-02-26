@@ -1,14 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
-using resiliences_service.DTOs;
 using resiliences_service.interfaces;
 using resiliences_service.Payloads;
 using resiliences_service.Resopones;
-using resiliences_service.Services;
 
 namespace resiliences_service.Controllers
 {
     [ApiController]
-    [Route("api/blacklist")]
+    [Route("blacklist")]
     public class BlackListedWalletController : ControllerBase
     {
         private readonly IBlackListedWalletService _service;
@@ -18,13 +16,7 @@ namespace resiliences_service.Controllers
             _service = service;
         }
 
-        [HttpGet]
-        public IActionResult DefaultHome()
-        {
-            return Ok(ApiResponse.Success("Welcome to the Blacklisted Wallet Service!"));
-        }
-
-        [HttpGet("check/{walletId}")]
+        [HttpGet("status/{walletId}")]
         public async Task<IActionResult> CheckWalletBlacklistStatus(uint walletId)
         {
             try
@@ -42,7 +34,7 @@ namespace resiliences_service.Controllers
             }
         }
 
-        [HttpDelete("{walletId}")]
+        [HttpDelete("delete/{walletId}")]
         public async Task<IActionResult> RemoveBlacklistedWallet(uint walletId)
         {
             try
@@ -60,7 +52,7 @@ namespace resiliences_service.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("add")]
         public async Task<IActionResult> AddToBlackList([FromBody] AddToBlackListRequest request)
         {
             if (!ModelState.IsValid)
