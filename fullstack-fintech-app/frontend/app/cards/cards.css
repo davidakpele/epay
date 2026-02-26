@@ -236,7 +236,7 @@
   }
 }
 
-.modal-header {
+.card-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -247,14 +247,14 @@
   flex-shrink: 0;
 }
 
-.modal-header h2 {
+.card-modal-header h2 {
   font-size: 24px;
   font-weight: 700;
   color: #1f2937;
   margin: 0;
 }
 
-.modal-close {
+.card-modal-close {
   background: none;
   border: none;
   cursor: pointer;
@@ -264,12 +264,12 @@
   border-radius: 8px;
 }
 
-.modal-close:hover {
+.card-modal-close:hover {
   background: #f3f4f6;
   color: #1f2937;
 }
 
-.modal-body {
+.card-modal-body {
   padding: 20px 28px 28px 28px;
   overflow-y: auto;
   flex: 1;
@@ -277,22 +277,22 @@
 }
 
 /* Custom Scrollbar */
-.modal-body::-webkit-scrollbar {
+.card-modal-body::-webkit-scrollbar {
   width: 3px;
 }
 
-.modal-body::-webkit-scrollbar-track {
+.card-modal-body::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 10px;
   margin: 8px 0;
 }
 
-.modal-body::-webkit-scrollbar-thumb {
+.card-modal-body::-webkit-scrollbar-thumb {
   background: var(--bg-main);
   border-radius: 10px;
 }
 
-.modal-body::-webkit-scrollbar-thumb:hover {
+.card-modal-body::-webkit-scrollbar-thumb:hover {
   background: var(--bg-main);
   opacity: 0.8;
 }
@@ -1023,33 +1023,33 @@
   border: 1px solid #374151;
 }
 
-.dark .modal-header {
+.dark .card-modal-header {
   background: #1f2937;
   border-bottom-color: #374151;
 }
 
-.dark .modal-header h2 {
+.dark .card-modal-header h2 {
   color: #f9fafb;
 }
 
-.dark .modal-close {
+.dark .card-modal-close {
   color: #9ca3af;
 }
 
-.dark .modal-close:hover {
+.dark .card-modal-close:hover {
   background: #374151;
   color: #f9fafb;
 }
 
-.dark .modal-body::-webkit-scrollbar-track {
+.dark .card-modal-body::-webkit-scrollbar-track {
   background: #374151;
 }
 
-.dark .modal-body::-webkit-scrollbar-thumb {
+.dark .card-modal-body::-webkit-scrollbar-thumb {
   background: var(--bg-main);
 }
 
-.dark .modal-body::-webkit-scrollbar-thumb:hover {
+.dark .card-modal-body::-webkit-scrollbar-thumb:hover {
   background: var(--bg-main);
   opacity: 0.8;
 }
@@ -1232,16 +1232,16 @@
     height: 100vh;
   }
   
-  .modal-header {
+  .card-modal-header {
     border-radius: 0;
     padding: 20px;
   }
   
-  .modal-header h2 {
+  .card-modal-header h2 {
     font-size: 20px;
   }
   
-  .modal-body {
+  .card-modal-body {
     padding: 20px;
   }
   

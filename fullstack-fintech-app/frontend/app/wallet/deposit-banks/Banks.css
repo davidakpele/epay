@@ -16,12 +16,6 @@
   gap: 2rem;
 }
 
-@media (min-width: 1024px) {
-  .banks-grid {
-    grid-template-columns: 2fr 3fr;
-  }
-}
-
 /* Bank Card */
 .banks-card {
   background-color: white;
@@ -506,6 +500,11 @@
 
   .banks-card {
     padding: 1.5rem;
+    margin-bottom: 10px;
+  }
+  .banks-list-header,
+  .form-header{
+    display: block;
   }
 
   .banks-grid {
@@ -698,4 +697,15 @@
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+@media (min-width: 1024px) {
+  .banks-grid {
+    grid-template-columns: 2fr 3fr;
+  
+  }
+  .banks-list-header{
+    display: block !important;
+  }
+
 }

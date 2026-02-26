@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { ChevronRight, Plus, CreditCard, Eye, EyeOff, Info, ArrowUpRight, ArrowDownLeft, ChevronDown, Search } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import DepositModal from '@/components/DepositModal';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
@@ -8,11 +9,12 @@ import MobileNav from '@/components/MobileNav';
 import Sidebar from '@/components/Sidebar';
 import LoadingScreen from '@/components/loader/Loadingscreen';
 import Link from 'next/link';
-import { ChevronRight, Plus, CreditCard, Eye, EyeOff, Info, ArrowUpRight, ArrowDownLeft, ChevronDown } from 'lucide-react';
 import './VirtualCards.css';
 import { Toast } from '@/app/types/auth';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { getFiat, getToken, getUserFullName, getUserId, setActiveWallet, setFiat, setWalletContainer } from '@/app/api/utils';
+import { walletService } from '@/app/api';
+import { Currency } from '@/app/types/api';
+import { useRouter } from 'next/navigation';
 
 type CardStatus = 'Active' | 'Pending' | 'On Review';
 type CardNetwork = 'Visa' | 'Mastercard';
@@ -50,18 +52,9 @@ interface Wallet {
   flag: string;
 }
 
-// ─── Flag image helper ────────────────────────────────────────────────────────
-
 const Flag = ({ src, alt }: { src: string; alt: string }) => (
   <img src={src} alt={alt} className="flag-img" />
 );
-
-// ─── Data ─────────────────────────────────────────────────────────────────────
-
-const wallets: Wallet[] = [
-  { code: 'USD', label: 'USD Wallet', balance: 3280.50, symbol: '$', flag: '../../assets/images/america-flag.png' },
-  { code: 'EUR', label: 'EUR Wallet', balance: 2450.00, symbol: '€', flag: '../../assets/images/euro.png' },
-];
 
 const initialCards: VirtualCard[] = [
   { id: '1', network: 'Visa',       currency: 'USD', label: 'USD Virtual Card', last4: '4521', expiry: '08/26', holder: 'JOHN A. DOE', status: 'Active',    balance: 1200, flag: '../../assets/images/america-flag.png' },
@@ -84,35 +77,44 @@ const cardCurrencyOptions = [
   { code: 'GBP', symbol: '£', label: 'GBP (£)', flag: '../../assets/images/uk-flag.png' },
 ];
 
-// ─── Component ────────────────────────────────────────────────────────────────
+const cardFees: Record<CardNetwork, string> = {
+  Visa: '$5',
+  Mastercard: '$25',
+};
 
 const VirtualCardsPage = () => {
-  const [isDepositOpen, setIsDepositOpen]           = useState(false);
-  const [theme, setTheme]                           = useState<'light' | 'dark'>('light');
-  const [isPageLoading, setIsPageLoading]           = useState(true);
-  const [toasts, setToasts]                         = useState<Toast[]>([]);
-
-  const [cards, setCards]                           = useState<VirtualCard[]>(initialCards);
+  const [fundModal, setFundModal]                   = useState<{ open: boolean; card: VirtualCard | null }>({ open: false, card: null });
+  const [withdrawModal, setWithdrawModal]           = useState<{ open: boolean; card: VirtualCard | null }>({ open: false, card: null });
   const [activeTab, setActiveTab]                   = useState<'All Cards' | 'Active' | 'Pending' | 'On Review'>('All Cards');
+  const [theme, setTheme]                           = useState<'light' | 'dark'>('light');
+  const [cards, setCards]                           = useState<VirtualCard[]>(initialCards);
   const [hiddenCards, setHiddenCards]               = useState<Set<string>>(new Set());
   const [selectedCardDetail, setSelectedCardDetail] = useState<VirtualCard | null>(null);
-
-  const [showBalances, setShowBalances]             = useState(true);
-  const [selectedWallet, setSelectedWallet]         = useState<Wallet>(wallets[0]);
-
-  const [formWallet, setFormWallet]                 = useState<Wallet>(wallets[0]);
-  const [isFormWalletOpen, setIsFormWalletOpen]     = useState(false);
   const [cardNetwork, setCardNetwork]               = useState<CardNetwork>('Visa');
   const [cardCurrency, setCardCurrency]             = useState(cardCurrencyOptions[0]);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
+  const [formWallet, setFormWallet] = useState<Wallet | null>(null);
+  const [toasts, setToasts]                         = useState<Toast[]>([]);
+  const [isDepositOpen, setIsDepositOpen]           = useState(false);
+  const [isPageLoading, setIsPageLoading]           = useState(true);
+  const [showBalances, setShowBalances]             = useState(true);
+  const [isFormWalletOpen, setIsFormWalletOpen]     = useState(false);
   const [isCurrencyDropOpen, setIsCurrencyDropOpen] = useState(false);
   const [fundAmount, setFundAmount]                 = useState('');
   const [isSubmitting, setIsSubmitting]             = useState(false);
-
-  const [fundModal, setFundModal]                   = useState<{ open: boolean; card: VirtualCard | null }>({ open: false, card: null });
-  const [withdrawModal, setWithdrawModal]           = useState<{ open: boolean; card: VirtualCard | null }>({ open: false, card: null });
-  const [modalAmount, setModalAmount]               = useState('');
-
-  // ─── Helpers ──────────────────────────────────────────────────────────────────
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
+  const [error, setError] = useState('');
+  const [wallet, setWallet] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isScrolling, setIsScrolling] = useState(false);
+  const userFullName = getUserFullName() || 'User';
+  const router = useRouter();
+  const [modalAmount, setModalAmount] = useState('');
 
   const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
     setToasts((prev) => {
@@ -150,6 +152,7 @@ const VirtualCardsPage = () => {
     }
   };
 
+  
   const getCardGradient = (card: VirtualCard) => {
     if (card.status === 'Pending' || card.status === 'On Review') return 'card-gradient-dark';
     if (card.currency === 'EUR') return 'card-gradient-blue';
@@ -164,32 +167,35 @@ const VirtualCardsPage = () => {
     ? cards
     : cards.filter((c) => c.status === activeTab);
 
-  // ─── Handlers ─────────────────────────────────────────────────────────────────
-
   const handleRequestCard = async () => {
-    if (!fundAmount && Number(fundAmount) < 0) {
-      showToast('Please enter a valid amount', 'warning');
-      return;
-    }
-    setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    const newCard: VirtualCard = {
-      id: String(Date.now()),
-      network: cardNetwork,
-      currency: formWallet.code,
-      label: `${formWallet.code} Virtual Card`,
-      last4: String(Math.floor(1000 + Math.random() * 9000)),
-      expiry: '12/27',
-      holder: 'YOU',
-      status: 'Pending',
-      balance: Number(fundAmount) || 0,
-      flag: formWallet.flag,
-    };
-    setCards((prev) => [newCard, ...prev]);
-    setFundAmount('');
-    setIsSubmitting(false);
-    showToast('Card request submitted successfully!', 'success');
+  if (!formWallet) {
+    showToast('Please select a wallet', 'warning');
+    return;
+  }
+  
+  if (!fundAmount && Number(fundAmount) < 0) {
+    showToast('Please enter a valid amount', 'warning');
+    return;
+  }
+  setIsSubmitting(true);
+  await new Promise((r) => setTimeout(r, 2000));
+  const newCard: VirtualCard = {
+    id: String(Date.now()),
+    network: cardNetwork,
+    currency: formWallet.code,
+    label: `${formWallet.code} Virtual Card`,
+    last4: String(Math.floor(1000 + Math.random() * 9000)),
+    expiry: '12/27',
+    holder: 'YOU',
+    status: 'Pending',
+    balance: Number(fundAmount) || 0,
+    flag: formWallet.flag,
   };
+  setCards((prev) => [newCard, ...prev]);
+  setFundAmount('');
+  setIsSubmitting(false);
+  showToast('Card request submitted successfully!', 'success');
+};
 
   const handleFundCard = async () => {
     const amt = Number(modalAmount);
@@ -216,14 +222,102 @@ const VirtualCardsPage = () => {
     showToast(`${getCurrencySymbol(withdrawModal.card!.currency)}${amt.toLocaleString()} withdrawn successfully!`, 'success');
   };
 
+  const loadWalletBalance = useCallback(async () => {
+    try {
+      setError('');
+      const token = getToken();
+      const userId = getUserId();
+      
+      if (!token || !userId) {
+        setError('Please login to view wallet');
+        return;
+      }
+      
+      const response = await walletService.getByUserId(userId, token);
+      if (!response || response.status === 401 || response.status === 500) {
+        setError('Failed to fetch wallet data');
+        router.push('/auth/logout');
+        return;
+      }
+      setWallet(response);
+      
+      if (response && response.wallet_balances) {
+        const apiCurrencies: Currency[] = response.wallet_balances.map((balance: any) => {
+          const currencyName = balance.currency_code;
+          return {
+            name: currencyName,
+            code: balance.currency_code,
+            symbol: balance.symbol
+          };
+        });
+        
+        setCurrencies(apiCurrencies);
+        if (getFiat() !== '' && getFiat() != null) {
+          const fiatCurrency = apiCurrencies.find(c => c.code === getFiat());
+          if (fiatCurrency) {
+            setSelectedCurrency(fiatCurrency);
+          }
+        }
+        else {
+          if (!selectedCurrency && apiCurrencies.length > 0) {
+            const defaultCurrency = apiCurrencies.find(c => c.code === 'NGN') || apiCurrencies[0];
+            setSelectedCurrency(defaultCurrency);
+            setActiveWallet(defaultCurrency.code);
+            setFiat(defaultCurrency.code);
+          }
+        }
+          
+        setWalletContainer(response.wallet_balances, response.hasTransferPin, response.walletId);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }, []); 
+
   useEffect(() => {
+    loadWalletBalance();
     const t = setTimeout(() => setIsPageLoading(false), 2000);
     return () => clearTimeout(t);
   }, []);
 
-  if (isPageLoading) return <LoadingScreen />;
+  useEffect(() => {
+    if (wallet && wallet.wallet_balances) {
+      const filteredWallets = wallet.wallet_balances
+        .filter((w: any) => w.currency_code === 'USD' || w.currency_code === 'NGN')
+        .map((w: any) => ({
+          code: w.currency_code,
+          label: `${w.currency_code} Wallet`,
+          balance: parseFloat(w.balance),
+          symbol: w.symbol,
+          flag: w.currency_code === 'USD' 
+            ? '../../assets/images/america-flag.png' 
+            : '../../assets/images/nigeria-flag.png'
+        }));
+      setWallets(filteredWallets);
+      
+      // Set default selected wallet
+      if (filteredWallets.length > 0) {
+        setSelectedWallet(filteredWallets[0]);
+        setFormWallet(filteredWallets[0]);
+      }
+    }
+  }, [wallet]);
 
-  // ─── Render ──────────────────────────────────────────────────────────────────
+  const handleScroll = () => {
+    setIsScrolling(true);
+    if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => setIsScrolling(false), 1000);
+  };
+
+
+  const filteredCurrencies = currencies.filter(c => 
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    c.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  
+
+  if (isPageLoading) return <LoadingScreen />;
 
   return (
     <div className={`dashboard-container ${theme === 'dark' ? 'dark' : ''}`}>
@@ -234,17 +328,17 @@ const VirtualCardsPage = () => {
 
         <div className="scrollable-content">
           <div className="toastrs">
-          {toasts.map((toast) => (
-            <div
-              key={toast.id}
-              className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}>
-              <div className="toast-icon">
-                <i className={`fa ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} aria-hidden="true"></i>
+            {toasts.map((toast) => (
+              <div
+                key={toast.id}
+                className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}>
+                <div className="toast-icon">
+                  <i className={`fa ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} aria-hidden="true"></i>
+                </div>
+                <div className="toast-message">{toast.message}</div>
               </div>
-              <div className="toast-message">{toast.message}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
           <div className="main-container">
 
@@ -285,9 +379,8 @@ const VirtualCardsPage = () => {
                   {wallets.map((w, i) => (
                     <React.Fragment key={w.code}>
                       <div
-                        className={`vc-wallet-item ${selectedWallet.code === w.code ? 'vc-wallet-selected' : ''}`}
-                        onClick={() => setSelectedWallet(w)}
-                      >
+                          className={`vc-wallet-item ${selectedWallet?.code === w.code ? 'vc-wallet-selected' : ''}`}
+                          onClick={() => setSelectedWallet(w)}>
                         <Flag src={w.flag} alt={w.code} />
                         <div className="vc-wallet-item-inner">
                           <span className="vc-wallet-label">{w.label}</span>
@@ -300,11 +393,11 @@ const VirtualCardsPage = () => {
                     </React.Fragment>
                   ))}
                   <div className="vc-wallet-balance">
-                    <span className="vc-balance-currency">{selectedWallet.symbol}</span>
+                    <span className="vc-balance-currency">{selectedWallet?.symbol}</span>
                     <span className="vc-balance-amount">
                       {showBalances
-                        ? `${selectedWallet.symbol}${selectedWallet.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-                        : `${selectedWallet.symbol} ••••••`}
+                        ? `${selectedWallet?.symbol}${selectedWallet?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                        : `${selectedWallet?.symbol} ••••••`}
                     </span>
                   </div>
                 </div>
@@ -345,40 +438,36 @@ const VirtualCardsPage = () => {
 
               {/* Request New Card */}
               <div className="vc-request-card" id="request-section">
-                <h3 className="vc-request-title"><span className="title-green">Request</span> New Card</h3>
+                <h3 className="vc-request-title">
+                  <span className="title-green">Request</span> New Card
+                </h3>
                 <div className="vc-request-form">
-
+                        
                   {/* Select Wallet */}
                   <div className="vc-form-col">
                     <label className="vc-form-label">Select Wallet</label>
-                    <div className="vc-dropdown" onClick={() => setIsFormWalletOpen(!isFormWalletOpen)}>
-                      <Flag src={formWallet.flag} alt={formWallet.code} />
-                      <span>{formWallet.label}</span>
-                      <ChevronDown size={14} className="vc-dropdown-chevron" />
+                    <div className="vc-dropdown" onClick={() => {
+                      setIsModalOpen(true);
+                      setIsDropdownOpen(!isDropdownOpen);
+                    }} style={{ cursor: 'pointer' }}>
+                      <span className='currency-option'>
+                        {selectedCurrency?.code || 'NGN'} 
+                        {isDropdownOpen ? <ChevronDown size={14} className="vc-dropdown-chevron" /> : <ChevronDown size={14} className="vc-dropdown-chevron" />}
+                      </span>
                     </div>
-                    {isFormWalletOpen && (
-                      <div className="vc-dropdown-menu">
-                        {wallets.map((w) => (
-                          <div
-                            key={w.code}
-                            className="vc-dropdown-item"
-                            onClick={() => {
-                              setFormWallet(w);
-                              setIsFormWalletOpen(false);
-                              setCardCurrency(cardCurrencyOptions.find(c => c.code === w.code) || cardCurrencyOptions[0]);
-                            }}
-                          >
-                            <Flag src={w.flag} alt={w.code} />
-                            <span>{w.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
-
+                    <div className="vc-request-meta">
+  <span className="vc-request-user">
+    <span className="vc-request-user-label">Card Holder:</span>
+    <strong>{userFullName}</strong>
+  </span>
+  <span className="vc-request-fee">
+    <span className="vc-request-fee-label">Card Issuance Fee:</span>
+    <strong className="vc-fee-amount">{cardFees[cardNetwork]}</strong>
+  </span>
+</div>
                   {/* Card Details */}
                   <div className="vc-form-col vc-form-details">
-                    <label className="vc-form-label">Card Details</label>
                     <div className="vc-details-row">
 
                       {/* Card Type */}
@@ -395,35 +484,13 @@ const VirtualCardsPage = () => {
                                 ? <span className="vc-visa-logo">VISA</span>
                                 : <span className="vc-mc-logo"><span className="mc-left" /><span className="mc-right" /></span>
                               }
-                              {n}
+                              <span className="vc-network-name">{n}</span>
+                              <span className="vc-network-fee">{cardFees[n]}</span>
                             </button>
                           ))}
                         </div>
                       </div>
 
-                      {/* Card Currency */}
-                      <div className="vc-detail-group">
-                        <span className="vc-detail-sub">Card Currency:</span>
-                        <div className="vc-dropdown vc-currency-drop" onClick={() => setIsCurrencyDropOpen(!isCurrencyDropOpen)}>
-                          <Flag src={cardCurrency.flag} alt={cardCurrency.code} />
-                          <span>{cardCurrency.label}</span>
-                          <ChevronDown size={13} className="vc-dropdown-chevron" />
-                        </div>
-                        {isCurrencyDropOpen && (
-                          <div className="vc-dropdown-menu">
-                            {cardCurrencyOptions.map((c) => (
-                              <div
-                                key={c.code}
-                                className="vc-dropdown-item"
-                                onClick={() => { setCardCurrency(c); setIsCurrencyDropOpen(false); }}
-                              >
-                                <Flag src={c.flag} alt={c.code} />
-                                <span>{c.label}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
                     </div>
 
                     {/* Amount */}
@@ -740,6 +807,35 @@ const VirtualCardsPage = () => {
                 >
                   Close
                 </button>
+              </div>
+            </div>
+          )}
+
+          {isModalOpen && (
+            <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header"><h3>Select Currency</h3></div>
+                <div className="search-container">
+                  <span className="search-icon-inside"><Search size={16} /></span>
+                  <input type="text" placeholder="Search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                </div>
+                <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
+                  {filteredCurrencies.map((c) => (
+                    <div key={c.code} className="country-item" onClick={() => { 
+                      setSelectedCurrency(c); 
+                      setIsModalOpen(false);
+                      setFiat(c.code); 
+                      setActiveWallet(c.code);
+                      setSearchTerm('') 
+                      setIsDropdownOpen(false);
+                    }}>
+                      <span>{c.name} ({c.code})</span>
+                      <div className={`radio-outer ${selectedCurrency?.code === c.code ? 'checked' : ''}`}>
+                        <div className="radio-inner"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using resiliences_service.Models;
-using resiliences_service.Enums;
 
 namespace resiliences_service.Configs
 {

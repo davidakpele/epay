@@ -120,11 +120,7 @@ services:
       - wallet-service
       - deposit-service
       - withdraw-service
-      - history-service
       - revenue-service
-      - bank-collection-service
-      - beneficiary-service
-      - blacklist-service
       - notification-service
       - escrow-service
       - maintenance-service
@@ -190,11 +186,8 @@ services:
     ports:
       - "8068:8068"
     depends_on:
-      - history-service
       - wallet-service
-      - blacklist-service
-      - bank-collection-service
-      - beneficiary-service
+      - resiliences-service
       - revenue-service
       - notification-service
       - authentication-service
@@ -215,7 +208,7 @@ services:
       - SPRING_REDIS_PORT=6379 
     depends_on:
       - postgres
-      - history-service
+      - resiliences-service
       - notification-service
       - redis
     healthcheck:
@@ -234,7 +227,7 @@ services:
     ports:
       - "8020:8020"
     depends_on:
-      - history-service
+      - resiliences-service
       - wallet-service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8035/actuator/health"]
@@ -254,7 +247,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy  # Wait for postgres to be healthy
-      history-service:
+      resiliences-service:
         condition: service_started
       wallet-service:
         condition: service_started
@@ -274,28 +267,6 @@ services:
       start_period: 90s  # More time for Spring Boot startup
     networks:
       - banking-network
-
-  history-service:
-    build: ./history-service
-    container_name: history-service
-    image: davidakpele/history-service:latest
-    ports:
-      - "8390:8390"
-    env_file:
-      - ./beneficiary-service/.env
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - banking-network
   
   revenue-service:
     build: ./revenue-service
@@ -304,67 +275,7 @@ services:
     ports:
       - "8083:8083"
     env_file:
-      - ./beneficiary-service/.env
-    depends_on:
-      mysql:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - banking-network
-
-  bank-collection-service:
-    build: ./bank-collection-service
-    container_name: bank-collection-service
-    image: davidakpele/bank-collection-service:latest
-    ports:
-      - "8040:8040"
-    env_file:
-      - ./beneficiary-service/.env
-    depends_on:
-      mysql:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - banking-network
-
-  beneficiary-service:
-    build: ./beneficiary-service
-    container_name: beneficiary-service
-    image: davidakpele/beneficiary-service:latest
-    env_file:
-      - ./beneficiary-service/.env
-    ports:
-      - "8084:8084" 
-    depends_on:
-      mysql:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - banking-network
-
-  blacklist-service:
-    build: ./blacklist-service
-    container_name: blacklist-service
-    image: davidakpele/blacklist-service:latest
-    ports:
-      - "8013:8013" 
-    env_file:
-      - ./beneficiary-service/.env
+      - ./revenue-service/.env
     depends_on:
       mysql:
         condition: service_healthy
@@ -389,7 +300,7 @@ services:
       - PORT=8086
       - USER_SERVICE_URL=http://authentication-service:8187
       - WALLET_SERVICE_URL=http://wallet-service:8035
-      - HISTORY_SERVICE_URL=http://history-service:8390
+      - HISTORY_SERVICE_URL=http://resiliences-service:8531
       - REVENUE_SERVICE_URL=http://revenue-service:8083
       - NOTIFICATION_SERVICE_URL=http://notification-service:8079
       - RUST_LOG=info
@@ -398,7 +309,7 @@ services:
       - redis
       - authentication-service
       - wallet-service
-      - history-service
+      - resiliences-service
       - notification-service
     networks:
       - banking-network
@@ -434,7 +345,7 @@ services:
       - postgres
       - notification-service
       - wallet-service
-      - history-service
+      - resiliences-service
       - authentication-service
     networks:
       - banking-network
@@ -456,6 +367,34 @@ services:
     networks:
       - banking-network
   
+  resiliences-service:
+    restart: unless-stopped
+    build: ./resiliences-service
+    container_name: resiliences-service  
+    image: davidakpele/resiliences-service:latest
+    ports:
+      - "8531:8531"  
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8531
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=pesco_db;Username=postgres;Password=root
+      - Redis__ConnectionString=redis:6379,abortConnect=false
+      - UserService__BaseUrl=http://authentication-service:8187
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8531/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - banking-network
+
+
   # administrator:
   #   restart: unless-stopped
   #   build: ./administrator
