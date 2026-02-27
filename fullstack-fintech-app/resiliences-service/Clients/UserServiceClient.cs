@@ -1,4 +1,5 @@
 using resiliences_service.DTOs;
+using resiliences_service.Resopones;
 
 namespace resiliences_service.Clients
 {
@@ -45,6 +46,15 @@ namespace resiliences_service.Clients
                 return null;
 
             return await response.Content.ReadFromJsonAsync<UserDTO>();
+        }
+
+        public async Task<List<UserDTO>?> GetAllUsersAsync()
+        {
+            ForwardAuthToken();
+            var response = await _httpClient.GetAsync("/cache/users/all");
+            if (!response.IsSuccessStatusCode) return null;
+            var result = await response.Content.ReadFromJsonAsync<UserResponse>();
+            return result?.Data;
         }
     }
 }
