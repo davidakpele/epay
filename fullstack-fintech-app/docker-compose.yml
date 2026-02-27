@@ -123,7 +123,6 @@ services:
       - revenue-service
       - notification-service
       - escrow-service
-      - maintenance-service
       - frontend
     
     healthcheck:
@@ -288,32 +287,6 @@ services:
     networks:
       - banking-network
 
-  maintenance-service:
-    build: ./maintenance-service
-    container_name: maintenance-service
-    image: davidakpele/maintenance-service:latest
-    ports:
-      - "8086:8086"
-    environment:
-      - DATABASE_URL=postgres://postgres:root@postgres:5432/pesco_db?schema=public
-      - DB_MAX_CONNECTIONS=10
-      - PORT=8086
-      - USER_SERVICE_URL=http://authentication-service:8187
-      - WALLET_SERVICE_URL=http://wallet-service:8035
-      - HISTORY_SERVICE_URL=http://resiliences-service:8531
-      - REVENUE_SERVICE_URL=http://revenue-service:8083
-      - NOTIFICATION_SERVICE_URL=http://notification-service:8079
-      - RUST_LOG=info
-    depends_on:
-      - postgres
-      - redis
-      - authentication-service
-      - wallet-service
-      - resiliences-service
-      - notification-service
-    networks:
-      - banking-network
-
   api-gateway:
     build:
       context: ./api-gateway
@@ -379,7 +352,10 @@ services:
       - ASPNETCORE_URLS=http://+:8531
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=pesco_db;Username=postgres;Password=root
       - Redis__ConnectionString=redis:6379,abortConnect=false
-      - UserService__BaseUrl=http://authentication-service:8187
+      - ServiceUrls__UserService=http://authentication-service:8187
+      - ServiceUrls__WalletService=http://wallet-service:8080
+      - ServiceUrls__RevenueService=http://revenue-service:8080
+      - ServiceUrls__NotificationService=http://notification-service:8080
     depends_on:
       postgres:
         condition: service_healthy

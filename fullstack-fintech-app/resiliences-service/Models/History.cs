@@ -63,7 +63,5 @@ namespace resiliences_service.Models
         // Change from Computed to Identity, and set default
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime UpdatedOn { get; set; } = DateTime.UtcNow;
-
-
     }
 }

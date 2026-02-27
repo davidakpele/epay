@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import DepositModal from '@/components/DepositModal';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { ChevronDown, ChevronRight, ArrowLeftRight, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import './Swap.css';
 import { Toast } from '@/app/types/auth';
-import { getUserId, getWalletList, setWalletContainer, updateNotificationContainer } from '@/app/api';
+import { getToken, getUserId, getWalletList, setWalletContainer, updateNotificationContainer } from '@/app/api';
 
 interface Currency {
   code: string;
@@ -35,19 +35,21 @@ const currencies: Currency[] = [
 ];
 
 const mockExchangeRates: Record<string, Record<string, number>> = {
-  USD: { EUR: 0.92, GBP: 0.80, JPY: 147.11, AUD: 1.52, CAD: 1.35, CHF: 0.88, CNY: 7.25, INR: 83.12, NGN: 1500.50, GHS: 13.50, KES: 129.00, ZAR: 18.60, AED: 3.67 },
-  EUR: { USD: 1.09, GBP: 0.87, JPY: 159.25, AUD: 1.65, CAD: 1.47, CHF: 0.96, CNY: 7.88, INR: 90.35, NGN: 1630.75, GHS: 14.70, KES: 140.60, ZAR: 20.28, AED: 4.00 },
-  GBP: { USD: 1.25, EUR: 1.15, JPY: 184.22, AUD: 1.90, CAD: 1.69, CHF: 1.10, CNY: 9.06, INR: 103.89, NGN: 1875.30, GHS: 16.88, KES: 161.25, ZAR: 23.25, AED: 4.59 },
-  JPY: { USD: 0.0068, EUR: 0.0063, GBP: 0.0054, AUD: 0.0103, CAD: 0.0092, CHF: 0.0060, CNY: 0.0493, INR: 0.565, NGN: 10.20, GHS: 0.092, KES: 0.878, ZAR: 0.127, AED: 0.025 },
-  AUD: { USD: 0.66, EUR: 0.61, GBP: 0.53, JPY: 97.10, CAD: 0.89, CHF: 0.58, CNY: 4.77, INR: 54.68, NGN: 987.45, GHS: 8.88, KES: 85.10, ZAR: 12.26, AED: 2.42 },
-  CAD: { USD: 0.74, EUR: 0.68, GBP: 0.59, JPY: 108.75, AUD: 1.12, CHF: 0.65, CNY: 5.37, INR: 61.55, NGN: 1111.11, GHS: 10.00, KES: 95.56, ZAR: 13.78, AED: 2.72 },
-  CHF: { USD: 1.14, EUR: 1.04, GBP: 0.91, JPY: 166.67, AUD: 1.72, CAD: 1.54, CNY: 8.24, INR: 94.50, NGN: 1705.88, GHS: 15.35, KES: 146.87, ZAR: 21.17, AED: 4.18 },
-  CNY: { USD: 0.14, EUR: 0.13, GBP: 0.11, JPY: 20.28, AUD: 0.21, CAD: 0.19, CHF: 0.12, INR: 11.46, NGN: 206.90, GHS: 1.86, KES: 17.83, ZAR: 2.57, AED: 0.51 },
-  INR: { USD: 0.012, EUR: 0.011, GBP: 0.0096, JPY: 1.77, AUD: 0.018, CAD: 0.016, CHF: 0.0106, CNY: 0.087, NGN: 18.05, GHS: 0.162, KES: 1.55, ZAR: 0.224, AED: 0.044 },
-  NGN: { USD: 0.00067, EUR: 0.00061, GBP: 0.00053, JPY: 0.098, AUD: 0.00101, CAD: 0.00090, CHF: 0.00059, CNY: 0.0048, INR: 0.055, GHS: 0.0065, KES: 0.086, ZAR: 0.0124, AED: 0.0024 },
+  USD: { EUR: 0.92, GBP: 0.80, JPY: 147.11, AUD: 1.52, CAD: 1.35, CHF: 0.88, CNY: 7.25, INR: 83.12, NGN: 1500.50 },
+  EUR: { USD: 1.09, GBP: 0.87, JPY: 159.25, AUD: 1.65, CAD: 1.47, CHF: 0.96, CNY: 7.88, INR: 90.35, NGN: 1630.75 },
+  GBP: { USD: 1.25, EUR: 1.15, JPY: 184.22, AUD: 1.90, CAD: 1.69, CHF: 1.10, CNY: 9.06, INR: 103.89, NGN: 1875.30 },
+  JPY: { USD: 0.0068, EUR: 0.0063, GBP: 0.0054, AUD: 0.0103, CAD: 0.0092, CHF: 0.0060, CNY: 0.0493, INR: 0.565, NGN: 10.20 },
+  AUD: { USD: 0.66, EUR: 0.61, GBP: 0.53, JPY: 97.10, CAD: 0.89, CHF: 0.58, CNY: 4.77, INR: 54.68, NGN: 987.45 },
+  CAD: { USD: 0.74, EUR: 0.68, GBP: 0.59, JPY: 108.75, AUD: 1.12, CHF: 0.65, CNY: 5.37, INR: 61.55, NGN: 1111.11 },
+  CHF: { USD: 1.14, EUR: 1.04, GBP: 0.91, JPY: 166.67, AUD: 1.72, CAD: 1.54, CNY: 8.24, INR: 94.50, NGN: 1705.88 },
+  CNY: { USD: 0.14, EUR: 0.13, GBP: 0.11, JPY: 20.28, AUD: 0.21, CAD: 0.19, CHF: 0.12, INR: 11.46, NGN: 206.90 },
+  INR: { USD: 0.012, EUR: 0.011, GBP: 0.0096, JPY: 1.77, AUD: 0.018, CAD: 0.016, CHF: 0.0106, CNY: 0.087, NGN: 18.05 },
+  NGN: { USD: 0.00067, EUR: 0.00061, GBP: 0.00053, JPY: 0.098, AUD: 0.00101, CAD: 0.00090, CHF: 0.00059, CNY: 0.0048, INR: 0.055 },
 };
 
 const feePercentage = 0.015;
+const WS_RECONNECT_LIMIT = 3;
+const WS_RECONNECT_DELAY = 3000;
 
 const SwapPage = () => {
   const [isDepositOpen, setIsDepositOpen]       = useState(false);
@@ -62,6 +64,7 @@ const SwapPage = () => {
   const [feeAmount, setFeeAmount]               = useState('0.00');
   const [exchangeRate, setExchangeRate]         = useState<number>(0);
   const [isLoadingRate, setIsLoadingRate]       = useState(false);
+  const [rateError, setRateError]               = useState<string | null>(null);
 
   const [isFromModalOpen, setIsFromModalOpen]   = useState(false);
   const [isToModalOpen, setIsToModalOpen]       = useState(false);
@@ -73,15 +76,31 @@ const SwapPage = () => {
   const [showFailModal, setShowFailModal]       = useState(false);
   const [errorMessage, setErrorMessage]         = useState('');
   const [exchangeSnapshot, setExchangeSnapshot] = useState<any>(null);
+  const [wsStatus, setWsStatus]                 = useState<'connected' | 'disconnected' | 'reconnecting'>('disconnected');
 
   const [userWallets, setUserWallets]           = useState<any[]>([]);
   const [websocket, setWebsocket]               = useState<WebSocket | null>(null);
   const [isScrolling, setIsScrolling]           = useState(false);
-  const scrollTimer                             = useRef<NodeJS.Timeout | null>(null);
+  const fromAmountRef   = useRef(fromAmount);
+  const toAmountRef     = useRef(toAmount);
+  const feeAmountRef    = useRef(feeAmount);
+  const exchangeRateRef = useRef(exchangeRate);
+  const fromCurrencyRef = useRef(fromCurrency);
+  const toCurrencyRef   = useRef(toCurrency);
 
-  // ─── Toast ───────────────────────────────────────────────────────────────────
+  useEffect(() => { fromAmountRef.current   = fromAmount;   }, [fromAmount]);
+  useEffect(() => { toAmountRef.current     = toAmount;     }, [toAmount]);
+  useEffect(() => { feeAmountRef.current    = feeAmount;    }, [feeAmount]);
+  useEffect(() => { exchangeRateRef.current = exchangeRate; }, [exchangeRate]);
+  useEffect(() => { fromCurrencyRef.current = fromCurrency; }, [fromCurrency]);
+  useEffect(() => { toCurrencyRef.current   = toCurrency;   }, [toCurrency]);
+    const scrollTimer      = useRef<NodeJS.Timeout | null>(null);
+  const reconnectCount   = useRef(0);
+  const reconnectTimer   = useRef<NodeJS.Timeout | null>(null);
+  const wsRef            = useRef<WebSocket | null>(null);
 
-  const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
+  // ── Toast ──────────────────────────────────────────────────────────────────
+  const showToast = useCallback((msg: string, type: 'warning' | 'success' = 'warning') => {
     setToasts((prev) => {
       if (prev.length >= 5) return prev;
       const id = Date.now();
@@ -92,31 +111,40 @@ const SwapPage = () => {
       }, 5000);
       return [...prev, newToast];
     });
-  };
+  }, []);
 
-  // ─── Exchange Rate ────────────────────────────────────────────────────────────
-
+  // ── Rate helpers ───────────────────────────────────────────────────────────
   const getExchangeRateWithMargin = (from: string, to: string) => {
     const raw = mockExchangeRates[from]?.[to];
-    return raw ? raw * (1 - 0.005) : null; // 0.5% margin
+    return raw ? raw * (1 - 0.005) : null;
   };
 
   const getRawRate = (from: string, to: string) => mockExchangeRates[from]?.[to] || null;
 
   const fetchExchangeRate = async (from: string, to: string) => {
+    if (from === to) return;
     setIsLoadingRate(true);
+    setRateError(null);
     try {
       await new Promise((r) => setTimeout(r, 800));
       const rate = getExchangeRateWithMargin(from, to);
-      if (rate) setExchangeRate(rate);
-      else showToast(`Rate unavailable for ${from} → ${to}`, 'warning');
+      if (rate) {
+        setExchangeRate(rate);
+      } else {
+        setExchangeRate(0);
+        setRateError(`Exchange rate unavailable for ${from} → ${to}`);
+        showToast(`Rate unavailable for ${from} → ${to}`, 'warning');
+      }
+    } catch (err) {
+      setExchangeRate(0);
+      setRateError('Failed to fetch exchange rate. Please try again.');
+      showToast('Failed to fetch exchange rate.', 'warning');
     } finally {
       setIsLoadingRate(false);
     }
   };
 
-  // ─── Calculate amounts ────────────────────────────────────────────────────────
-
+  // ── Amount formatting ──────────────────────────────────────────────────────
   const formatNumberWithCommas = (value: string): string => {
     const clean = value.replace(/,/g, '');
     if (!clean) return '';
@@ -128,7 +156,7 @@ const SwapPage = () => {
   const calculateSwapAmounts = (raw: string) => {
     if (!raw || !exchangeRate) { setToAmount(''); setFeeAmount('0.00'); return; }
     const num = parseFloat(raw.replace(/,/g, ''));
-    if (isNaN(num)) { setToAmount(''); setFeeAmount('0.00'); return; }
+    if (isNaN(num) || num <= 0) { setToAmount(''); setFeeAmount('0.00'); return; }
     const base  = num * exchangeRate;
     const fee   = base * feePercentage;
     const final = base - fee;
@@ -145,13 +173,16 @@ const SwapPage = () => {
 
   useEffect(() => { calculateSwapAmounts(fromAmount); }, [fromAmount, exchangeRate]);
 
-  // ─── Wallets ─────────────────────────────────────────────────────────────────
-
+  // ── Wallets ────────────────────────────────────────────────────────────────
   const fetchUserWallets = async () => {
     try {
       const list = getWalletList();
-      setUserWallets(list || []);
-    } catch { setUserWallets([]); }
+      if (!list) throw new Error('No wallet data returned');
+      setUserWallets(list);
+    } catch (err) {
+      setUserWallets([]);
+      showToast('Failed to load wallet balances.', 'warning');
+    }
   };
 
   const getWalletBalance = (code: string) => {
@@ -159,84 +190,200 @@ const SwapPage = () => {
     return w ? parseFloat(w.balance.replace(/,/g, '')) : 0;
   };
 
-  // ─── WebSocket ────────────────────────────────────────────────────────────────
-
-  const handleWebSocketMessage = (message: any) => {
+  // ── WebSocket ──────────────────────────────────────────────────────────────
+  const handleWebSocketMessage = useCallback((message: any) => {
     if (message.type === 'swap_response') {
       setIsProcessing(false);
       if (message.status === 'COMPLETED') {
-        setExchangeSnapshot({ fromCurrency, toCurrency, fromAmount, toAmount, exchangeRate, feeAmount });
+
+        // ✅ Read from refs — always current values
+        setExchangeSnapshot({
+          fromCurrency: fromCurrencyRef.current,
+          toCurrency:   toCurrencyRef.current,
+          fromAmount:   fromAmountRef.current,
+          toAmount:     toAmountRef.current,
+          exchangeRate: exchangeRateRef.current,
+          feeAmount:    feeAmountRef.current,
+        });
+
         setShowSuccessModal(true);
         updateNotificationContainer({ type: 'PAYMENTS', description: 'Currency swap completed successfully' });
-        showToast(`Swap complete! You received ${toCurrency.symbol}${toAmount}`, 'success');
+        showToast(`Swap complete! You received ${toCurrencyRef.current.symbol}${toAmountRef.current}`, 'success');
         setFromAmount(''); setToAmount(''); setFeeAmount('0.00');
         fetchUserWallets();
       } else {
-        setErrorMessage(message.message || 'Swap failed. Please try again.');
+        const errMsg = message.message || 'Swap failed. Please try again.';
+        setErrorMessage(errMsg);
         setShowFailModal(true);
-        showToast(message.message || 'Swap failed', 'warning');
+        showToast(errMsg, 'warning');
       }
     }
-    if (message.type === 'wallet_update' || message.type === 'wallet_update_response') {
-      setWalletContainer(message.data.wallet.wallet_balances, message.data.wallet.hasTransferPin, message.data.wallet.walletId);
-      fetchUserWallets();
-    }
-  };
 
-  const connectWebSocket = () => {
+    if (message.type === 'error') {
+      setIsProcessing(false);
+      const errMsg = message.message || 'An error occurred during the swap.';
+      setErrorMessage(errMsg);
+      setShowFailModal(true);
+      showToast(errMsg, 'warning');
+    }
+
+    if (message.type === 'wallet_update' || message.type === 'wallet_update_response') {
+      try {
+        setWalletContainer(
+          message.data.wallet.wallet_balances,
+          message.data.wallet.hasTransferPin,
+          message.data.wallet.walletId
+        );
+        fetchUserWallets();
+      } catch {
+        showToast('Failed to update wallet data.', 'warning');
+      }
+    }
+  }, []); 
+
+  const connectWebSocket = useCallback(() => {
     const userId = getUserId();
-    if (!userId) return null;
+    if (!userId) {
+      showToast('Session expired. Please log in again.', 'warning');
+      return null;
+    }
+
     try {
       const ws = new WebSocket(`ws://localhost:8292/api/ws/wallet?userId=${userId}`);
-      ws.onopen    = () => setWebsocket(ws);
-      ws.onmessage = (e) => handleWebSocketMessage(JSON.parse(e.data));
-      ws.onerror   = () => showToast('WebSocket connection error', 'warning');
-      ws.onclose   = () => setWebsocket(null);
+
+      ws.onopen = () => {
+        setWebsocket(ws);
+        wsRef.current = ws;
+        setWsStatus('connected');
+        reconnectCount.current = 0;
+        showToast('Connected to swap service.', 'success');
+      };
+
+      ws.onmessage = (e) => {
+        try {
+          const parsed = JSON.parse(e.data);
+          handleWebSocketMessage(parsed);
+        } catch {
+          showToast('Received malformed response from server.', 'warning');
+        }
+      };
+
+      ws.onerror = () => {
+        showToast('WebSocket connection error.', 'warning');
+        setWsStatus('disconnected');
+      };
+
+      ws.onclose = (event) => {
+        setWebsocket(null);
+        wsRef.current = null;
+        setWsStatus('disconnected');
+
+        // Auto-reconnect unless closed intentionally (code 1000)
+        if (event.code !== 1000 && reconnectCount.current < WS_RECONNECT_LIMIT) {
+          reconnectCount.current += 1;
+          setWsStatus('reconnecting');
+          showToast(`Connection lost. Reconnecting (${reconnectCount.current}/${WS_RECONNECT_LIMIT})...`, 'warning');
+          reconnectTimer.current = setTimeout(() => connectWebSocket(), WS_RECONNECT_DELAY);
+        } else if (reconnectCount.current >= WS_RECONNECT_LIMIT) {
+          showToast('Unable to reconnect. Please refresh the page.', 'warning');
+        }
+      };
+
       return ws;
-    } catch { return null; }
-  };
+    } catch (err) {
+      showToast('Failed to establish WebSocket connection.', 'warning');
+      setWsStatus('disconnected');
+      return null;
+    }
+  }, [handleWebSocketMessage]);
 
-  // ─── Submit ──────────────────────────────────────────────────────────────────
+  // ── Swap validation & execution ────────────────────────────────────────────
+  const validateSwap = (): string | null => {
+    const token   = getToken();
+    const userId  = getUserId();
 
-  const handleExchange = async () => {
-    if (!fromAmount || parseFloat(fromAmount.replace(/,/g, '')) <= 0) {
-      showToast('Please enter a valid amount', 'warning'); return;
+    if (!token || token === 'null' || token.trim() === '') {
+      return 'Session expired. Please log in again.';
+    }
+    if (!userId) {
+      return 'User session not found. Please log in again.';
+    }
+    if (!fromAmount || fromAmount.trim() === '') {
+      return 'Please enter an amount.';
+    }
+
+    const numericAmount = parseFloat(fromAmount.replace(/,/g, ''));
+    if (isNaN(numericAmount)) {
+      return 'Invalid amount entered.';
+    }
+    if (numericAmount <= 0) {
+      return 'Amount must be greater than zero.';
     }
     if (fromCurrency.code === toCurrency.code) {
-      showToast('Please select two different currencies', 'warning'); return;
+      return 'Please select two different currencies.';
     }
+    if (!exchangeRate || exchangeRate <= 0) {
+      return `Exchange rate unavailable for ${fromCurrency.code} → ${toCurrency.code}. Please try again.`;
+    }
+    if (rateError) {
+      return rateError;
+    }
+
     const fromWallet = userWallets.find((w: any) => w.currency_code === fromCurrency.code);
     if (fromWallet) {
       const balance = parseFloat(fromWallet.balance.replace(/,/g, ''));
-      const amount  = parseFloat(fromAmount.replace(/,/g, ''));
-      if (amount > balance) {
-        showToast('Insufficient balance for this swap', 'warning'); return;
+      if (numericAmount > balance) {
+        return `Insufficient ${fromCurrency.code} balance. Available: ${fromCurrency.symbol}${balance.toLocaleString()}`;
       }
+    } else {
+      return `You don't have a ${fromCurrency.code} wallet. Please deposit first.`;
+    }
+
+    return null; // all good
+  };
+
+  const handleExchange = async () => {
+    const validationError = validateSwap();
+    if (validationError) {
+      showToast(validationError, 'warning');
+      return;
     }
 
     setIsProcessing(true);
+    const token  = getToken();
+    const userId = getUserId();
 
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-      websocket.send(JSON.stringify({
-        type: 'swap_currency',
-        fromCurrency: fromCurrency.code,
-        toCurrency: toCurrency.code,
-        amount: fromAmount.replace(/,/g, ''),
-        acceptRate: true,
-        userId: getUserId(),
-      }));
-    } else {
-      // Fallback simulation when no WS connection
-      await new Promise((r) => setTimeout(r, 2000));
-      setExchangeSnapshot({ fromCurrency, toCurrency, fromAmount, toAmount, exchangeRate, feeAmount });
-      setShowSuccessModal(true);
-      showToast(`Swapped ${fromCurrency.symbol}${fromAmount} → ${toCurrency.symbol}${toAmount}!`, 'success');
-      setFromAmount(''); setToAmount(''); setFeeAmount('0.00');
+    const payload = JSON.stringify({
+      type:         'swap_currency',
+      fromCurrency: fromCurrency.code,
+      toCurrency:   toCurrency.code,
+      amount:       fromAmount.replace(/,/g, ''),
+      acceptRate:   true,
+      token,
+      userId,
+    });
+
+    const activeWs = wsRef.current;
+
+    if (activeWs && activeWs.readyState === WebSocket.OPEN) {
+      try {
+        activeWs.send(payload);
+      } catch (err) {
+        setIsProcessing(false);
+        showToast('Failed to send swap request. Please try again.', 'warning');
+      }
+    } else if (activeWs && activeWs.readyState === WebSocket.CONNECTING) {
       setIsProcessing(false);
+      showToast('Still connecting to swap service. Please wait a moment.', 'warning');
+    } else {
+      // WebSocket not available — notify user
+      setIsProcessing(false);
+      showToast('Swap service is not connected. Please refresh the page.', 'warning');
     }
   };
 
   const handleSwapCurrencies = () => {
+    if (isProcessing) return;
     const prev = fromCurrency;
     setFromCurrency(toCurrency);
     setToCurrency(prev);
@@ -244,15 +391,17 @@ const SwapPage = () => {
     setToAmount('');
   };
 
-  // ─── Effects ─────────────────────────────────────────────────────────────────
-
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const t = setTimeout(() => setIsPageLoading(false), 2000);
     fetchUserWallets();
-    const ws = connectWebSocket();
+    connectWebSocket();
     return () => {
       clearTimeout(t);
-      if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.close(1000, 'Component unmounted');
+      }
     };
   }, []);
 
@@ -289,8 +438,6 @@ const SwapPage = () => {
 
   if (isPageLoading) return <LoadingScreen />;
 
-  // ─── Render ──────────────────────────────────────────────────────────────────
-
   return (
     <div className={`dashboard-container ${theme === 'dark' ? 'dark' : ''}`}>
       <Sidebar />
@@ -325,6 +472,16 @@ const SwapPage = () => {
             <h1 className="swap-page-title">
               <span className="title-green">Currency</span> Swap
             </h1>
+
+            {/* ── WS Status Banner ── */}
+            {wsStatus !== 'connected' && (
+              <div className={`ws-status-banner ws-status--${wsStatus}`}>
+                <AlertCircle size={14} />
+                {wsStatus === 'reconnecting'
+                  ? `Reconnecting to swap service... (${reconnectCount.current}/${WS_RECONNECT_LIMIT})`
+                  : 'Swap service disconnected. Swaps may not process.'}
+              </div>
+            )}
 
             {/* ── Main Card ── */}
             <div className="swap-card">
@@ -381,7 +538,11 @@ const SwapPage = () => {
                         <span className="rate-spinner" />
                         Fetching rate...
                       </span>
-                    ) : (
+                    ) : rateError ? (
+                      <span className="swap-rate-error">
+                        <AlertCircle size={13} /> {rateError}
+                      </span>
+                    ) : exchangeRate > 0 ? (
                       <>
                         <span className="swap-rate-main">
                           1 {fromCurrency.code} = {exchangeRate.toFixed(6)} {toCurrency.code}
@@ -392,6 +553,8 @@ const SwapPage = () => {
                           </span>
                         )}
                       </>
+                    ) : (
+                      <span className="swap-rate-error">Rate unavailable</span>
                     )}
                   </div>
                 </div>
@@ -416,6 +579,12 @@ const SwapPage = () => {
                       disabled={isProcessing}
                     />
                   </div>
+                  {/* Inline insufficient balance warning */}
+                  {fromAmount && parseFloat(fromAmount.replace(/,/g, '')) > getWalletBalance(fromCurrency.code) && (
+                    <span className="swap-field-error">
+                      <AlertCircle size={12} /> Insufficient {fromCurrency.code} balance
+                    </span>
+                  )}
                 </div>
 
                 {/* Swap Toggle */}
@@ -449,6 +618,12 @@ const SwapPage = () => {
                       readOnly
                     />
                   </div>
+                  {/* Same currency warning */}
+                  {fromCurrency.code === toCurrency.code && (
+                    <span className="swap-field-error">
+                      <AlertCircle size={12} /> From and To currencies must be different
+                    </span>
+                  )}
                 </div>
 
                 {/* Summary */}
@@ -474,12 +649,24 @@ const SwapPage = () => {
                 <button
                   className="swap-btn"
                   onClick={handleExchange}
-                  disabled={isProcessing || !fromAmount}
+                  disabled={
+                    isProcessing ||
+                    !fromAmount ||
+                    isLoadingRate ||
+                    !!rateError ||
+                    fromCurrency.code === toCurrency.code ||
+                    wsStatus === 'disconnected'
+                  }
                 >
                   {isProcessing ? (
                     <span className="btn-loader-row">
                       <span className="btn-spinner" />
                       Processing...
+                    </span>
+                  ) : wsStatus === 'reconnecting' ? (
+                    <span className="btn-loader-row">
+                      <span className="btn-spinner" />
+                      Reconnecting...
                     </span>
                   ) : (
                     <span className="btn-loader-row">
@@ -502,7 +689,9 @@ const SwapPage = () => {
                     <input type="text" placeholder="Search currency..." value={fromSearch} onChange={(e) => setFromSearch(e.target.value)} />
                   </div>
                   <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
-                    {filteredFrom.map((c) => (
+                    {filteredFrom.length === 0 ? (
+                      <div className="empty-search">No currencies found</div>
+                    ) : filteredFrom.map((c) => (
                       <div key={c.code} className="country-item" onClick={() => { setFromCurrency(c); setIsFromModalOpen(false); setFromSearch(''); }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <span style={{ fontSize: '22px' }}>{c.flag}</span>
@@ -531,7 +720,9 @@ const SwapPage = () => {
                     <input type="text" placeholder="Search currency..." value={toSearch} onChange={(e) => setToSearch(e.target.value)} />
                   </div>
                   <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
-                    {filteredTo.map((c) => (
+                    {filteredTo.length === 0 ? (
+                      <div className="empty-search">No currencies found</div>
+                    ) : filteredTo.map((c) => (
                       <div key={c.code} className="country-item" onClick={() => { setToCurrency(c); setIsToModalOpen(false); setToSearch(''); }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <span style={{ fontSize: '22px' }}>{c.flag}</span>

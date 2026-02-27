@@ -154,6 +154,23 @@ builder.Services.AddScoped<IBeneficiaryRepository, BeneficiaryRepository>();
 builder.Services.AddScoped<IBeneficiaryService, BeneficiaryService>();
 builder.Services.AddScoped<IBlackListedWalletRepository, BlackListedWalletRepository>();
 builder.Services.AddScoped<IBlackListedWalletService, BlackListedWalletService>();
+builder.Services.AddScoped<IWalletMaintenanceRepository, WalletMaintenanceRepository>();
+builder.Services.AddScoped<IMaintenanceFeeHistoryRepository, MaintenanceFeeHistoryRepository>();
+builder.Services.AddHttpClient<MaintenanceService>();
+builder.Services.AddScoped<IMaintenanceService>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    return new MaintenanceService(
+        sp.GetRequiredService<IWalletMaintenanceRepository>(),
+        sp.GetRequiredService<IMaintenanceFeeHistoryRepository>(),
+        sp.GetRequiredService<IHistoryService>(),
+        sp.GetRequiredService<IHttpClientFactory>().CreateClient(),
+        config["ServiceUrls:UserService"]         ?? throw new InvalidOperationException("ServiceUrls:UserService is missing"),
+        config["ServiceUrls:WalletService"]       ?? throw new InvalidOperationException("ServiceUrls:WalletService is missing"),
+        config["ServiceUrls:RevenueService"]      ?? throw new InvalidOperationException("ServiceUrls:RevenueService is missing"),
+        config["ServiceUrls:NotificationService"] ?? throw new InvalidOperationException("ServiceUrls:NotificationService is missing")
+    );
+});
 builder.Services.AddMemoryCache(options =>
 {
     options.SizeLimit = 1024 * 1024 * 512;
@@ -165,11 +182,10 @@ builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
 });
-
 builder.Services.AddHttpClient<UserServiceClient>(client =>
 {
-    var baseUrl = builder.Configuration["UserService:BaseUrl"]
-        ?? throw new InvalidOperationException("UserService:BaseUrl is missing in configuration");
+    var baseUrl = builder.Configuration["ServiceUrls:UserService"]
+        ?? throw new InvalidOperationException("ServiceUrls:UserService is missing in configuration");
 
     client.BaseAddress = new Uri(baseUrl);
     client.DefaultRequestHeaders.Add("User-Agent", "resiliences-service/1.0");
@@ -198,6 +214,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+    db.Database.EnsureCreated();
 }
 app.UseAuthentication();
 app.UseAuthorization();

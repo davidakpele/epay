@@ -13,41 +13,35 @@ namespace resiliences_service.Mappers
         {
             return new HistoryDTO
             {
-                Id = history.Id,
-                WalletId = history.WalletId,
-                UserId = history.UserId,
-                SessionId = history.SessionId,
-                Amount = history.Amount,
-                Type = history.Type?.ToString(),
-                Description = history.Description,
-                Message = history.Message,
-                CurrencyType = history.CurrencyType.ToString(),
-                Status = history.Status?.ToString(),
-                IpAddress = history.IpAddress,
-                Timestamp = FormatTime(history.Timestamp),
-                CreatedOn = FormatTime(history.CreatedOn),
-                UpdatedOn = FormatTime(history.UpdatedOn)
+                Id               = history.Id,
+                WalletId         = (long)history.WalletId,
+                UserId           = (long)history.UserId,
+                SessionId        = history.SessionId        ?? string.Empty,
+                TransactionId    = history.TransactionId    ?? string.Empty,
+                ReferenceNo      = history.ReferenceId      ?? string.Empty,
+                TerminalId       = history.TerminalId       ?? string.Empty,
+                ErId             = history.ErId             ?? string.Empty,
+                AccountHolder    = history.AccountHolder    ?? string.Empty,
+                PreviousBalance  = (decimal)history.PreviousBalance,
+                AvailableBalance = (decimal)history.AvailableBalance,
+                Amount           = (decimal)history.Amount,
+                TransactionType  = history.Type?.ToString() ?? string.Empty,
+                Description      = history.Description      ?? string.Empty,
+                Message          = history.Message          ?? string.Empty,
+                CurrencyType     = history.CurrencyType,
+                Status           = history.Status           ?? string.Empty,
+                IpAddress        = history.IpAddress        ?? string.Empty,
+                Timestamp        = FormatTime(history.Timestamp),
             };
         }
 
-        public static List<HistoryDTO> ToHistoryDTOs(IEnumerable<History> histories)
-        {
-            return histories
-                .Select(h => ToHistoryDTO(h))
-                .ToList();
-        }
+        public static List<HistoryDTO> ToHistoryDTOs(IEnumerable<History> histories) =>
+            histories.Select(ToHistoryDTO).ToList();
 
-        private static string FormatTime(DateTime? time)
-        {
-            if (time == null)
-                return string.Empty;
+        private static string FormatTime(DateTime? time) =>
+            time?.ToString("O", CultureInfo.InvariantCulture) ?? string.Empty;
 
-            return time.Value.ToString("O", CultureInfo.InvariantCulture);
-        }
-
-        private static string FormatTime(DateTime time)
-        {
-            return time.ToString("O", CultureInfo.InvariantCulture);
-        }
+        private static string FormatTime(DateTime time) =>
+            time.ToString("O", CultureInfo.InvariantCulture);
     }
 }
