@@ -10,5 +10,6 @@ namespace resiliences_service.interfaces
     {
         Task RecordPaidAsync(long userId, CurrencyType currencyType, decimal feeAmount);
         Task RecordOverdueAsync(long userId, CurrencyType currencyType, decimal feeAmount, string reason);
+        Task RecordPendingAsync(long id, CurrencyType currencyType, decimal feeAmount, string v);
     }
 }

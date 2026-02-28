@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using resiliences_service.Configs;
 using resiliences_service.Enums;
@@ -60,6 +56,32 @@ namespace resiliences_service.Repositories
             await _db.SaveChangesAsync();
         }
 
+        public async Task MarkPendingAsync(long userId, CurrencyType currencyType)
+        {
+            var record = await _db.WalletMaintenances
+                .FirstOrDefaultAsync(w => w.UserId == userId && w.CurrencyType == currencyType);
+
+            if (record == null)
+            {
+                _db.WalletMaintenances.Add(new WalletMaintenance
+                {
+                    UserId       = userId,
+                    CurrencyType = currencyType,
+                    Balance      = 0,
+                    Status       = DebtStatus.PENDING,
+                    CreatedOn    = DateTime.UtcNow,
+                    UpdatedOn    = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                record.Status    = DebtStatus.PENDING;
+                record.UpdatedOn = DateTime.UtcNow;
+            }
+
+            await _db.SaveChangesAsync();
+        }
+
         public async Task MarkOverdueAsync(long userId, CurrencyType currencyType)
         {
             var record = await _db.WalletMaintenances
@@ -71,6 +93,17 @@ namespace resiliences_service.Repositories
             record.UpdatedOn = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
+        }
+
+        public async Task<DebtStatus?> GetStatusAsync(long userId, CurrencyType currencyType)
+        {
+            var record = await _db.WalletMaintenances
+                .AsNoTracking()
+                .Where(w => w.UserId == userId && w.CurrencyType == currencyType)
+                .Select(w => (DebtStatus?)w.Status)
+                .FirstOrDefaultAsync();
+
+            return record;
         }
 
         public async Task<DateTime?> GetLastChargedDateAsync(long userId, CurrencyType currencyType)
@@ -86,10 +119,10 @@ namespace resiliences_service.Repositories
         {
             page     = Math.Max(page, 1);
             pageSize = Math.Clamp(pageSize, 1, 100);
-            var offset = (page - 1) * pageSize;
 
-            var total = await _db.WalletMaintenances.LongCountAsync();
-            var items = await _db.WalletMaintenances
+            var offset = (page - 1) * pageSize;
+            var total  = await _db.WalletMaintenances.LongCountAsync();
+            var items  = await _db.WalletMaintenances
                 .AsNoTracking()
                 .OrderByDescending(w => w.UpdatedOn)
                 .ThenBy(w => w.UserId)
@@ -104,11 +137,11 @@ namespace resiliences_service.Repositories
         {
             page     = Math.Max(page, 1);
             pageSize = Math.Clamp(pageSize, 1, 100);
-            var offset = (page - 1) * pageSize;
 
-            var query = _db.WalletMaintenances.Where(w => w.Status == status);
-            var total = await query.LongCountAsync();
-            var items = await query
+            var offset = (page - 1) * pageSize;
+            var query  = _db.WalletMaintenances.Where(w => w.Status == status);
+            var total  = await query.LongCountAsync();
+            var items  = await query
                 .AsNoTracking()
                 .OrderByDescending(w => w.UpdatedOn)
                 .ThenBy(w => w.UserId)
@@ -118,5 +151,6 @@ namespace resiliences_service.Repositories
 
             return (items, total);
         }
+
     }
 }

@@ -13,6 +13,7 @@ using resiliences_service.Repositories;
 using resiliences_service.Resopones;
 using resiliences_service.Services;
 using resiliences_service.interfaces;
+using resiliences_service.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -139,7 +140,7 @@ builder.Services.Configure<FirewallSettings>(builder.Configuration.GetSection("F
 builder.Services.AddSingleton<AttackPatternDetector>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddHostedService<MaintenanceWorker>();
 builder.Services.AddScoped<IUserBankRepository, UserBankRepository>();
 builder.Services.AddScoped<IUserBankService, UserBankService>();
 builder.Services.AddScoped<IBeneficiaryRepository, BeneficiaryRepository>();

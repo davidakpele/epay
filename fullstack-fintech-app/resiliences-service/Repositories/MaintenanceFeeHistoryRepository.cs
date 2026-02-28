@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using resiliences_service.Configs;
 using resiliences_service.Enums;
 using resiliences_service.interfaces;
@@ -9,7 +5,7 @@ using resiliences_service.Models;
 
 namespace resiliences_service.Repositories
 {
-     public class MaintenanceFeeHistoryRepository : IMaintenanceFeeHistoryRepository
+    public class MaintenanceFeeHistoryRepository : IMaintenanceFeeHistoryRepository
     {
         private readonly AppDbContext _db;
 
@@ -33,6 +29,22 @@ namespace resiliences_service.Repositories
             await _db.SaveChangesAsync();
         }
 
+        public async Task RecordPendingAsync(long userId, CurrencyType currencyType, decimal feeAmount, string reason)
+        {
+            _db.MaintenanceFeeHistories.Add(new MaintenanceFeeHistory
+            {
+                UserId       = userId,
+                CurrencyType = currencyType,
+                FeeAmount    = feeAmount,
+                Status       = DebtStatus.PENDING,
+                Reason       = reason,
+                AttemptedOn  = DateTime.UtcNow,
+                PaidOn       = null
+            });
+
+            await _db.SaveChangesAsync();
+        }
+
         public async Task RecordOverdueAsync(long userId, CurrencyType currencyType, decimal feeAmount, string reason)
         {
             _db.MaintenanceFeeHistories.Add(new MaintenanceFeeHistory
@@ -42,7 +54,8 @@ namespace resiliences_service.Repositories
                 FeeAmount    = feeAmount,
                 Status       = DebtStatus.OVERDUE,
                 Reason       = reason,
-                AttemptedOn  = DateTime.UtcNow
+                AttemptedOn  = DateTime.UtcNow,
+                PaidOn       = null
             });
 
             await _db.SaveChangesAsync();

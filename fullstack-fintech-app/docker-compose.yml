@@ -353,9 +353,9 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=pesco_db;Username=postgres;Password=root
       - Redis__ConnectionString=redis:6379,abortConnect=false
       - ServiceUrls__UserService=http://authentication-service:8187
-      - ServiceUrls__WalletService=http://wallet-service:8080
-      - ServiceUrls__RevenueService=http://revenue-service:8080
-      - ServiceUrls__NotificationService=http://notification-service:8080
+      - ServiceUrls__WalletService=http://wallet-service:8035
+      - ServiceUrls__RevenueService=http://revenue-service:8083
+      - ServiceUrls__NotificationService=http://notification-service:8079
     depends_on:
       postgres:
         condition: service_healthy
