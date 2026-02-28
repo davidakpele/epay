@@ -1,2 +1,0 @@
-pub mod wallet_maintenance_repository;
-pub mod maintenance_fee_history_repository;

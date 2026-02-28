@@ -5,28 +5,26 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hazelcast.collection.ISet;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.map.IMap;
 import com.pesco.wallet_service.bootstrap.DataSection;
 import com.pesco.wallet_service.bootstrap.HistorySection;
 import com.pesco.wallet_service.bootstrap.TransactionRecord;
@@ -43,13 +41,16 @@ import com.pesco.wallet_service.enums.Currency;
 import com.pesco.wallet_service.handler.WalletHandler;
 import com.pesco.wallet_service.models.CurrencyBalanceMapStruct;
 import com.pesco.wallet_service.models.Wallet;
+import com.pesco.wallet_service.payloads.SwapHistoryRequest;
 import com.pesco.wallet_service.repository.WalletRepository;
 import com.pesco.wallet_service.response.HistoryResponse;
 import com.pesco.wallet_service.services.WalletService;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import pesco.wallet_service.grpc.WalletServiceGrpc;
-import org.springframework.web.socket.CloseStatus;
-import com.pesco.wallet_service.payloads.SwapHistoryRequest;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.collection.ISet;
+import com.hazelcast.map.IMap;
+
 
 @Component
 public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
@@ -138,7 +139,6 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
                         ));
 
                     } catch (IOException e) {
-                        e.printStackTrace();
                     }
                 })
                 .exceptionally(ex -> {
@@ -149,8 +149,6 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
                         );
                         sendMessage(session, errorPayload);
                     } catch (IOException ioEx) {
-
-                        ioEx.printStackTrace();
                     }
                     return null;
                 });
@@ -163,9 +161,11 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
     @Override 
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         try {
+
             Map<String, Object> payload = objectMapper.readValue(message.getPayload(),
-                    new TypeReference<Map<String, Object>>() {
-                    });
+                new TypeReference<Map<String, Object>>() {
+            });
+
             Map<String, Object> responseMessageObject = new LinkedHashMap<>();
             String type = (String) payload.get("type");
            
@@ -222,22 +222,40 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
                 }
             }
 
-            if(type.equals("swap_currency")){
-                Boolean acceptRate = (Boolean) payload.get("acceptRate");
-                String fromCurrency = (String) payload.get("fromCurrency");
-                String toCurrency = (String) payload.get("toCurrency");
-                String jwt = String.valueOf(payload.get("token"));
-                Long userId = ((Number) payload.get("userId")).longValue();
-                
-                BigDecimal amount = new BigDecimal(((String) payload.get("amount")).replace(",", "."));
-                
+            if (type.equals("swap_currency")) {
+                Boolean acceptRate  = (Boolean) payload.get("acceptRate");
+                String fromCurrency = (String)  payload.get("fromCurrency");
+                String toCurrency   = (String)  payload.get("toCurrency");
+                String jwt          = String.valueOf(payload.get("token"));
+                Long userId         = payload.get("userId") != null
+                                        ? ((Number) payload.get("userId")).longValue()
+                                        : null;
+
+                BigDecimal amount = null;
+                try {
+                    String rawAmount = (String) payload.get("amount");
+                    if (rawAmount != null && !rawAmount.isBlank()) {
+                        amount = new BigDecimal(rawAmount.replace(",", "."));
+                    }
+                } catch (NumberFormatException e) {
+                    sendMessage(session, Map.of("type", "error", "message", "Invalid amount format"));
+                    return;
+                }
+
+                if (userId == null)                                      { sendMessage(session, Map.of("type", "error", "message", "User ID is required"));        return; }
+                if (fromCurrency == null || fromCurrency.isBlank())      { sendMessage(session, Map.of("type", "error", "message", "From currency is required"));   return; }
+                if (toCurrency   == null || toCurrency.isBlank())        { sendMessage(session, Map.of("type", "error", "message", "To currency is required"));     return; }
+                if (jwt == null  || jwt.isBlank() || jwt.equals("null")) { sendMessage(session, Map.of("type", "error", "message", "Token is required"));           return; }
+                if (acceptRate   == null)                                { sendMessage(session, Map.of("type", "error", "message", "Accept rate is required"));     return; }
+                if (amount == null)                                      { sendMessage(session, Map.of("type", "error", "message", "Amount is required"));          return; }
+                if (amount.compareTo(BigDecimal.ZERO) <= 0)              { sendMessage(session, Map.of("type", "error", "message", "Amount must be greater than zero")); return; }
+
                 Map<String, Object> swapResult = processCurrencySwap(userId, fromCurrency, toCurrency, amount, acceptRate, session, jwt);
-                
                 responseMessageObject.putAll(swapResult);
                 responseMessageObject.put("type", "swap_response");
                 sendMessage(session, responseMessageObject);
             }
-        }catch(Exception e){
+        }catch(IOException | NumberFormatException e){
             sendErrorAndClose(session, "Error", e.getMessage());
         }
     }
@@ -493,7 +511,7 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
             BigDecimal exchangeRate = getExchangeRate(fromCurrency, toCurrency);
             Map<String, Object> calculation = calculateSwapAmounts(amount, exchangeRate);
             
-            return executeSwapTransaction(userId, fromCurrency, toCurrency, amount, exchangeRate, calculation, session);
+            return executeSwapTransaction(userId, fromCurrency, toCurrency, amount, exchangeRate, calculation, session, token);
         } catch (Exception e) {
             return Map.of(
                 "status", "FAILED",
@@ -590,7 +608,7 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
         }
     }
 
-    private Map<String, Object> executeSwapTransaction(Long userId, String fromCurrency, String toCurrency, BigDecimal amount, BigDecimal exchangeRate, Map<String, Object> calculation, WebSocketSession session) {
+    private Map<String, Object> executeSwapTransaction(Long userId, String fromCurrency, String toCurrency, BigDecimal amount, BigDecimal exchangeRate, Map<String, Object> calculation, WebSocketSession session, String token) {
         try {
             Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
@@ -647,8 +665,7 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
             historyPayload.setAvailable(availableBalance);
             historyPayload.setUserId(user.getId());
 
-            CompletableFuture<Void> saveHistory = createHistory(historyPayload);
-            
+            CompletableFuture<Void> saveHistory = createHistory(historyPayload, token);
             notificationServiceClient.sendSwapAlert(
                 userEmail,
                 userFullName,
@@ -690,8 +707,9 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
             .orElse(BigDecimal.ZERO);
     }
 
-    private CompletableFuture<Void> createHistory(SwapHistoryRequest request){
-        historyClient.createUserHistory(request);
+    private CompletableFuture<Void> createHistory(SwapHistoryRequest request, String token){
+        historyClient.createUserHistory(request, token);
+
         return CompletableFuture.completedFuture(null);
     }
 

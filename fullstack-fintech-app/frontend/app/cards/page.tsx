@@ -329,18 +329,18 @@ function Cards() {
         
         {/* Card Details Modal */}
         {isCardDetailsOpen && selectedCard && (
-          <div className="modal-overlay" onClick={() => setIsCardDetailsOpen(false)}>
-            <div className="card-details-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
+          <div className="card-modal-overlay" onClick={() => setIsCardDetailsOpen(false)}>
+            <div className="card-card-details-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="card-modal-header">
                 <h2>Card Details</h2>
-                <button className="modal-close" onClick={() => setIsCardDetailsOpen(false)}>
+                <button className="card-modal-close" onClick={() => setIsCardDetailsOpen(false)}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 6L6 18M6 6l12 12"/>
                   </svg>
                 </button>
               </div>
 
-              <div className="modal-body">
+              <div className="card-modal-body">
                 {/* Card Preview */}
                 <div className={selectedCard.cardType === 'MASTER' || selectedCard.cardType === 'MASTERCARD' ? "card-featured-modal" : "card-simple-modal"}>
                   <div className="card-modal-inner">

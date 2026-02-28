@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+
 import org.springframework.stereotype.Component;
+
 import pesco.example.withdraw_service.clients.BlackListServiceClient;
 import pesco.example.withdraw_service.clients.HistoryServiceClient;
 import pesco.example.withdraw_service.clients.NotificationServiceClient;
@@ -39,13 +41,19 @@ public class UserTransactionsAgent {
     public boolean isHighVolumeOrFrequentTransactions(Long id, String email, String userFirstname, String userLastname, Long walletId, String token) {
         List<HistoryDTO> recentTransactions = historyServiceClient.FindRecentTransactionsByUserId(id,
                 LocalDateTime.now().minusMinutes(10), token);
+
+        if (recentTransactions == null || recentTransactions.isEmpty()) {
+            return false;
+        }
+
         BigDecimal totalAmount = recentTransactions.stream()
                 .map(HistoryDTO::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         if (recentTransactions.size() > 5 || totalAmount.compareTo(new BigDecimal("10000.00")) > 0) {
             blackListServiceClient.blockUserWallet(walletId, BanActions.FRAUDULENT_ACTIVITY, token);
-            notificationServiceClient.blockUserWalletNotification(email, userFirstname, userLastname, "Your wallet has been temporarily blocked due to suspicious activity. You recently performed multiple high-value or frequent transactions within a short time. Please contact support to verify your identity and restore access.");
+            notificationServiceClient.blockUserWalletNotification(email, userFirstname, userLastname, 
+                "Your wallet has been temporarily blocked due to suspicious activity. You recently performed multiple high-value or frequent transactions within a short time. Please contact support to verify your identity and restore access.");
             return true;
         }
         return false;

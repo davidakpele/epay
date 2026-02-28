@@ -181,16 +181,28 @@ public class UserServiceClient {
                 .uri("/user/username/{username}", username)
                 .headers(headers -> headers.setBearerAuth(token))
                 .retrieve()
-                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                        clientResponse -> clientResponse.bodyToMono(String.class)
-                                .flatMap(errorMessage -> {
-                                    if (clientResponse.statusCode().is4xxClientError()) {
-                                        String details = extractDetailsFromError(errorMessage);
-                                        return Mono.error(new UserClientNotFoundException("The User `"+username+"` not found.", details));
-                                    }
-                                    return Mono.error(new RuntimeException("Server error"));
-                                }))
+                .onStatus(
+                    HttpStatusCode::is4xxClientError,
+                    clientResponse -> clientResponse.bodyToMono(String.class)
+                            .flatMap(body -> {
+                                try {
+                                    ObjectMapper mapper = new ObjectMapper();
+                                    JsonNode json = mapper.readTree(body);
+                                    String message = json.path("message").asText("User not found");
+                                    String details = json.path("details").asText("");
+                                    return Mono.error(new UserClientNotFoundException(message, details));
+                                } catch (Exception e) {
+                                    return Mono.error(new UserClientNotFoundException("User `" + username + "` not found.", ""));
+                                }
+                            })
+                )
+                .onStatus(
+                    HttpStatusCode::is5xxServerError,
+                    clientResponse -> clientResponse.bodyToMono(String.class)
+                            .flatMap(body -> Mono.error(new RuntimeException("Auth service error: " + body)))
+                )
                 .bodyToMono(UserDTO.class)
+                .onErrorResume(UserClientNotFoundException.class, ex -> Mono.error(ex)) // re-throw to caller
                 .block();
     }
 }

@@ -44,6 +44,7 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
     bankCollectionService.getByUserId(userId)
       .then(async (response) => {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+          console.log(response.data)
           setBankList(response.data);
           setIsEmpty(false);
           setTimeout(() => {
@@ -173,10 +174,10 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
       if (step === 'bank') {
         payloads = {
           ...payloads,
-          accountHolderName: selectedBank?.account_holder_name || "",
-          accountNumber: selectedBank?.account_number || "",
-          bankCode: selectedBank?.bank_code || "",
-          bankName: selectedBank?.bank_name || "",
+          accountHolderName: selectedBank?.accountHolderName || "",
+          accountNumber: selectedBank?.accountNumber || "",
+          bankCode: selectedBank?.bankCode || "",
+          bankName: selectedBank?.bankName || "",
           depositSystem: "PAYSTACK"
         };
       } else if (step === 'card') {
@@ -421,9 +422,9 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
                                 {selectedBank?.id === bank.id ? <CheckCircle size={20} className="selected-check" /> : <Landmark size={20} />}
                               </div>
                               <div className="bank-account-info">
-                                <h4 className="bank-name">{bank.bank_name || 'Unknown Bank'}</h4>
-                                <p className="account-holder">{bank.account_holder_name || 'No Name'}</p>
-                                <p className="account-number">{bank.account_number || 'No Account Number'}</p>
+                                <h4 className="bank-name">{bank.bankName || 'Unknown Bank'}</h4>
+                                <p className="account-holder">{bank.accountHolderName || 'No Name'}</p>
+                                <p className="account-number">{bank.accountNumber || 'No Account Number'}</p>
                               </div>
                               <div className="verified-badge">
                                 <ShieldCheck size={14} />
@@ -455,7 +456,7 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
                       </div>
                       <div className="detail-content">
                         <span className="detail-label">Bank Name</span>
-                        <p className="wallet-account-details">{selectedBank?.bank_name || 'Unknown Bank'}</p>
+                        <p className="wallet-account-details">{selectedBank?.bankName || 'Unknown Bank'}</p>
                       </div>
                     </div>
                     <div className="bank-detail-row">
@@ -465,8 +466,8 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
                       <div className="detail-content">
                         <span className="detail-label">Account Number</span>
                         <div className="detail-value-row">
-                          <p className="wallet-account-details">{selectedBank?.account_number || 'No Account Number'}</p>
-                          <button className="copy-button" onClick={() => handleCopy(selectedBank?.account_number || '')}>
+                          <p className="wallet-account-details">{selectedBank?.accountNumber || 'No Account Number'}</p>
+                          <button className="copy-button" onClick={() => handleCopy(selectedBank?.accountNumber || '')}>
                             {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
                           </button>
                         </div>
@@ -478,7 +479,7 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
                       </div>
                       <div className="detail-content">
                         <span className="detail-label">Account Name</span>
-                        <p className="wallet-account-details">{selectedBank?.account_holder_name || 'No Name'}</p>
+                        <p className="wallet-account-details">{selectedBank?.accountHolderName || 'No Name'}</p>
                       </div>
                     </div>
                   </div>

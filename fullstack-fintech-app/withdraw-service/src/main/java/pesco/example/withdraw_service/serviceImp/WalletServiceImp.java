@@ -37,6 +37,7 @@ import pesco.example.withdraw_service.enums.BanActions;
 import pesco.example.withdraw_service.enums.CurrencyStructType;
 import pesco.example.withdraw_service.enums.TransactionType;
 import pesco.example.withdraw_service.exceptions.Error;
+import pesco.example.withdraw_service.exceptions.UserClientNotFoundException;
 import pesco.example.withdraw_service.payloads.CreateEscrowRequest;
 import pesco.example.withdraw_service.services.WalletService;
 import pesco.example.withdraw_service.utils.IdGeneratorUtil;
@@ -161,11 +162,13 @@ public class WalletServiceImp implements WalletService {
             System.out.println("Process 20 - Transfer pin provided");
 
             System.out.println("Process 21 - Fetching sender user: " + dto.getUsername());
-            UserDTO fromUser = userServiceClient.findByUsername(dto.getUsername(), token);
-            if (fromUser == null) {
-                System.out.println("Process 22 - Sender user NOT FOUND, returning 400");
+            UserDTO fromUser;
+            try {
+                fromUser = userServiceClient.findByUsername(dto.getUsername(), token);
+            } catch (UserClientNotFoundException e) {
+                System.out.println("Process 22 - Sender NOT FOUND: " + e.getMessage());
                 idempotencyService.clearKey(idempotencyKey);
-                return Error.createResponse("Sender User not found", HttpStatus.BAD_REQUEST, "Your username is not found in our system.");
+                return Error.createResponse("Sender User not found", HttpStatus.BAD_REQUEST, e.getMessage());
             }
             System.out.println("Process 23 - Sender user found: id=" + fromUser.getId() + ", username=" + fromUser.getUsername());
 
@@ -177,11 +180,13 @@ public class WalletServiceImp implements WalletService {
             System.out.println("Process 25 - Sender and recipient are different users");
 
             System.out.println("Process 26 - Fetching recipient user: " + dto.getRecipientUsername());
-            UserDTO recipientUser = userServiceClient.findByUsername(dto.getRecipientUsername(), token);
-            if (recipientUser == null) {
-                System.out.println("Process 27 - Recipient user NOT FOUND, returning 400");
+            UserDTO recipientUser;
+            try {
+                recipientUser = userServiceClient.findByUsername(dto.getRecipientUsername(), token);
+            } catch (UserClientNotFoundException e) {
+                System.out.println("Process 27 - Recipient NOT FOUND: " + e.getMessage());
                 idempotencyService.clearKey(idempotencyKey);
-                return Error.createResponse("User not found", HttpStatus.BAD_REQUEST, "Recipient user is does not found in our system.");
+                return Error.createResponse("User not found", HttpStatus.BAD_REQUEST, e.getMessage());
             }
             System.out.println("Process 28 - Recipient user found: id=" + recipientUser.getId() + ", username=" + recipientUser.getUsername());
 
@@ -240,7 +245,7 @@ public class WalletServiceImp implements WalletService {
             System.out.println("Process 43 - New account risk check passed");
 
             System.out.println("Process 44 - Checking fraudulent action in recent history");
-            if (isFradulentActionByUserInRecentHistory(fromUser.getId(), fromUser.getUsername(), TransactionType.DEPOSIT)) {
+            if (isFradulentActionByUserInRecentHistory(fromUser.getId(), fromUser.getUsername(), TransactionType.DEPOSIT, token)) {
                 System.out.println("Process 45 - FRAUDULENT action in recent history detected, locking account");
                 idempotencyService.clearKey(idempotencyKey);
                 userServiceClient.updateUserAccountStatus(fromUser.getId(), BanActions.SUSPICIOUS_ACTIVITY, token);
@@ -573,8 +578,8 @@ public class WalletServiceImp implements WalletService {
 
     }
 
-    private boolean isFradulentActionByUserInRecentHistory(Long id, String username, TransactionType deposit) {
-        List<HistoryDTO> activities = historyServiceClient.listHistoryByType(id, username, deposit);
+    private boolean isFradulentActionByUserInRecentHistory(Long id, String username, TransactionType deposit, String token) {
+        List<HistoryDTO> activities = historyServiceClient.listHistoryByType(id, username, deposit, token);
 
         if (activities == null || activities.isEmpty()) {
             return false;
@@ -718,7 +723,7 @@ public class WalletServiceImp implements WalletService {
             }
 
             if (isFradulentActionByUserInRecentHistory(fromUser.getId(), fromUser.getUsername(),
-                    TransactionType.DEPOSIT)) {
+                    TransactionType.DEPOSIT, token)) {
                 idempotencyService.clearKey(idempotencyKey); 
                 userServiceClient.updateUserAccountStatus(fromUser.getId(),
                         BanActions.SUSPICIOUS_ACTIVITY,

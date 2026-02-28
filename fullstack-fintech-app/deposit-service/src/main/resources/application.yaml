@@ -6,8 +6,7 @@ spring:
     name: deposit-service
 
 jwt:
-  secret-key: lcBCilFEQT0SWEZcCQhGx2UaCZcxPx4bYBfrGM0DVKDJycK2UL4dDJqAkZ8r4IBQxSa3S2wlTVlnVVzvzP5sfzPtLUournmEY2N3ZGVnQ1BtWEF0anZ0aDNLNHJhaHh9IkFVaj0PXA==
-
+  secret-key: 3hbXrhqhmvPD0bVq9Ce4hxTqALG701J7jRXyfKjqtzDPIlbdJ8YMIfZtHmPlC6Js9JVpELE2tj4KGP1VoCMA4Ya58WGF3Hs1
 flutterwave:
   public-key: FLWPUBK_TEST-9f86808391a0bef01975c332a2782e5a-X
   secret-key: FLWSECK_TEST-1eee27f63b4dc12394dbf5c7badaa39e-X
@@ -19,7 +18,7 @@ paystack:
     key: sk_test_aaa8ff310f15a0ad5f23950a584f8942cbdf02aa
   
 history-service:
-  base-url:  http://history-service:8390
+  base-url:  http://resiliences-service:8531
 
 wallet-service:
   base-url: http://wallet-service:8035
@@ -31,7 +30,7 @@ auth-service:
   base-url:  http://authentication-service:8080
 
 banklist-service:
-  base-url:  http://banklist-service:8040
+  base-url:  http://resiliences-service:8531
 
 notification-service:
   base-url:  http://notification-service:8079

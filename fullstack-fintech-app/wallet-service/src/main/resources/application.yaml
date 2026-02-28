@@ -51,11 +51,11 @@ spring:
           provider_disables_autocommit: true
 
 jwt:
-  secret-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnBaWj2t3CwC6kxlhHYxKs2eirgl0kYohe6MZaNKS7XbS1zWlM2xZlaY9fUZbn9jlGGaKWci2gaGBU45JXAqzlpQbuWiMYavcfG19kB1dBNy6vOH++uJSEPNud7EwaBpdY9YENMkKKcEkTAZNXhifGGcSlAaBQ9NZmYdG5bTBiht1TsQk19GLOcS9DftjlAk7EadAVnfJBLLnVgZxBDTMP5L4LW1EMAS8y8Lwp98LWu7T3OfejnUMbH2AWd5FXYDZI1TXHhVMLVmM08ZZr0HpoLevjwCgv7CMhtvm7q6wIDAQABlcBCilFEQT0SWEZcCQhGx2UaCZcxPx4bYBfrGM0DVKDJycK2UL4dDJqAkZ8r4IBQxSa3S2wlTVlnVVzvzP5sfzPtLUournmEY2N3ZGVnQ1BtWEF0anZ0aDNLNHJhaHh9IkFVaj0PXA
+  secret-key: 3hbXrhqhmvPD0bVq9Ce4hxTqALG701J7jRXyfKjqtzDPIlbdJ8YMIfZtHmPlC6Js9JVpELE2tj4KGP1VoCMA4Ya58WGF3Hs1
   expiration-minutes: 30
   refresh-expiration-days: 7
-  issuer: "Unified Dynamic Systems"
-  audience: "UD49-Stations-app"
+  issuer: "ePay"
+  audience: "Unified Dynamic Systems"
   clock-skew-seconds: 30
   algorithm: "HS256"
   token-prefix: "Bearer"
@@ -82,7 +82,7 @@ authentication-service:
   base-url: http://authentication-service:8187
 
 history-service:
-  base-url: http://history-service:8390
+  base-url: http://resiliences-service:8531
 
 notification-service:
   base-url: http://notification-service:8079

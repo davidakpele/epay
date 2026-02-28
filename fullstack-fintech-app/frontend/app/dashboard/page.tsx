@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { 
   Eye, EyeOff, Plus, ArrowDownLeft, 
   CreditCard, Repeat, Search, User2, 

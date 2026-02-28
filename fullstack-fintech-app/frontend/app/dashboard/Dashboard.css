@@ -785,11 +785,6 @@
   margin-right: 20px;
 }
 
-/* Max screen (≥ 979px) — show 6 items */
-
-
-
-/* 979px down to 700px — show 4 items */
 @media (max-width: 1200px) {
   .feature-grid {
     grid-template-columns: repeat(6, 1fr);
