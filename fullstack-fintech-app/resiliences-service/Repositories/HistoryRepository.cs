@@ -97,10 +97,16 @@ namespace resiliences_service.Repositories
             var query = _context.Histories.Where(h => h.UserId == userId);
 
             if (startDate.HasValue)
-                query = query.Where(h => h.CreatedOn >= startDate.Value);
+            {
+                var start = DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc);
+                query = query.Where(h => h.CreatedOn >= start);
+            }
 
             if (endDate.HasValue)
-                query = query.Where(h => h.CreatedOn < endDate.Value.AddDays(1));
+            {
+                var end = DateTime.SpecifyKind(endDate.Value.AddDays(1), DateTimeKind.Utc);
+                query = query.Where(h => h.CreatedOn < end);
+            }
 
             if (!string.IsNullOrEmpty(transactionType) && transactionType != "ALL")
                 query = query.Where(h => h.Type.ToString() == transactionType);

@@ -52,7 +52,7 @@ namespace resiliences_service.Controllers
             }
         }
 
-        [HttpPost("add")]
+        [HttpPost]
         public async Task<IActionResult> AddToBlackList([FromBody] AddToBlackListRequest request)
         {
             if (!ModelState.IsValid)

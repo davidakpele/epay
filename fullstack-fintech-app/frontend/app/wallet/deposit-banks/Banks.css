@@ -497,7 +497,9 @@
     padding: 1rem;
     margin-bottom:100px;
   }
-
+  .accountHolderName{
+    font-size: 12px !important;
+  }
   .banks-card {
     padding: 1.5rem;
     margin-bottom: 10px;
@@ -702,8 +704,8 @@
 @media (min-width: 1024px) {
   .banks-grid {
     grid-template-columns: 2fr 3fr;
-  
   }
+  
   .banks-list-header{
     display: block !important;
   }

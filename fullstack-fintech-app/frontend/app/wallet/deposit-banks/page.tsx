@@ -232,13 +232,13 @@ const Banks = () => {
       if (result?.data && Array.isArray(result.data)) {
         const formattedBanks = result.data.map((bank: any) => ({
           id: bank.id,
-          bankCode: bank.bank_code,
-          bankName: bank.bank_name,
-          accountNumber: bank.account_number,
-          accountName: bank.account_holder_name,
+          bankCode: bank.bankCode,
+          bankName: bank.bankName,
+          accountNumber: bank.accountNumber,
+          accountName: bank.accountHolderName,
           currency: "NGN",
-          addedDate: bank.created_on
-            ? new Date(bank.created_on).toISOString().split("T")[0]
+          addedDate: bank.createdOn
+            ? new Date(bank.createdOn).toISOString().split("T")[0]
             : new Date().toISOString().split("T")[0],
         }));
 
@@ -599,9 +599,9 @@ const Banks = () => {
                               </svg>
                             </div>
                             <div className="currency1__main">
-                              <span className="currency1__abbr">{newBank.bankName}</span>
+                              <span className="currency1__abbr accountHolderName">{newBank.bankName}</span>
                               <div className="d-flex justify-content-between">
-                                <span className="currency1__name">{newBank.accountName}</span>
+                                <span className="currency1__name accountHolderName">{newBank.accountName}</span>
                                 <span className="verified-text">verified</span>
                               </div>
                               <span className="currency1__name">{newBank.accountNumber}</span>
@@ -696,9 +696,9 @@ const Banks = () => {
                                     </svg>
                                   </div>
                                   <div className="currency1__main">
-                                    <span className="currency1__abbr">{bank.bankName}</span>
+                                    <span className="currency1__abbr accountHolderName">{bank.bankName}</span>
                                     <div className="d-flex justify-content-between">
-                                      <span className="currency1__name">
+                                      <span className="currency1__name accountHolderName">
                                         {bank.accountName}
                                       </span>
                                       <span className="verified-text">verified</span>
