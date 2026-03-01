@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using resiliences_service.Enums;
 using resiliences_service.interfaces;
 using resiliences_service.Models;
+using resiliences_service.Payloads;
 
 namespace resiliences_service.Controllers
 {
@@ -11,7 +12,7 @@ namespace resiliences_service.Controllers
     [Authorize]
     public class BeneficiaryController : ControllerBase
     {
-        private readonly IBeneficiaryService _service;
+        private readonly IBeneficiaryService            _service;
         private readonly ILogger<BeneficiaryController> _logger;
 
         public BeneficiaryController(IBeneficiaryService service, ILogger<BeneficiaryController> logger)
@@ -20,7 +21,8 @@ namespace resiliences_service.Controllers
             _logger  = logger;
         }
 
-        [HttpPost]
+        // POST /beneficiary/create
+        [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateBeneficiaryRequest req)
         {
             if (!ModelState.IsValid)
@@ -85,12 +87,13 @@ namespace resiliences_service.Controllers
             }
         }
 
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetByUserId(uint userId)
+        // GET /beneficiaries/{id}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(uint id)
         {
             try
             {
-                var beneficiary = await _service.GetByUserIdAsync(userId);
+                var beneficiary = await _service.GetByUserIdAsync(id);
                 if (beneficiary == null)
                     return NotFound(new { error = "Beneficiary not found" });
 
@@ -98,12 +101,13 @@ namespace resiliences_service.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[BeneficiaryController] GetByUserId failed");
+                _logger.LogError(ex, "[BeneficiaryController] GetById failed");
                 return StatusCode(500, new { error = "Failed to fetch beneficiary" });
             }
         }
 
-        [HttpGet("user/{userId}/all")]
+        // GET /beneficiaries/{userId}/all
+        [HttpGet("{userId}/all")]
         public async Task<IActionResult> GetAllByUserId(uint userId)
         {
             try
@@ -118,7 +122,8 @@ namespace resiliences_service.Controllers
             }
         }
 
-        [HttpGet("user/{userId}/type")]
+        // GET /beneficiaries/{userId}/type?type=bank
+        [HttpGet("{userId}/type")]
         public async Task<IActionResult> GetByType(uint userId, [FromQuery] string type)
         {
             if (!Enum.TryParse<BeneficiaryType>(type, true, out var beneficiaryType) ||
@@ -137,7 +142,8 @@ namespace resiliences_service.Controllers
             }
         }
 
-        [HttpGet("user/{userId}/search")]
+        // GET /beneficiaries/{userId}/search?search=query
+        [HttpGet("{userId}/search")]
         public async Task<IActionResult> Search(uint userId, [FromQuery] string search)
         {
             if (string.IsNullOrEmpty(search))
@@ -155,6 +161,26 @@ namespace resiliences_service.Controllers
             }
         }
 
+        // GET /beneficiaries/{id}/verify
+        [HttpGet("{id}/verify")]
+        public async Task<IActionResult> Verify(uint id)
+        {
+            try
+            {
+                var beneficiary = await _service.GetByUserIdAsync(id);
+                if (beneficiary == null)
+                    return NotFound(new { error = "Beneficiary not found" });
+
+                return Ok(new { status = "success", message = "Beneficiary verified", data = beneficiary });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[BeneficiaryController] Verify failed");
+                return StatusCode(500, new { error = "Failed to verify beneficiary" });
+            }
+        }
+
+        // PUT /beneficiaries/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(uint id, [FromBody] CreateBeneficiaryRequest req)
         {
@@ -203,6 +229,7 @@ namespace resiliences_service.Controllers
             }
         }
 
+        // DELETE /beneficiaries/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(uint id, [FromQuery] uint userId)
         {
@@ -222,6 +249,7 @@ namespace resiliences_service.Controllers
             }
         }
 
+        // DELETE /beneficiaries/bulk
         [HttpDelete("bulk")]
         public async Task<IActionResult> DeleteByIds([FromBody] DeleteBeneficiariesRequest req)
         {
@@ -239,24 +267,5 @@ namespace resiliences_service.Controllers
                 return StatusCode(500, new { error = "Failed to delete beneficiaries" });
             }
         }
-    }
-
-    public class CreateBeneficiaryRequest
-    {
-        public uint UserId { get; set; }
-        public BeneficiaryType BeneficiaryType { get; set; }
-        public string BeneficiaryName { get; set; } = default!;
-        public string Currency { get; set; } = "NGN";
-        public string? AccountNumber { get; set; }
-        public string? AccountName { get; set; }
-        public string? BankCode { get; set; }
-        public string? BankName { get; set; }
-        public string? RecipientUsername { get; set; }
-    }
-
-    public class DeleteBeneficiariesRequest
-    {
-        public uint UserId { get; set; }
-        public List<uint> Ids { get; set; } = new();
     }
 }

@@ -81,7 +81,7 @@ const Statements = () => {
       status: 'All Statuses',
     });
     
-    const transactionTypes = ['All Types', 'Transfer', 'Deposit', 'Withdrawal', 'Payment', 'Bills Payment', 'Credited'];
+    const transactionTypes = ['All Types', 'TRANSFER', 'DEPOSIT', 'WITHDRAW', 'Payment', 'BILLS', 'CREDITED'];
     const statuses = ['All Statuses', 'Completed', 'Pending', 'Failed'];
     
     const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
@@ -553,7 +553,7 @@ This is an official receipt for your records.
     };
 
     const isDebitTransaction = (type: string): boolean => {
-      const debitTypes = ['DEBIT', 'WITHDRAW', 'WITHDRAWAL', 'BILL PAYMENT', 'BILLS PAYMENT', 'PAYMENT', 'TRANSFER'];
+      const debitTypes = ['DEBITED', 'WITHDRAW', 'BILL PAYMENT', 'BILLS PAYMENT', 'PAYMENT', 'TRANSFER'];
       return debitTypes.some(debitType => type.toUpperCase().includes(debitType));
     };
 

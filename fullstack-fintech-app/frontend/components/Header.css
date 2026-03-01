@@ -804,3 +804,13 @@
     font-size: 18px;
   }
 }
+
+.sidebar-logo-img {
+  width: 108px;
+  height: 37px;
+  background-image: url('/assets/images/logo-ui2.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: left center;
+  cursor: pointer;
+}

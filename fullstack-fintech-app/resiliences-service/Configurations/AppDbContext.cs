@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using resiliences_service.Models;
 
 namespace resiliences_service.Configs
@@ -27,6 +28,29 @@ namespace resiliences_service.Configs
         {
             base.OnModelCreating(modelBuilder);
 
+            // UTC DateTime converters for PostgreSQL
+            var utcConverter = new ValueConverter<DateTime, DateTime>(
+                v => v.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v, DateTimeKind.Utc),
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
+            );
+
+            var utcNullableConverter = new ValueConverter<DateTime?, DateTime?>(
+                v => v.HasValue ? (v.Value.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)) : v,
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v
+            );
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime))
+                        property.SetValueConverter(utcConverter);
+
+                    if (property.ClrType == typeof(DateTime?))
+                        property.SetValueConverter(utcNullableConverter);
+                }
+            }
+            
             modelBuilder.Entity<Beneficiary>()
                 .HasIndex(b => new { b.UserId, b.BeneficiaryType })
                 .HasDatabaseName("idx_user_beneficiary");

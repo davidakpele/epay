@@ -202,7 +202,7 @@ External Request → NGINX Security Layer → Spring Security Filters → Applic
 | `deposit-service` | 8020 | ❌ | ❌ | ✅ | Deposit processing|
 | `withdraw-service` | 8068 | ❌ | ✅ | ❌ | Withdrawal processing|
 
-### Golang Services
+### .Net Services
 | Service | Port | Database | Description |
 |---------|------|----------|-------------|
 | `bank-collection-service` | 8040 | ✅ | Payment gateway integration (Paystack) |
@@ -210,17 +210,14 @@ External Request → NGINX Security Layer → Spring Security Filters → Applic
 | `revenue-service` | 8083 | ✅ | Revenue tracking and analytics |
 | `blacklist-service` | 8013 | ✅ | Fraud detection and IP analysis |
 | `beneficiary-service` | 8041 | ✅ | Beneficiary management |
+| `maintenance-service` | 8390 | ✅ | System maintenance & fee processing, checking update from admin command center, check blacklisted wallet, block account, freeze account and the rest |
+| `escrow-service` | 8041 | ✅ | Escrow account management & instant fail transaction refund |
 
 ### Message Queue Services
 | Service | Port | Database | Description |
 |---------|------|----------|-------------|
 | `notification-service` | 8079 | ❌ | Real-time notifications via RabbitMQ |
 
-### Rust Services
-| Service | Port | Database | Description |
-|---------|------|----------|-------------|
-| `maintenance-service` | 8390 | ✅ | System maintenance & fee processing, checking update from admin command center, check blacklisted wallet, block account, freeze account and the rest |
-| `escrow-service` | 8041 | ✅ | Escrow account management & instant fail transaction refund |
 
 ### 🔧 Maintenance Service Overview
 - The **Maintenance Service** (built in Rust) handles automated system maintenance operations including:

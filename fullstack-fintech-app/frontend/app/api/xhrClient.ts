@@ -5,7 +5,7 @@ interface XhrClientOptions {
   shouldRetry?: (status: number) => boolean;
   onRetry?: (attempt: number, maxRetries: number, delay: number, status?: number) => void;
 }
-
+const authPages = ['/auth/login', '/auth/register'];
 const xhrClient = <T = any>(
   api_url: string,
   method: string,
@@ -32,10 +32,12 @@ const xhrClient = <T = any>(
         }
         xhr.setRequestHeader(key, headers[key]);
       });
+      
+      const isAuthPage = authPages.some(page => window.location.pathname.includes(page));
 
       xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
-          if (xhr.status === 403 || xhr.status === 401) {
+          if ((xhr.status === 403 || xhr.status === 401) && !isAuthPage) {
             window.location.href = '/auth/logout';
             reject('Payment required. Redirecting to logout.');
             return;
