@@ -197,7 +197,18 @@
 .dot:nth-child(3) {
   animation-delay: 0.4s;
 }
-
+.loaderLogoImg {
+  width: 150px;
+  height: 55px;
+  background-image: url('/assets/images/logo-ui2.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: left center;
+  cursor: pointer;
+  max-Width: 108px;
+  object-fit: contain;
+  display: block;
+}
 /* Animations */
 @keyframes contentFadeIn {
   from {

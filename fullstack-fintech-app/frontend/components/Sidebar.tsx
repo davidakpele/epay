@@ -95,21 +95,8 @@ const Sidebar = () => {
       <div className="logo-section">
         <div className="settings-avatar-wrapper">
           <Link href="/dashboard">
-            <img
-            src={'../assets/images/logo-ui2.png'}
-            alt="User profile"
-            style={{
-              width: 'auto',
-              height: '37px',
-              maxWidth: '108px',
-              objectFit: 'contain',
-              display: 'block',
-              cursor: 'pointer',
-            }}
-            onError={(e) => {
-              e.currentTarget.src = '/assets/images/logo.jpg';
-            }}
-          /></Link>
+            <div className="sidebar-logo-img" />
+            </Link>
         </div>
       </div>
 
