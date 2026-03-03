@@ -701,13 +701,67 @@
   }
 }
 
+.page-header {
+  margin-bottom: 32px;
+  padding: 40px 48px;
+  background: linear-gradient(135deg, #1a6b0f 0%, #2e8b1a 40%, #4caf30 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(46, 139, 26, 0.35);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  min-height: 220px;
+}
+
+/* Decorative wave/blob shapes */
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: 280px;
+  width: 260px;
+  height: 260px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 50%;
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  right: 100px;
+  width: 320px;
+  height: 320px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+.page-title {
+  font-size: 40px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 14px 0;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+.page-description {
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
 @media (min-width: 1024px) {
   .banks-grid {
     grid-template-columns: 2fr 3fr;
   }
-  
+   .page-header { padding: 28px 24px; min-height: auto; }
   .banks-list-header{
     display: block !important;
   }
 
+}
+@media (max-width: 480px) {
+  .page-header { padding: 22px 18px; }
 }

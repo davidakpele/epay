@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight, Plus, CreditCard, Eye, EyeOff, Info, ArrowUpRight, ArrowDownLeft, ChevronDown, Search } from 'lucide-react';
+import { ChevronRight, Plus, CreditCard, Eye, EyeOff, Info, ArrowUpRight, ArrowDownLeft, ChevronDown, Search, CreditCardIcon, ClipboardListIcon } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import DepositModal from '@/components/DepositModal';
 import Footer from '@/components/Footer';
@@ -12,13 +12,13 @@ import Link from 'next/link';
 import './VirtualCards.css';
 import { Toast } from '@/app/types/auth';
 import { getFiat, getToken, getUserFullName, getUserId, setActiveWallet, setFiat, setWalletContainer } from '@/app/api/utils';
-import { walletService } from '@/app/api';
+import { virtualCardService, walletService } from '@/app/api';
 import { Currency } from '@/app/types/api';
 import { useRouter } from 'next/navigation';
 
 type CardStatus = 'Active' | 'Pending' | 'On Review';
-type CardNetwork = 'Visa' | 'Mastercard';
-type WalletType = 'USD' | 'EUR' | 'GBP';
+type CardNetwork = 'Visa' | 'Master';
+type WalletType = 'USD' | 'EUR' | 'GBP' | string;
 
 interface VirtualCard {
   id: string;
@@ -52,34 +52,85 @@ interface Wallet {
   flag: string;
 }
 
+const FLAG_MAP: Record<string, string> = {
+  USD: '../../assets/images/america-flag.png',
+  EUR: '../../assets/images/euro.png',
+  GBP: '../../assets/images/uk-flag.png',
+  NGN: '../../assets/images/nigeria-flag.png',
+};
+
+const cardFees: Record<CardNetwork, string> = {
+  Visa: '$5',
+  Master: '$25',
+};
+
 const Flag = ({ src, alt }: { src: string; alt: string }) => (
   <img src={src} alt={alt} className="flag-img" />
 );
 
-const initialCards: VirtualCard[] = [
-  { id: '1', network: 'Visa',       currency: 'USD', label: 'USD Virtual Card', last4: '4521', expiry: '08/26', holder: 'JOHN A. DOE', status: 'Active',    balance: 1200, flag: '../../assets/images/america-flag.png' },
-  { id: '2', network: 'Mastercard', currency: 'EUR', label: 'EUR Virtual Card', last4: '7890', expiry: '09/26', holder: 'EMILY R.',    status: 'Pending',   balance: 300,  flag: '../../assets/images/euro.png' },
-  { id: '3', network: 'Visa',       currency: 'USD', label: 'USD Virtual Card', last4: '9632', expiry: '09/26', holder: 'MICHAEL T.', status: 'Active',    balance: 850,  flag: '../../assets/images/america-flag.png' },
-  { id: '4', network: 'Visa',       currency: 'GBP', label: 'GBP Virtual Card', last4: '2210', expiry: '11/26', holder: 'SARAH K.',   status: 'On Review', balance: 0,    flag: '../../assets/images/uk-flag.png' },
-];
+/** Map raw API card data → VirtualCard */
+const mapApiCard = (raw: any, userFullName: string): VirtualCard => {
+  const currency = raw.currency || raw.currency_code || 'USD';
+  const network: CardNetwork =
+    String(raw.card_type || raw.cardType || raw.network || 'Visa').includes('MASTER') ||
+    String(raw.card_type || raw.cardType || raw.network || '').toLowerCase() === 'master'
+      ? 'Master'
+      : 'Visa';
 
-const requestHistory: CardRequest[] = [
-  { id: 'r1', currency: 'USD', network: 'Visa',       amount: 500,  status: 'Pending',   requestedOn: 'Apr 20, 2024',                             flag: '../../assets/images/america-flag.png' },
-  { id: 'r2', currency: 'EUR', network: 'Mastercard', amount: 300,  status: 'On Review', requestedOn: 'Apr 18, 2024',                             flag: '../../assets/images/euro.png' },
-  { id: 'r3', currency: 'USD', network: 'Visa',       amount: 1200, status: 'Active',    requestedOn: 'Apr 15, 2024', approvedOn: 'Apr 15, 2024', flag: '../../assets/images/america-flag.png' },
-];
+  const rawStatus = raw.status || 'Pending';
+  const status: CardStatus =
+    rawStatus === 'ACTIVE' || rawStatus === 'active' || rawStatus === 'Active'
+      ? 'Active'
+      : rawStatus === 'ON_REVIEW' || rawStatus === 'on_review' || rawStatus === 'On Review'
+      ? 'On Review'
+      : 'Pending';
 
-const statusCounts = { Pending: 2, 'On Review': 1, Active: 3 };
+  return {
+    id: String(raw.id || raw.card_id || raw.cardId || Date.now()),
+    network,
+    currency,
+    label: `${currency} Virtual Card`,
+    last4: String(raw.last4 || raw.last_four || raw.lastFour || '****'),
+    expiry: raw.expiry || raw.expiry_date || raw.expiryDate || '**/**',
+    holder: raw.account_holder_name || raw.accountHolderName || userFullName.toUpperCase(),
+    status,
+    balance: parseFloat(raw.balance || raw.current_balance || 0),
+    flag: FLAG_MAP[currency] || FLAG_MAP['USD'],
+  };
+};
 
-const cardCurrencyOptions = [
-  { code: 'USD', symbol: '$', label: 'USD ($)', flag: '../../assets/images/america-flag.png' },
-  { code: 'EUR', symbol: '€', label: 'EUR (€)', flag: '../../assets/images/euro.png' },
-  { code: 'GBP', symbol: '£', label: 'GBP (£)', flag: '../../assets/images/uk-flag.png' },
-];
+/** Map raw API request history → CardRequest */
+const mapApiRequest = (raw: any): CardRequest => {
+  const currency = raw.currency || raw.currency_code || 'USD';
+  const network: CardNetwork =
+    String(raw.card_type || raw.cardType || raw.network || '').toLowerCase() === 'master'
+      ? 'Master'
+      : 'Visa';
 
-const cardFees: Record<CardNetwork, string> = {
-  Visa: '$5',
-  Mastercard: '$25',
+  const rawStatus = raw.status || 'Pending';
+  const status: CardStatus =
+    rawStatus === 'ACTIVE' || rawStatus === 'active' || rawStatus === 'Active'
+      ? 'Active'
+      : rawStatus === 'ON_REVIEW' || rawStatus === 'on_review' || rawStatus === 'On Review'
+      ? 'On Review'
+      : 'Pending';
+
+  const fmt = (d: string) => {
+    if (!d) return '';
+    try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+    catch { return d; }
+  };
+
+  return {
+    id: String(raw.id || raw.request_id || raw.requestId || Date.now()),
+    currency,
+    network,
+    amount: parseFloat(raw.initial_balance || raw.initialBalance || raw.amount || 0),
+    status,
+    requestedOn: fmt(raw.created_at || raw.createdAt || raw.requestedOn || ''),
+    approvedOn: status === 'Active' ? fmt(raw.updated_at || raw.updatedAt || raw.approvedOn || '') : undefined,
+    flag: FLAG_MAP[currency] || FLAG_MAP['USD'],
+  };
 };
 
 const VirtualCardsPage = () => {
@@ -87,35 +138,36 @@ const VirtualCardsPage = () => {
   const [withdrawModal, setWithdrawModal]           = useState<{ open: boolean; card: VirtualCard | null }>({ open: false, card: null });
   const [activeTab, setActiveTab]                   = useState<'All Cards' | 'Active' | 'Pending' | 'On Review'>('All Cards');
   const [theme, setTheme]                           = useState<'light' | 'dark'>('light');
-  const [cards, setCards]                           = useState<VirtualCard[]>(initialCards);
+  const [cards, setCards]                           = useState<VirtualCard[]>([]);
   const [hiddenCards, setHiddenCards]               = useState<Set<string>>(new Set());
   const [selectedCardDetail, setSelectedCardDetail] = useState<VirtualCard | null>(null);
   const [cardNetwork, setCardNetwork]               = useState<CardNetwork>('Visa');
-  const [cardCurrency, setCardCurrency]             = useState(cardCurrencyOptions[0]);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
-  const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
-  const [formWallet, setFormWallet] = useState<Wallet | null>(null);
+  const [wallets, setWallets]                       = useState<Wallet[]>([]);
+  const [selectedWallet, setSelectedWallet]         = useState<Wallet | null>(null);
   const [toasts, setToasts]                         = useState<Toast[]>([]);
   const [isDepositOpen, setIsDepositOpen]           = useState(false);
   const [isPageLoading, setIsPageLoading]           = useState(true);
+  const [isCardsLoading, setIsCardsLoading]         = useState(true);
   const [showBalances, setShowBalances]             = useState(true);
-  const [isFormWalletOpen, setIsFormWalletOpen]     = useState(false);
-  const [isCurrencyDropOpen, setIsCurrencyDropOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen]               = useState(false);
   const [fundAmount, setFundAmount]                 = useState('');
   const [isSubmitting, setIsSubmitting]             = useState(false);
-  const [currencies, setCurrencies] = useState<Currency[]>([]);
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
-  const [error, setError] = useState('');
-  const [wallet, setWallet] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isScrolling, setIsScrolling] = useState(false);
+  const [currencies, setCurrencies]                 = useState<Currency[]>([]);
+  const [selectedCurrency, setSelectedCurrency]     = useState<Currency | null>(null);
+  const [error, setError]                           = useState('');
+  const [wallet, setWallet]                         = useState<any>(null);
+  const [isDropdownOpen, setIsDropdownOpen]         = useState(false);
+  const scrollTimer                                  = useRef<NodeJS.Timeout | null>(null);
+  const [searchTerm, setSearchTerm]                 = useState('');
+  const [isScrolling, setIsScrolling]               = useState(false);
+  const [requestHistory, setRequestHistory]         = useState<CardRequest[]>([]);
+  const [statusCounts, setStatusCounts]             = useState({ Pending: 0, 'On Review': 0, Active: 0 });
+  const [modalAmount, setModalAmount]               = useState('');
+
   const userFullName = getUserFullName() || 'User';
   const router = useRouter();
-  const [modalAmount, setModalAmount] = useState('');
 
+  // ── Toast helper ──────────────────────────────────────────────────────────
   const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
     setToasts((prev) => {
       if (prev.length >= 5) return prev;
@@ -152,7 +204,6 @@ const VirtualCardsPage = () => {
     }
   };
 
-  
   const getCardGradient = (card: VirtualCard) => {
     if (card.status === 'Pending' || card.status === 'On Review') return 'card-gradient-dark';
     if (card.currency === 'EUR') return 'card-gradient-blue';
@@ -161,78 +212,34 @@ const VirtualCardsPage = () => {
   };
 
   const getCurrencySymbol = (code: WalletType) =>
-    wallets.find((w) => w.code === code)?.symbol || '$';
+    wallets.find((w) => w.code === code)?.symbol ||
+    currencies.find((c) => c.code === code)?.symbol ||
+    '$';
 
   const filteredCards = activeTab === 'All Cards'
     ? cards
     : cards.filter((c) => c.status === activeTab);
 
-  const handleRequestCard = async () => {
-  if (!formWallet) {
-    showToast('Please select a wallet', 'warning');
-    return;
-  }
-  
-  if (!fundAmount && Number(fundAmount) < 0) {
-    showToast('Please enter a valid amount', 'warning');
-    return;
-  }
-  setIsSubmitting(true);
-  await new Promise((r) => setTimeout(r, 2000));
-  const newCard: VirtualCard = {
-    id: String(Date.now()),
-    network: cardNetwork,
-    currency: formWallet.code,
-    label: `${formWallet.code} Virtual Card`,
-    last4: String(Math.floor(1000 + Math.random() * 9000)),
-    expiry: '12/27',
-    holder: 'YOU',
-    status: 'Pending',
-    balance: Number(fundAmount) || 0,
-    flag: formWallet.flag,
-  };
-  setCards((prev) => [newCard, ...prev]);
-  setFundAmount('');
-  setIsSubmitting(false);
-  showToast('Card request submitted successfully!', 'success');
-};
+  const filteredCurrencies = currencies.filter((c) =>
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const handleFundCard = async () => {
-    const amt = Number(modalAmount);
-    if (!amt || amt <= 0) { showToast('Enter a valid amount', 'warning'); return; }
-    setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setCards((prev) => prev.map((c) => c.id === fundModal.card?.id ? { ...c, balance: c.balance + amt } : c));
-    setFundModal({ open: false, card: null });
-    setModalAmount('');
-    setIsSubmitting(false);
-    showToast(`Card funded with ${getCurrencySymbol(fundModal.card!.currency)}${amt.toLocaleString()}!`, 'success');
+  // ── Recompute status counts whenever cards change ─────────────────────────
+  const recomputeCounts = (cardList: VirtualCard[]) => {
+    const counts = { Pending: 0, 'On Review': 0, Active: 0 };
+    cardList.forEach((c) => { counts[c.status] = (counts[c.status] || 0) + 1; });
+    setStatusCounts(counts);
   };
 
-  const handleWithdraw = async () => {
-    const amt = Number(modalAmount);
-    if (!amt || amt <= 0) { showToast('Enter a valid amount', 'warning'); return; }
-    if (amt > (withdrawModal.card?.balance || 0)) { showToast('Insufficient card balance', 'warning'); return; }
-    setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setCards((prev) => prev.map((c) => c.id === withdrawModal.card?.id ? { ...c, balance: c.balance - amt } : c));
-    setWithdrawModal({ open: false, card: null });
-    setModalAmount('');
-    setIsSubmitting(false);
-    showToast(`${getCurrencySymbol(withdrawModal.card!.currency)}${amt.toLocaleString()} withdrawn successfully!`, 'success');
-  };
-
+  // ── Load wallet balances ───────────────────────────────────────────────────
   const loadWalletBalance = useCallback(async () => {
     try {
       setError('');
       const token = getToken();
       const userId = getUserId();
-      
-      if (!token || !userId) {
-        setError('Please login to view wallet');
-        return;
-      }
-      
+      if (!token || !userId) { setError('Please login to view wallet'); return; }
+
       const response = await walletService.getByUserId(userId, token);
       if (!response || response.status === 401 || response.status === 500) {
         setError('Failed to fetch wallet data');
@@ -240,66 +247,90 @@ const VirtualCardsPage = () => {
         return;
       }
       setWallet(response);
-      
-      if (response && response.wallet_balances) {
-        const apiCurrencies: Currency[] = response.wallet_balances.map((balance: any) => {
-          const currencyName = balance.currency_code;
-          return {
-            name: currencyName,
-            code: balance.currency_code,
-            symbol: balance.symbol
-          };
-        });
-        
+
+      if (response?.wallet_balances) {
+        const apiCurrencies: Currency[] = response.wallet_balances.map((b: any) => ({
+          name: b.currency_code,
+          code: b.currency_code,
+          symbol: b.symbol,
+        }));
         setCurrencies(apiCurrencies);
-        if (getFiat() !== '' && getFiat() != null) {
-          const fiatCurrency = apiCurrencies.find(c => c.code === getFiat());
-          if (fiatCurrency) {
-            setSelectedCurrency(fiatCurrency);
-          }
+
+        const saved = getFiat();
+        if (saved) {
+          const found = apiCurrencies.find((c) => c.code === saved);
+          if (found) setSelectedCurrency(found);
+        } else if (apiCurrencies.length > 0) {
+          const def = apiCurrencies.find((c) => c.code === 'NGN') || apiCurrencies[0];
+          setSelectedCurrency(def);
+          setActiveWallet(def.code);
+          setFiat(def.code);
         }
-        else {
-          if (!selectedCurrency && apiCurrencies.length > 0) {
-            const defaultCurrency = apiCurrencies.find(c => c.code === 'NGN') || apiCurrencies[0];
-            setSelectedCurrency(defaultCurrency);
-            setActiveWallet(defaultCurrency.code);
-            setFiat(defaultCurrency.code);
-          }
-        }
-          
+
         setWalletContainer(response.wallet_balances, response.hasTransferPin, response.walletId);
       }
     } catch (e) {
-      console.log(e);
+      console.error('Wallet load error:', e);
     }
-  }, []); 
+  }, []);
 
+  // ── Load virtual cards + request history from API ─────────────────────────
+  const loadCards = useCallback(async () => {
+    try {
+      setIsCardsLoading(true);
+      const userId = getUserId();
+      const token  = getToken();
+      if (!userId || !token) return;
+
+      // Fetch user's virtual cards
+      const cardsResponse = await virtualCardService.fetchUserVirtualCardsByUserId(userId);
+
+      let rawCards: any[] = [];
+      if (Array.isArray(cardsResponse)) {
+        rawCards = cardsResponse;
+      } else if (cardsResponse?.data && Array.isArray(cardsResponse.data)) {
+        rawCards = cardsResponse.data;
+      } else if (cardsResponse?.cards && Array.isArray(cardsResponse.cards)) {
+        rawCards = cardsResponse.cards;
+      }
+
+      const mapped = rawCards.map((r) => mapApiCard(r, userFullName));
+      setCards(mapped);
+      recomputeCounts(mapped);
+
+      // Build request history from the same card list (each card = a request)
+      const history = rawCards.map((r) => mapApiRequest(r));
+      setRequestHistory(history);
+    } catch (e) {
+      console.error('Cards load error:', e);
+    } finally {
+      setIsCardsLoading(false);
+    }
+  }, [userFullName]);
+
+  // ── Effects ───────────────────────────────────────────────────────────────
   useEffect(() => {
-    loadWalletBalance();
-    const t = setTimeout(() => setIsPageLoading(false), 2000);
-    return () => clearTimeout(t);
+    const init = async () => {
+      await loadWalletBalance();
+      await loadCards();
+      setTimeout(() => setIsPageLoading(false), 2000);
+    };
+    init();
   }, []);
 
   useEffect(() => {
-    if (wallet && wallet.wallet_balances) {
-      const filteredWallets = wallet.wallet_balances
+    if (wallet?.wallet_balances) {
+      const filtered = wallet.wallet_balances
         .filter((w: any) => w.currency_code === 'USD' || w.currency_code === 'NGN')
         .map((w: any) => ({
           code: w.currency_code,
           label: `${w.currency_code} Wallet`,
           balance: parseFloat(w.balance),
           symbol: w.symbol,
-          flag: w.currency_code === 'USD' 
-            ? '../../assets/images/america-flag.png' 
-            : '../../assets/images/nigeria-flag.png'
+          flag: FLAG_MAP[w.currency_code] || FLAG_MAP['USD'],
         }));
-      setWallets(filteredWallets);
-      
-      // Set default selected wallet
-      if (filteredWallets.length > 0) {
-        setSelectedWallet(filteredWallets[0]);
-        setFormWallet(filteredWallets[0]);
-      }
+      setWallets(filtered);
+      if (filtered.length > 0) setSelectedWallet(filtered[0]);
     }
   }, [wallet]);
 
@@ -310,12 +341,131 @@ const VirtualCardsPage = () => {
   };
 
 
-  const filteredCurrencies = currencies.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleRequestCard = async () => {
+  if (!selectedCurrency) {
+    showToast('Please select a wallet currency', 'warning');
+    return;
+  }
 
-  
+  if (!cardNetwork) {
+    showToast('Please select a card type (Visa or Mastercard)', 'warning');
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  const currencyCode = selectedCurrency.code as WalletType;
+  const requestedOn = new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  const optimisticCard: VirtualCard = {
+    id: String(Date.now()),
+    network: cardNetwork,
+    currency: currencyCode,
+    label: `${currencyCode} Virtual Card`,
+    last4: String(Math.floor(1000 + Math.random() * 9000)),
+    expiry: '12/27',
+    holder: userFullName.toUpperCase(),
+    status: 'Pending',
+    balance: Number(fundAmount) || 0,
+    flag: FLAG_MAP[currencyCode] || FLAG_MAP['USD'],
+  };
+
+  const optimisticRequest: CardRequest = {
+    id: `r${Date.now()}`,
+    currency: currencyCode,
+    network: cardNetwork,
+    amount: Number(fundAmount) || 0,
+    status: 'Pending',
+    requestedOn,
+    flag: FLAG_MAP[currencyCode] || FLAG_MAP['USD'],
+  };
+
+try {
+  const userId = getUserId();
+  const cardRequest = {
+    userId,
+    accountHolderName: userFullName,
+    cardType: cardNetwork.toUpperCase(),
+    currency: currencyCode,
+    initialBalance: Number(fundAmount) || 0,
+    allowInternational: true,
+    allowOnline: true,
+    allowAtm: false,
+    allowContactless: true,
+    merchantName: 'ePay',
+    merchantId: Math.random().toString(36).substring(2, 12).toUpperCase(),
+    merchantCountry: currencyCode,
+    merchantCity: 'Unknown',
+    limitPeriod: 'MONTHLY',
+    spendingLimit: 10000.00,
+  };
+
+  await virtualCardService.createCard(cardRequest);
+
+  setFundAmount('');
+  showToast('Card request submitted successfully!', 'success');
+  await loadCards();
+
+} catch (e) {
+  console.error('Card creation error:', e);
+  showToast('Failed to submit card request. Please try again.', 'warning');
+} finally {
+  setIsSubmitting(false);
+}
+};
+
+  // ── Fund card ─────────────────────────────────────────────────────────────
+  const handleFundCard = async () => {
+    const amt = Number(modalAmount);
+    if (!amt || amt <= 0) { showToast('Enter a valid amount', 'warning'); return; }
+    setIsSubmitting(true);
+    // try {
+    //   if (fundModal.card) {
+    //     await virtualCardService.fundCard?.({
+    //       cardId: fundModal.card.id,
+    //       amount: amt,
+    //     });
+    //   }
+    // } catch (e) {
+    //   console.error('Fund card error:', e);
+    // }
+    setCards((prev) =>
+      prev.map((c) => c.id === fundModal.card?.id ? { ...c, balance: c.balance + amt } : c)
+    );
+    setFundModal({ open: false, card: null });
+    setModalAmount('');
+    setIsSubmitting(false);
+    showToast(`Card funded with ${getCurrencySymbol(fundModal.card!.currency)}${amt.toLocaleString()}!`, 'success');
+  };
+
+  // ── Withdraw ──────────────────────────────────────────────────────────────
+  const handleWithdraw = async () => {
+    const amt = Number(modalAmount);
+    if (!amt || amt <= 0) { showToast('Enter a valid amount', 'warning'); return; }
+    if (amt > (withdrawModal.card?.balance || 0)) { showToast('Insufficient card balance', 'warning'); return; }
+    setIsSubmitting(true);
+    // try {
+    //   if (withdrawModal.card) {
+    //     await virtualCardService.withdrawFromCard?.({
+    //       cardId: withdrawModal.card.id,
+    //       amount: amt,
+    //     });
+    //   }
+    // } catch (e) {
+    //   console.error('Withdraw error:', e);
+    // }
+    setCards((prev) =>
+      prev.map((c) => c.id === withdrawModal.card?.id ? { ...c, balance: c.balance - amt } : c)
+    );
+    setWithdrawModal({ open: false, card: null });
+    setModalAmount('');
+    setIsSubmitting(false);
+    showToast(`${getCurrencySymbol(withdrawModal.card!.currency)}${amt.toLocaleString()} withdrawn successfully!`, 'success');
+  };
 
   if (isPageLoading) return <LoadingScreen />;
 
@@ -327,13 +477,12 @@ const VirtualCardsPage = () => {
         <Header theme={theme} toggleTheme={toggleTheme} />
 
         <div className="scrollable-content">
+          {/* ── Toasts ── */}
           <div className="toastrs">
             {toasts.map((toast) => (
-              <div
-                key={toast.id}
-                className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}>
+              <div key={toast.id} className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}>
                 <div className="toast-icon">
-                  <i className={`fa ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} aria-hidden="true"></i>
+                  <i className={`fa ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`} aria-hidden="true" />
                 </div>
                 <div className="toast-message">{toast.message}</div>
               </div>
@@ -355,12 +504,6 @@ const VirtualCardsPage = () => {
                 <h1 className="vc-title"><span className="title-green">Virtual</span> Cards</h1>
                 <p className="vc-subtitle">Request and manage your virtual cards (USD, EUR, GBP)</p>
               </div>
-              <button
-                className="vc-request-btn"
-                onClick={() => document.getElementById('request-section')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                <Plus size={16} /> Request Virtual Card
-              </button>
             </div>
 
             {/* ── Top Row: Wallet Balances + Card Request Status ── */}
@@ -379,31 +522,34 @@ const VirtualCardsPage = () => {
                   {wallets.map((w, i) => (
                     <React.Fragment key={w.code}>
                       <div
-                          className={`vc-wallet-item ${selectedWallet?.code === w.code ? 'vc-wallet-selected' : ''}`}
-                          onClick={() => setSelectedWallet(w)}>
+                        className={`vc-wallet-item ${selectedWallet?.code === w.code ? 'vc-wallet-selected' : ''}`}
+                        onClick={() => setSelectedWallet(w)}
+                      >
                         <Flag src={w.flag} alt={w.code} />
                         <div className="vc-wallet-item-inner">
                           <span className="vc-wallet-label">{w.label}</span>
-                          <div className="vc-wallet-dots">
-                            <span /><span /><span />
-                          </div>
+                          <div className="vc-wallet-dots"><span /><span /><span /></div>
                         </div>
                       </div>
                       {i < wallets.length - 1 && <div className="vc-wallet-divider" />}
                     </React.Fragment>
                   ))}
                   <div className="vc-wallet-balance">
-                    <span className="vc-balance-currency">{selectedWallet?.symbol}</span>
                     <span className="vc-balance-amount">
-                      {showBalances
-                        ? `${selectedWallet?.symbol}${selectedWallet?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-                        : `${selectedWallet?.symbol} ••••••`}
+                      {showBalances ? (
+                        `${selectedWallet?.symbol} ${selectedWallet?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                      ) : (
+                        <>
+                          <span className="hash-symbol">{selectedWallet?.symbol}</span>
+                          <span className="hash-amount-action"> *****</span>
+                        </>
+                      )}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Card Request Status */}
+              {/* Card Request Status — fully dynamic */}
               <div className="vc-status-card">
                 <h3 className="vc-status-title">Card Request Status</h3>
                 <div className="vc-status-row">
@@ -441,143 +587,161 @@ const VirtualCardsPage = () => {
                 <h3 className="vc-request-title">
                   <span className="title-green">Request</span> New Card
                 </h3>
+
                 <div className="vc-request-form">
-                        
+
                   {/* Select Wallet */}
-                  <div className="vc-form-col">
+                  <div>
                     <label className="vc-form-label">Select Wallet</label>
-                    <div className="vc-dropdown" onClick={() => {
-                      setIsModalOpen(true);
-                      setIsDropdownOpen(!isDropdownOpen);
-                    }} style={{ cursor: 'pointer' }}>
-                      <span className='currency-option'>
-                        {selectedCurrency?.code || 'NGN'} 
-                        {isDropdownOpen ? <ChevronDown size={14} className="vc-dropdown-chevron" /> : <ChevronDown size={14} className="vc-dropdown-chevron" />}
+                    <div className="btn-vc-dropdown" onClick={() => { setIsModalOpen(true); setIsDropdownOpen(!isDropdownOpen); }}>
+                      <span className="card-currency-option">
+                        {selectedCurrency?.code || 'NGN'}
+                        <ChevronDown size={14} className="vc-dropdown-chevron" />
                       </span>
                     </div>
                   </div>
-                    <div className="vc-request-meta">
-  <span className="vc-request-user">
-    <span className="vc-request-user-label">Card Holder:</span>
-    <strong>{userFullName}</strong>
-  </span>
-  <span className="vc-request-fee">
-    <span className="vc-request-fee-label">Card Issuance Fee:</span>
-    <strong className="vc-fee-amount">{cardFees[cardNetwork]}</strong>
-  </span>
-</div>
-                  {/* Card Details */}
-                  <div className="vc-form-col vc-form-details">
-                    <div className="vc-details-row">
 
-                      {/* Card Type */}
-                      <div className="vc-detail-group">
-                        <span className="vc-detail-sub">Card Type:</span>
-                        <div className="vc-network-btns">
-                          {(['Visa', 'Mastercard'] as CardNetwork[]).map((n) => (
-                            <button
-                              key={n}
-                              className={`vc-network-btn ${cardNetwork === n ? 'vc-network-selected' : ''}`}
-                              onClick={() => setCardNetwork(n)}
-                            >
-                              {n === 'Visa'
-                                ? <span className="vc-visa-logo">VISA</span>
-                                : <span className="vc-mc-logo"><span className="mc-left" /><span className="mc-right" /></span>
-                              }
-                              <span className="vc-network-name">{n}</span>
-                              <span className="vc-network-fee">{cardFees[n]}</span>
-                            </button>
-                          ))}
-                        </div>
+                  {/* Card Holder + Issuance Fee */}
+                  <div className="vc-request-meta">
+                    <div className="vc-meta-chip">
+                      <div className="vc-meta-chip-header">
+                        <span className="vc-meta-label-icon">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                          </svg>
+                        </span>
+                        <span className="vc-meta-chip-label">Card Holder</span>
                       </div>
-
+                      <div className="vc-meta-chip-body">
+                        <div className="vc-meta-avatar">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                          </svg>
+                        </div>
+                        <span className="vc-meta-chip-value">{userFullName}</span>
+                      </div>
                     </div>
 
-                    {/* Amount */}
-                    <div className="vc-amount-row">
-                      <div className="vc-amount-field">
-                        <label className="vc-detail-sub">
-                          Amount <span className="vc-optional">(Optional):</span>
-                        </label>
-                        <div className="vc-amount-input-wrap">
-                          <span className="vc-amount-symbol">{cardCurrency.symbol}</span>
-                          <input
-                            type="number"
-                            className="vc-amount-input"
-                            placeholder="Enter amount"
-                            value={fundAmount}
-                            onChange={(e) => setFundAmount(e.target.value)}
-                          />
-                        </div>
+                    <div className="vc-meta-chip">
+                      <div className="vc-meta-chip-header">
+                        <span className="vc-meta-label-icon">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                          </svg>
+                        </span>
+                        <span className="vc-meta-chip-label">Issuance Fee</span>
                       </div>
-                      <button className="vc-submit-btn" onClick={handleRequestCard} disabled={isSubmitting}>
-                        {isSubmitting ? <span className="btn-spinner-sm" /> : null}
-                        Request Card
-                      </button>
+                      <div className="vc-meta-chip-body">
+                        <span className="vc-meta-chip-value fee-green">{cardFees[cardNetwork]}</span>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Card Type */}
+                  <div className="vc-card-type-row">
+                    <span className="vc-detail-sub">Card Type</span>
+                    <div className="vc-network-btns">
+                      {(['Visa', 'Master'] as CardNetwork[]).map((n) => (
+                        <button
+                          key={n}
+                          className={`vc-network-btn ${cardNetwork === n ? 'vc-network-selected' : ''}`}
+                          onClick={() => setCardNetwork(n)}
+                        >
+                          {n === 'Visa'
+                            ? <span className="vc-visa-logo">VISA</span>
+                            : <span className="vc-mc-logo"><span className="mc-left" /><span className="mc-right" /></span>
+                          }
+                          <span>{n}</span>
+                          <span className="vc-network-fee">{cardFees[n]}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Amount + Button */}
+                  <div className="vc-amount-row">
+                    <button className="vc-request-btn" onClick={handleRequestCard} disabled={isSubmitting}>
+                      {isSubmitting ? <span className="btn-spinner-sm" /> : <Plus size={16} />}
+                      Request Virtual Card
+                    </button>
                   </div>
 
                 </div>
               </div>
 
-              {/* Request History */}
+              {/* Request History — fully dynamic */}
               <div className="vc-history-card">
                 <h3 className="vc-status-title">Request History</h3>
                 <div className="vc-history-list">
-                  {requestHistory.map((r) => (
-                    <div key={r.id} className="vc-history-item">
-                      {/* Top line: flag + colored dot + name + status pill */}
-                      <div className="vc-history-top">
-                        <div className="vc-history-top-left">
-                          <Flag src={r.flag} alt={r.currency} />
-                          <span
-                            className="vc-history-dot"
-                            style={{
-                              background:
-                                r.status === 'Active' ? '#22c55e' :
-                                r.status === 'Pending' ? '#f59e0b' : '#3b82f6'
-                            }}
-                          />
-                          <p className="vc-history-name">{r.currency} Virtual Card</p>
-                        </div>
-                        <span className={`vc-history-status ${getStatusColor(r.status)}`}>
-                          {r.status === 'Active' ? 'Approved' : r.status}
-                          <span
-                            className="vc-status-dot-sm"
-                            style={{
-                              background:
-                                r.status === 'Active' ? '#22c55e' :
-                                r.status === 'Pending' ? '#f59e0b' : '#3b82f6'
-                            }}
-                          />
-                        </span>
-                      </div>
-                      {/* Bottom line: network logo + amount + separator + date */}
-                      <div className="vc-history-meta">
-                        <span className="vc-history-network">
-                          {r.network === 'Visa'
-                            ? <span className="vc-visa-sm">VISA</span>
-                            : <span className="vc-mc-sm"><span /><span /></span>
-                          }
-                        </span>
-                        <span className="vc-history-amount">
-                          {getCurrencySymbol(r.currency)}{r.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </span>
-                        <span>•</span>
-                        {r.approvedOn
-                          ? <><span className="vc-history-meta-approved">Approved on:</span><span>{r.approvedOn}</span></>
-                          : <><span>Requested on:</span><span>{r.requestedOn}</span></>
-                        }
-                      </div>
+                  {isCardsLoading ? (
+                    <div className="vc-loading-state">
+                      <span className="btn-spinner-sm" /> Loading history...
                     </div>
-                  ))}
+                  ) : requestHistory.length === 0 ? (
+                    <div className="vc-empty-state">
+                      <div className="vc-empty-icon">
+                        <ClipboardListIcon size={24} color="#16a34a" />
+                      </div>
+                      <p className="vc-empty-title">No requests yet</p>
+                      <p className="vc-empty-sub">Your card request history will appear here once you submit a request.</p>
+                    </div>
+                  ) : (
+                    requestHistory.map((r) => (
+                      <div key={r.id} className="vc-history-item">
+                        <div className="vc-history-top">
+                          <div className="vc-history-top-left">
+                            <Flag src={r.flag} alt={r.currency} />
+                            <span
+                              className="vc-history-dot"
+                              style={{
+                                background:
+                                  r.status === 'Active' ? '#22c55e' :
+                                  r.status === 'Pending' ? '#f59e0b' : '#3b82f6'
+                              }}
+                            />
+                            <p className="vc-history-name">{r.currency} Virtual Card</p>
+                          </div>
+                          <span className={`vc-history-status ${getStatusColor(r.status)}`}>
+                            {r.status === 'Active' ? 'Approved' : r.status}
+                            <span
+                              className="vc-status-dot-sm"
+                              style={{
+                                background:
+                                  r.status === 'Active' ? '#22c55e' :
+                                  r.status === 'Pending' ? '#f59e0b' : '#3b82f6'
+                              }}
+                            />
+                          </span>
+                        </div>
+                        <div className="vc-history-meta">
+                          <span className="vc-history-network">
+                            {r.network === 'Visa'
+                              ? <span className="vc-visa-sm">VISA</span>
+                              : <span className="vc-mc-sm"><span /><span /></span>
+                            }
+                          </span>
+                          <span className="vc-history-amount">
+                            {getCurrencySymbol(r.currency)}{r.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                          <span>•</span>
+                          {r.approvedOn
+                            ? <><span className="vc-history-meta-approved">Approved on:</span><span>{r.approvedOn}</span></>
+                            : <><span>Requested on:</span><span>{r.requestedOn}</span></>
+                          }
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
                 <button className="vc-history-view-all">View All</button>
               </div>
 
             </div>
 
-            {/* ── My Virtual Cards ── */}
+            {/* ── My Virtual Cards — fully dynamic ── */}
             <div className="vc-cards-section">
               <div className="vc-cards-header">
                 <h3 className="vc-cards-title">My <span className="title-green">Virtual Cards</span></h3>
@@ -595,98 +759,116 @@ const VirtualCardsPage = () => {
                 <button className="vc-view-all">View All <ChevronRight size={14} /></button>
               </div>
 
-              <div className="vc-cards-grid">
-                {filteredCards.map((card) => {
-                  const hidden = hiddenCards.has(card.id);
-                  return (
-                    <div key={card.id} className="vc-card-wrapper">
-                      {/* Card face */}
-                      <div className={`vc-card ${getCardGradient(card)}`}>
-                        {/* Row 1: Network + Label + Status badge */}
-                        <div className="vc-card-row1">
-                          <div className="vc-card-row1-left">
-                            <span className={`vc-card-network ${card.network === 'Visa' ? 'vc-card-visa' : 'vc-card-mc'}`}>
-                              {card.network === 'Visa' ? 'VISA' : (
-                                <span className="vc-mc-card"><span /><span /></span>
-                              )}
-                            </span>
-                            <span className="vc-card-label">{card.label}</span>
-                          </div>
-                          <span className={`vc-card-badge ${getStatusColor(card.status)}`}>
-                            {card.status === 'Active' ? '▼' : '●'} {card.status}
-                          </span>
-                        </div>
-
-                        {/* Row 2: Card number + Flag */}
-                        <div className="vc-card-row2">
-                          <div className="vc-card-number">
-                            **** **** **** {hidden ? '••••' : card.last4}
-                          </div>
-                          <div className="vc-card-flag-wrap">
-                            <img src={card.flag} alt={card.currency} className="vc-card-flag-img" />
-                            <button className="vc-eye-card-btn" onClick={() => toggleCardVisibility(card.id)}>
-                              {hidden ? <Eye size={13} /> : <EyeOff size={13} />}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Row 3: Holder name + Expiry */}
-                        <div className="vc-card-row3">
-                          <p className="vc-card-holder">{card.holder}</p>
-                          <div className="vc-card-expiry-block">
-                            <span className="vc-card-expiry-label">Expiry</span>
-                            <strong className="vc-card-expiry-date">{card.expiry}</strong>
-                          </div>
-                        </div>
-
-                        {/* Review overlay */}
-                        {card.status === 'On Review' && (
-                          <div className="vc-card-overlay">
-                            <span>🔍 On Review by Admin</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Card actions */}
-                      <div className="vc-card-actions">
-                        {card.status === 'Active' ? (
-                          <>
-                            <button
-                              className="vc-action-btn vc-action-outline"
-                              onClick={() => setSelectedCardDetail(card)}
-                            >
-                              View Details
-                            </button>
-                            <button
-                              className="vc-action-btn vc-action-fund"
-                              onClick={() => { setFundModal({ open: true, card }); setModalAmount(''); }}
-                            >
-                              <ArrowDownLeft size={14} /> Fund Card
-                            </button>
-                          </>
-                        ) : card.status === 'Pending' ? (
-                          <div className="vc-on-review-badge">
-                            <span className="vc-on-review-icon">🔍</span>
-                            <span>On Review by Admin</span>
-                          </div>
-                        ) : card.status === 'On Review' ? (
-                          <div className="vc-on-review-badge">
-                            <span className="vc-on-review-icon">🔍</span>
-                            <span>On Review by Admin</span>
-                          </div>
-                        ) : (
-                          <button
-                            className="vc-action-btn vc-action-outline"
-                            onClick={() => setSelectedCardDetail(card)}
-                          >
-                            View Details
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+              {isCardsLoading ? (
+                <div className="vc-cards-loading">
+                  <span className="btn-spinner-sm" /> Loading cards...
+                </div>
+              ) : filteredCards.length === 0 ? (
+                <div className="vc-cards-empty">
+                <div className="vc-empty-icon"><CreditCardIcon size={24} color="#16a34a" /></div>
+                <p className="vc-empty-title">
+                  {activeTab === 'All Cards' ? 'No virtual cards yet' : `No ${activeTab} cards`}
+                </p>
+                <p className="vc-empty-sub">
+                  {activeTab === 'All Cards'
+                    ? 'Request your first virtual card using the form above.'
+                    : `You have no ${activeTab.toLowerCase()} cards at the moment.`}
+                </p>
               </div>
+              ) : (
+                <div className="vc-cards-grid">
+                  {filteredCards.map((card) => {
+                    const hidden   = hiddenCards.has(card.id);
+                    const isLocked = card.status !== 'Active';
+
+                    return (
+                      <div key={card.id} className="vc-card-wrapper">
+                        {/* Card face */}
+                        <div className={`vc-card ${getCardGradient(card)} ${isLocked ? 'vc-card-locked' : ''}`}>
+                          <div className="vc-card-row1">
+                            <div className="vc-card-row1-left">
+                              <span className={`vc-card-network ${card.network === 'Visa' ? 'vc-card-visa' : 'vc-card-mc'}`}>
+                                {card.network === 'Visa' ? 'VISA' : (
+                                  <span className="vc-mc-card"><span /><span /></span>
+                                )}
+                              </span>
+                              <span className="vc-card-label">{card.label}</span>
+                            </div>
+                            <span className={`vc-card-badge ${getStatusColor(card.status)}`}>
+                              {card.status === 'Active' ? '▼' : '●'} {card.status}
+                            </span>
+                          </div>
+
+                          <div className="vc-card-row2">
+                            <div className="vc-card-number">
+                              {isLocked ? '**** **** **** ••••' : `**** **** **** ${hidden ? '••••' : card.last4}`}
+                            </div>
+                            <div className="vc-card-flag-wrap">
+                              <img src={card.flag} alt={card.currency} className="vc-card-flag-img" />
+                              {!isLocked && (
+                                <button className="vc-eye-card-btn" onClick={() => toggleCardVisibility(card.id)}>
+                                  {hidden ? <Eye size={13} /> : <EyeOff size={13} />}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="vc-card-row3">
+                            <p className="vc-card-holder">{isLocked ? '••••• •••••••' : card.holder}</p>
+                            <div className="vc-card-expiry-block">
+                              <span className="vc-card-expiry-label">Expiry</span>
+                              <strong className="vc-card-expiry-date">{isLocked ? '••/••' : card.expiry}</strong>
+                            </div>
+                          </div>
+
+                          {isLocked && (
+                            <div className="vc-card-overlay">
+                              {card.status === 'Pending' ? (
+                                <div className="vc-overlay-content">
+                                  <span className="vc-overlay-icon">⏳</span>
+                                  <span className="vc-overlay-text">Awaiting Admin Approval</span>
+                                  <span className="vc-overlay-sub">Your card request is being reviewed</span>
+                                </div>
+                              ) : (
+                                <div className="vc-overlay-content">
+                                  <span className="vc-overlay-icon">🔍</span>
+                                  <span className="vc-overlay-text">Under Review</span>
+                                  <span className="vc-overlay-sub">Our team is reviewing your request</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Card actions */}
+                        <div className="vc-card-actions">
+                          {card.status === 'Active' ? (
+                            <>
+                              <button
+                                className="vc-action-btn vc-action-outline"
+                                onClick={() => setSelectedCardDetail(card)}
+                              >
+                                View Details
+                              </button>
+                              <button
+                                className="vc-action-btn vc-action-fund"
+                                onClick={() => { setFundModal({ open: true, card }); setModalAmount(''); }}
+                              >
+                                <ArrowDownLeft size={14} /> Fund Card
+                              </button>
+                            </>
+                          ) : (
+                            <div className={`vc-on-review-badge ${card.status === 'Pending' ? 'badge-pending' : 'badge-review'}`}>
+                              <span className="vc-on-review-icon">{card.status === 'Pending' ? '⏳' : '🔍'}</span>
+                              <span>{card.status === 'Pending' ? 'Pending Admin Approval' : 'On Review by Admin'}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
           </div>
@@ -713,9 +895,7 @@ const VirtualCardsPage = () => {
                   </div>
                 </div>
                 <div className="vc-modal-actions">
-                  <button className="vc-action-btn vc-action-outline" onClick={() => setFundModal({ open: false, card: null })}>
-                    Cancel
-                  </button>
+                  <button className="vc-action-btn vc-action-outline" onClick={() => setFundModal({ open: false, card: null })}>Cancel</button>
                   <button className="vc-action-btn vc-action-fund" onClick={handleFundCard} disabled={isSubmitting}>
                     {isSubmitting ? <span className="btn-spinner-sm" /> : <ArrowDownLeft size={14} />} Fund Card
                   </button>
@@ -750,9 +930,7 @@ const VirtualCardsPage = () => {
                   </div>
                 </div>
                 <div className="vc-modal-actions">
-                  <button className="vc-action-btn vc-action-outline" onClick={() => setWithdrawModal({ open: false, card: null })}>
-                    Cancel
-                  </button>
+                  <button className="vc-action-btn vc-action-outline" onClick={() => setWithdrawModal({ open: false, card: null })}>Cancel</button>
                   <button className="vc-action-btn vc-action-submit" onClick={handleWithdraw} disabled={isSubmitting}>
                     {isSubmitting ? <span className="btn-spinner-sm" /> : <ArrowUpRight size={14} />} Withdraw
                   </button>
@@ -811,27 +989,37 @@ const VirtualCardsPage = () => {
             </div>
           )}
 
+          {/* ── Currency Select Modal ── */}
           {isModalOpen && (
             <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
               <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header"><h3>Select Currency</h3></div>
                 <div className="search-container">
                   <span className="search-icon-inside"><Search size={16} /></span>
-                  <input type="text" placeholder="Search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
                 <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
                   {filteredCurrencies.map((c) => (
-                    <div key={c.code} className="country-item" onClick={() => { 
-                      setSelectedCurrency(c); 
-                      setIsModalOpen(false);
-                      setFiat(c.code); 
-                      setActiveWallet(c.code);
-                      setSearchTerm('') 
-                      setIsDropdownOpen(false);
-                    }}>
+                    <div
+                      key={c.code}
+                      className="country-item"
+                      onClick={() => {
+                        setSelectedCurrency(c);
+                        setIsModalOpen(false);
+                        setFiat(c.code);
+                        setActiveWallet(c.code);
+                        setSearchTerm('');
+                        setIsDropdownOpen(false);
+                      }}
+                    >
                       <span>{c.name} ({c.code})</span>
                       <div className={`radio-outer ${selectedCurrency?.code === c.code ? 'checked' : ''}`}>
-                        <div className="radio-inner"></div>
+                        <div className="radio-inner" />
                       </div>
                     </div>
                   ))}

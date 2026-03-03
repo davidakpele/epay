@@ -112,10 +112,11 @@ export const API_URLS = {
     UPDATE: (id: string | number) => `${SERVICE_URLS.BENEFICIARY}/beneficiaries/${id}`,
     DELETE: (id: string | number) => `${SERVICE_URLS.BENEFICIARY}/beneficiaries/${id}`,
     VERIFY: (id: string | number) => `${SERVICE_URLS.BENEFICIARY}/beneficiaries/${id}/verify`,
+    CHECK_IF_GOT_USER: (id: string | number, recipientUsername: string) => `${SERVICE_URLS.BENEFICIARY}/beneficiaries/${id}/username/${recipientUsername}`,
   },
 
   VIRTUALCARD: {
     GET_CARDS_BY_USER_ID: (id: string | number) => `${SERVICE_URLS.VIRTUALCARD}/virtual-cards/user/${id}`,
-    CREATE: `${SERVICE_URLS.VIRTUALCARD}/virtual-cards`,
+    CREATECARD: `${SERVICE_URLS.VIRTUALCARD}/virtual-cards`,
   }
 };

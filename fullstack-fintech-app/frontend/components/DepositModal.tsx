@@ -44,7 +44,6 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
     bankCollectionService.getByUserId(userId)
       .then(async (response) => {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-          console.log(response.data)
           setBankList(response.data);
           setIsEmpty(false);
           setTimeout(() => {

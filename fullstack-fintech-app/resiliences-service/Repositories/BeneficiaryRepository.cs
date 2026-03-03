@@ -119,5 +119,15 @@ namespace resiliences_service.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<Beneficiary?> GetByUserIdAndUsernameAsync(uint userId, string recipientUsername)
+        {
+            return await _context.Beneficiaries
+                .Where(b => b.UserId == userId
+                            && b.RecipientUsername == recipientUsername
+                            && b.IsActive)
+                .FirstOrDefaultAsync();
+        }
+
     }
 }

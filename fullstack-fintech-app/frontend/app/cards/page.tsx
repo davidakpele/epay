@@ -65,7 +65,6 @@ function Cards() {
         await new Promise(resolve => setTimeout(resolve, 3000));
         
         const response = virtualCardService.fetchUserVirtualCardsByUserId(userId);
-      
         const data = await response;
       
         const transformedCards: VirtualCard[] = data.map((card: any) => ({

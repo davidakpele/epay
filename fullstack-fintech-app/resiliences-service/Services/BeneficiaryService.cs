@@ -101,5 +101,11 @@ namespace resiliences_service.Services
 
             await _repo.DeleteByIdsAsync(ids, userId);
         }
+
+        public async Task<Beneficiary?> GetByUserIdAndUsernameAsync(uint userId, string recipientUsername)
+        {
+            return await _repo.GetByUserIdAndUsernameAsync(userId, recipientUsername);
+        }
+
     }
 }

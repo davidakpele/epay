@@ -94,7 +94,7 @@ public class VirtualCard {
     @Column(name = "merchant_category_code", length = 4)
     private String merchantCategoryCode; // MCC
     
-    @Column(name = "merchant_country", length = 2)
+    @Column(name = "merchant_country", length = 10)
     private String merchantCountry;
     
     @Column(name = "merchant_city")
