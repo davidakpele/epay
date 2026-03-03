@@ -267,5 +267,34 @@ namespace resiliences_service.Controllers
                 return StatusCode(500, new { error = "Failed to delete beneficiaries" });
             }
         }
+
+        // GET /beneficiaries/{userId}/username/{recipientUsername}
+        [HttpGet("{userId}/username/{recipientUsername}")]
+        public async Task<IActionResult> CheckUserBeneficiary(uint userId, string recipientUsername)
+        {
+            if (string.IsNullOrWhiteSpace(recipientUsername))
+                return BadRequest(new { error = "recipientUsername is required" });
+
+            try
+            {
+                var beneficiary = await _service.GetByUserIdAndUsernameAsync(userId, recipientUsername);
+                
+                if (beneficiary == null)
+                    return NotFound(new { error = "Beneficiary not found" });
+
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Beneficiary retrieved successfully",
+                    data = beneficiary
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[BeneficiaryController] CheckUserBeneficiary failed");
+                return StatusCode(500, new { error = "Failed to check beneficiary" });
+            }
+        }
+
     }
 }

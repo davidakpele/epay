@@ -611,9 +611,19 @@ const WithdrawModal = ({ isOpen, onClose, theme, onWithdrawReloadSuccess }: With
           setShowSuccessModal(true);
           setShowPinModal(false);
           clearIdempotencyKey();
-          setTimeout(() => {
+          const checkResponse = await beneficiaryService.checkBeneficiary(userId, recipientUsername);
+          if (
+            checkResponse?.status === 'success'
+          ) {
+            setShowBeneficiaryModal(false);
+            setIsSavingBeneficiary(false);
+            return;
+          }else{
             setShowBeneficiaryModal(true);
-          }, 500);
+          }
+          // setTimeout(() => {
+          //   
+          // }, 500);
         } else {
           const errorMessage = response.message || 'Transaction failed';
           showToast(errorMessage, 'warning');
@@ -1040,7 +1050,7 @@ const WithdrawModal = ({ isOpen, onClose, theme, onWithdrawReloadSuccess }: With
               </div>
               <h3 className="status-modal-title">Success!</h3>
               <p className="status-modal-message">
-                {step === 'bank' ? 'Withdrawal successful' : 'Transfer successful'}
+                {step === 'bank' ? 'Withdrawal successful' : 'Transaction successful'}
               </p>
               <button className="status-modal-btn confirm-btn" onClick={() => { setShowSuccessModal(false); onClose(); }}>
                 Done

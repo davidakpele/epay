@@ -89,162 +89,117 @@ public class WalletServiceImp implements WalletService {
     @SuppressWarnings("unchecked")
     @Override
     public ResponseEntity<?> processWithdraw(DeductWalletRequestDTO dto, String token, HttpServletRequest request) {
-        System.out.println("Process 1 - Start processWithdraw");
         String idempotencyKey = dto.getIdempotencyKey();
         Map<String, Object> jsonResponse = new HashMap<>();
         HazelcastIdempotencyService.IdempotencyResult idempotencyResult = idempotencyService.checkAndSetProcessing(idempotencyKey);
 
         if (idempotencyResult.isInvalid()) {
-            System.out.println("Process 2 - Idempotency key is INVALID, returning 400");
             return Error.createResponse("Invalid idempotency key", HttpStatus.BAD_REQUEST, idempotencyResult.getMessage());
         }
-        System.out.println("Process 3 - Idempotency key is valid");
-
+    
         if (idempotencyResult.isDuplicate()) {
-            System.out.println("Process 4 - Duplicate transaction detected, returning 409");
             return Error.createResponse("Duplicate transaction", HttpStatus.CONFLICT, idempotencyResult.getMessage());
         }
-        System.out.println("Process 5 - Not a duplicate");
-
+    
         if (idempotencyResult.isCompleted()) {
-            System.out.println("Process 6 - Already completed, returning cached response");
             return ResponseEntity.ok(idempotencyResult.getResponse());
         }
-        System.out.println("Process 7 - Not completed yet, proceeding");
-
+  
         try {
             if (dto.getSenderUserId() == null) {
-                System.out.println("Process 8 - SenderUserId is NULL, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("UserId is require.*", HttpStatus.BAD_REQUEST, "UserId can not be empty");
             }
-            System.out.println("Process 9 - SenderUserId OK: " + dto.getSenderUserId());
-
+        
             if (dto.getWalletId() == null) {
-                System.out.println("Process 10 - WalletId is NULL, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("WalletId is require.*", HttpStatus.BAD_REQUEST, "WalletId can not be empty");
             }
-            System.out.println("Process 11 - WalletId OK: " + dto.getWalletId());
-
+ 
             if (dto.getRecipientUsername().isEmpty() || dto.getRecipientUsername().isBlank()) {
-                System.out.println("Process 12 - RecipientUsername is EMPTY, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Recipient username is require.*", HttpStatus.BAD_REQUEST, "Recipient username can not be empty");
             }
-            System.out.println("Process 13 - RecipientUsername OK: " + dto.getRecipientUsername());
-
+         
             if (dto.getAmount() != null && dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                System.out.println("Process 14 - Amount is INVALID (<= 0): " + dto.getAmount());
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Amount is required and must be greater than zero.", HttpStatus.BAD_REQUEST, "Please provide a valid amount you want to deposit.");
             }
-            System.out.println("Process 15 - Amount OK: " + dto.getAmount());
-
             if (dto.getCurrency().isEmpty() || dto.getCurrency().isBlank()) {
-                System.out.println("Process 16 - Currency is EMPTY, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Currency Type is require.*", HttpStatus.BAD_REQUEST, "Currency Type can not be empty");
             } else if (!Arrays.stream(CurrencyType.values()).anyMatch(ct -> ct.name().equalsIgnoreCase(dto.getCurrency()))) {
-                System.out.println("Process 17 - Currency is INVALID: " + dto.getCurrency());
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Invalid Currency provided.*", HttpStatus.BAD_REQUEST,
                         "Please provide Currency type. Any of this list (USD, EUR, NGN, GBP, JPY, AUD, CAD, CHF, CNY, INR)");
             }
-            System.out.println("Process 18 - Currency OK: " + dto.getCurrency());
-
             String providedPin = dto.getPassword().trim();
             if (providedPin == null || providedPin.isEmpty()) {
-                System.out.println("Process 19 - Transfer pin is EMPTY, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Transfer Pin is require.*", HttpStatus.BAD_REQUEST, "Please provide your transfer pin to your wallet.");
             }
-            System.out.println("Process 20 - Transfer pin provided");
 
-            System.out.println("Process 21 - Fetching sender user: " + dto.getUsername());
             UserDTO fromUser;
             try {
                 fromUser = userServiceClient.findByUsername(dto.getUsername(), token);
             } catch (UserClientNotFoundException e) {
-                System.out.println("Process 22 - Sender NOT FOUND: " + e.getMessage());
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Sender User not found", HttpStatus.BAD_REQUEST, e.getMessage());
             }
-            System.out.println("Process 23 - Sender user found: id=" + fromUser.getId() + ", username=" + fromUser.getUsername());
 
             if (dto.getRecipientUsername().equals(fromUser.getUsername())) {
-                System.out.println("Process 24 - Sender and recipient are the SAME USER, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Sorry.!, It seems you made a mistake...", HttpStatus.BAD_REQUEST, "You can transfer to yourself.");
             }
-            System.out.println("Process 25 - Sender and recipient are different users");
 
-            System.out.println("Process 26 - Fetching recipient user: " + dto.getRecipientUsername());
             UserDTO recipientUser;
             try {
                 recipientUser = userServiceClient.findByUsername(dto.getRecipientUsername(), token);
             } catch (UserClientNotFoundException e) {
-                System.out.println("Process 27 - Recipient NOT FOUND: " + e.getMessage());
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("User not found", HttpStatus.BAD_REQUEST, e.getMessage());
             }
-            System.out.println("Process 28 - Recipient user found: id=" + recipientUser.getId() + ", username=" + recipientUser.getUsername());
-
+           
             if (fromUser.getId() != null && !fromUser.getUsername().equals(dto.getUsername())) {
-                System.out.println("Process 29 - FRAUDULENT action detected (username mismatch), returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Fraudulent action detected.", HttpStatus.BAD_REQUEST,
                         "Fraudulent action detected. You are not authorized to operate this wallet.");
             }
-            System.out.println("Process 30 - Sender identity verified");
 
             boolean isLockedAccount = fromUser.getId() != null ? fromUser.getRecords().get(0).isLocked() : false;
             boolean isBlockedAccount = fromUser.getId() != null ? fromUser.getRecords().get(0).isIsBlocked() : false;
-            System.out.println("Process 31 - Account status: locked=" + isLockedAccount + ", blocked=" + isBlockedAccount);
-
+          
             if (isLockedAccount) {
-                System.out.println("Process 32 - Account is LOCKED, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Account has been locked.", HttpStatus.BAD_REQUEST,
                         "Your account has been temporarily locked.");
             }
 
             if (isBlockedAccount) {
-                System.out.println("Process 33 - Account is BLOCKED, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Account has been blocked.", HttpStatus.BAD_REQUEST,
                         "Your account has been blocked.");
             }
-            System.out.println("Process 34 - Account is active (not locked or blocked)");
 
-            System.out.println("Process 35 - Checking blacklist for walletId: " + dto.getWalletId());
             if (blackListServiceClient.FindByWalletId(dto.getWalletId(), token)) {
                 System.out.println("Process 36 - Wallet is BLACKLISTED, returning 403");
                 return Error.createResponse("Transaction blocked due to blacklisted wallet address.", HttpStatus.FORBIDDEN, "Please contact support.");
             }
-            System.out.println("Process 37 - Wallet is not blacklisted");
 
-            System.out.println("Process 38 - Checking for high volume / frequent transactions");
             if (userTransactionsAgent.isHighVolumeOrFrequentTransactions(fromUser.getId(), fromUser.getEmail(),
                     fromUser.getRecords().get(0).getFirstName(), fromUser.getRecords().get(0).getLastName(),
                     dto.getWalletId(), token)) {
-                System.out.println("Process 39 - HIGH VOLUME or FREQUENT transactions detected, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Account temporarily banned.", HttpStatus.BAD_REQUEST,
                         "Account temporarily banned due to suspicious activity.");
             }
-            System.out.println("Process 40 - No high volume/frequent transaction issues");
 
-            System.out.println("Process 41 - Checking new account high-risk");
             if (userTransactionsAgent.isNewAccountAndHighRisk(fromUser.getUsername(), token)) {
-                System.out.println("Process 42 - NEW ACCOUNT HIGH RISK detected, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Your account has been restricted.", HttpStatus.BAD_REQUEST,
                         "New Account Restrictions. Please verify your identity to continue.");
             }
-            System.out.println("Process 43 - New account risk check passed");
 
-            System.out.println("Process 44 - Checking fraudulent action in recent history");
             if (isFradulentActionByUserInRecentHistory(fromUser.getId(), fromUser.getUsername(), TransactionType.DEPOSIT, token)) {
                 System.out.println("Process 45 - FRAUDULENT action in recent history detected, locking account");
                 idempotencyService.clearKey(idempotencyKey);
@@ -252,79 +207,58 @@ public class WalletServiceImp implements WalletService {
                 return Error.createResponse("Account Locked.", HttpStatus.LOCKED,
                         "Your account has been found taking fradulent action.");
             }
-            System.out.println("Process 46 - No fraudulent history found");
 
             CurrencyType currency = CurrencyType.valueOf(dto.getCurrency().toUpperCase());
-            System.out.println("Process 47 - Fetching sender account balance for currency: " + currency);
             WalletBalanceDTO senderAccountBalance = getCurrentBalance(dto.getSenderUserId(), currency);
-            System.out.println("Process 48 - Sender balance: " + (senderAccountBalance != null ? senderAccountBalance.getBalance() : "null"));
 
-            System.out.println("Process 49 - Checking fraudulent behavior via agent");
             if (fromUser.getId() != null && userTransactionsAgent.isFraudulentBehavior(dto.getWalletId(), fromUser.getEmail(),
                     fromUser.getRecords().get(0).getFirstName(), fromUser.getRecords().get(0).getLastName(), token)) {
-                System.out.println("Process 50 - FRAUDULENT BEHAVIOR flagged, returning 400");
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("This account has been flagged.", HttpStatus.BAD_REQUEST,
                         "Fraudulent Activity Detected. Please contact support team immediately.");
             }
-            System.out.println("Process 51 - Fraud behavior check passed");
 
-            System.out.println("Process 52 - Fetching recipient wallet account");
             WalletSectionDTO recipientWalletAccount = fromUser.getId() != null && recipientUser.getId() != null
                     ? walletServiceClient.getWalletSectionByUser(recipientUser.getId())
                     : null;
-            System.out.println("Process 53 - Recipient wallet account: " + (recipientWalletAccount != null ? "found" : "null"));
 
             if (recipientWalletAccount == null && recipientUser.getId() != null) {
-                System.out.println("Process 54 - Recipient has no wallet, creating one async");
                 idempotencyService.clearKey(idempotencyKey);
                 CompletableFuture<Void> createNewWallet = CompletableFuture
                         .runAsync(() -> walletServiceClient.createUserWallet(recipientUser.getId()));
                 createNewWallet.join();
-                System.out.println("Process 55 - Recipient wallet created");
             }
 
-            System.out.println("Process 56 - Fetching wallet PIN settings for walletId: " + dto.getWalletId());
             FindUserWalletPinRequest pinRequest = FindUserWalletPinRequest.newBuilder()
                     .setWalletId(dto.getWalletId())
                     .build();
             FindUserWalletPinResponse walletSettings = walletServiceClient.findUserWalletPin(pinRequest);
-            System.out.println("Process 57 - Wallet settings: " + (walletSettings != null ? "found, isSecure=" + walletSettings.getIsSecure() : "null"));
-
+   
             if (walletSettings != null) {
                 if (walletSettings.getIsSecure()) {
-                    System.out.println("Process 58 - Wallet is secure, validating PIN");
                     if (senderAccountBalance != null && !passwordEncoder.matches(providedPin, walletSettings.getPassword())) {
-                        System.out.println("Process 59 - PIN is INVALID, returning 400");
                         idempotencyService.clearKey(idempotencyKey);
                         return Error.createResponse("Invalid transfer pin.", HttpStatus.BAD_REQUEST,
                                 "Invalid transfer pin.\nThe provided transfer pin is incorrect.");
                     }
-                    System.out.println("Process 60 - PIN is VALID");
                 } else {
-                    System.out.println("Process 61 - Wallet PIN is NOT SET, returning 400");
                     idempotencyService.clearKey(idempotencyKey);
                     return Error.createResponse("Tranfer pin is not set.", HttpStatus.BAD_REQUEST,
                             "Please set your withdrawal pin before attempting to any withdraws.");
                 }
             }
 
-            System.out.println("Process 62 - Entering synchronized block for wallet withdraw");
             synchronized (("wallet-withdraw-" + dto.getSenderUserId() + "-" + (recipientUser.getId() != null ? recipientUser.getId() : null)).intern()) {
-                System.out.println("Process 63 - Inside synchronized block");
-
+        
                 BigDecimal feeAmount = transferBootstrap.calculateFee(dto.getAmount());
                 BigDecimal cAmount = dto.getAmount();
                 BigDecimal finalDeduction = cAmount.add(feeAmount);
                 BigDecimal wallet_balance = new BigDecimal((senderAccountBalance != null ? senderAccountBalance.getBalance() : "0.00"));
-                System.out.println("Process 64 - Fee: " + feeAmount + ", Amount: " + cAmount + ", FinalDeduction: " + finalDeduction + ", WalletBalance: " + wallet_balance);
-
+       
                 if (wallet_balance.compareTo(finalDeduction) < 0) {
-                    System.out.println("Process 65 - INSUFFICIENT balance, returning 400");
                     return Error.createResponse("Insufficient balancen.", HttpStatus.BAD_REQUEST, "Low balance");
                 }
-                System.out.println("Process 66 - Balance is sufficient");
-
+          
                 BigDecimal recipientPreviousBalance = (recipientWalletAccount != null && recipientWalletAccount.getWalletBalances() != null)
                         ? recipientWalletAccount.getWalletBalances().stream()
                             .filter(b -> dto.getCurrency().equalsIgnoreCase(b.getCurrency_code()))
@@ -332,13 +266,11 @@ public class WalletServiceImp implements WalletService {
                             .findFirst()
                             .orElse(BigDecimal.ZERO)
                         : BigDecimal.ZERO;
-                System.out.println("Process 67 - Recipient previous balance: " + recipientPreviousBalance);
-
+       
                 jsonResponse.put("currency", recipientWalletAccount);
                 String newAmount = dto.getAmount().toString();
                 CurrencyType currencyTypes = CurrencyType.valueOf(dto.getCurrency().toUpperCase());
 
-                System.out.println("Process 68 - Calling deduction for senderId: " + dto.getSenderUserId());
                 WithdrawResponse withdrawResponse = deduction(
                         dto.getSenderUserId(),
                         dto.getWalletId(),
@@ -346,17 +278,13 @@ public class WalletServiceImp implements WalletService {
                         newAmount,
                         dto.getRecipientUsername(),
                         token);
-                System.out.println("Process 69 - Deduction response: status=" + withdrawResponse.getStatus() + ", message=" + withdrawResponse.getMessage());
 
                 if (!"success".equals(withdrawResponse.getStatus())) {
-                    System.out.println("Process 70 - Deduction FAILED, clearing key and returning 500");
                     idempotencyService.clearKey(idempotencyKey);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body(Map.of("status", "error", "message", withdrawResponse.getMessage()));
                 }
-                System.out.println("Process 71 - Deduction SUCCESS, new balance: " + withdrawResponse.getNewBalance());
 
-                System.out.println("Process 72 - Creating escrow request");
                 CreateEscrowRequest escrowRequest = new CreateEscrowRequest();
                 escrowRequest.setSenderId(dto.getSenderUserId());
                 escrowRequest.setRecipientId(recipientUser.getId());
@@ -365,22 +293,17 @@ public class WalletServiceImp implements WalletService {
                 escrowRequest.setAmount(dto.getAmount());
 
                 ResponseEntity<?> escrowResponse = escrowServiceClient.create(escrowRequest);
-                System.out.println("Process 73 - Escrow response status: " + escrowResponse.getStatusCode());
-
+    
                 if (!escrowResponse.getStatusCode().is2xxSuccessful()) {
-                    System.out.println("Process 74 - Escrow creation FAILED, returning 500");
                     idempotencyService.clearKey(idempotencyKey);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body(Map.of("status", "error", "message", "Failed to create escrow for withdrawal"));
                 }
-                System.out.println("Process 75 - Escrow created successfully");
-
+          
                 Map<String, Object> responseBody = (Map<String, Object>) escrowResponse.getBody();
                 Map<String, Object> ledger = (Map<String, Object>) responseBody.get("ledger");
                 String ledgerId = (String) ledger.get("id");
-                System.out.println("Process 76 - Ledger ID: " + ledgerId + ", updating status to SUCCESS");
                 escrowServiceClient.updateLedgerStatus(ledgerId, "SUCCESS");
-                System.out.println("Process 77 - Ledger status updated");
 
                 BigDecimal new_balance = new BigDecimal(withdrawResponse.getNewBalance());
                 CurrencyStructType currencyType = CurrencyStructType.valueOf(dto.getCurrency().toUpperCase());
@@ -399,18 +322,14 @@ public class WalletServiceImp implements WalletService {
                 }
                 descriptionBuilder.append("/MFY");
                 String description1 = descriptionBuilder.toString();
-                System.out.println("Process 78 - Sender description: " + description1);
 
                 String transactionId = generateTransactionId();
-                System.out.println("Process 79 - Generated transactionId: " + transactionId);
 
                 String senderFirstname = capitalizeFirstLetter(fromUser.getRecords().get(0).getFirstName());
                 String senderLastname = capitalizeFirstLetter(fromUser.getRecords().get(0).getLastName());
                 String senderStringPreviousBalance = senderAccountBalance != null ? senderAccountBalance.getBalance() : null;
                 BigDecimal senderPreviousBalance = new BigDecimal(senderStringPreviousBalance);
-                System.out.println("Process 80 - Sender: " + senderFirstname + " " + senderLastname + ", prevBalance: " + senderPreviousBalance);
 
-                System.out.println("Process 81 - Creating sender transaction history (async)");
                 CompletableFuture<Void> senderHistory = createHistory(
                         cAmount, currencyType.name(), description1, dto.getNote(),
                         fromUser.getId(), dto.getWalletId(), TransactionType.DEBITED,
@@ -431,13 +350,10 @@ public class WalletServiceImp implements WalletService {
                     description2Builder.append((fromUser.getRecords().get(0).getFirstName() + " " + fromUser.getRecords().get(0).getLastName()).toUpperCase());
                 }
                 String description2 = description2Builder.toString();
-                System.out.println("Process 82 - Recipient description: " + description2);
-
+      
                 String recipientFirstname = capitalizeFirstLetter((recipientUser.getId() != null ? recipientUser.getRecords().get(0).getFirstName() : null));
                 String recipientLastname = capitalizeFirstLetter((recipientUser.getId() != null ? recipientUser.getRecords().get(0).getLastName() : null));
-                System.out.println("Process 83 - Recipient: " + recipientFirstname + " " + recipientLastname);
 
-                System.out.println("Process 84 - Fetching updated recipient account balance");
                 WalletBalanceDTO recipientAccountBalance = getCurrentBalance((recipientUser.getId() != null ? recipientUser.getId() : null), currency);
                 WalletSectionDTO recipientNewBalanceWalletRequest = walletServiceClient.getWalletSectionByUser((recipientUser.getId() != null ? recipientUser.getId() : null));
 
@@ -446,9 +362,7 @@ public class WalletServiceImp implements WalletService {
                         .map(b -> new BigDecimal(b.getBalance().replace(",", "")))
                         .findFirst()
                         .orElse(BigDecimal.ZERO);
-                System.out.println("Process 85 - Recipient new balance: " + recipientNewBalance);
 
-                System.out.println("Process 86 - Creating recipient transaction history (async)");
                 CompletableFuture<Void> recipientHistory = createHistory(
                         cAmount, currencyType.name(), description2, dto.getNote(),
                         (recipientUser.getId() != null ? recipientUser.getId() : null),
@@ -460,15 +374,10 @@ public class WalletServiceImp implements WalletService {
                         transactionId, recipientPreviousBalance, recipientNewBalance,
                         recipientFirstname + ' ' + recipientLastname, token, request);
 
-                System.out.println("Process 87 - Waiting for both history futures to complete");
                 CompletableFuture.allOf(senderHistory, recipientHistory).join();
-                System.out.println("Process 88 - Both history records created");
-
-                System.out.println("Process 89 - Crediting platform revenue, fee: " + feeAmount + " " + dto.getCurrency());
+   
                 revenueServiceClient.creditPlatformRevenue(feeAmount, dto.getCurrency());
-                System.out.println("Process 90 - Platform revenue credited");
 
-                System.out.println("Process 91 - Sending debit alert to: " + fromUser.getEmail());
                 CompletableFuture<?> sendDebitAlert = CompletableFuture.supplyAsync(() ->
                         notificationServiceClient.sendDebitAlert(
                                 fromUser.getEmail(), senderFirstname + " " + senderLastname,
@@ -476,7 +385,6 @@ public class WalletServiceImp implements WalletService {
                                 cAmount, currencyType.toString(), feeAmount, new_balance, transactionId, senderPreviousBalance));
 
                 BigDecimal recipient_new_balance = new BigDecimal(recipientAccountBalance.getBalance());
-                System.out.println("Process 92 - Sending credit alert to: " + (recipientUser.getId() != null ? recipientUser.getEmail() : "null"));
                 CompletableFuture<?> sendCreditAlert = CompletableFuture.supplyAsync(() ->
                         notificationServiceClient.sendCreditAlert(
                                 (recipientUser.getId() != null ? recipientUser.getEmail() : null),
@@ -484,25 +392,19 @@ public class WalletServiceImp implements WalletService {
                                 recipientFirstname + " " + recipientLastname,
                                 cAmount, currencyType.toString(), recipient_new_balance, transactionId, recipientPreviousBalance));
 
-                System.out.println("Process 93 - Waiting for both alert futures to complete");
                 CompletableFuture.allOf(sendDebitAlert, sendCreditAlert).join();
-                System.out.println("Process 94 - Both alerts sent");
-
+       
                 jsonResponse.put("status", withdrawResponse.getStatus());
                 jsonResponse.put("message", withdrawResponse.getMessage());
                 jsonResponse.put("currency", withdrawResponse.getCurrency());
                 jsonResponse.put("newBalance", transferBootstrap.formatBigDecimal(new_balance));
                 jsonResponse.put("timestamp", System.currentTimeMillis());
 
-                System.out.println("Process 95 - Marking idempotency key as completed");
                 idempotencyService.markAsCompleted(idempotencyKey, jsonResponse);
 
-                System.out.println("Process 96 - SUCCESS, returning 200 OK");
                 return ResponseEntity.ok(jsonResponse);
             }
-
         } catch (Exception e) {
-            System.out.println("Process ERROR - Exception caught: " + e.getClass().getSimpleName() + " | Message: " + e.getMessage());
             e.printStackTrace();
             idempotencyService.clearKey(idempotencyKey);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

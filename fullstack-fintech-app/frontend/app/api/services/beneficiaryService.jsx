@@ -25,6 +25,11 @@ export const beneficiaryService = {
     verifyBeneficiary: (beneficiaryId) => {
         return makeAuthenticatedRequest(API_URLS.BENEFICIARY.VERIFY(beneficiaryId), 'POST');
     },
+
+    checkBeneficiary: (userId, recipientUsername)=> {
+        return makeAuthenticatedRequest(API_URLS.BENEFICIARY.CHECK_IF_GOT_USER(userId, recipientUsername), 'GET');
+    },
+
 };
 
 export default beneficiaryService;

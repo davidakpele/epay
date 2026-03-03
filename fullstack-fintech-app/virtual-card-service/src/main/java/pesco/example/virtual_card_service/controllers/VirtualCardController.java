@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,11 +28,14 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/virtual-cards")
-@RequiredArgsConstructor
 @Tag(name = "Virtual Card Management", description = "APIs for managing virtual cards")
 public class VirtualCardController {
 
-    private final VirtualCardService virtualCardService;
+        private final VirtualCardService virtualCardService;
+
+        public VirtualCardController(VirtualCardService virtualCardService) {
+                this.virtualCardService = virtualCardService;
+        }
 
     // ==================== CREATE ====================
     @PostMapping
@@ -46,7 +48,6 @@ public class VirtualCardController {
     })
     public ResponseEntity<VirtualCardResponse> createCard(
             @Valid @RequestBody CreateVirtualCardRequest request) {
-        log.info("REST request to create virtual card for user: {}", request.getUserId());
         VirtualCardResponse response = virtualCardService.createCard(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -61,7 +62,6 @@ public class VirtualCardController {
     })
     public ResponseEntity<VirtualCardResponse> getCardById(
             @Parameter(description = "Card ID") @PathVariable String cardId) {
-        log.info("REST request to get virtual card: {}", cardId);
         VirtualCardResponse response = virtualCardService.getCardById(cardId);
         return ResponseEntity.ok(response);
     }
@@ -77,7 +77,6 @@ public class VirtualCardController {
     })
     public ResponseEntity<VirtualCardDetailsResponse> getCardDetails(
             @Parameter(description = "Card ID") @PathVariable String cardId) {
-        log.info("REST request to get virtual card details: {}", cardId);
         VirtualCardDetailsResponse response = virtualCardService.getCardDetails(cardId);
         return ResponseEntity.ok(response);
     }
@@ -89,7 +88,6 @@ public class VirtualCardController {
     })
     public ResponseEntity<List<VirtualCardResponse>> getCardsByUserId(
             @Parameter(description = "User ID") @PathVariable Long userId) {
-        log.info("REST request to get all cards for user: {}", userId);
         List<VirtualCardResponse> response = virtualCardService.getCardsByUserId(userId);
         return ResponseEntity.ok(response);
     }
@@ -103,8 +101,6 @@ public class VirtualCardController {
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort by field") @RequestParam(defaultValue = "createdAt") String sortBy,
             @Parameter(description = "Sort direction") @RequestParam(defaultValue = "DESC") String sortDir) {
-        log.info("REST request to get cards for user: {} with pagination", userId);
-        
         Sort.Direction direction = sortDir.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
@@ -117,7 +113,6 @@ public class VirtualCardController {
                description = "Retrieves only active virtual cards for a specific user")
     public ResponseEntity<List<VirtualCardResponse>> getActiveCardsByUserId(
             @Parameter(description = "User ID") @PathVariable Long userId) {
-        log.info("REST request to get active cards for user: {}", userId);
         List<VirtualCardResponse> response = virtualCardService.getActiveCardsByUserId(userId);
         return ResponseEntity.ok(response);
     }
@@ -134,7 +129,6 @@ public class VirtualCardController {
     public ResponseEntity<VirtualCardResponse> updateCard(
             @Parameter(description = "Card ID") @PathVariable String cardId,
             @Valid @RequestBody UpdateVirtualCardRequest request) {
-        log.info("REST request to update virtual card: {}", cardId);
         VirtualCardResponse response = virtualCardService.updateCard(cardId, request);
         return ResponseEntity.ok(response);
     }
@@ -149,7 +143,6 @@ public class VirtualCardController {
     public ResponseEntity<VirtualCardResponse> updateCardStatus(
             @Parameter(description = "Card ID") @PathVariable String cardId,
             @Valid @RequestBody UpdateCardStatusRequest request) {
-        log.info("REST request to update card status: {} to {}", cardId, request.getStatus());
         VirtualCardResponse response = virtualCardService.updateCardStatus(cardId, request);
         return ResponseEntity.ok(response);
     }
@@ -164,7 +157,6 @@ public class VirtualCardController {
     public ResponseEntity<VirtualCardResponse> updateBalance(
             @Parameter(description = "Card ID") @PathVariable String cardId,
             @Valid @RequestBody UpdateBalanceRequest request) {
-        log.info("REST request to update balance for card: {}", cardId);
         VirtualCardResponse response = virtualCardService.updateBalance(cardId, request);
         return ResponseEntity.ok(response);
     }
@@ -179,7 +171,6 @@ public class VirtualCardController {
     })
     public ResponseEntity<Void> deleteCard(
             @Parameter(description = "Card ID") @PathVariable String cardId) {
-        log.info("REST request to soft delete virtual card: {}", cardId);
         virtualCardService.deleteCard(cardId);
         return ResponseEntity.noContent().build();
     }
@@ -194,7 +185,6 @@ public class VirtualCardController {
     })
     public ResponseEntity<VirtualCardResponse> freezeCard(
             @Parameter(description = "Card ID") @PathVariable String cardId) {
-        log.info("REST request to freeze card: {}", cardId);
         VirtualCardResponse response = virtualCardService.freezeCard(cardId);
         return ResponseEntity.ok(response);
     }
@@ -208,7 +198,6 @@ public class VirtualCardController {
     })
     public ResponseEntity<VirtualCardResponse> unfreezeCard(
             @Parameter(description = "Card ID") @PathVariable String cardId) {
-        log.info("REST request to unfreeze card: {}", cardId);
         VirtualCardResponse response = virtualCardService.unfreezeCard(cardId);
         return ResponseEntity.ok(response);
     }
@@ -222,7 +211,6 @@ public class VirtualCardController {
     })
     public ResponseEntity<VirtualCardResponse> cancelCard(
             @Parameter(description = "Card ID") @PathVariable String cardId) {
-        log.info("REST request to cancel card: {}", cardId);
         VirtualCardResponse response = virtualCardService.cancelCard(cardId);
         return ResponseEntity.ok(response);
     }

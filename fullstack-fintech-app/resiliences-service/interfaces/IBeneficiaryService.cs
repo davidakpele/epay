@@ -14,5 +14,6 @@ namespace resiliences_service.interfaces
         Task UpdateAsync(Beneficiary beneficiary);
         Task DeleteAsync(uint id, uint userId);
         Task DeleteByIdsAsync(List<uint> ids, uint userId);
+        Task<Beneficiary?> GetByUserIdAndUsernameAsync(uint userId, string recipientUsername);
     }
 }
