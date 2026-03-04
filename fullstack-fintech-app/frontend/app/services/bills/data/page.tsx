@@ -266,7 +266,7 @@ const DataBundle = () => {
                         </div>
                         <input
                             type="text"
-                            className="data-input amount-input"
+                            className="data-input page-amount-input"
                             placeholder="Or enter custom amount"
                             value={getFormattedAmount()}
                             onChange={handleAmountChange}

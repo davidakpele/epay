@@ -28,25 +28,18 @@ const MobileNav = ({ activeTab = 'home', onPlusClick }: MobileNavProps) => {
     router.push('/wallet/accounts');
   };
 
-  // Helper function to check if a tab is active
   const isActive = (tabName: string) => {
     return activeTab !== 'none' && activeTab === tabName;
   };
 
   return (
     <footer className="mobile-footer">
-      <div 
-        className={`footer-tab ${isActive('home') ? 'active' : ''}`} 
-        onClick={handleHomeRoute}
-      >
+      <div className={`footer-tab ${isActive('home') ? 'active' : ''}`} onClick={handleHomeRoute}>
         <Home size={22} />
         <span>Home</span>
       </div>
       
-      <div 
-        className={`footer-tab ${isActive('wallet') ? 'active' : ''}`} 
-        onClick={handleWalletRoute}
-      >
+      <div className={`footer-tab ${isActive('wallet') ? 'active' : ''}`}  onClick={handleWalletRoute}>
         <Wallet size={22} />
         <span>Wallet</span>
       </div>
@@ -55,18 +48,12 @@ const MobileNav = ({ activeTab = 'home', onPlusClick }: MobileNavProps) => {
         <Plus size={28} />
       </div>
       
-      <div 
-        className={`footer-tab ${isActive('exchange') ? 'active' : ''}`} 
-        onClick={handleExchangeRoute}
-      >
+      <div className={`footer-tab ${isActive('exchange') ? 'active' : ''}`} onClick={handleExchangeRoute}>
         <Repeat size={20} />
         <span>Swap</span>
       </div>
       
-      <div 
-        className={`footer-tab ${isActive('profile') ? 'active' : ''}`} 
-        onClick={handleUserProfileRoute}
-      >
+      <div className={`footer-tab ${isActive('profile') ? 'active' : ''}`} onClick={handleUserProfileRoute}>
         <User size={22} />
         <span>Profile</span>
       </div>

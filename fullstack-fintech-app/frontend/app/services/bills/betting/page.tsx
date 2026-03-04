@@ -259,7 +259,7 @@ const BettingPage = () => {
                   </div>
                   <input
                     type="text"
-                    className="betting-input amount-input"
+                    className="betting-input page-amount-input"
                     placeholder="Or enter custom amount"
                     value={getFormattedAmount()}
                     onChange={handleAmountChange}

@@ -124,21 +124,17 @@ services:
       - notification-service
       - escrow-service
       - frontend
-    
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    
     environment:
       - TZ=UTC
       - NGINX_ENTRYPOINT_QUIET_LOGS=1
-    
     networks:
       - banking-network
-    
     deploy:
       resources:
         limits:
@@ -147,7 +143,6 @@ services:
         reservations:
           cpus: '0.5'
           memory: 128M
-    
     logging:
       driver: "json-file"
       options:
@@ -286,7 +281,7 @@ services:
       start_period: 40s
     networks:
       - banking-network
-
+ 
   api-gateway:
     build:
       context: ./api-gateway

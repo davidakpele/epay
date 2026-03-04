@@ -278,8 +278,7 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
           href: '/settings',
           submenu: [
             { label: 'General', href: '/settings/general' },
-            { label: 'Profile Settings', href: '/settings/profile' },
-            { label: 'Security', href: '/settings/security' }
+            { label: 'Profile Settings', href: '/settings/profile' }
           ]
         },
       ]
