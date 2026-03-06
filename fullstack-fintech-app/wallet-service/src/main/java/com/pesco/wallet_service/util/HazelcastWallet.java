@@ -22,49 +22,53 @@ public class HazelcastWallet {
     @Autowired
     private HazelcastInstance hazelcastInstance;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    
-    public void updateHazelcastWalletBalance(Long userId, Currency currencyType, BigDecimal amountDelta)
-            throws JsonProcessingException {
+
+    public void updateHazelcastWalletBalance(Long userId, Currency currencyType, BigDecimal amountDelta) {
         String mapKey = "user_session:" + userId;
         IMap<String, String> userSessionMap = hazelcastInstance.getMap("user-sessions");
-        
+
         String sessionData = userSessionMap.get(mapKey);
         if (sessionData != null) {
-            UserSessionData userSession = objectMapper.readValue(sessionData, UserSessionData.class);
-            WalletSection walletSection = userSession.getWallet();
-            List<WalletBalanceDTO> balances = walletSection.getWallet_balances();
+            try {
+                UserSessionData userSession = objectMapper.readValue(sessionData, UserSessionData.class);
+                WalletSection walletSection = userSession.getWallet();
+                List<WalletBalanceDTO> balances = walletSection.getWallet_balances();
 
-            boolean found = false;
-            for (WalletBalanceDTO dto : balances) {
-                if (dto.getCurrency_code().equalsIgnoreCase(currencyType.name())) {
-                    Object balanceObj = dto.getBalance();
-                    BigDecimal current;
+                boolean found = false;
+                for (WalletBalanceDTO dto : balances) {
+                    if (dto.getCurrency_code().equalsIgnoreCase(currencyType.name())) {
+                        Object balanceObj = dto.getBalance();
+                        BigDecimal current;
+                        if (balanceObj instanceof String) {
+                            current = new BigDecimal(((String) balanceObj).replace(",", ""));
+                        } else if (balanceObj instanceof Number) {
+                            current = BigDecimal.valueOf(((Number) balanceObj).doubleValue());
+                        } else {
+                            throw new IllegalArgumentException("Unsupported balance type: " + balanceObj.getClass());
+                        }
 
-                    if (balanceObj instanceof String) {
-                        current = new BigDecimal(((String) balanceObj).replace(",", ""));
-                    } else if (balanceObj instanceof Number) {
-                        current = BigDecimal.valueOf(((Number) balanceObj).doubleValue());
-                    } else {
-                        throw new IllegalArgumentException("Unsupported balance type: " + balanceObj.getClass());
+                        dto.setBalance(current.add(amountDelta)
+                                .setScale(2, RoundingMode.HALF_UP)
+                                .toPlainString());
+                        found = true;
+                        break;
                     }
-                    BigDecimal updated = current.add(amountDelta);
-                    dto.setBalance(updated.setScale(2, RoundingMode.HALF_UP).toPlainString());
-                    found = true;
-                    break;
                 }
-            }
 
-            if (!found && amountDelta.compareTo(BigDecimal.ZERO) > 0) {
-                WalletBalanceDTO newDto = new WalletBalanceDTO();
-                newDto.setCurrency_code(currencyType.name());
-                newDto.setBalance(amountDelta.setScale(2, RoundingMode.HALF_UP).toPlainString());
-                balances.add(newDto);
-            }
-            walletSection.setWallet_balances(balances);
-            userSession.setWallet(walletSection);
+                if (!found && amountDelta.compareTo(BigDecimal.ZERO) > 0) {
+                    WalletBalanceDTO newDto = new WalletBalanceDTO();
+                    newDto.setCurrency_code(currencyType.name());
+                    newDto.setBalance(amountDelta.setScale(2, RoundingMode.HALF_UP).toPlainString());
+                    balances.add(newDto);
+                }
 
-            String updatedJson = objectMapper.writeValueAsString(userSession);
-            userSessionMap.put(mapKey, updatedJson);
+                walletSection.setWallet_balances(balances);
+                userSession.setWallet(walletSection);
+                userSessionMap.put(mapKey, objectMapper.writeValueAsString(userSession));
+
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

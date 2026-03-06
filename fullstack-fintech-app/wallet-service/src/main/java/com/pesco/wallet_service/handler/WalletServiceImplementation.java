@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,6 +31,7 @@ import pesco.wallet_service.grpc.UpdateBalanceRequest;
 import pesco.wallet_service.grpc.WalletBalanceResponse;
 import pesco.wallet_service.grpc.WalletDeductionRequest;
 import io.grpc.stub.StreamObserver;
+import jakarta.transaction.Transactional;
 import pesco.wallet_service.grpc.CreateTransferPinRequest;
 import pesco.wallet_service.grpc.CreateTransferPinResponse;
 import pesco.wallet_service.grpc.CurrencyBalance;
@@ -218,49 +221,59 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
     }
 
     @Override
+    @Transactional  
     public void withdrawIn(WalletDeductionRequest request, StreamObserver<WithdrawResponse> responseObserver) {
         try {
             Long userId = request.getUserId();
-            Long walletId = request.getWalletId();
             CurrencyType currencyType = request.getCurrency();
             BigDecimal amount = new BigDecimal(request.getAmount());
+            Currency currency = Currency.valueOf(currencyType.name());
 
-            // Validate wallet
-            Optional<Wallet> walletOpt = walletRepository.findById(walletId);
-            if (walletOpt.isEmpty()) {
-                responseObserver.onError(Status.NOT_FOUND.withDescription("Wallet not found").asRuntimeException());
+            CompletableFuture<Wallet> senderFuture = CompletableFuture.supplyAsync(
+                () -> walletRepository.findWalletByUserId(userId)
+            );
+            CompletableFuture<Long> recipientIdFuture = CompletableFuture.supplyAsync(
+                () -> userServiceClient.getUserIdByUsername(request.getRecipientUsername(), request.getToken())
+            );
+
+            Wallet senderWallet = senderFuture.get();
+            Long recipientUserId = recipientIdFuture.get();
+
+            if (senderWallet == null) {
+                responseObserver.onError(Status.NOT_FOUND.withDescription("Sender wallet not found").asRuntimeException());
                 return;
             }
 
-            Wallet senderWallet = walletRepository.findWalletByUserId(userId);
-
-            Long recipientUserId = userServiceClient.getUserIdByUsername(request.getRecipientUsername(), request.getToken());
-            
-            Wallet recipientWallet = walletRepository
-                    .findWalletByUserId(recipientUserId);
-            
-            // Validate balance
             CurrencyBalanceMapStruct senderCurrency = senderWallet.getBalances().stream()
                     .filter(b -> b.getCurrencyCode().equalsIgnoreCase(currencyType.name()))
-                    .findFirst().orElse(null);
+                    .findFirst()
+                    .orElse(null);
 
-            Currency currency = Currency.valueOf(currencyType.toString().toUpperCase());
-            
-            // Deduct from sender
+            if (senderCurrency == null || senderCurrency.getBalance().compareTo(amount) < 0) {
+                responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("Insufficient balance").asRuntimeException());
+                return;
+            }
+
+            Wallet recipientWallet = walletRepository.findWalletByUserId(recipientUserId);
+
             senderCurrency.setBalance(senderCurrency.getBalance().subtract(amount));
-            walletRepository.save(senderWallet);
-            redisWallet.updateHazelcastWalletBalance(userId, currency, amount.negate());
 
-            // Credit recipient
             CurrencyBalanceMapStruct recipientCurrency = recipientWallet.getBalances().stream()
                     .filter(b -> b.getCurrencyCode().equalsIgnoreCase(currencyType.name()))
-                    .findFirst().orElse(null);
+                    .findFirst()
+                    .orElse(null);
 
-            if (recipientCurrency != null) {
-                recipientCurrency.setBalance(recipientCurrency.getBalance().add(amount));
+            if (recipientCurrency == null) {
+                responseObserver.onError(Status.NOT_FOUND.withDescription("Recipient currency not supported").asRuntimeException());
+                return;
             }
-            walletRepository.save(recipientWallet);
-            redisWallet.updateHazelcastWalletBalance(recipientWallet.getUserId(), currency, amount);
+            recipientCurrency.setBalance(recipientCurrency.getBalance().add(amount));
+            walletRepository.saveAll(List.of(senderWallet, recipientWallet));
+
+            CompletableFuture.runAsync(() -> {
+                redisWallet.updateHazelcastWalletBalance(userId, currency, amount.negate());
+                redisWallet.updateHazelcastWalletBalance(recipientUserId, currency, amount);
+            }).exceptionally(ex -> null);
 
             WithdrawResponse response = WithdrawResponse.newBuilder()
                     .setStatus("success")
@@ -272,7 +285,8 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
-        } catch (Exception e) {
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
             responseObserver.onError(Status.INTERNAL.withDescription("Transfer failed: " + e.getMessage()).asRuntimeException());
         }
     }
@@ -333,44 +347,50 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
         }
     }
 
+
     @Override
+    @Transactional
     public void updateBalance(UpdateBalanceRequest request, StreamObserver<WalletResponse> responseObserver) {
         try {
-            Optional<Wallet> walletOptional = walletRepository.findById(request.getWalletId());
+            Wallet wallet = walletRepository.findById(request.getWalletId())
+                    .orElse(null);
 
-            if (walletOptional.isEmpty()) {
+            if (wallet == null) {
                 responseObserver.onError(Status.NOT_FOUND
                         .withDescription("Wallet not found.")
                         .asRuntimeException());
                 return;
             }
 
-            Wallet wallet = walletOptional.get();
             CurrencyBalance balanceUpdate = request.getBalanceUpdate();
             BigDecimal amountToAdd = new BigDecimal(balanceUpdate.getBalance());
+            String currencyCode = balanceUpdate.getCurrencyCode().toUpperCase(); 
 
-            boolean updated = false;
-            for (CurrencyBalanceMapStruct cb : wallet.getBalances()) {
-                if (cb.getCurrencyCode().equalsIgnoreCase(balanceUpdate.getCurrencyCode())) {
-                    BigDecimal currentBalance = cb.getBalance();
-                    cb.setBalance(currentBalance.add(amountToAdd));
-                    updated = true;
-                    break;
-                }
-            }
+            Optional<CurrencyBalanceMapStruct> existing = wallet.getBalances().stream()
+                    .filter(cb -> cb.getCurrencyCode().equalsIgnoreCase(currencyCode))
+                    .findFirst();
 
-            if (!updated) {
+            if (existing.isPresent()) {
+                existing.get().setBalance(existing.get().getBalance().add(amountToAdd));
+            } else {
                 CurrencyBalanceMapStruct newCurrency = new CurrencyBalanceMapStruct();
-                newCurrency.setCurrencyCode(balanceUpdate.getCurrencyCode());
+                newCurrency.setCurrencyCode(currencyCode);
                 newCurrency.setCurrencySymbol(balanceUpdate.getCurrencySymbol());
                 newCurrency.setBalance(amountToAdd);
                 wallet.getBalances().add(newCurrency);
             }
 
             Wallet updatedWallet = walletRepository.save(wallet);
-            WalletResponse response = toWalletResponse(updatedWallet);
 
-            responseObserver.onNext(response);
+            CompletableFuture.runAsync(() ->
+                redisWallet.updateHazelcastWalletBalance(
+                    wallet.getUserId(),
+                    Currency.valueOf(currencyCode),
+                    amountToAdd
+                )
+            ).exceptionally(ex -> null);
+
+            responseObserver.onNext(toWalletResponse(updatedWallet));
             responseObserver.onCompleted();
 
         } catch (Exception e) {

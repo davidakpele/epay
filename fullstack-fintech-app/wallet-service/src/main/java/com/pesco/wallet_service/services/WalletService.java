@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,8 @@ import com.pesco.wallet_service.repository.WalletSettingsRepository;
 import com.pesco.wallet_service.util.AccountWrapper;
 import com.pesco.wallet_service.util.HazelcastWallet;
 import com.pesco.wallet_service.util.JwtTokenProvider;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class WalletService {
@@ -138,10 +141,13 @@ public class WalletService {
         return ResponseEntity.status(HttpStatus.OK).body(dto);
     }
 
+    @Transactional
     public ResponseEntity<?> updateBalance(String currency, BigDecimal amount, Long userId, Long walletId) {
         Map<String, Object> response = new LinkedHashMap<>();
 
         try {
+            String currencyCode = currency.toUpperCase();
+
             Optional<Wallet> walletOptional = walletRepository.findById(walletId);
 
             if (walletOptional.isEmpty()) {
@@ -153,7 +159,6 @@ public class WalletService {
 
             Wallet wallet = walletOptional.get();
 
-            // Ensure the wallet belongs to the given user
             if (!wallet.getUserId().equals(userId)) {
                 response.put("status", "error");
                 response.put("type", "message");
@@ -161,36 +166,37 @@ public class WalletService {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
-            boolean updated = false;
-            String symbol = getCurrencySymbol(currency); 
+            Optional<CurrencyBalanceMapStruct> existing = wallet.getBalances().stream()
+                    .filter(cb -> cb.getCurrencyCode().equalsIgnoreCase(currencyCode))
+                    .findFirst();
 
-            // Loop through existing balances
-            for (CurrencyBalanceMapStruct cb : wallet.getBalances()) {
-                if (cb.getCurrencyCode().equalsIgnoreCase(currency)) {
-                    BigDecimal newBalance = cb.getBalance().add(amount);
-                    cb.setBalance(newBalance);
-                    updated = true;
-                    break;
-                }
-            }
-
-            if (!updated) {
-                CurrencyBalanceMapStruct newCurrency = new CurrencyBalanceMapStruct(
-                    currency.toUpperCase(),
-                    symbol,
+            if (existing.isPresent()) {
+                CurrencyBalanceMapStruct cb = existing.get();
+                cb.setBalance(cb.getBalance().add(amount));
+            } else {
+                wallet.addBalance(new CurrencyBalanceMapStruct(
+                    currencyCode,
+                    getCurrencySymbol(currencyCode),
                     amount
-                );
-                wallet.addBalance(newCurrency);
+                ));
             }
 
             walletRepository.save(wallet);
+
+            CompletableFuture.runAsync(() ->
+                redisWallet.updateHazelcastWalletBalance(
+                    userId,
+                    Currency.valueOf(currencyCode),
+                    amount
+                )
+            ).exceptionally(ex -> null);
 
             response.put("status", "success");
             response.put("type", "wallet_update");
             response.put("message", "Wallet balance updated successfully.");
             response.put("userId", userId);
             response.put("walletId", walletId);
-            response.put("currency", currency.toUpperCase());
+            response.put("currency", currencyCode);
             response.put("amount_added", amount);
             response.put("updated_balances", wallet.getBalances());
 
@@ -221,6 +227,7 @@ public class WalletService {
     }
 
 
+    @Transactional
     public ResponseEntity<?> processMaintenanceFee(MaintenanceDebitRequest request) {
         Map<String, Object> response = new LinkedHashMap<>();
 
@@ -236,7 +243,6 @@ public class WalletService {
 
             Wallet wallet = walletOptional.get();
 
-            // Ensure the wallet belongs to the given user
             if (!wallet.getUserId().equals(request.getUserId())) {
                 response.put("status", "error");
                 response.put("type", "message");
@@ -244,44 +250,45 @@ public class WalletService {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
 
-            boolean updated = false;
-            BigDecimal newBalance = BigDecimal.ZERO;
+            String currencyCode = request.getCurrencyType().toUpperCase();
 
-            // Loop through existing balances to find the currency
-            for (CurrencyBalanceMapStruct cb : wallet.getBalances()) {
-                if (cb.getCurrencyCode().equalsIgnoreCase(request.getCurrencyType())) {
-                    // DEDUCT the fee amount (subtract instead of add)
-                    newBalance = cb.getBalance().subtract(request.getAmount());
-                    
-                    // Check if balance is sufficient
-                    if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-                        response.put("status", "error");
-                        response.put("type", "message");
-                        response.put("message", "Insufficient balance for maintenance fee.");
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                    }
-                    
-                    cb.setBalance(newBalance);
-                    updated = true;
-                    break;
-                }
-            }
+            CurrencyBalanceMapStruct cb = wallet.getBalances().stream()
+                    .filter(b -> b.getCurrencyCode().equalsIgnoreCase(currencyCode))
+                    .findFirst()
+                    .orElse(null);
 
-            if (!updated) {
+            if (cb == null) {
                 response.put("status", "error");
                 response.put("type", "message");
-                response.put("message", "Currency balance not found for: " + request.getCurrencyType());
+                response.put("message", "Currency balance not found for: " + currencyCode);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
+            BigDecimal newBalance = cb.getBalance().subtract(request.getAmount());
+            if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+                response.put("status", "error");
+                response.put("type", "message");
+                response.put("message", "Insufficient balance for maintenance fee deduction.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            cb.setBalance(newBalance);
             walletRepository.save(wallet);
+
+            CompletableFuture.runAsync(() ->
+                redisWallet.updateHazelcastWalletBalance(
+                    wallet.getUserId(),
+                    Currency.valueOf(currencyCode),
+                    request.getAmount().negate()
+                )
+            ).exceptionally(ex -> null);
 
             response.put("status", "success");
             response.put("type", "wallet_update");
-            response.put("message", "Maintenance Fee has been successfully deducted.");
+            response.put("message", "Maintenance fee has been successfully deducted.");
             response.put("userId", request.getUserId());
             response.put("walletId", request.getWalletId());
-            response.put("currency", request.getCurrencyType());
+            response.put("currency", currencyCode);
             response.put("amount_deducted", request.getAmount());
             response.put("new_balance", newBalance);
             response.put("updated_balances", wallet.getBalances());
@@ -291,65 +298,63 @@ public class WalletService {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("type", "message");
-            response.put("message", "Error updating wallet balance: " + e.getMessage());
+            response.put("message", "Error processing maintenance fee: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
-
+    
+    @Transactional
     public ResponseEntity<?> refundWallet(WalletRefundRequest request) {
         Map<String, Object> response = new LinkedHashMap<>();
 
         try {
-            Optional<Wallet> walletOptional = walletRepository.findByUserId(request.getSenderId());
+            Wallet wallet = walletRepository.findByUserId(request.getSenderId())
+                    .orElse(null);
 
-            if (walletOptional.isEmpty()) {
+            if (wallet == null) {
                 response.put("status", "error");
                 response.put("type", "message");
                 response.put("message", "Wallet not found.");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
-            Wallet wallet = walletOptional.get();
-            if (!wallet.getUserId().equals(request.getSenderId())) {
+            String currencyCode = request.getCurrencyCode().toUpperCase();
+            Optional<CurrencyBalanceMapStruct> currencyBalance = wallet.getBalances().stream()
+                    .filter(cb -> cb.getCurrencyCode().equalsIgnoreCase(currencyCode))
+                    .findFirst();
+
+            if (currencyBalance.isEmpty()) {
                 response.put("status", "error");
                 response.put("type", "message");
-                response.put("message", "Wallet does not belong to this user.");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
-
-            boolean updated = false;
-            BigDecimal newBalance = BigDecimal.ZERO;
-
-            for (CurrencyBalanceMapStruct cb : wallet.getBalances()) {
-                if (cb.getCurrencyCode().equalsIgnoreCase(request.getCurrencyCode())) {
-                    newBalance = cb.getBalance().add(request.getAmount());
-                    
-                    cb.setBalance(newBalance);
-                    updated = true;
-                    break;
-                }
-            }
-
-            if (!updated) {
-                response.put("status", "error");
-                response.put("type", "message");
-                response.put("message", "Currency balance not found for: " + request.getCurrencyCode());
+                response.put("message", "Currency balance not found for: " + currencyCode);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
+            CurrencyBalanceMapStruct cb = currencyBalance.get();
+            BigDecimal newBalance = cb.getBalance().add(request.getAmount());
+            cb.setBalance(newBalance);
+
             walletRepository.save(wallet);
+            
+            CompletableFuture.runAsync(() ->
+                redisWallet.updateHazelcastWalletBalance(
+                    wallet.getUserId(),
+                    Currency.valueOf(currencyCode),
+                    request.getAmount()
+                )
+            ).exceptionally(ex -> null);
 
             response.put("status", "success");
             response.put("type", "wallet_update");
             response.put("message", "Refund has been successfully processed.");
             response.put("userId", request.getSenderId());
-            response.put("currency", request.getCurrencyCode());
+            response.put("currency", currencyCode);
             response.put("amount_refunded", request.getAmount());
             response.put("new_balance", newBalance);
             response.put("updated_balances", wallet.getBalances());
 
             return ResponseEntity.ok(response);
+
         } catch (Exception e) {
             response.put("status", "error");
             response.put("type", "message");
@@ -358,6 +363,5 @@ public class WalletService {
         }
     }
 
- 
 
 }
