@@ -1,0 +1,37 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+}
+
+.bordered { border-bottom: 1px solid var(--border); }
+
+.num {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.numYellow { color: #a07800; }
+
+.label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.badgeGreen  { background: var(--success-light); color: var(--success); }
+.badgeYellow { background: var(--yellow-light);  color: #8a6800; }
