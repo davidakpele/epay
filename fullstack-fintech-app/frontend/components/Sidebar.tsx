@@ -9,19 +9,10 @@ import {
   CreditCard,
   Receipt,
   Repeat,
-  Send,
-  HandCoins,
-  FileText,
   UserPlus,
-  Landmark,
-  User,
   Headphones,
   Settings,
   LogOut,
-  Smartphone,
-  ScanEyeIcon,
-  UserStarIcon,
-  CreditCardIcon,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -83,7 +74,6 @@ const Sidebar = () => {
           submenu: [
             { label: 'General', href: '/settings/general' },
             { label: 'Profile Settings', href: '/settings/profile' },
-            { label: 'Security', href: '/settings/security' }
           ]
         },
       ]

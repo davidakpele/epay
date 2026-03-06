@@ -191,7 +191,7 @@
 }
 
 /* Amount input with ₦ prefix */
-.shop-amount-input-row {
+.shop-page-amount-input-row {
   display: flex;
   align-items: center;
   border: 1.5px solid #e2e8f0;
@@ -200,11 +200,11 @@
   transition: border-color 0.2s, box-shadow 0.2s;
   overflow: hidden;
 }
-.shop-amount-input-row:focus-within {
+.shop-page-amount-input-row:focus-within {
   border-color: var(--bg-main);
   box-shadow: 0 0 0 3px rgba(46,125,50,0.1);
 }
-.dark .shop-amount-input-row {
+.dark .shop-page-amount-input-row {
   background: #253340;
   border-color: #2d3748;
 }
@@ -219,7 +219,7 @@
 }
 .dark .naira-prefix { border-right-color: #2d3748; }
 
-.shop-amount-input {
+.shop-page-amount-input {
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;

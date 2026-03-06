@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -233,17 +234,23 @@ public class UserRecordImplementations implements UserRecordService {
             Path uploadDir = Paths.get(fileStorageConfig.getUploadDir()).toAbsolutePath().normalize();
             Files.createDirectories(uploadDir);
 
+            // Delete any existing image for this user, regardless of extension
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(uploadDir, id + ".*")) {
+                for (Path existingFile : stream) {
+                    Files.deleteIfExists(existingFile);
+                }
+            }
+
             String ext = StringUtils.getFilenameExtension(image.getOriginalFilename());
             String fileName = id + (ext != null ? "." + ext : "");
             Path filePath = uploadDir.resolve(fileName);
 
-            Files.deleteIfExists(filePath);
             Files.copy(image.getInputStream(), filePath);
 
             String profilePath = "/uploads/images/" + fileName;
 
             UserRecord userRecord = recordOpt.get();
-            userRecord.setPhoto(profilePath);  
+            userRecord.setPhoto(profilePath);
             userRecord.setUser(userOpt.get());
             userRecordRepository.save(userRecord);
 
@@ -252,7 +259,7 @@ public class UserRecordImplementations implements UserRecordService {
                             "status", "success",
                             "message", "Profile image uploaded successfully.",
                             "userId", id,
-                            "imageUrl", profilePath  
+                            "imageUrl", profilePath
                     )
             );
 

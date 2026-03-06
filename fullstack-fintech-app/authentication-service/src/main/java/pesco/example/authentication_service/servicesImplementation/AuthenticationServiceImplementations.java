@@ -2,13 +2,11 @@ package pesco.example.authentication_service.servicesImplementation;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional; 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,9 +16,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-
 import jakarta.servlet.http.HttpServletResponse;
 import pesco.example.authentication_service.clients.NotificationServiceClient;
 import pesco.example.authentication_service.clients.WalletServiceClient;
@@ -29,7 +24,6 @@ import pesco.example.authentication_service.enums.ContactMethod;
 import pesco.example.authentication_service.enums.Role;
 import pesco.example.authentication_service.enums.UserStatus;
 import pesco.example.authentication_service.exceptions.Error;
-import pesco.example.authentication_service.exceptions.UserNotFoundException;
 import pesco.example.authentication_service.models.AuthorizeUserVerification;
 import pesco.example.authentication_service.models.TwoFactorAuthentication;
 import pesco.example.authentication_service.models.UserRecord;
@@ -52,17 +46,14 @@ import pesco.example.authentication_service.services.UserTracerService;
 import pesco.example.authentication_service.utils.KeyWrapper;
 
 @Service
-@Transactional
 public class AuthenticationServiceImplementations implements AuthenticationService {
 
-    private static final int EXPIRATION_MINUTES = 10;
-    private Date expirationTime;
+    private static final int EXPIRATION_MINUTES = 15;
     private final UsersRepository userRepository;
     private final UserRecordRepository userRecordRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final NotificationServiceClient notificationServiceClient;
-    private final VerificationTokenRepository verificationTokenRepository;
     private final AuthenticationManager authenticationManager;
     private final KeyWrapper keysWrapper;
     private final AuthorizeUserVerificationService authorizeUserVerificationService;
@@ -72,8 +63,10 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
     private final UserTracerService userTracerService;
     private final UserAttemptService userAttemptService;
     private final MessagingService messagingService;
+    private final VerificationTokenRepository verificationTokenRepository;
 
-    public AuthenticationServiceImplementations(UsersRepository userRepository,
+    public AuthenticationServiceImplementations(
+            UsersRepository userRepository,
             UserRecordRepository userRecordRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
@@ -105,276 +98,207 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
         this.messagingService = messagingService;
     }
 
+    @Override
     @Transactional
     public ResponseEntity<?> createAccount(UserSignUpRequest request) {
-       
-        String identifier = "email".equals(request.getRegMode()) 
-            ? request.getEmail() 
-            : request.getPhone();
+        String identifier = "email".equals(request.getRegMode())
+                ? request.getEmail()
+                : request.getPhone();
 
         if (!MessagingService.verifyOTP(identifier, request.getVerificationCode())) {
-            return Error.createResponse("Invalid or expired verification code.*", 
-                HttpStatus.BAD_REQUEST, "The verification code you entered is invalid or has expired.");
+            return Error.createResponse("Invalid or expired verification code.",
+                    HttpStatus.BAD_REQUEST, "The verification code you entered is invalid or has expired.");
         }
 
         Long nextUserId = getNextUserId();
-        Users user = new Users();
-        user.setId(nextUserId);
-        user.setUsername(request.getUsername());
-        user.setTwoFactorAuth(false);
-        user.setRole(Role.USER);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        
-        if ("email".equals(request.getRegMode())) {
-            user.setEmail(request.getEmail());
-            user.setEnabled(false); 
-        } else {
-            user.setEmail(null);
-            user.setEnabled(true); 
-        }
-
+        Users user = buildUser(request, nextUserId);
         userRepository.save(user);
-
-        Users savedUser = userRepository.findById(nextUserId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-        
-        String referralCode = UUID.randomUUID().toString();
-
-        UserRecord userRecord = new UserRecord();
-        userRecord.setUser(savedUser);
-        
-        if ("phone".equals(request.getRegMode())) {
-            userRecord.setTelephone(request.getPhone());
-        }
-        
-        userRecord.setFirstName(request.getFirstname());
-        userRecord.setLastName(request.getLastname());
-        userRecord.setTransferPinSet(false);
-        userRecord.setLocked(false);
-        userRecord.setLockedAt(null);
-        userRecord.setReferralCode(referralCode);
-        userRecord.setBlocked(false);
-        userRecord.setProfileComplete(false);
-        userRecord.setTotalReferers(null);
-        userRecord.setReferralUsername("n13_" + request.getUsername());
-        userRecord.setReferralLink(keysWrapper.getUrl() + "/auth/register?referral_code=" + referralCode);
-        
-        if ("email".equals(request.getRegMode())) {
-            userRecord.setStatus(UserStatus.PENDING_VERIFICATION);
-        } else {
-            userRecord.setStatus(UserStatus.ACTIVE);
-        }
-
+        UserRecord userRecord = buildUserRecord(request, user);
         userRecordRepository.save(userRecord);
-        
-        // UUID verificationToken = UUID.randomUUID();
-        // expirationTime = calculateExpirationDate(EXPIRATION_MINUTES);
-        // VerificationToken tokenEntity = new VerificationToken();
-        // tokenEntity.setUserId(nextUserId);
-        // tokenEntity.setToken(String.valueOf(verificationToken));
-        // tokenEntity.setExpirationTime(expirationTime);
 
-        // verificationTokenRepository.save(tokenEntity);
-        String message = "Thanks for sigining up for ePay! Your account has been created succcessfully.";
-        if ("email".equals(request.getRegMode())) {
-            Long unverifiedUserId = KeyWrapper.generateUniqueAuthorizeUserId();
-            authorizeUserVerificationService.save(nextUserId, unverifiedUserId);
-            CompletableFuture<Void> walletCreationFuture = CompletableFuture
-                .runAsync(() -> {
-                    walletServiceClient.createUserWallet(user.getId());
-                });
-    
-            walletCreationFuture.join();
-            Optional<UserRecord> optionalRecord = userRecordRepository.findByUserId(user.getId());
-            optionalRecord.ifPresent(record -> {
-                record.setStatus(UserStatus.ACTIVE);
-                record.setLocked(false);
-                record.setBlocked(false);
-                userRecordRepository.save(record);
+        boolean isEmail = "email".equals(request.getRegMode());
 
-                user.setEnabled(true);
-                userRepository.save(user);
-            });
-            // String verificationLink = keysWrapper.getUrl() + "/auth/verifyRegistration?token=" 
-            //     + verificationToken + "&id=" + unverifiedUserId;
-            // String content = "Dear " + request.getUsername() + ",\n\n"
-            //         + "Thank you for signing up for pesco! We're excited to have you on board.\n\n"
-            //         + "Please verify your email address to complete your registration and activate your account.";
-
-            // CompletableFuture<Void> sendVerificationMessage = CompletableFuture.runAsync(() -> 
-            //     notificationServiceClient.sendVerificationEmail(request.getEmail(), content, 
-            //         verificationLink, request.getUsername()));
-            // sendVerificationMessage.join();
-            return Error.createResponse("success", HttpStatus.CREATED, message);
+        if (isEmail) {
+            authorizeUserVerificationService.save(nextUserId, KeyWrapper.generateUniqueAuthorizeUserId());
+            walletServiceClient.createUserWallet(user.getId());
+            activateUserRecord(user);
         } else {
-            // Phone registration - account is already verified via OTP
-            // Create wallet asynchronously
-            CompletableFuture<Void> walletCreationFuture = CompletableFuture
-                .runAsync(() -> {
-                    walletServiceClient.createUserWallet(user.getId());
-                });
-    
-            walletCreationFuture.join();
-            
-            // Update user record status - use different variable name in lambda
-            Optional<UserRecord> optionalRecord = userRecordRepository.findByUserId(user.getId());
-            optionalRecord.ifPresent(record -> {
-                record.setStatus(UserStatus.ACTIVE);
-                record.setLocked(false);
-                record.setBlocked(false);
-                userRecordRepository.save(record);
-            });
 
-            user.setEnabled(true);
-            userRepository.save(user);
-            // Invalidate the OTP after successful registration
+            CompletableFuture.runAsync(() -> walletServiceClient.createUserWallet(user.getId()));
+            activateUserRecord(user);
             MessagingService.invalidateOTP(identifier);
-            
-            // Send welcome message via the chosen method
-            ContactMethod method = "WHATSAPP".equals(request.getVerificationMethod()) 
-                ? ContactMethod.WHATSAPP 
-                : ContactMethod.SMS;
-            
-            CompletableFuture.runAsync(() -> 
-                messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
-            return Error.createResponse("success", HttpStatus.CREATED, message);
+            ContactMethod method = "WHATSAPP".equals(request.getVerificationMethod())
+                    ? ContactMethod.WHATSAPP
+                    : ContactMethod.SMS;
+            CompletableFuture.runAsync(() ->
+                    messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
         }
+
+        return Error.createResponse("success", HttpStatus.CREATED,
+                "Thanks for signing up! Your account has been created successfully.");
     }
 
     @Override
     public ResponseEntity<?> login(UserSignInRequest request, HttpServletResponse response) {
-        Map<String, Object> Authresponse = new HashMap<>();
-
-        Optional<Users> userInfo = userRepository.findByUsername(request.getUsername());
-        if (userInfo.isEmpty()) {
-            Authresponse.put("status", HttpStatus.BAD_REQUEST.value());
-            Authresponse.put("success", false);
-            Authresponse.put("message", "Invalid user credentials.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Authresponse);
+        Map<String, Object> authResponse = new LinkedHashMap<>();
+        Users user = userRepository.findByUsername(request.getUsername()).orElse(null);
+        if (user == null) {
+            return buildAuthError(authResponse, "Invalid user credentials.", HttpStatus.BAD_REQUEST);
         }
 
-        Users user = userInfo.get();
-
         if (!user.isEnabled()) {
-            Authresponse.put("status", HttpStatus.UNAUTHORIZED.value());
-            Authresponse.put("success", false);
-            Authresponse.put("message", "This account has not been verified.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Authresponse);
+            return buildAuthError(authResponse, "This account has not been verified.", HttpStatus.UNAUTHORIZED);
         }
 
         if (userTracerService.hasActiveSession(user.getId())) {
-            Authresponse.put("status", HttpStatus.UNAUTHORIZED.value());
-            Authresponse.put("success", false);
-            Authresponse.put("message", "This account is already logged in on another device.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Authresponse);
+            return buildAuthError(authResponse, "This account is already logged in on another device.", HttpStatus.UNAUTHORIZED);
         }
 
         userAttemptService.createFailAttempt(user.getId(), AttemptType.LOGIN);
 
         try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getUsername(),
-                            request.getPassword()));
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-            Optional<UserRecord> checkAccountStatus = userRecordRepository.findByUserId(user.getId());
-            if (checkAccountStatus.isPresent()) {
-                UserRecord recordStatus = checkAccountStatus.get();
-                if (recordStatus.isLocked()) {
-                    Authresponse.put("status", HttpStatus.UNAUTHORIZED.value());
-                    Authresponse.put("success", false);
-                    Authresponse.put("message", "Sorry, this account is currently locked. Please contact customer service.");
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Authresponse);
-                } else if (recordStatus.isBlocked()) {
-                    Authresponse.put("status", HttpStatus.UNAUTHORIZED.value());
-                    Authresponse.put("success", false);
-                    Authresponse.put("message", "Sorry, this account is currently blocked. Please contact customer service.");
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Authresponse);
+            UserRecord record = userRecordRepository.findByUserId(user.getId()).orElse(null);
+            if (record != null) {
+                if (record.isLocked()) {
+                    return buildAuthError(authResponse,
+                            "Sorry, this account is currently locked. Please contact customer service.",
+                            HttpStatus.UNAUTHORIZED);
                 }
+                if (record.isBlocked()) {
+                    return buildAuthError(authResponse,
+                            "Sorry, this account is currently blocked. Please contact customer service.",
+                            HttpStatus.UNAUTHORIZED);
+                }
+            }
+
+            if (user.isTwoFactorAuth()) {
+                return handleTwoFactorAuth(user, authResponse);
             }
 
             String jwtToken = jwtService.generateToken(user, user.getId());
-
             UserTracer session = userTracerService.createSession(user);
-
-            boolean isTwoFactorAuthEnabled = user.isTwoFactorAuth();
-            if (isTwoFactorAuthEnabled) {
-                Authresponse.put("message", "Two-factor authentication is enabled.");
-                Authresponse.put("twoFactorAuthEnabled", true);
-                Authresponse.put("status", HttpStatus.OK.value());
-
-                String otp = keysWrapper.generateOTP();
-                String jwt = keysWrapper.generateUniqueKey();
-
-                TwoFactorAuthentication existingOtp = twoFactorAuthenticationServiceImplementation
-                        .findByUser(user.getId());
-                if (existingOtp != null) {
-                    twoFactorAuthenticationServiceImplementation.deleteTwoFactorOtp(existingOtp);
-                }
-
-                TwoFactorAuthentication newOtp = twoFactorAuthenticationServiceImplementation
-                        .createTwoFactorOtp(user, otp, jwt);
-                Authresponse.put("otpId", newOtp.getId().toString());
-                Authresponse.put("jwt", newOtp.getToken());
-
-                RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        RequestContextHolder.setRequestAttributes(requestAttributes);
-                        notificationServiceClient.sendOptEmail(
-                                user.getEmail(), otp,
-                                keysWrapper.getUrl() + "/auth/security/password",
-                                keysWrapper.getUrl() + "/auth/security/configuring-two-factor-authentication",
-                                keysWrapper.getUrl() + "/auth/security/configuring-two-factor-authentication-recovery-methods");
-                    } finally {
-                        RequestContextHolder.resetRequestAttributes();
-                    }
-                });
-
-                return ResponseEntity.ok(Authresponse);
-            }
-
-            Optional<UserRecord> record = userRecordRepository.findByUserId(user.getId());
-
             userAttemptService.UpdateUserAccount(user.getId());
-            
-            Authresponse.put("jwt", jwtToken);
-            Authresponse.put("email", user.getEmail());
-            Authresponse.put("userId", user.getId());
-            Authresponse.put("status", HttpStatus.OK.value());
-            Authresponse.put("is_verify", user.isEnabled());
-            Authresponse.put("is_profile_complete", user.getRecords().get(0).isProfileComplete());
-            Authresponse.put("referral_username", record.get().getReferralUsername());
-            Authresponse.put("date_of_birth", record.get().getDateofBirth());
-            Authresponse.put("referral_link", record.get().getReferralLink());
-            Authresponse.put("country", user.getRecords().get(0).getCountry());
-            Authresponse.put("state", user.getRecords().get(0).getState());
-            Authresponse.put("city", user.getRecords().get(0).getCity());
-            Authresponse.put("gender", user.getRecords().get(0).getGender());
-            Authresponse.put("telephone", user.getRecords().get(0).getTelephone());
-            Authresponse.put("success", true);
-            Authresponse.put("session", true);
-            Authresponse.put("sessionId", session.getSessionId());
-            Authresponse.put("twoFactorAuthEnabled", user.isTwoFactorAuth());
-            Authresponse.put("username", user.getUsername());
-            Authresponse.put("fullname", user.getRecords().get(0).getFirstName() + " " + user.getRecords().get(0).getLastName());
 
-             return ResponseEntity.ok()
-                .header("X-Session-ID", session.getSessionId())
-                .header("X-Session-Expires", session.getExpiresAt().toString())
-                .body(Authresponse);
+            UserRecord rec = userRecordRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new RuntimeException("User record not found"));
+
+            authResponse.put("jwt", jwtToken);
+            authResponse.put("email", user.getEmail());
+            authResponse.put("userId", user.getId());
+            authResponse.put("status", HttpStatus.OK.value());
+            authResponse.put("success", true);
+            authResponse.put("session", true);
+            authResponse.put("sessionId", session.getSessionId());
+            authResponse.put("username", user.getUsername());
+            authResponse.put("is_verify", user.isEnabled());
+            authResponse.put("is_profile_complete", rec.isProfileComplete());
+            authResponse.put("referral_username", rec.getReferralUsername());
+            authResponse.put("referral_link", rec.getReferralLink());
+            authResponse.put("date_of_birth", rec.getDateofBirth());
+            authResponse.put("country", rec.getCountry());
+            authResponse.put("state", rec.getState());
+            authResponse.put("city", rec.getCity());
+            authResponse.put("gender", rec.getGender());
+            authResponse.put("telephone", rec.getTelephone());
+            authResponse.put("fullname", rec.getFirstName() + " " + rec.getLastName());
+            authResponse.put("twoFactorAuthEnabled", false);
+
+            return ResponseEntity.ok()
+                    .header("X-Session-ID", session.getSessionId())
+                    .header("X-Session-Expires", session.getExpiresAt().toString())
+                    .body(authResponse);
 
         } catch (BadCredentialsException e) {
-            Authresponse.put("status", HttpStatus.BAD_REQUEST.value());
-            Authresponse.put("success", false);
-            Authresponse.put("message", "Invalid user credentials.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Authresponse);
+            return buildAuthError(authResponse, "Invalid user credentials.", HttpStatus.BAD_REQUEST);
         } catch (AuthenticationException e) {
-            Authresponse.put("status", HttpStatus.BAD_REQUEST.value());
-            Authresponse.put("success", false);
-            Authresponse.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Authresponse);
+            return buildAuthError(authResponse, e.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<?> verifyUser(String token, Long id) {
+        AuthResponse verifyResponse = new AuthResponse();
+
+        if (authorizeUserVerificationRepository.findUserById(id)) {
+            verifyResponse.setMessage("This account has already been verified.");
+            verifyResponse.setStatus(true);
+            return ResponseEntity.ok(verifyResponse);
+        }
+        VerificationToken verificationToken = verificationTokenRepository.findByToken(token);
+        if (verificationToken == null) {
+            verifyResponse.setMessage("Invalid verification token.");
+            verifyResponse.setStatus(false);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(verifyResponse);
+        }
+
+        Users user = userRepository.findById(verificationToken.getUserId()).orElse(null);
+        if (user == null) {
+            verifyResponse.setMessage("User not found.");
+            verifyResponse.setStatus(false);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(verifyResponse);
+        }
+        if (user.isEnabled()) {
+            verifyResponse.setMessage("Hi " + user.getUsername() + ", your account has already been verified.");
+            verifyResponse.setStatus(true);
+            return ResponseEntity.ok(verifyResponse);
+        }
+
+        if (verificationToken.getExpirationTime().getTime() - System.currentTimeMillis() < 0) {
+            verifyResponse.setMessage("Verification token has expired. Click resend to get a new token.");
+            verifyResponse.setStatus(false);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(verifyResponse);
+        }
+
+        try {
+            walletServiceClient.createUserWallet(user.getId());
+            activateUserRecord(user);
+            verificationTokenRepository.delete(verificationToken);
+
+            verifyResponse.setMessage("User registration verified successfully.");
+            verifyResponse.setStatus(true);
+            return ResponseEntity.ok(verifyResponse);
+
+        } catch (Exception e) {
+            verifyResponse.setMessage("Failed to verify user: " + e.getMessage());
+            verifyResponse.setStatus(false);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(verifyResponse);
+        }
+    }
+
+    @Override
+    public VerificationTokenResult generateVerificationToken(String oldToken) {
+        VerificationToken verificationToken = verificationTokenRepository.findByToken(oldToken);
+        if (verificationToken == null) {
+            return new VerificationTokenResult(false, "Token not found");
+        }
+
+        String newToken = UUID.randomUUID().toString();
+        verificationToken.setToken(newToken);
+        verificationToken.setExpirationTime(calculateExpirationDate(EXPIRATION_MINUTES));
+        verificationTokenRepository.save(verificationToken);
+
+        Users user = userRepository.findById(verificationToken.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        AuthorizeUserVerification authUser = authorizeUserVerificationRepository
+                .findUserByIdOptional(user.getId())
+                .orElseThrow(() -> new RuntimeException("Auth verification not found"));
+
+        String verificationLink = keysWrapper.getUrl() + "/auth/verifyRegistration?token=" + newToken + "&id=" + authUser.getId();
+        String content = "Dear " + user.getUsername() + ",\n\nThank you for registering. Please verify your email to activate your account.";
+        CompletableFuture.runAsync(() ->
+                notificationServiceClient.sendVerificationEmail(user.getEmail(), content, verificationLink, user.getUsername()));
+
+        return new VerificationTokenResult(true, verificationToken);
+    }
+
+    @Override
+    public ResponseEntity<?> createWallet(Long id) {
+        CompletableFuture.runAsync(() -> walletServiceClient.createUserWallet(id));
+        return ResponseEntity.status(HttpStatus.CREATED).body("Wallet created.");
     }
 
     @Override
@@ -387,139 +311,100 @@ public class AuthenticationServiceImplementations implements AuthenticationServi
         return userRepository.findByUsername(username);
     }
 
-    @Override
-    public VerificationTokenResult generateVerificationToken(String oldToken) {
-        VerificationToken verificationToken = verificationTokenRepository.findByToken(oldToken);
-        if (verificationToken == null) {
-            return new VerificationTokenResult(false, "Token not found");
+    private Users buildUser(UserSignUpRequest request, Long id) {
+        Users user = new Users();
+        user.setId(id);
+        user.setUsername(request.getUsername());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setTwoFactorAuth(false);
+        user.setRole(Role.USER);
+
+        if ("email".equals(request.getRegMode())) {
+            user.setEmail(request.getEmail());
+            user.setEnabled(false);
+        } else {
+            user.setEmail(null);
+            user.setEnabled(true);
         }
-        Date newExpirationTime = calculateExpirationDate(EXPIRATION_MINUTES);
+        return user;
+    }
 
-        Optional<Users> user = userRepository.findById(verificationToken.getUserId());
-        verificationToken.setExpirationTime(newExpirationTime);
+    private UserRecord buildUserRecord(UserSignUpRequest request, Users user) {
+        String referralCode = UUID.randomUUID().toString();
+        UserRecord record = new UserRecord();
+        record.setUser(user);
+        record.setFirstName(request.getFirstname());
+        record.setLastName(request.getLastname());
+        record.setTransferPinSet(false);
+        record.setLocked(false);
+        record.setLockedAt(null);
+        record.setBlocked(false);
+        record.setProfileComplete(false);
+        record.setTotalReferers(null);
+        record.setReferralCode(referralCode);
+        record.setReferralUsername("n13_" + request.getUsername());
+        record.setReferralLink(keysWrapper.getUrl() + "/auth/register?referral_code=" + referralCode);
 
-        String newToken = UUID.randomUUID().toString();
-        verificationToken.setToken(newToken);
-        verificationTokenRepository.save(verificationToken);
+        if ("phone".equals(request.getRegMode())) {
+            record.setTelephone(request.getPhone());
+            record.setStatus(UserStatus.ACTIVE);
+        } else {
+            record.setStatus(UserStatus.PENDING_VERIFICATION);
+        }
+        return record;
+    }
 
-        Optional<AuthorizeUserVerification> optionAuthUser = authorizeUserVerificationRepository
-                .findUserByIdOptional(user.get().getId());
+    private void activateUserRecord(Users user) {
+        userRecordRepository.findByUserId(user.getId()).ifPresent(record -> {
+            record.setStatus(UserStatus.ACTIVE);
+            record.setLocked(false);
+            record.setBlocked(false);
+            userRecordRepository.save(record);
+        });
+        user.setEnabled(true);
+        userRepository.save(user);
+    }
 
-        String verificationLink = keysWrapper.getUrl() + "/auth/verifyRegistration?token=" + newToken + "&id="
-                + optionAuthUser.get().getId();
+    private ResponseEntity<?> handleTwoFactorAuth(Users user, Map<String, Object> authResponse) {
+        String otp = keysWrapper.generateOTP();
+        String jwt = keysWrapper.generateUniqueKey();
 
-        String content = "Dear " + user.get().getUsername() + ",\n\n"
-                + "Thank you for registering with Pesco! We're thrilled to have you join us.\n\n"
-                + "To complete your registration and activate your account";
+        TwoFactorAuthentication existing = twoFactorAuthenticationServiceImplementation.findByUser(user.getId());
+        if (existing != null) {
+            twoFactorAuthenticationServiceImplementation.deleteTwoFactorOtp(existing);
+        }
 
-        CompletableFuture<Void>sendVerificationLinkMessage = CompletableFuture.runAsync(() -> notificationServiceClient.sendVerificationEmail(user.get().getEmail(), content, verificationLink, user.get().getUsername()));
-        sendVerificationLinkMessage.join();
-        
-        return new VerificationTokenResult(true, verificationToken);
+        TwoFactorAuthentication newOtp = twoFactorAuthenticationServiceImplementation
+                .createTwoFactorOtp(user, otp, jwt);
+        CompletableFuture.runAsync(() ->
+                notificationServiceClient.sendOptEmail(
+                        user.getEmail(), otp,
+                        keysWrapper.getUrl() + "/auth/security/password",
+                        keysWrapper.getUrl() + "/auth/security/configuring-two-factor-authentication",
+                        keysWrapper.getUrl() + "/auth/security/configuring-two-factor-authentication-recovery-methods"));
+
+        authResponse.put("message", "Two-factor authentication is enabled.");
+        authResponse.put("twoFactorAuthEnabled", true);
+        authResponse.put("status", HttpStatus.OK.value());
+        authResponse.put("otpId", newOtp.getId().toString());
+        authResponse.put("jwt", newOtp.getToken());
+        return ResponseEntity.ok(authResponse);
+    }
+
+    private ResponseEntity<?> buildAuthError(Map<String, Object> response, String message, HttpStatus status) {
+        response.put("status", status.value());
+        response.put("success", false);
+        response.put("message", message);
+        return ResponseEntity.status(status).body(response);
+    }
+
+    private Long getNextUserId() {
+        return userRepository.findMaxId().orElse(1000L) + 1;
     }
 
     private Date calculateExpirationDate(int expirationMinutes) {
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(new Date().getTime());
         calendar.add(Calendar.MINUTE, expirationMinutes);
-        return new Date(calendar.getTime().getTime());
+        return calendar.getTime();
     }
-
-    @Override
-    @Transactional
-    public ResponseEntity<?> verifyUser(String token, Long id) {
-        AuthResponse verifyResponse = new AuthResponse();
-        boolean checkVerifyUser = authorizeUserVerificationRepository.findUserById(id);
-        if (checkVerifyUser) {
-            verifyResponse.setMessage("This account has already been verified.");
-            verifyResponse.setStatus(true);
-            return new ResponseEntity<>(verifyResponse, HttpStatus.OK);
-        }
-
-        VerificationToken verificationToken = verificationTokenRepository.findByToken(token);
-
-        if (verificationToken == null) {
-            verifyResponse.setMessage("Invalid verification token");
-            verifyResponse.setStatus(false);
-            return new ResponseEntity<>(verifyResponse, HttpStatus.BAD_REQUEST);
-        }
-
-        Optional<Users> optionalUser = userRepository.findById(verificationToken.getUserId());
-        if (optionalUser.isEmpty()) {
-            verifyResponse.setMessage("User not found.");
-            verifyResponse.setStatus(false);
-            return new ResponseEntity<>(verifyResponse, HttpStatus.BAD_REQUEST);
-        }
-
-        Users user = optionalUser.get();
-        if (user.isEnabled()) {
-            verifyResponse.setMessage("Hi " + user.getUsername() + ", Your account has already been verified.");
-            verifyResponse.setStatus(true);
-            return new ResponseEntity<>(verifyResponse, HttpStatus.OK);
-        }
-
-        Calendar cal = Calendar.getInstance();
-        if (verificationToken.getExpirationTime().getTime() - cal.getTime().getTime() < 0) {
-            verifyResponse.setMessage("Verification token has expired. Click the resend button to get a new token.");
-            verifyResponse.setStatus(false);
-            return new ResponseEntity<>(verifyResponse, HttpStatus.CONFLICT);
-        }
-
-        CompletableFuture<Void> walletCreationFuture = CompletableFuture
-                .runAsync(() -> {
-                    walletServiceClient.createUserWallet(user.getId());
-                });
-        try {
-            walletCreationFuture.join();
-            Optional<UserRecord> optionalRecord = userRecordRepository.findByUserId(user.getId());
-            optionalRecord.ifPresent(userRecord -> {
-                userRecord.setStatus(UserStatus.ACTIVE);
-                userRecord.setLocked(false);
-                userRecord.setBlocked(false);
-                userRecordRepository.save(userRecord);
-            });
-
-            user.setEnabled(true);
-            userRepository.save(user);
-            verificationTokenRepository.delete(verificationToken);
-
-            verifyResponse.setMessage("User registration verified successfully.");
-            verifyResponse.setStatus(true);
-            return new ResponseEntity<>(verifyResponse, HttpStatus.OK);
-
-        } catch (Exception e) {
-            verifyResponse.setMessage(
-                    "Failed to create wallet for user. Skipping user verification. Error: " + e.getMessage());
-            verifyResponse.setStatus(false);
-            return new ResponseEntity<>(verifyResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-   private Long getNextUserId() {
-        List<Users> existingUsers = userRepository.findAll();
-        Users newUser = new Users();
-        if (existingUsers.isEmpty()) {
-            newUser.setId(1001L);
-        } else {
-            Long maxId = existingUsers.stream()
-                    .map(Users::getId)
-                    .max(Long::compare)
-                    .orElse(0L);
-            newUser.setId(maxId + 1);
-        }
-        return newUser.getId();
-    }
-
-    @Override
-    public ResponseEntity<?> createWallet(Long id) {
-
-       CompletableFuture<Void> walletCreationFuture = CompletableFuture
-                .runAsync(() -> {
-                    walletServiceClient.createUserWallet(id);
-                });
-        walletCreationFuture.join();
-            
-        return ResponseEntity.status(HttpStatus.CREATED).body("Wallet created."); 
-    }
-
 }

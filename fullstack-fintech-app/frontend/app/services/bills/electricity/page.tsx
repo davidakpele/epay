@@ -253,7 +253,7 @@ const ElectricitySubscription = () => {
                         </div>
                         <input
                             type="text"
-                            className="airtime-input amount-input"
+                            className="airtime-input page-amount-input"
                             placeholder="Or enter custom amount"
                             value={getFormattedAmount()}
                             onChange={handleAmountChange}

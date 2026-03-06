@@ -558,7 +558,11 @@ const SwapPage = () => {
                     )}
                   </div>
                 </div>
-
+                  {fromAmount && parseFloat(fromAmount.replace(/,/g, '')) > getWalletBalance(fromCurrency.code) && (
+                    <span className="swap-field-error">
+                      <AlertCircle size={12} /> Insufficient {fromCurrency.code} balance
+                    </span>
+                  )}
                 {/* FROM */}
                 <div className="swap-section-label">From</div>
                 <div className="swap-field-group">
@@ -579,12 +583,7 @@ const SwapPage = () => {
                       disabled={isProcessing}
                     />
                   </div>
-                  {/* Inline insufficient balance warning */}
-                  {fromAmount && parseFloat(fromAmount.replace(/,/g, '')) > getWalletBalance(fromCurrency.code) && (
-                    <span className="swap-field-error">
-                      <AlertCircle size={12} /> Insufficient {fromCurrency.code} balance
-                    </span>
-                  )}
+                
                 </div>
 
                 {/* Swap Toggle */}

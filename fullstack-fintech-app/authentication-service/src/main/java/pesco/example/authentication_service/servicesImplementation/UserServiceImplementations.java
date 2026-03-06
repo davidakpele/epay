@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import pesco.example.authentication_service.clients.NotificationServiceClient;
 import pesco.example.authentication_service.dtos.PageResponse;
 import pesco.example.authentication_service.dtos.UserDTO;
-import pesco.example.authentication_service.dtos.UserRecordDTO;
 import pesco.example.authentication_service.exceptions.ApiException;
 import pesco.example.authentication_service.exceptions.Error;
 import pesco.example.authentication_service.models.UserRecord;

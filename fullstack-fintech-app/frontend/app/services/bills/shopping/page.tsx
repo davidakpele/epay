@@ -236,11 +236,11 @@ const ShoppingBill = () => {
                 {/* Amount */}
                 <div className="shopping-field">
                   <label className="shopping-label"> Amount</label>
-                  <div className="shop-amount-input-row">
+                  <div className="shop-page-amount-input-row">
                     <span className="naira-prefix">₦</span>
                     <input
                       type="text"
-                      className="shopping-input shop-amount-input"
+                      className="shopping-input shop-page-amount-input"
                       placeholder="Enter amount (₦)"
                       value={getFormattedAmount()}
                       onChange={handleAmountChange}

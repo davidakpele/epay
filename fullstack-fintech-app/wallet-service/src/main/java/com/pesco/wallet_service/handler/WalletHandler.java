@@ -73,18 +73,19 @@ public class WalletHandler {
         return decimalFormat.format(value);
     }
     
+    @Transactional
     public void createAccount(Long userId) {
+
         Wallet wallet = new Wallet();
         wallet.setUserId(userId);
         wallet.setBalances(new ArrayList<>());
         accountWrapper.initializeAllCurrencyWallets(wallet);
 
-        walletRepository.save(wallet);
-
         WalletSettings setting = new WalletSettings();
         setting.setPassword("");
         setting.setIsSecure(false);
         setting.setWallet(wallet);
+        walletRepository.save(wallet);
         walletSettingsRepository.save(setting);
     }
 

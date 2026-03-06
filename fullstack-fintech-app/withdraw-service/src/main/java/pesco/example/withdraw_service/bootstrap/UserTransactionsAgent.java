@@ -50,7 +50,7 @@ public class UserTransactionsAgent {
                 .map(HistoryDTO::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (recentTransactions.size() > 5 || totalAmount.compareTo(new BigDecimal("10000.00")) > 0) {
+        if (recentTransactions.size() > 5 || totalAmount.compareTo(new BigDecimal("1000000000.00")) > 0) {
             blackListServiceClient.blockUserWallet(walletId, BanActions.FRAUDULENT_ACTIVITY, token);
             notificationServiceClient.blockUserWalletNotification(email, userFirstname, userLastname, 
                 "Your wallet has been temporarily blocked due to suspicious activity. You recently performed multiple high-value or frequent transactions within a short time. Please contact support to verify your identity and restore access.");

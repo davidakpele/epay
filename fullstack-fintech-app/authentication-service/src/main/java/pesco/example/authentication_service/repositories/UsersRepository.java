@@ -45,4 +45,7 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
 
     @Query("SELECT COALESCE(MIN(u.id), 0) FROM Users u")
     Optional<Long> findMinUserId();
+
+    @Query("SELECT MAX(u.id) FROM Users u")
+    Optional<Long> findMaxId();
 }
