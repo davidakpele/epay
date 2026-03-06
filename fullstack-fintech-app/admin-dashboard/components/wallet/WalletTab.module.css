@@ -1,0 +1,430 @@
+/* ── Outer wrapper — no padding, fills the card ── */
+.wrap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ══ Each block is its own full-width white section ══ */
+.block {
+  width: 100%;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+
+.block:last-child {
+  border-bottom: none;
+}
+
+.blockTitle {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 14px;
+  letter-spacing: -0.2px;
+}
+
+/* ══ Wallet row: balance card LEFT + buttons pinned to RIGHT ══ */
+.walletRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  /* pushes btnBox to far right */
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+/* Small green card — fixed width */
+.balanceCard {
+  width: 430px;
+  flex-shrink: 0;
+  background: var(--green-dark);
+  border-radius: 12px;
+  padding: 18px 22px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Buttons box — no border, no bg, just the 3 buttons at far right */
+.btnBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #9aff7c;
+  background: rgba(157, 199, 144, 0.182);
+  border-radius: 10px;
+  border: none;
+  padding: 5px;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, filter 0.15s;
+  flex-shrink: 0;
+}
+
+.iconBtn:hover {
+  transform: scale(1.1);
+}
+
+.iconBtnGreen {
+  background: #e4f5e8;
+  color: var(--green-dark);
+  border: 1.5px solid #b8dfc4;
+}
+
+.iconBtnRed {
+  background: var(--red-light);
+  color: var(--red);
+  border: 1.5px solid #f5c6cb;
+}
+
+.balanceLabel {
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+}
+
+.balanceAmount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+/* User info plain text */
+.userInfoText {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+  font-weight: 400;
+}
+
+/* ══ Recent Transactions ══ */
+.txnTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.txnTopRow .blockTitle {
+  margin: 0;
+}
+
+.pillFilters {
+  display: flex;
+  gap: 8px;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s;
+  white-space: nowrap;
+}
+
+.pill:hover {
+  border-color: var(--green-dark);
+}
+
+.chevron {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+}
+
+/* Sub filter row */
+.subRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.subBtn {
+  height: 34px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.subBtnActive {
+  background: var(--green-dark);
+  color: #fff;
+  border-color: var(--green-dark);
+}
+
+.selWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sel {
+  height: 34px;
+  padding: 0 28px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text);
+  background: #fff;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.sel:focus {
+  border-color: var(--green-dark);
+}
+
+.selChev {
+  position: absolute;
+  right: 9px;
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* Table */
+.tableWrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 480px;
+}
+
+.table thead th {
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 9px 12px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: #fafcfb;
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.table tbody tr:hover {
+  background: rgba(82, 183, 136, 0.04);
+}
+
+.table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody td {
+  padding: 12px 12px;
+  font-size: 0.8rem;
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.txnId {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 0.74rem !important;
+  color: var(--text-muted) !important;
+  white-space: nowrap;
+}
+
+.txnCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.txnIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.txnLabel {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.amount {
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-weight: 600 !important;
+  white-space: nowrap;
+}
+
+.pos {
+  color: var(--success) !important;
+}
+
+.neg {
+  color: var(--text) !important;
+}
+
+.typeBadge {
+  display: inline-flex;
+  padding: 4px 12px;
+  border-radius: 7px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  background: #e8f4e8;
+  color: var(--green-dark);
+  border: 1px solid #c2e0c2;
+  white-space: nowrap;
+}
+
+.date {
+  color: var(--text-muted) !important;
+  font-size: 0.78rem !important;
+  white-space: nowrap;
+}
+
+.viewAll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 42px;
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewAll:hover {
+  border-color: var(--green-dark);
+  color: var(--green-dark);
+  background: var(--success-light);
+}
+
+/* ── Currency toggle ── */
+.currencyToggle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  width: fit-content;
+  margin-bottom: 14px;
+}
+
+.currencyBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.currencyBtn:hover {
+  color: var(--text);
+}
+
+.currencyBtnActive {
+  background: #fff;
+  color: var(--green-dark) !important;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+}
+
+.currencyFlag {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ── Balance card — add currency label line ── */
+.balanceCur {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  margin-top: -6px;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 1300){
+  .btnBox {
+    display: none;
+    visibility: hidden;
+  }
+}
+/* Responsive */
+@media (max-width: 1000px) {
+  .balanceCard {
+    width: 100%;
+  }
+
+  .walletRow {
+    flex-direction: column;
+  }
+
+  .btnBox {
+    display: none;
+    visibility: hidden;
+  }
+}

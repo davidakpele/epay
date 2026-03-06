@@ -64,7 +64,7 @@ export default function LoginPage() {
     setLoading(true);
     await new Promise(r => setTimeout(r, 1400));
 
-    if (email === "admin@epay.com" && password === "admin123") {
+    if (email && password) {
       router.push("/");
     } else {
       setErrors({

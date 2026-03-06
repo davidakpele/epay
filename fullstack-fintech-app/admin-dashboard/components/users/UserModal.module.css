@@ -101,7 +101,7 @@
   font-size: 0.72rem;
   color: var(--text-muted);
   margin-top: 2px;
-  font-family: 'DM Mono', monospace;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 /* ── Divider ── */
@@ -201,7 +201,7 @@
   padding: 0 12px 0 34px;
   border: 1px solid var(--border);
   border-radius: 9px;
-  font-family: 'Sora', sans-serif;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   font-size: 0.8rem;
   color: var(--text);
   background: #fff;
@@ -219,7 +219,7 @@
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: 9px;
-  font-family: 'Sora', sans-serif;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   font-size: 0.8rem;
   color: var(--text);
   background: #fff;
@@ -265,7 +265,7 @@
   border: 1px solid var(--border);
   border-radius: 9px;
   background: #fff;
-  font-family: 'Sora', sans-serif;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -280,7 +280,7 @@
   border: none;
   border-radius: 9px;
   background: var(--green-dark);
-  font-family: 'Sora', sans-serif;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   font-size: 0.82rem;
   font-weight: 600;
   color: #fff;

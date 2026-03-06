@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   MoreHorizontal, Eye, Pencil, ShieldOff,
-  Trash2, ChevronLeft, ChevronRight,
+  Trash2, ChevronLeft, ChevronRight, Wallet,
 } from "lucide-react";
 import styles from "./UsersTable.module.css";
 import { ActionType, KycStatus, User, UserStatus } from "@/app/types";
-import ViewUserModal from "./ViewUserModal";
-import DeleteUserModal from "./DeleteUserModal";
-import EditUserModal from "./EditUserModal";
+import ViewUserModal    from "./ViewUserModal";
+import DeleteUserModal  from "./DeleteUserModal";
+import EditUserModal    from "./EditUserModal";
 import SuspendUserModal from "./SuspendUserModal";
 import { TOTAL_PAGES, USERS, USERS_PER_PAGE } from "@/app/lib/users";
-
 
 const kycClass: Record<KycStatus, string> = {
   Verified: styles.kycVerified,
@@ -29,13 +29,14 @@ const statusClass: Record<UserStatus, string> = {
 /* ── Row action dropdown ── */
 interface ActionMenuProps {
   onView: () => void;
+  onViewWallet: () => void;
   onEdit: () => void;
   onSuspend: () => void;
   onDelete: () => void;
   onClose: () => void;
 }
 
-function ActionMenu({ onView, onEdit, onSuspend, onDelete, onClose }: ActionMenuProps) {
+function ActionMenu({ onView, onViewWallet, onEdit, onSuspend, onDelete, onClose }: ActionMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,6 +52,12 @@ function ActionMenu({ onView, onEdit, onSuspend, onDelete, onClose }: ActionMenu
       <button className={styles.actionItem} onClick={onView}>
         <Eye size={14} className={styles.actionIcon} /> View
       </button>
+
+      {/* ── New: View Wallet ── */}
+      <button className={`${styles.actionItem} ${styles.actionWallet}`} onClick={onViewWallet}>
+        <Wallet size={14} className={styles.actionIcon} /> View Wallet
+      </button>
+
       <button className={styles.actionItem} onClick={onEdit}>
         <Pencil size={14} className={styles.actionIcon} /> Edit
       </button>
@@ -67,16 +74,16 @@ function ActionMenu({ onView, onEdit, onSuspend, onDelete, onClose }: ActionMenu
 
 /* ── Main table ── */
 export default function UsersTable() {
+  const router = useRouter();
+
   const [page, setPage]         = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [jumpPage, setJumpPage] = useState("1");
 
-  // modal state
   const [activeUser,   setActiveUser]   = useState<User | null>(null);
   const [activeAction, setActiveAction] = useState<ActionType>(null);
-
-  const [userList, setUserList] = useState<User[]>(USERS);
+  const [userList, setUserList]         = useState<User[]>(USERS);
 
   const start = (page - 1) * USERS_PER_PAGE;
   const rows  = userList.slice(start, start + USERS_PER_PAGE);
@@ -217,11 +224,12 @@ export default function UsersTable() {
                       </button>
                       {openMenu === user.id && (
                         <ActionMenu
-                          onClose={() => setOpenMenu(null)}
-                          onView={()    => openAction(user, "view")}
-                          onEdit={()    => openAction(user, "edit")}
-                          onSuspend={() => openAction(user, "suspend")}
-                          onDelete={()  => openAction(user, "delete")}
+                          onClose={()      => setOpenMenu(null)}
+                          onView={()       => openAction(user, "view")}
+                          onViewWallet={()  => router.push(`/manage-users/${user.id}/wallet`)}
+                          onEdit={()       => openAction(user, "edit")}
+                          onSuspend={()    => openAction(user, "suspend")}
+                          onDelete={()     => openAction(user, "delete")}
                         />
                       )}
                     </div>
@@ -245,10 +253,10 @@ export default function UsersTable() {
 
             {Array.from({ length: Math.min(5, TOTAL_PAGES) }, (_, i) => {
               let p: number;
-              if (TOTAL_PAGES <= 5)          p = i + 1;
-              else if (page <= 3)            p = i + 1;
+              if (TOTAL_PAGES <= 5)             p = i + 1;
+              else if (page <= 3)               p = i + 1;
               else if (page >= TOTAL_PAGES - 2) p = TOTAL_PAGES - 4 + i;
-              else                           p = page - 2 + i;
+              else                              p = page - 2 + i;
               return (
                 <button
                   key={p}
