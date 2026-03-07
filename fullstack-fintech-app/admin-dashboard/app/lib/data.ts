@@ -79,7 +79,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { label: "Manage Users", href: "/manage-users"               },
   { label: "Audit Logs",  href: "/audit-logs"                 },
   { label: "Loan Approvals",  href: "/manage-loans"           },
-  { label: "Card Requests",  href: "/card-requests"   },
+  { label: "Card Requests",  href: "/card-requests"           },
   { label: "Banking Liquidity",  href: "/banking-liquidity"   },
   {
     label: "Notification",
