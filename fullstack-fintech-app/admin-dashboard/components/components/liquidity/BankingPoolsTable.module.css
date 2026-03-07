@@ -1,0 +1,387 @@
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 14px rgba(42, 80, 55, 0.07);
+  overflow: hidden;
+}
+
+.header {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid #f0f4f0;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a2e1a;
+  margin: 0;
+  font-family: var(--font-system);
+  letter-spacing: -0.2px;
+}
+
+/* Table */
+.tableWrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+
+.table thead th {
+  text-align: left;
+  font-size: 0.67rem;
+  font-weight: 700;
+  color: #8aaa8a;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 10px 16px;
+  background: #fafcfa;
+  border-bottom: 1px solid #eef2ee;
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.table tbody tr:hover {
+  background: rgba(77, 184, 37, 0.03);
+}
+
+.table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid #f0f4f0;
+}
+
+.table tbody td {
+  padding: 13px 16px;
+  font-size: 0.8rem;
+  color: #2a3a2a;
+  vertical-align: middle;
+}
+
+/* Cells */
+.idCell {
+  font-family: var(--font-system);
+  font-size: 0.73rem !important;
+  color: #8aaa8a !important;
+}
+
+.bankCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bankLogo {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+
+.bankName {
+  font-weight: 600;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  color: #1a2e1a;
+}
+
+.acctCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.symBadge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.acctNum {
+  font-family: var(--font-system);
+  font-size: 0.8rem;
+  color: #2a3a2a;
+  letter-spacing: 0.5px;
+}
+
+.currency {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4a6a4a;
+}
+
+.balance {
+  font-family: var(--font-system);
+  font-weight: 700 !important;
+  font-size: 0.84rem !important;
+  color: #1a2e1a !important;
+  white-space: nowrap;
+}
+
+/* Manage button */
+.manageBtn {
+  height: 34px;
+  padding: 0 18px;
+  background: #166701;
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-family: var(--font-system);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.manageBtn:hover {
+  background: #0f4d00;
+  transform: translateY(-1px);
+}
+
+/* Total row */
+.totalRow td {
+  padding: 13px 16px !important;
+  border-top: 2px solid #e8f0e8 !important;
+  background: #f8fcf8 !important;
+}
+
+.totalLabel {
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  color: #4a6a4a !important;
+  text-align: right;
+}
+
+.totalValues {
+  display: flex !important;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.totalNgn {
+  font-family: var(--font-system);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #166701;
+}
+
+.totalUsd {
+  font-family: var(--font-system);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #3a5a8a;
+}
+
+/* ── Manage Modal ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.22s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.modalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.modalBank {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modalBankName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a2e1a;
+}
+
+.modalAcct {
+  font-size: 0.76rem;
+  color: #8aaa8a;
+  font-family: var(--font-system);
+  margin-top: 2px;
+}
+
+.modalClose {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #e0e8e0;
+  border-radius: 50%;
+  background: #f5f8f5;
+  color: #5a6a5a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  transition: background 0.15s;
+}
+
+.modalClose:hover {
+  background: #e0e8e0;
+}
+
+.modalBalance {
+  background: #f5f8f5;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modalBalLabel {
+  font-size: 0.72rem;
+  color: #8aaa8a;
+  font-weight: 500;
+}
+
+.modalBalValue {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a2e1a;
+  font-family: var(--font-system);
+}
+
+.modalActions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.modalTab {
+  flex: 1;
+  height: 38px;
+  border: 1px solid #e0e8e0;
+  border-radius: 9px;
+  background: #f5f8f5;
+  font-family: var(--font-system);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #5a6a5a;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.modalTabActive {
+  background: #166701;
+  color: #fff;
+  border-color: #166701;
+}
+
+.modalTabActiveRed {
+  background: #e05555;
+  color: #fff;
+  border-color: #e05555;
+}
+
+.modalField {
+  margin-bottom: 18px;
+}
+
+.modalLabel {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #2a3a2a;
+  margin-bottom: 7px;
+}
+
+.modalInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #dde8dd;
+  border-radius: 10px;
+  font-family: var(--font-system);
+  font-size: 0.95rem;
+  color: #1a2e1a;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modalInput:focus {
+  border-color: #166701;
+  box-shadow: 0 0 0 3px rgba(22, 103, 1, 0.08);
+}
+
+.modalSubmit {
+  width: 100%;
+  height: 44px;
+  background: #166701;
+  color: #fff;
+  border: none;
+  border-radius: 11px;
+  font-family: var(--font-system);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.modalSubmit:hover {
+  background: #0f4d00;
+  transform: translateY(-1px);
+}
+
+.modalSubmitRed {
+  background: #e05555;
+}
+
+.modalSubmitRed:hover {
+  background: #c03333;
+}

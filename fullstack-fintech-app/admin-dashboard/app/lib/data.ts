@@ -77,7 +77,10 @@ export const NAV_ITEMS: NavItem[] = [
 export const SIDEBAR_ITEMS: NavItem[] = [
   { label: "Dashboard",    href: "/",              active: true },
   { label: "Manage Users", href: "/manage-users"               },
-  { label: "Manage KYC",  href: "/manage-kyc"                 },
+  { label: "Audit Logs",  href: "/audit-logs"                 },
+  { label: "Loan Approvals",  href: "/manage-loans"           },
+  { label: "Card Requests",  href: "/card-requests"   },
+  { label: "Banking Liquidity",  href: "/banking-liquidity"   },
   {
     label: "Transactions",
     children: [
@@ -85,14 +88,6 @@ export const SIDEBAR_ITEMS: NavItem[] = [
       { label: "Deposits",         href: "/transactions/deposits" },
       { label: "Withdrawals",      href: "/transactions/withdrawals" },
       { label: "Transfers",        href: "/transactions/transfers" },
-    ],
-  },
-  {
-    label: "Virtual Cards",
-    children: [
-      { label: "All Cards",    href: "/virtual-cards" },
-      { label: "Active Cards", href: "/virtual-cards/active" },
-      { label: "Frozen Cards", href: "/virtual-cards/frozen" },
     ],
   },
   {
@@ -104,16 +99,40 @@ export const SIDEBAR_ITEMS: NavItem[] = [
       { label: "Cable TV",  href: "/paybills/cable" },
     ],
   },
-  {
-    label: "Exchange",
-    children: [
-      { label: "Buy Crypto",  href: "/exchange/buy" },
-      { label: "Sell Crypto", href: "/exchange/sell" },
-      { label: "Swap",        href: "/exchange/swap" },
-    ],
-  },
   { label: "Settings", href: "/settings" },
 ];
+
+export const STAT_LIQUIDITY_CARDS = [
+  {
+    label:    "Total Liquidity",
+    value:    "₦5,820,000",
+    bg:       "#166701",
+    textCol:  "#fff",
+    subCol:   "rgba(255,255,255,0.65)",
+  },
+  {
+    label:    "Total Deposits",
+    value:    "₦9,350,000",
+    bg:       "#4db825",
+    textCol:  "#fff",
+    subCol:   "rgba(255,255,255,0.7)",
+  },
+  {
+    label:    "Total Withdrawals",
+    value:    "₦3,530,000",
+    bg:       "#c8a84b",
+    textCol:  "#fff",
+    subCol:   "rgba(255,255,255,0.7)",
+  },
+  {
+    label:    "Treasury Value",
+    value:    "$23,700",
+    bg:       "#5b8db8",
+    textCol:  "#fff",
+    subCol:   "rgba(255,255,255,0.7)",
+  },
+];
+
 
 export const CHART_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
 export const CHART_TRANSACTIONS = [18000,30000,59875,40000,55000,70000,90000,110000,130000,120000,150000,180000,140000,160000,200000];
