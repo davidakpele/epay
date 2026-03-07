@@ -227,7 +227,7 @@ export default function UsersTable() {
                           onClose={()      => setOpenMenu(null)}
                           onView={()       => openAction(user, "view")}
                           onViewWallet={()  => router.push(`/manage-users/${user.id}/wallet`)}
-                          onEdit={()       => openAction(user, "edit")}
+                          onEdit={()        => router.push(`/edit-user/${user.id}/edit`)}
                           onSuspend={()    => openAction(user, "suspend")}
                           onDelete={()     => openAction(user, "delete")}
                         />

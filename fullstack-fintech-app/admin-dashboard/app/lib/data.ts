@@ -82,21 +82,16 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { label: "Card Requests",  href: "/card-requests"   },
   { label: "Banking Liquidity",  href: "/banking-liquidity"   },
   {
-    label: "Transactions",
+    label: "Notification",
     children: [
-      { label: "All Transactions", href: "/transactions" },
-      { label: "Deposits",         href: "/transactions/deposits" },
-      { label: "Withdrawals",      href: "/transactions/withdrawals" },
-      { label: "Transfers",        href: "/transactions/transfers" },
+      { label: "Announcements", href: "/notifications" },
     ],
   },
   {
-    label: "Paybills",
+    label: "Manage Reports",
     children: [
-      { label: "Airtime",   href: "/paybills/airtime" },
-      { label: "Data",      href: "/paybills/data" },
-      { label: "Utilities", href: "/paybills/utilities" },
-      { label: "Cable TV",  href: "/paybills/cable" },
+      { label: "In-House",   href: "/reports/in-house" },
+      { label: "Users Queries",      href: "/reports/queries" },
     ],
   },
   { label: "Settings", href: "/settings" },

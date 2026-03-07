@@ -43,7 +43,7 @@
   gap: 9px;
   padding: 9px 13px;
   border-radius: 9px;
-  color: rgba(255,255,255,0.62);
+  color: rgb(246, 245, 245);
   text-decoration: none;
   font-size: 0.82rem;
   font-weight: 500;
@@ -56,7 +56,7 @@
   font-family: var(--font-system);
   line-height: 1.3;
 }
-.navItem:hover    { background: rgba(255,255,255,0.08); color: #fff; }
+.navItem:hover    { background: rgba(255,255,255,0.08); color: #359903; }
 .navItemActive    { background: rgba(116,198,157,0.17); color: var(--green-accent); }
 .navItemOpen      { background: rgba(255,255,255,0.06); color: #fff; }
 

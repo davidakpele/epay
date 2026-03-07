@@ -7,6 +7,7 @@ import {
   LayoutDashboard, Users, ScanFace, CreditCard,
   Layers, FileText, ArrowLeftRight, Settings,
   ChevronRight, LogOut,
+  BellIcon,
 } from "lucide-react";
 
 import styles from "./Sidebar.module.css";
@@ -17,7 +18,7 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const ICONS = [LayoutDashboard, Users, ScanFace, CreditCard, Layers, FileText, ArrowLeftRight, Settings];
+const ICONS = [LayoutDashboard, Users, ScanFace, CreditCard, Layers, FileText, BellIcon, Settings];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
