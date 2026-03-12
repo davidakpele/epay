@@ -1,0 +1,248 @@
+server:
+  port: 8109
+  shutdown: graceful
+
+spring:
+  application:
+    name: administrator-api
+    config:
+      activate:
+        on-profile: dev
+  # ── Web ───────────────────────────────────────────────────────────────────
+  web:
+    resources:
+      add-mappings: false
+
+  main:
+    allow-bean-definition-overriding: true
+
+  security:
+    filter:
+      dispatcher-types: REQUEST,ERROR,ASYNC
+
+  # ── Database ──────────────────────────────────────────────────────────────
+  datasource:
+    url: jdbc:postgresql://postgres:5432/pesco_db
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: false
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      connection-timeout: 20000
+      pool-name: AdminHikariPool
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+
+  # ── JPA ───────────────────────────────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        connection:
+          provider_disables_autocommit: true
+
+  flyway:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:pesco_db}
+    user: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+  # ── Jackson ───────────────────────────────────────────────────────────────
+  jackson:
+    deserialization:
+      fail-on-null-for-primitives: false
+      fail-on-unknown-properties: false
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+    time-zone: UTC
+
+
+
+  # ── File Upload ───────────────────────────────────────────────────────────
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 2MB
+      max-request-size: 2MB
+      file-size-threshold: 0
+      location: /tmp
+
+  # ── Cache (Caffeine) ──────────────────────────────────────────────────────
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=10m
+
+  # ── SQL Init ──────────────────────────────────────────────────────────────
+  sql:
+    init:
+      mode: never
+
+  # ── Disable unused auto-configurations ───────────────────────────────────
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration
+
+
+# ── JWT ───────────────────────────────────────────────────────────────────────
+jwt:
+  secret-key: 3hbXrhqhmvPD0bVq9Ce4hxTqALG701J7jRXyfKjqtzDPIlbdJ8YMIfZtHmPlC6Js9JVpELE2tj4KGP1VoCMA4Ya58WGF3Hs1
+  expiration-minutes: 1440       # 24 hours
+  refresh-expiration-days: 30    # 30 days for admin
+  issuer: "ePay"
+  audience: "Unified Dynamic Systems"
+  clock-skew-seconds: 30
+  algorithm: "HS256"
+  token-prefix: "Bearer"
+  authorization-header: "Authorization"
+  enable-token-blacklist: true
+  blacklist-cleanup-interval-minutes: 60
+  max-blacklist-size: 10000
+  cookie-name: "iso-token"
+  http-only-cookie: true
+  secure-cookie: true
+  same-site-cookie: "Strict"
+  cors-allowed-origins: "http://localhost:3000,http://localhost:8000"
+  enable-multi-factor-support: false
+  max-tokens-per-user: 5
+  log-token-issuance: false
+  enable-token-rotation: true
+  rotation-grace-period-minutes: 5
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+
+# ── File Storage ──────────────────────────────────────────────────────────────
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:/var/www/uploads/images}
+  max-file-size: 50MB
+  allowed-file-types: image/jpeg,image/png,image/gif,image/webp
+
+
+# ── Inter-service URLs ────────────────────────────────────────────────────────
+notification-service:
+  base-url: http://notification-service:8079
+
+wallet-service:
+  base-url: http://wallet-service:8035
+
+authentication-service:
+  base-url: http://authentication-service:8187
+
+history-service:
+  base-url: http://history-service:8390
+
+virtual-card-service:
+  base-url: http://virtual-card-service:8037
+
+wallet-websocket:
+  url: ws://wallet-service:8035/ws/wallet
+
+
+# ── Actuator / Observability ──────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+  tracing:
+    enabled: false
+    sampling:
+      probability: 1.0
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging:
+  level:
+    root: INFO
+    com.example.administrator: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    springdoc: INFO
+    org.springframework.boot.autoconfigure: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+
+# ── SpringDoc / OpenAPI ───────────────────────────────────────────────────────
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+    version: openapi_3_0
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    filter: true
+    display-request-duration: true
+    doc-expansion: none
+    default-models-expand-depth: 3
+    default-model-expand-depth: 3
+    show-extensions: true
+    show-common-extensions: true
+    disable-swagger-default-url: true
+  packages-to-scan: com.example.administrator.controllers
+  paths-to-match: /api/**
+  show-actuator: false
+  writer-with-default-pretty-printer: true
+  override-with-generic-response: false
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+
+
+# ── App Metadata (Swagger info) ───────────────────────────────────────────────
+app:
+  name: Administrator API
+  version: 0.0.1
+  description: REST API for administrator operations across the platform
+  contact:
+    name: Administrator Team
+    email: support@example.com
+    url: https://example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  servers:
+    - url: http://localhost:8081
+      description: Local Development Server
+    - url: https://api.example.com/admin
+      description: Production Server
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      auth-service:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+  timelimiter:
+    instances:
+      auth-service:
+        timeout-duration: 3s
