@@ -1,26 +1,23 @@
 package com.example.administrator_api.configurations;
 
-
+import com.example.administrator_api.security.CustomUserDetailsService;
+import com.example.administrator_api.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import com.example.administrator_api.security.CustomUserDetailsService;
-
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import reactor.core.publisher.Mono;
 
 @Configuration
-@EnableWebSecurity
-@EnableMethodSecurity
+@EnableReactiveMethodSecurity
 public class SecurityConfiguration {
 
     private final CustomUserDetailsService customUserDetailsService;
@@ -33,97 +30,87 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-            "/admin/auth/login",
-                        "/admin/auth/logout",
-                        "/css/**",
-                        "/js/**",
-                        "/bower_components/**",
-                        "/dist/**",
-                        "/plugins/**",
-                        "/fonts/**",
-                        "/images/**",
-                        "/img/**",
-                        "/error",
-                        "/admin/api/auth/login",
-                        "/admin/api/auth/register",
-                        "/admin/api/auth/refresh",
-                        "/admin/api/auth/logout",
-                        "/admin/api/verify-user",
-                        "/admin/api/username/**"  
-                    ).permitAll()
-                    .requestMatchers("/admin/dashboard").hasRole("ADMIN")
-                    .requestMatchers("/admin/users").hasRole("ADMIN")
-                    .requestMatchers("/admin/user/**").hasAnyRole("USER", "ADMIN")
-                    .requestMatchers("/admin/api/**").hasAnyRole("USER", "ADMIN")
-                    .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                    .loginPage("/admin/auth/login")
-                    .loginProcessingUrl("/admin/auth/login")
-                    .defaultSuccessUrl("/admin/dashboard", true)
-                    .failureUrl("/admin/auth/login?error=true")
-                    .permitAll()
-                )
-                .logout(logout -> logout
-                    .logoutUrl("/admin/auth/logout")
-                    .logoutSuccessUrl("/admin/auth/login?logout=true")
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID", "jwt-token")
-                    .permitAll()
-                )
-                
-            .exceptionHandling(handling -> handling
-                .accessDeniedHandler(customAccessDeniedHandler())
-                .authenticationEntryPoint((request, response, authException) -> {
-                    String requestUri = request.getRequestURI();
-                    if (requestUri.startsWith("/api/")) {
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        response.setContentType("application/json");
-                        response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
-                    } else {
-                        response.sendRedirect("/admin/auth/login");
+    public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) {
+        return http
+            .csrf(ServerHttpSecurity.CsrfSpec::disable)
+            .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+            .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+            .logout(ServerHttpSecurity.LogoutSpec::disable)
+
+            .authorizeExchange(auth -> auth
+                // ── Public endpoints ──────────────────────────────────
+                .pathMatchers(
+                    "/admin/api/auth/login",
+                    "/admin/api/auth/register",
+                    "/admin/api/auth/refresh",
+                    "/admin/api/auth/logout",
+                    "/admin/api/verify-user",
+                    "/admin/api/username/**",
+                    "/actuator/health",
+                    "/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html"
+                ).permitAll()
+                // ── Role-protected endpoints ──────────────────────────
+                .pathMatchers("/admin/dashboard").hasRole("ADMIN")
+                .pathMatchers("/admin/users").hasRole("ADMIN")
+                .pathMatchers("/admin/user/**").hasAnyRole("USER", "ADMIN")
+                .pathMatchers("/admin/api/**").hasAnyRole("USER", "ADMIN")
+                .anyExchange().authenticated()
+            )
+
+            // ── Exception handling ────────────────────────────────────
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((exchange, e) -> {
+                    String path = exchange.getRequest().getPath().value();
+                    ServerHttpResponse response = exchange.getResponse();
+                    if (path.startsWith("/api/") || path.startsWith("/admin/api/")) {
+                        response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                        byte[] bytes = "{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}"
+                                .getBytes();
+                        DataBuffer buffer = response.bufferFactory().wrap(bytes);
+                        return response.writeWith(Mono.just(buffer));
                     }
+                    response.setStatusCode(HttpStatus.FOUND);
+                    response.getHeaders().setLocation(
+                        java.net.URI.create("/admin/auth/login"));
+                    return response.setComplete();
+                })
+                .accessDeniedHandler((exchange, e) -> {
+                    String path = exchange.getRequest().getPath().value();
+                    ServerHttpResponse response = exchange.getResponse();
+                    if (path.startsWith("/api/") || path.startsWith("/admin/api/")) {
+                        response.setStatusCode(HttpStatus.FORBIDDEN);
+                        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                        byte[] bytes = "{\"error\":\"Forbidden\",\"message\":\"Access denied\"}"
+                                .getBytes();
+                        DataBuffer buffer = response.bufferFactory().wrap(bytes);
+                        return response.writeWith(Mono.just(buffer));
+                    }
+                    response.setStatusCode(HttpStatus.FOUND);
+                    response.getHeaders().setLocation(
+                        java.net.URI.create("/admin/login?denied=true"));
+                    return response.setComplete();
                 })
             )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            
-        return http.build();
-    }
 
+            // ── JWT filter runs before auth ───────────────────────────
+            .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(customUserDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
+            .build();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
 
     @Bean
-    public AccessDeniedHandler customAccessDeniedHandler() {
-        return (request, response, accessDeniedException) -> {
-            String requestUri = request.getRequestURI();
-            if (requestUri.startsWith("/api/")) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\":\"Forbidden\",\"message\":\"Access denied\"}");
-            } else {
-                response.sendRedirect("/admin/login?denied=true");
-            }
-        };
+    public org.springframework.security.authentication.ReactiveAuthenticationManager reactiveAuthenticationManager() {
+        var authManager = new org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager(
+                customUserDetailsService);
+        authManager.setPasswordEncoder(passwordEncoder());
+        return authManager;
     }
 }

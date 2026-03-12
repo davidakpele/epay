@@ -14,6 +14,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import com.example.administrator_api.components.JwtProperties;
+import com.example.administrator_api.exceptions.JwtAuthenticationException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -26,7 +27,6 @@ import io.jsonwebtoken.security.InvalidKeyException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import io.jsonwebtoken.security.WeakKeyException;
-import io.jsonwebtoken.SignatureAlgorithm;
 
 @Service
 public class JwtService {
@@ -82,11 +82,12 @@ public class JwtService {
         }
 
         try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(signingKey)
+            // ── jjwt 0.12.x API ──────────────────────────────────────────
+            return Jwts.parser()
+                    .verifyWith((javax.crypto.SecretKey) signingKey)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
         } catch (ExpiredJwtException e) {
             throw new JwtAuthenticationException("JWT token is expired",
                 HttpStatus.UNAUTHORIZED, "TOKEN_EXPIRED", e);
@@ -134,17 +135,17 @@ public class JwtService {
             Instant now = Instant.now();
             Instant expiry = now.plus(jwtProperties.getExpirationMinutes(), ChronoUnit.MINUTES);
 
+            // ── jjwt 0.12.x API ──────────────────────────────────────────
             return Jwts.builder()
-                    .setHeaderParam("typ", "JWT")
-                    .setHeaderParam("alg", "HS256")
-                    .setClaims(claims)
-                    .setSubject(userDetails.getUsername())
-                    .setIssuer(jwtProperties.getIssuer())
-                    .setAudience(jwtProperties.getAudience())
-                    .setIssuedAt(Date.from(now))
-                    .setExpiration(Date.from(expiry))
-                    .setNotBefore(Date.from(now))
-                    .signWith(signingKey, SignatureAlgorithm.HS256)
+                    .header().add("typ", "JWT").and()
+                    .claims(claims)
+                    .subject(userDetails.getUsername())
+                    .issuer(jwtProperties.getIssuer())
+                    .audience().add(jwtProperties.getAudience()).and()
+                    .issuedAt(Date.from(now))
+                    .expiration(Date.from(expiry))
+                    .notBefore(Date.from(now))
+                    .signWith(signingKey)
                     .compact();
         } catch (InvalidKeyException e) {
             throw new JwtAuthenticationException("Failed to generate JWT token",
@@ -156,17 +157,18 @@ public class JwtService {
         try {
             Instant now = Instant.now();
             Instant expiry = now.plus(jwtProperties.getRefreshExpirationDays(), ChronoUnit.DAYS);
+
+            // ── jjwt 0.12.x API ──────────────────────────────────────────
             return Jwts.builder()
-                    .setHeaderParam("typ", "JWT")
-                    .setHeaderParam("alg", "HS256")
-                    .setSubject(userDetails.getUsername())
-                    .setIssuer(jwtProperties.getIssuer())
-                    .setAudience(jwtProperties.getAudience())
-                    .setIssuedAt(Date.from(now))
-                    .setExpiration(Date.from(expiry))
-                    .setNotBefore(Date.from(now))
+                    .header().add("typ", "JWT").and()
+                    .subject(userDetails.getUsername())
+                    .issuer(jwtProperties.getIssuer())
+                    .audience().add(jwtProperties.getAudience()).and()
+                    .issuedAt(Date.from(now))
+                    .expiration(Date.from(expiry))
+                    .notBefore(Date.from(now))
                     .claim("tokenType", "refresh")
-                    .signWith(signingKey, SignatureAlgorithm.HS256)
+                    .signWith(signingKey)
                     .compact();
         } catch (InvalidKeyException e) {
             throw new JwtAuthenticationException("Failed to generate refresh token",
@@ -203,8 +205,9 @@ public class JwtService {
                 return false;
             }
 
+            // ── 0.12.x: getAudience() returns Set<String> ─────────────
             String expectedAudience = jwtProperties.getAudience();
-            if (expectedAudience != null && !expectedAudience.equals(claims.getAudience())) {
+            if (expectedAudience != null && !claims.getAudience().contains(expectedAudience)) {
                 return false;
             }
 

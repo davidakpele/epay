@@ -1,7 +1,9 @@
 package com.example.administrator_api.security;
 
 
+import com.example.administrator_api.exceptions.JwtAuthenticationException;
 import com.example.administrator_api.models.User;
+import com.example.administrator_api.services.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -85,14 +87,11 @@ public class JwtAuthenticationFilter implements WebFilter {
                         new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
 
-                    // Attach userId and username to request attributes
-                    ServerWebExchange mutatedExchange = exchange.mutate()
-                        .request(r -> r
-                            .attribute("userId", jwtService.extractUserId(jwt))
-                            .attribute("username", username))
-                        .build();
+                    // ── Set attributes on the exchange, not the request ───────
+                    exchange.getAttributes().put("userId", jwtService.extractUserId(jwt));
+                    exchange.getAttributes().put("username", username);
 
-                    return chain.filter(mutatedExchange)
+                    return chain.filter(exchange)
                         .contextWrite(ReactiveSecurityContextHolder
                             .withAuthentication(authToken));
                 }
@@ -104,7 +103,7 @@ public class JwtAuthenticationFilter implements WebFilter {
                 writeErrorResponse(exchange, ex.getStatus(), ex.getMessage()))
             .onErrorResume(Exception.class, ex ->
                 writeErrorResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR,
-                    "An unexpected error occurred"));
+            "An unexpected error occurred"));
     }
 
     private Mono<Void> writeErrorResponse(ServerWebExchange exchange,
