@@ -3,11 +3,12 @@ server:
   shutdown: graceful
 
 spring:
+  config:
+    activate:
+      on-profile: dev
   application:
     name: administrator-api
-    config:
-      activate:
-        on-profile: dev
+
   # ── Web ───────────────────────────────────────────────────────────────────
   web:
     resources:
@@ -20,44 +21,27 @@ spring:
     filter:
       dispatcher-types: REQUEST,ERROR,ASYNC
 
-  # ── Database ──────────────────────────────────────────────────────────────
-  datasource:
-    url: jdbc:postgresql://postgres:5432/pesco_db
-    username: postgres
-    password: root
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      auto-commit: false
-      minimum-idle: 5
-      maximum-pool-size: 10
-      idle-timeout: 30000
-      connection-timeout: 20000
-      pool-name: AdminHikariPool
-      max-lifetime: 1200000
-      leak-detection-threshold: 60000
+  # ── Database (R2DBC — reactive, pairs with WebFlux) ───────────────────────
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:pesco_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:root}
+    pool:
+      initial-size: 5
+      max-size: 10
+      max-idle-time: 30m
+      max-life-time: 20m
+      acquire-retry: 3
 
-  # ── JPA ───────────────────────────────────────────────────────────────────
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        jdbc:
-          lob:
-            non_contextual_creation: true
-        connection:
-          provider_disables_autocommit: true
-
+  # ── Flyway (still uses JDBC — Flyway does not support R2DBC) ──────────────
   flyway:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:pesco_db}
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:pesco_db}
     user: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    password: ${DB_PASSWORD:root}
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: true
+
   # ── Jackson ───────────────────────────────────────────────────────────────
   jackson:
     deserialization:
@@ -67,17 +51,6 @@ spring:
       write-dates-as-timestamps: false
     default-property-inclusion: non_null
     time-zone: UTC
-
-
-
-  # ── File Upload ───────────────────────────────────────────────────────────
-  servlet:
-    multipart:
-      enabled: true
-      max-file-size: 2MB
-      max-request-size: 2MB
-      file-size-threshold: 0
-      location: /tmp
 
   # ── Cache (Caffeine) ──────────────────────────────────────────────────────
   cache:
@@ -95,13 +68,15 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration
       - org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 
 
 # ── JWT ───────────────────────────────────────────────────────────────────────
 jwt:
   secret-key: 3hbXrhqhmvPD0bVq9Ce4hxTqALG701J7jRXyfKjqtzDPIlbdJ8YMIfZtHmPlC6Js9JVpELE2tj4KGP1VoCMA4Ya58WGF3Hs1
-  expiration-minutes: 1440       # 24 hours
-  refresh-expiration-days: 30    # 30 days for admin
+  expiration-minutes: 1440
+  refresh-expiration-days: 30
   issuer: "ePay"
   audience: "Unified Dynamic Systems"
   clock-skew-seconds: 30
@@ -181,7 +156,7 @@ logging:
     com.example.administrator: DEBUG
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    io.r2dbc: DEBUG
     springdoc: INFO
     org.springframework.boot.autoconfigure: WARN
   pattern:
@@ -230,11 +205,13 @@ app:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   servers:
-    - url: http://localhost:8081
+    - url: http://localhost:8109
       description: Local Development Server
     - url: https://api.example.com/admin
       description: Production Server
 
+
+# ── Resilience4j ──────────────────────────────────────────────────────────────
 resilience4j:
   circuitbreaker:
     instances:
