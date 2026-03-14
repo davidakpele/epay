@@ -1,0 +1,169 @@
+syntax = "proto3";
+
+package history;
+
+option java_multiple_files = true;
+option java_package = "history_service.grpc";
+option java_outer_classname = "HistoryProto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+enum TransactionType {
+  DEPOSIT = 0;
+  WITHDRAW = 1;
+  TRANSFER = 2;
+  CREDITED = 3;
+  DEBITED = 4;
+}
+
+enum CurrencyType {
+  USD = 0;
+  EUR = 1;
+  NGN = 2;
+  GBP = 3;
+  JPY = 4;
+  AUD = 5;
+  CAD = 6;
+  CHF = 7;
+  CNY = 8;
+  INR = 9;
+}
+
+message HistoryMessage {
+  int64 id = 1;
+  int64 wallet_id = 2;
+  int64 user_id = 3;
+  string session_id = 4;
+  string amount = 5;
+  TransactionType type = 6;
+  string description = 7;
+  CurrencyType currency_type = 8;
+  string status = 9;
+  google.protobuf.Timestamp timestamp = 11;
+  google.protobuf.Timestamp created_on = 12;
+  google.protobuf.Timestamp updated_on = 13;
+}
+
+message HistoryResponse {
+  HistoryMessage history = 1;
+}
+
+message HistoryListResponse {
+  repeated HistoryMessage transactions = 1;
+}
+
+message AccountOverview {
+  int64 id = 1;
+  string balance = 2;
+  repeated HistoryMessage transactions = 3;
+}
+
+// Create requests
+message CreateDepositHistoryRequest {
+  int64 wallet_id = 1;
+  int64 user_id = 2;
+  string amount = 3;
+  CurrencyType currency_type = 4;
+  TransactionType type = 5;
+}
+
+message CreateFeaturesHistoryRequest {
+  int64 wallet_id = 1;
+  int64 user_id = 2;
+  string amount = 3;
+  CurrencyType currency_type = 4;
+  TransactionType type = 5;
+}
+
+message CreateWithdrawHistoryRequest {
+  int64 wallet_id = 1;
+  int64 user_id = 2;
+  string recipient_username = 3;
+  string amount = 4;
+  CurrencyType currency_type = 5;
+  TransactionType type = 6;
+}
+
+message CreateCreditHistoryRequest {
+  int64 wallet_id = 1;
+  int64 user_id = 2;
+  string amount = 3;
+  CurrencyType currency_type = 4;
+  TransactionType type = 5;
+  string description = 6;
+}
+
+// Query requests
+message GetHistoryRequest {
+  int64 id = 1;
+}
+
+message ListHistoryByCurrencyRequest {
+  int64 wallet_id = 1;
+  int64 user_id = 2;
+  string currency = 3;
+}
+
+message ListAllHistoryRequest {
+  int32 page = 1;
+  int32 size = 2;
+}
+
+message ListAllHistoryResponse {
+  repeated HistoryMessage transactions = 1;
+  int32 total_pages = 2;
+  int32 current_page = 3;
+}
+
+message ListHistoryByTypeRequest {
+  string username = 1;
+  string user_id = 2;
+  TransactionType type = 3;
+}
+
+message FindRecentTransactionsRequest {
+  int64 wallet_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+message FindByWalletAndUserRequest {
+  int64 wallet_id = 1;
+  int64 user_id = 2;
+}
+
+message CountUserHistoryRequest {
+  int64 user_id = 1;
+}
+
+message CountUserHistoryResponse {
+  int64 count = 1;
+}
+
+message DeleteHistoriesRequest {
+  repeated int64 ids = 1;
+}
+
+message DeleteHistoriesResponse {
+  bool success = 1;
+}
+
+// The service definition
+service HistoryService {
+  rpc CreateDepositHistory(CreateDepositHistoryRequest) returns (HistoryResponse);
+  rpc CreateFeaturesHistory(CreateFeaturesHistoryRequest) returns (HistoryResponse);
+  rpc CreateWithdrawHistory(CreateWithdrawHistoryRequest) returns (google.protobuf.Empty);
+  rpc CreateCreditHistory(CreateCreditHistoryRequest) returns (HistoryResponse);
+  rpc CreateDebitHistory(CreateCreditHistoryRequest) returns (HistoryResponse); 
+
+  rpc GetHistory(GetHistoryRequest) returns (HistoryResponse);
+  rpc ListHistoryByCurrency(ListHistoryByCurrencyRequest) returns (AccountOverview);
+  rpc ListAllHistory(ListAllHistoryRequest) returns (ListAllHistoryResponse);
+  rpc ListHistoryByType(ListHistoryByTypeRequest) returns (HistoryListResponse);
+  rpc FindRecentTransactions(FindRecentTransactionsRequest) returns (HistoryListResponse);
+  rpc FindByWalletAndUser(FindByWalletAndUserRequest) returns (HistoryListResponse);
+
+  rpc CountUserHistory(CountUserHistoryRequest) returns (CountUserHistoryResponse);
+  rpc DeleteHistories(DeleteHistoriesRequest) returns (DeleteHistoriesResponse);
+}
+
