@@ -6,6 +6,7 @@ spring:
     exclude:
       - org.springframework.boot.cassandra.autoconfigure.CassandraAutoConfiguration
       - org.springframework.boot.cassandra.autoconfigure.CassandraDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration  # ✅ add
   error:
     include-message: always
     include-binding-errors: always
@@ -164,8 +165,10 @@ logging:
   level:
     root: INFO
     com.example.admin_api_service: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.web: INFO                                          # ✅ was DEBUG
+    org.springframework.web.servlet.mvc.method.annotation: WARN           # ✅ add — silences ExceptionHandlerExceptionResolver noise
+    org.springframework.security: INFO                                     # ✅ was DEBUG — reduce security filter noise
+    org.springframework.security.web.FilterChainProxy: DEBUG              # ✅ keep only the useful security log
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
   pattern:
