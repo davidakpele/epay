@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -100,102 +101,51 @@ public class SecurityConfiguration {
         return source;
     }
     
-    @SuppressWarnings("removal")
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            
             .csrf(AbstractHttpConfigurer::disable)
-            // Security Headers - Protection against XSS, Clickjacking, MIME sniffing
+            .oauth2ResourceServer(AbstractHttpConfigurer::disable)  // ← disable, don't configure
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .headers(headers -> headers
-                .contentSecurityPolicy(csp -> csp
-                    .policyDirectives("default-src 'self'; " +
-                                    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-                                    "style-src 'self' 'unsafe-inline'; " +
-                                    "img-src 'self' data: https:; " +
-                                    "font-src 'self' data:; " +
-                                    "connect-src 'self'; " +
-                                    "frame-ancestors 'none'")
-                )
+                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+                    "style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; " +
+                    "font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"))
                 .frameOptions(frame -> frame.deny())
-                .xssProtection(xss -> xss
-                    .headerValue(org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
-                )
-                .contentTypeOptions(contentType -> contentType.disable())
+                .xssProtection(xss -> xss.headerValue(
+                    XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
                 .referrerPolicy(referrer -> referrer
-                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-                )
+                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                 .permissionsPolicy(permissions -> permissions
-                    .policy("geolocation=(self), microphone=(), camera=(), payment=()")
-                )
+                    .policy("geolocation=(self), microphone=(), camera=(), payment=()"))
             )
-            .addFilterBefore(
-                new FirewallExceptionFilter(),
-                UsernamePasswordAuthenticationFilter.class
-            )
-            .addFilterBefore(
-                botDetectionFilter,
-                UsernamePasswordAuthenticationFilter.class
-            )
-            .addFilterBefore(
-                new InputValidationFilter(),
-                UsernamePasswordAuthenticationFilter.class
-            )
-            .addFilterBefore(
-                new SecurityHeadersFilter(),
-                UsernamePasswordAuthenticationFilter.class
-            )
-            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new FirewallExceptionFilter(),  UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(botDetectionFilter,             UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new InputValidationFilter(),    UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new SecurityHeadersFilter(),    UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(rateLimitingFilter,             UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthFilter,                  UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/admin/auth/**", "/error/**").permitAll()
                 .requestMatchers(
-                    "/swagger-ui.html",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/swagger-resources/**",
-                    "/webjars/**"
-                ).permitAll() 
-                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                    "/swagger-ui.html", "/swagger-ui/**",
+                    "/v3/api-docs", "/v3/api-docs/**", "/webjars/**"
+                ).permitAll()
+                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "SUPER_ADMIN") // ← hasAnyAuthority not hasAnyRole
                 .anyRequest().authenticated()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt
-                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
-                    .decoder(jwtDecoder())
-                )
-                .authenticationEntryPoint(authenticationEntryPoint)
             )
             .authenticationProvider(authenticationProvider)
             .exceptionHandling(handling -> handling
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(customAccessDeniedHandler())
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             );
-            
+
         return http.build();
     }
 
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecretKey());
-        SecretKey secretKey = Keys.hmacShaKeyFor(keyBytes);
-        return NimbusJwtDecoder.withSecretKey(secretKey).build();
-    }
-
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
-        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
-
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
-        return converter;
-    }
 
     @Bean
     public HttpFirewall httpFirewall() {
