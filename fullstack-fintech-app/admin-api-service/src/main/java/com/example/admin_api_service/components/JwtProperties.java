@@ -3,7 +3,6 @@ package com.example.admin_api_service.components;
 import javax.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.validation.annotation.Validated;
@@ -13,8 +12,8 @@ import javax.validation.constraints.Positive;
 
 @Getter
 @Setter
+@Component
 @Validated
-@Component 
 @ConfigurationProperties(prefix = "jwt")
 public class JwtProperties {
     
@@ -24,16 +23,16 @@ public class JwtProperties {
     @NotNull(message = "Token expiration minutes is required")
     @Positive(message = "Token expiration must be positive")
     @Min(value = 1, message = "Token expiration must be at least 1 minute")
-    private Integer expirationMinutes = 30;
+    private Integer expirationMinutes = 1440;
     
     @NotNull(message = "Refresh token expiration days is required")
     @Positive(message = "Refresh token expiration must be positive")
     @Min(value = 1, message = "Refresh token expiration must be at least 1 day")
     private Integer refreshExpirationDays = 7;
     
-    private String issuer = "your-app";
+    private String issuer = "ePay";
     
-    private String audience = "your-app-users";
+    private String audience = "Unified Dynamic Systems";
     
     @NotNull(message = "Clock skew seconds is required")
     @Min(value = 0, message = "Clock skew cannot be negative")

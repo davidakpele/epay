@@ -1,5 +1,7 @@
 package com.example.admin_api_service.configs;
 
+import java.time.Duration;
+
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -7,51 +9,67 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.core.RedisTemplate;  // ✅ Jackson 3, non-deprecated
+import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import java.time.Duration; 
 
 @Configuration
 @EnableCaching
 public class RedisConfig {
 
+    /**
+     * GenericJacksonJsonRedisSerializer is the Spring Data Redis 4.0
+     * replacement for the deprecated GenericJackson2JsonRedisSerializer.
+     * Uses Jackson 3 (tools.jackson.*) internally.
+     *
+     * - enableDefaultTyping()           → embeds @class so objects deserialize
+     *                                     back to their concrete type
+     * - enableSpringCacheNullValueSupport() → handles Spring Cache NullValue sentinel
+     */
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+    public GenericJacksonJsonRedisSerializer genericJsonSerializer() {
+        return GenericJacksonJsonRedisSerializer.builder()
+                .enableUnsafeDefaultTyping()         // no validator — only safe for trusted internal data
+                .enableSpringCacheNullValueSupport()
+                .build();
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(
+            RedisConnectionFactory connectionFactory,
+            GenericJacksonJsonRedisSerializer genericJsonSerializer
+    ) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
-
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-
-        template.afterPropertiesSet();
-        return template;
-    }
-
-    @Bean
-    public RedisTemplate<String, String> stringRedisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
-
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new StringRedisSerializer());
+        StringRedisSerializer stringSerializer = new StringRedisSerializer();
+        template.setKeySerializer(stringSerializer);
+        template.setHashKeySerializer(stringSerializer);
+        template.setValueSerializer(genericJsonSerializer);
+        template.setHashValueSerializer(genericJsonSerializer);
 
         template.afterPropertiesSet();
         return template;
     }
 
+    // stringRedisTemplate intentionally omitted — Spring Boot autoconfigures it
+
     @Bean
-    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+    public CacheManager cacheManager(
+            RedisConnectionFactory redisConnectionFactory,
+            GenericJacksonJsonRedisSerializer genericJsonSerializer
+    ) {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(1)) // Use java.time.Duration
-                .disableCachingNullValues();
+                .entryTtl(Duration.ofHours(1))
+                .disableCachingNullValues()
+                .serializeValuesWith(
+                        RedisSerializationContext.SerializationPair
+                                .fromSerializer(genericJsonSerializer)
+                );
 
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(config)
                 .build();
     }
 }
-

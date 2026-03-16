@@ -19,24 +19,23 @@ import com.example.admin_api_service.exceptions.ApiErrorReponse;
 import com.example.admin_api_service.payloads.LoginRequest;
 import com.example.admin_api_service.services.AuthService;
 import com.example.admin_api_service.services.UserService;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/admin/auth")
 @CrossOrigin(origins = "*", maxAge = 3600)
-public class ApiController {
+public class AuthApiController {
     
     private final AuthService authService;
     private final UserService adminUserService;
 
-    public ApiController(AuthService authService, UserService adminUserService) {
+    public AuthApiController(AuthService authService, UserService adminUserService) {
         this.authService = authService;
         this.adminUserService = adminUserService;
     }
 
-    @PostMapping("/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest,
                                    HttpServletResponse response,  HttpServletRequest httpRequest) {
         return authService.login(loginRequest, response, httpRequest);
