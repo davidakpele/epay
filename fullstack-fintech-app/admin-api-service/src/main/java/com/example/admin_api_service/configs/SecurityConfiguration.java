@@ -1,7 +1,6 @@
 package com.example.admin_api_service.configs;
 
 import java.util.Arrays;
-import javax.crypto.SecretKey;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -10,10 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -26,17 +21,13 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.authentication.AuthenticationProvider;
 import com.example.admin_api_service.components.CustomAuthenticationEntryPoint;
-import com.example.admin_api_service.components.JwtProperties;
 import com.example.admin_api_service.security.BotDetectionFilter;
 import com.example.admin_api_service.security.FirewallExceptionFilter;
 import com.example.admin_api_service.security.InputValidationFilter;
 import com.example.admin_api_service.security.JwtAuthenticationFilter;
 import com.example.admin_api_service.security.RateLimitingFilter;
 import com.example.admin_api_service.security.SecurityHeadersFilter;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletResponse;
-
 
 @Configuration
 @EnableWebSecurity
@@ -45,15 +36,14 @@ public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
-    private final JwtProperties jwtProperties;
+
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final RateLimitingFilter rateLimitingFilter;
     private final BotDetectionFilter botDetectionFilter;
 
-    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider, JwtProperties jwtProperties, CustomAuthenticationEntryPoint authenticationEntryPoint, RateLimitingFilter rateLimitingFilter, BotDetectionFilter botDetectionFilter) {
+    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider, CustomAuthenticationEntryPoint authenticationEntryPoint, RateLimitingFilter rateLimitingFilter, BotDetectionFilter botDetectionFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.authenticationProvider = authenticationProvider;
-        this.jwtProperties = jwtProperties;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.rateLimitingFilter = rateLimitingFilter;
         this.botDetectionFilter = botDetectionFilter;
@@ -134,7 +124,7 @@ public class SecurityConfiguration {
                     "/swagger-ui.html", "/swagger-ui/**",
                     "/v3/api-docs", "/v3/api-docs/**", "/webjars/**"
                 ).permitAll()
-                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "SUPER_ADMIN") // ← hasAnyAuthority not hasAnyRole
+                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "SUPER_ADMIN") 
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider)
@@ -150,7 +140,6 @@ public class SecurityConfiguration {
     @Bean
     public HttpFirewall httpFirewall() {
         StrictHttpFirewall firewall = new StrictHttpFirewall();
-        
         // Block URL encoding and special characters
         firewall.setAllowSemicolon(false);
         firewall.setAllowUrlEncodedPercent(false);
