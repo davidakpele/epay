@@ -96,7 +96,7 @@ public class SecurityConfiguration {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
-            .oauth2ResourceServer(AbstractHttpConfigurer::disable)  // ← disable, don't configure
+            .oauth2ResourceServer(AbstractHttpConfigurer::disable)  
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .headers(headers -> headers
@@ -119,7 +119,7 @@ public class SecurityConfiguration {
             .addFilterBefore(rateLimitingFilter,             UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter,                  UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/admin/auth/**", "/error/**").permitAll()
+                .requestMatchers("/auth/**", "/error/**").permitAll()
                 .requestMatchers(
                     "/swagger-ui.html", "/swagger-ui/**",
                     "/v3/api-docs", "/v3/api-docs/**", "/webjars/**"

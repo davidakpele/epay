@@ -23,7 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
-@RequestMapping("/admin/auth")
+@RequestMapping("/auth")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthApiController {
     

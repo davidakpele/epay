@@ -22,7 +22,7 @@ public class WebClientConfig {
     @Value("${history-service.base-url}")
     private String historyServiceBaseUrl;
 
-    @Value("${auth-service.base-url}")
+    @Value("${authentication-service.base-url}")
     private String authServiceBaseUrl;
 
     @Value("${banklist-service.base-url}")

@@ -1,7 +1,7 @@
 spring:
   application:
     name: admin-api-service
-
+    
   autoconfigure:
     exclude:
       - org.springframework.boot.cassandra.autoconfigure.CassandraAutoConfiguration
@@ -23,7 +23,7 @@ spring:
     allow-bean-definition-overriding: true
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/pesco_db
+    url: jdbc:postgresql://postgres:5432/pesco_db
     username: postgres
     password: root
     driver-class-name: org.postgresql.Driver
@@ -52,7 +52,7 @@ spring:
           provider_disables_autocommit: true
 
   cassandra:
-    contact-points: localhost
+    contact-points: cassandra
     port: 9042
     local-datacenter: datacenter1
     keyspace-name: epay_keyspace
@@ -63,7 +63,7 @@ spring:
     rest:
       base-path: /data-rest
     redis:
-      host: localhost
+      host: redis
       port: 6379
       timeout: 2000ms
       lettuce:
@@ -77,7 +77,7 @@ spring:
 
   cloud:
     task:
-      initialize-enabled: true
+      initialize-enabled: false
       table-prefix: TASK_
 
   grpc:
@@ -94,10 +94,10 @@ spring:
 
   devtools:
     restart:
-      enabled: true
+      enabled: false
       exclude: "static/**,public/**"
     livereload:
-      enabled: true
+      enabled: false
 
   sql:
     init:
@@ -166,25 +166,25 @@ logging:
   level:
     root: INFO
     com.example.admin_api_service: DEBUG
-    org.springframework.web: INFO                                          # ✅ was DEBUG
-    org.springframework.web.servlet.mvc.method.annotation: WARN           # ✅ add — silences ExceptionHandlerExceptionResolver noise
-    org.springframework.security: INFO                                     # ✅ was DEBUG — reduce security filter noise
-    org.springframework.security.web.FilterChainProxy: DEBUG              # ✅ keep only the useful security log
+    org.springframework.web: INFO 
+    org.springframework.web.servlet.mvc.method.annotation: WARN 
+    org.springframework.security: INFO 
+    org.springframework.security.web.FilterChainProxy: DEBUG 
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 server:
-  port: 8287
+  port: 8109
   servlet:
-    context-path: /api
+    context-path: /admin
 
 wallet-service:
   base-url: http://wallet-service:8081
 
-auth-service:
-  base-url: http://auth-service:8187
+authentication-service:
+  base-url: http://authentication-service:8187 
 
 history-service:
   base-url: http://history-service:8531

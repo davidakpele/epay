@@ -123,6 +123,7 @@ services:
       - revenue-service
       - notification-service
       - escrow-service
+      - admin-api-service 
       - frontend
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
@@ -365,38 +366,32 @@ services:
     networks:
       - banking-network
 
-
-  # administrator:
-  #   restart: unless-stopped
-  #   build: ./administrator
-  #   container_name: administrator
-  #   image: davidakpele/administrator:latest
-  #   ports:
-  #     - "8109:8109"
-  #   environment:
-  #     - SPRING_REDIS_HOST=redis
-  #     - SPRING_REDIS_PORT=6379
-  #     - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/banking_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-  #     - SPRING_DATASOURCE_USERNAME=banking_user
-  #     - SPRING_DATASOURCE_PASSWORD=banking_pass
-  #   depends_on:
-  #     - mysql
-  #     # - postgres
-  #     - escrow-service
-  #     - notification-service
-  #     - wallet-service
-  #     - history-service
-  #     - maintenance-service
-  #     - authentication-service
-  #     - blacklist-service
-  #     - deposit-service
-  #     - revenue-service
-  #     - bank-collection-service
-  #     - beneficiary-service
-  #     - withdraw-service
-  #     - redis
-  #   networks:
-  #     - banking-network
+  admin-api-service:
+    build: ./admin-api-service
+    container_name: admin-api-service
+    image: davidakpele/admin-api-service:latest
+    ports:
+      - "8109:8109"
+    volumes:
+      - ./uploads/auth:/var/www/uploads/images
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - FILE_UPLOAD_DIR=/var/www/uploads/images
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - notification-service
+      - authentication-service
+      - resiliences-service
+      - withdraw-service
+      - wallet-service
+      - deposit-service
+      - revenue-service
+      - escrow-service
+      - redis
+    networks:
+    - banking-network
 
   frontend:
     build: ./frontend

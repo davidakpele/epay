@@ -41,8 +41,8 @@ public class DataInitializer {
                     .accountNonExpired(true)
                     .accountNonLocked(true)
                     .credentialsNonExpired(true)
-                    .createdAt(LocalDateTime.now())    // ← set manually
-                    .updatedAt(LocalDateTime.now())    // ← set manually
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
                     .build();
 
             userRepository.save(admin);
