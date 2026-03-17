@@ -187,16 +187,16 @@ authentication-service:
   base-url: http://authentication-service:8187 
 
 history-service:
-  base-url: http://history-service:8531
+  base-url: http://resiliences-service:8531
 
 notification-service:
   base-url: http://notification-service:8079
 
 banklist-service:
-  base-url: http://banklist-service:8082
+  base-url: http://resiliences-service:8531
 
 blacklist-service:
-  base-url: http://blacklist-service:8083
+  base-url: http://resiliences-service:8531
 
 revenue-service:
   base-url: http://revenue-service:8084

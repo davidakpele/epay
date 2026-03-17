@@ -110,6 +110,10 @@ namespace resiliences_service.Middleware
 
             var userId   = jwtToken.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
             var username = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+            var roles    = jwtToken.Claims
+                               .Where(c => c.Type == "role" || c.Type == "roles")
+                               .Select(c => c.Value)
+                               .ToHashSet();
 
             if (string.IsNullOrEmpty(userId))
             {
@@ -129,6 +133,15 @@ namespace resiliences_service.Middleware
                 return;
             }
 
+            // ── ADMIN / SUPER_ADMIN — JWT validation is sufficient, skip user service ──
+            if (roles.Contains("ADMIN") || roles.Contains("SUPER_ADMIN"))
+            {
+                context.Items["RequestId"] = requestId;
+                await _next(context);
+                return;
+            }
+
+            // ── USER — full verification against user service required ────────────────
             UserDTO? user;
             try
             {

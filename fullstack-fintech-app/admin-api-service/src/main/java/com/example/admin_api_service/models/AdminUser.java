@@ -196,10 +196,10 @@ public class AdminUser implements UserDetails {
         this.role = role;
     }
 
-    public boolean isActive() {
+    public boolean isIsActive() {
         return this.active;
     }
-
+    
     public boolean getActive() {
         return this.active;
     }

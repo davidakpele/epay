@@ -18,5 +18,6 @@ namespace resiliences_service.interfaces
         Task<List<History>> FindByUserIdWithFiltersAsync(ulong userId, DateTime? startDate, DateTime? endDate, string? transactionType, string? currency);
         Task<List<History>> FindAllRecentAsync(DateTime since, int page, int pageSize);
         Task<List<ulong>> FindRecentActiveUserIdsAsync(DateTime since);
+        Task<long> CountAllAsync();
     }
 }

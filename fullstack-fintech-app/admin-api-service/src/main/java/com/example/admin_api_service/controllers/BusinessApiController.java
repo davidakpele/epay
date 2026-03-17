@@ -11,7 +11,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import com.example.admin_api_service.clients.HistoryServiceClient;
 import com.example.admin_api_service.clients.UserServiceClient;
+import com.example.admin_api_service.clients.VirtualCardServiceClient;
+import com.example.admin_api_service.responses.DashboardSummaryResponse;
+import com.example.admin_api_service.services.SystemWalletService;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 
@@ -20,12 +25,17 @@ import jakarta.servlet.http.HttpServletRequest;
 public class BusinessApiController {
 
     private final UserServiceClient userServiceClient;
-    
-    public BusinessApiController(UserServiceClient userServiceClient) {
+    private final SystemWalletService systemWalletService;
+    private final HistoryServiceClient historyServiceClient;
+    private final VirtualCardServiceClient virtualCardServiceClient;
+
+    public BusinessApiController(UserServiceClient userServiceClient, SystemWalletService systemWalletService, HistoryServiceClient historyServiceClient, VirtualCardServiceClient virtualCardServiceClient) {
         this.userServiceClient = userServiceClient;
+        this.systemWalletService = systemWalletService;
+        this.historyServiceClient = historyServiceClient;
+        this.virtualCardServiceClient = virtualCardServiceClient;
     }
 
-    // Only ADMIN who owns the resource
     @PreAuthorize("hasAuthority('ADMIN') and @security.isOwner(#userId)")
     @GetMapping("/{userId}/wallet")
     public ResponseEntity<?> getWallet(@PathVariable Long userId,
@@ -33,14 +43,18 @@ public class BusinessApiController {
         return ResponseEntity.ok("Hello welcome back");
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/users/count")
-    public ResponseEntity<?> getTotalUsers(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
-        Long count = userServiceClient.getTotalUsers(token);
-        Map<String, Object> result = new HashMap<>();
-        result.put("totalUsers", count);
-        return ResponseEntity.ok(result);
+    @GetMapping("/dashboard/summary")
+    public ResponseEntity<?> getDashboardSummary(HttpServletRequest request) {
+        String token = extractToken(request);
+        long totalUsers        = userServiceClient.getTotalUsers(token);
+        long totalHistory      = historyServiceClient.getTotalHistory(token);
+        
+        long totalVirtualCards = virtualCardServiceClient.getTotalVirtualCards(token);
+
+        return ResponseEntity.ok(
+                systemWalletService.buildDashboardSummary(totalUsers, totalHistory, totalVirtualCards)
+        );
+    
     }
 
     @PreAuthorize("@security.isOwnerOrAdmin(#userId)")
@@ -84,6 +98,10 @@ public class BusinessApiController {
         result.put("username", username);
         result.put("verified", verified);
         return ResponseEntity.ok(result);
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        return request.getHeader("Authorization").substring(7);
     }
     
 }

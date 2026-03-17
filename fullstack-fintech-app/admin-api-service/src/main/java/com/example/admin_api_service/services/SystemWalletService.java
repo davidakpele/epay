@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.admin_api_service.components.ReferenceGenerator;
 import com.example.admin_api_service.components.WalletFundedEvent;
+import com.example.admin_api_service.enums.AlertStatus;
 import com.example.admin_api_service.enums.Currency;
 import com.example.admin_api_service.enums.LiquidityTransactionType;
 import com.example.admin_api_service.enums.TransactionStatus;
@@ -25,6 +26,8 @@ import com.example.admin_api_service.payloads.WithdrawWalletRequest;
 import com.example.admin_api_service.repository.LiquidityThresholdAlertRepository;
 import com.example.admin_api_service.repository.LiquidityTransactionRepository;
 import com.example.admin_api_service.repository.SystemWalletRepository;
+import com.example.admin_api_service.responses.DashboardSummaryResponse;
+import com.example.admin_api_service.responses.SystemWalletResponse;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -252,4 +255,43 @@ public class SystemWalletService {
                 .status(TransactionStatus.SUCCESS)
                 .build();
     }
+
+    @Transactional
+    public DashboardSummaryResponse buildDashboardSummary(
+            long totalUsers,
+            long totalHistory,
+            long totalVirtualCards
+    ) {
+        List<SystemWallet> wallets = systemWalletRepository.findAll();
+
+        List<SystemWalletResponse> walletResponses = wallets.stream()
+                .map(SystemWalletResponse::from)
+                .toList();
+
+        BigDecimal platformTotalBalance = wallets.stream()
+                .map(SystemWallet::getBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long totalActiveAlerts = wallets.stream()
+                .flatMap(w -> alertRepository
+                        .findBySystemWalletIdAndStatus(w.getId(), AlertStatus.ACTIVE)
+                        .stream())
+                .count();
+
+        boolean anyBelowThreshold = wallets.stream()
+                .anyMatch(SystemWallet::isBelowThreshold);
+
+        return new DashboardSummaryResponse(
+                totalUsers,
+                totalHistory,
+                totalVirtualCards,
+                walletResponses,
+                platformTotalBalance,
+                totalActiveAlerts,
+                anyBelowThreshold,
+                LocalDateTime.now()
+        );
+    }
+
+
 }

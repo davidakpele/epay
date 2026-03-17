@@ -5,6 +5,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import pesco.example.virtual_card_service.components.JwtProperties;
+import pesco.example.virtual_card_service.exceptions.JwtAuthenticationException;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -83,5 +86,19 @@ public class JwtService {
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    public List<String> extractRoles(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            @SuppressWarnings("unchecked")
+            List<String> roles = (List<String>) claims.get("roles");
+            return roles != null ? roles : List.of();
+        } catch (JwtAuthenticationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JwtAuthenticationException("Failed to extract roles from token", 
+                HttpStatus.UNAUTHORIZED, e);
+        }
     }
 }

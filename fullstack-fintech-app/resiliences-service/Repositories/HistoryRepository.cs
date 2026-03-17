@@ -138,5 +138,10 @@ namespace resiliences_service.Repositories
                 .Distinct()
                 .ToListAsync();
         }
+
+        public async Task<long> CountAllAsync()
+        {
+            return await _context.Histories.LongCountAsync();
+        }
     }
 }

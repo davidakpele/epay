@@ -17,7 +17,7 @@ spring:
     filter:
       dispatcher-types: REQUEST,ERROR,ASYNC
   datasource:
-    url: jdbc:postgresql://postgres:5432/pesco_db
+    url: jdbc:postgresql://localhost:5432/pesco_db
     username: postgres
     password: root
     driver-class-name: org.postgresql.Driver

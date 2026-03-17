@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,6 +15,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
+
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import pesco.example.virtual_card_service.exceptions.JwtAuthenticationException;
 import pesco.example.virtual_card_service.services.JwtService;
@@ -37,62 +41,110 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
-        
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
+        if (isPublicEndpoint(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader("Authorization");
-        
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            final String jwt = authHeader.substring(7);
-            final String userEmail = jwtService.extractUsername(jwt);
+            final String jwt = authHeader.substring(7).trim();
+            final String username = jwtService.extractUsername(jwt);
+            final List<String> roles = jwtService.extractRoles(jwt);
 
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-                
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                UserDetails userDetails;
+                if (roles.contains("ADMIN") || roles.contains("SUPER_ADMIN")) {
+                    UserDetails tempDetails = org.springframework.security.core.userdetails.User.builder()
+                            .username(username)
+                            .password("")
+                            .authorities(roles.stream()
+                                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                                    .toList())
+                            .build();
+
+                    if (!jwtService.isTokenValid(jwt, tempDetails)) {
+                        handleAuthenticationError(response, "Invalid or expired token");
+                        return;
+                    }
+
+                    userDetails = tempDetails;
+
                 } else {
-                    handleAuthenticationError(response, "Invalid or expired token");
-                    return;
+                    userDetails = userDetailsService.loadUserByUsername(username);
+                    if (!jwtService.isTokenValid(jwt, userDetails)) {
+                        handleAuthenticationError(response, "Invalid or expired token");
+                        return;
+                    }
                 }
+
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                );
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
-            
+
             filterChain.doFilter(request, response);
-            
+
         } catch (JwtAuthenticationException e) {
             handleAuthenticationError(response, e.getMessage());
-        } catch (ServletException | IOException | UsernameNotFoundException e) {
+        } catch (UsernameNotFoundException e) {
+            handleAuthenticationError(response, "User not found");
+        } catch (ServletException | IOException e) {
             handleAuthenticationError(response, "Authentication failed");
         }
+    }
+
+    private boolean isPublicEndpoint(HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        return path.startsWith("/auth/") ||
+               path.startsWith("/error/") ||
+               path.equals("/actuator/health") ||
+               path.equals("/health") ||
+               path.equals("/ping") ||
+               path.startsWith("/swagger-ui") ||
+               path.startsWith("/v3/api-docs") ||
+               path.startsWith("/css/") ||
+               path.startsWith("/js/") ||
+               path.startsWith("/images/") ||
+               path.equals("/favicon.ico") ||
+               (path.startsWith("/user/username/") && request.getMethod().equals("GET")) ||
+               (path.matches("/user/\\d+") && request.getMethod().equals("GET")) ||
+               path.startsWith("/cache/users/") ||
+               path.startsWith("/user/list");
     }
 
     private void handleAuthenticationError(
             HttpServletResponse response,
             String message
     ) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        
+
         Map<String, Object> errorDetails = new HashMap<>();
         errorDetails.put("error", "Authentication Failed");
         errorDetails.put("message", message);
         errorDetails.put("timestamp", System.currentTimeMillis());
-        errorDetails.put("path", "JWT Authentication Filter");
+        errorDetails.put("status", 401);
+
         response.getWriter().write(objectMapper.writeValueAsString(errorDetails));
     }
+
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
