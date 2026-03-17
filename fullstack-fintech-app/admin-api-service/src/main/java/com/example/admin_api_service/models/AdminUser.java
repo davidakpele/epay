@@ -99,15 +99,20 @@ public class AdminUser implements UserDetails {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    // ─── Constructors ─────────────────────────────────────────────────────────
+    @Builder.Default
+    private Boolean notificationEnabled = true;
+  
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (role == null) return Set.of();
+        return Set.of(new SimpleGrantedAuthority(role.name()));
+    }
 
-    public AdminUser() {}
 
-    public AdminUser(Long id, String firstName, String lastName, String email,
-                     String password, String gender, String username,
-                     AdminRole role, boolean active, boolean accountNonExpired,
-                     boolean accountNonLocked, boolean credentialsNonExpired,
-                     LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public AdminUser() {
+    }
+
+    public AdminUser(Long id, String firstName, String lastName, String email, String password, String gender, String username, AdminRole role, boolean active, boolean accountNonExpired, boolean accountNonLocked, boolean credentialsNonExpired, LocalDateTime createdAt, LocalDateTime updatedAt, Boolean notificationEnabled) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -122,94 +127,152 @@ public class AdminUser implements UserDetails {
         this.credentialsNonExpired = credentialsNonExpired;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.notificationEnabled = notificationEnabled;
     }
 
-    // ─── Factory Method ───────────────────────────────────────────────────────
-
-    public static AdminUser create(String username, String email, String password,
-                                    String firstName, String lastName,
-                                    String gender, AdminRole role) {
-        return AdminUser.builder()
-                .username(username)
-                .email(email)
-                .password(password)
-                .firstName(firstName)
-                .lastName(lastName)
-                .gender(gender)
-                .role(role)
-                .active(true)
-                .accountNonExpired(true)
-                .accountNonLocked(true)
-                .credentialsNonExpired(true)
-                .build();
+    public Long getId() {
+        return this.id;
     }
 
-    // ─── UserDetails ──────────────────────────────────────────────────────────
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (role == null) return Set.of();
-        return Set.of(new SimpleGrantedAuthority(role.name()));
+    public String getFirstName() {
+        return this.firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return this.lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return this.email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Override
-    public String getPassword() { return password; }
+    public String getPassword() {
+        return this.password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getGender() {
+        return this.gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
 
     @Override
-    public String getUsername() { return username; }
+    public String getUsername() {
+        return this.username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public AdminRole getRole() {
+        return this.role;
+    }
+
+    public void setRole(AdminRole role) {
+        this.role = role;
+    }
+
+    public boolean isActive() {
+        return this.active;
+    }
+
+    public boolean getActive() {
+        return this.active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 
     @Override
-    public boolean isAccountNonExpired() { return accountNonExpired; }
+    public boolean isAccountNonExpired() {
+        return this.accountNonExpired;
+    }
+
+    public boolean getAccountNonExpired() {
+        return this.accountNonExpired;
+    }
+
+    public void setAccountNonExpired(boolean accountNonExpired) {
+        this.accountNonExpired = accountNonExpired;
+    }
 
     @Override
-    public boolean isAccountNonLocked() { return accountNonLocked; }
+    public boolean isAccountNonLocked() {
+        return this.accountNonLocked;
+    }
+
+    public boolean getAccountNonLocked() {
+        return this.accountNonLocked;
+    }
+
+    public void setAccountNonLocked(boolean accountNonLocked) {
+        this.accountNonLocked = accountNonLocked;
+    }
 
     @Override
-    public boolean isCredentialsNonExpired() { return credentialsNonExpired; }
+    public boolean isCredentialsNonExpired() {
+        return this.credentialsNonExpired;
+    }
 
-    @Override
-    public boolean isEnabled() { return active; }
+    public boolean getCredentialsNonExpired() {
+        return this.credentialsNonExpired;
+    }
 
-    // ─── Getters & Setters ────────────────────────────────────────────────────
+    public void setCredentialsNonExpired(boolean credentialsNonExpired) {
+        this.credentialsNonExpired = credentialsNonExpired;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public LocalDateTime getCreatedAt() {
+        return this.createdAt;
+    }
 
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
+    public LocalDateTime getUpdatedAt() {
+        return this.updatedAt;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
-    public void setPassword(String password) { this.password = password; }
+    public Boolean isNotificationEnabled() {
+        return this.notificationEnabled;
+    }
 
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+    public Boolean getNotificationEnabled() {
+        return this.notificationEnabled;
+    }
 
-    public void setUsername(String username) { this.username = username; }
-
-    public AdminRole getRole() { return role; }
-    public void setRole(AdminRole role) { this.role = role; }
-
-    public boolean isActive() { return active; }
-    public boolean getActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
-
-    public boolean getAccountNonExpired() { return accountNonExpired; }
-    public void setAccountNonExpired(boolean accountNonExpired) { this.accountNonExpired = accountNonExpired; }
-
-    public boolean getAccountNonLocked() { return accountNonLocked; }
-    public void setAccountNonLocked(boolean accountNonLocked) { this.accountNonLocked = accountNonLocked; }
-
-    public boolean getCredentialsNonExpired() { return credentialsNonExpired; }
-    public void setCredentialsNonExpired(boolean credentialsNonExpired) { this.credentialsNonExpired = credentialsNonExpired; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setNotificationEnabled(Boolean notificationEnabled) {
+        this.notificationEnabled = notificationEnabled;
+    }
+    
 }

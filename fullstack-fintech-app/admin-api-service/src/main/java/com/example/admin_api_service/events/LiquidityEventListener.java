@@ -3,14 +3,16 @@ package com.example.admin_api_service.events;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
 import com.example.admin_api_service.components.LiquidityAlertResolvedEvent;
 import com.example.admin_api_service.components.LiquidityAlertTriggeredEvent;
 import com.example.admin_api_service.components.WalletFundedEvent;
 import com.example.admin_api_service.components.WalletRebalancedEvent;
 import com.example.admin_api_service.components.WalletWithdrawnEvent;
+import com.example.admin_api_service.enums.AuditAction;
+import com.example.admin_api_service.enums.NotificationPriority;
 import com.example.admin_api_service.models.LiquidityThresholdAlert;
-
+import com.example.admin_api_service.services.AuditLogService;
+import com.example.admin_api_service.services.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,11 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LiquidityEventListener {
 
-    private final NotificationService notificationService;   // your existing notification service
-    private final AuditLogService auditLogService;           // your existing audit service
+    private final NotificationService notificationService; 
+    private final AuditLogService auditLogService; 
 
     @EventListener
-    @Async  // non-blocking — won't slow down the transaction that published it
+    @Async  
     public void onWalletFunded(WalletFundedEvent event) {
         log.info("[LIQUIDITY] Wallet funded — currency={}, amount={}, adminId={}",
                 event.wallet().getCurrency(),
