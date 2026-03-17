@@ -66,25 +66,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UserDetails userDetails;
-
                 if (roles.contains("ADMIN") || roles.contains("SUPER_ADMIN")) {
-                    boolean verified = adminServiceClient.verifyUser(username);
-                    if (!verified) {
-                        handleAuthenticationError(response, "User not verified by admin service");
-                        return;
-                    }
-
-                    userDetails = org.springframework.security.core.userdetails.User.builder()
+                    UserDetails tempDetails = org.springframework.security.core.userdetails.User.builder()
                             .username(username)
                             .password("")
                             .authorities(roles.stream()
                                     .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                                     .toList())
-                            .accountExpired(false)
-                            .accountLocked(false)
-                            .credentialsExpired(false)
-                            .disabled(false)
                             .build();
+
+                    if (!jwtService.isTokenValid(jwt, tempDetails)) {
+                        handleAuthenticationError(response, "Invalid or expired token");
+                        return;
+                    }
+
+                    userDetails = tempDetails;
 
                 } else {
                     userDetails = userDetailsService.loadUserByUsername(username);
