@@ -202,5 +202,24 @@ namespace resiliences_service.Controllers
             }
         }
 
+        [HttpGet("analytics")]
+        public async Task<IActionResult> GetTransactionAnalytics([FromQuery] string period = "MONTHLY")
+        {
+            try
+            {
+                var validPeriods = new[] { "DAILY", "WEEKLY", "MONTHLY", "YEARLY" };
+                if (!validPeriods.Contains(period.ToUpper()))
+                    return BadRequest(new { error = "Invalid period. Use DAILY, WEEKLY, MONTHLY or YEARLY" });
+
+                var data = await _historyService.GetTransactionAnalyticsAsync(period.ToUpper());
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[HistoryController] GetTransactionAnalytics failed");
+                return StatusCode(500, new { error = "Failed to retrieve transaction analytics" });
+            }
+        }
+
     }
 }

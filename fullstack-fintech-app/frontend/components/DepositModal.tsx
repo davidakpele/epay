@@ -155,7 +155,6 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
       const username = getUsername();
       const userEmail = getUserEmail();
       const fiat = getFiat();
-
       const fiatCurrency = fiat || 'NGN';
       const extract_symbol = getWallet(fiatCurrency);  
       
@@ -186,57 +185,52 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
           ...payloads,
           processingFee: cardFee,
           totalAmount: totalAmount,
-          depositSystem: "PAYSTACK_CARD"
+          depositSystem: "CARD"
         };
       } else if (step === 'ussd') {
         payloads = {
           ...payloads,
           ussdCode: `*737*50*${rawAmount}#`,
-          depositSystem: "PAYSTACK_USSD"
+          depositSystem: "USSD"
         };
       }
 
-      await depositService.create(payloads)
-        .then((response) => {
-          if (response.status === 'success') {
-            setIsProcessing(false);
-            if (onDepositSuccess) {
-              onDepositSuccess();
-            }else{
-              eventEmitter.emit('refreshBalance');
-            }
-            setShowSuccessModal(true);
-            
-            updateNotificationContainer({
-              type: "MESSAGES",
-              description: `${extract_symbol?.symbol || getFiat()}${amount}` + " Successfully Deposited.",
-              date: new Date().toISOString()
-            });
-            
-            if (typeof window !== 'undefined') {
-              if ((window as any).refreshNavbarNotifications) {
-                (window as any).refreshNavbarNotifications();
-              }
-              
-              if ((window as any).refreshWalletBalance) {
-                (window as any).refreshWalletBalance();
-              }
-            }
-          } else {
-            updateNotificationContainer({
-              type: "MESSAGES",
-              description: "Deposit failed. Please try again."
-            });
-            setIsProcessing(false);
-            setErrorMessage("We couldn't process your deposit. Please try again.");
-            setShowFailModal(true);
-          }
-        })
-        .catch((error) => {
-          const errorMsg = error?.response?.data?.message || error?.message || "An unexpected error occurred";
-          setErrorMessage(errorMsg);
-          setShowFailModal(true);
+      const response = await depositService.create(payloads);
+      const body = response?.data ?? response;
+
+      if (body?.status === 'success') {
+        setIsProcessing(false);
+        if (onDepositSuccess) {
+          onDepositSuccess();
+        } else {
+          eventEmitter.emit('refreshBalance');
+        }
+        setShowSuccessModal(true);
+
+        updateNotificationContainer({
+          type: "MESSAGES",
+          description: `${extract_symbol?.symbol || getFiat()}${amount}` + " Successfully Deposited.",
+          date: new Date().toISOString()
         });
+
+        if (typeof window !== 'undefined') {
+          if ((window as any).refreshNavbarNotifications) {
+            (window as any).refreshNavbarNotifications();
+          }
+          if ((window as any).refreshWalletBalance) {
+            (window as any).refreshWalletBalance();
+          }
+        }
+      } else {
+        updateNotificationContainer({
+          type: "MESSAGES",
+          description: "Deposit failed. Please try again."
+        });
+        setIsProcessing(false);
+        setErrorMessage(body?.message || "We couldn't process your deposit. Please try again.");
+        setShowFailModal(true);
+      }
+
     } catch (error: any) {
       const errorMsg = error?.response?.data?.message || error?.message || "An unexpected error occurred";
       setErrorMessage(errorMsg);

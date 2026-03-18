@@ -1,6 +1,5 @@
 package pesco.deposit_service.payloads;
 
-
 import java.math.BigDecimal;
 import lombok.Builder;
 import lombok.Data;
@@ -25,23 +24,37 @@ public class DepositRequest {
     private String currencySymbol;
     private DEPOSITANDWITHDRAWALSYSTEM depositSystem;
 
-    public DepositRequest() {
-    }
+    // Card-specific
+    private BigDecimal processingFee;
+    private BigDecimal totalAmount;
 
-    public DepositRequest(String accountHolderName, String accountNumber, String bankCode, String bankName, Long userId, String email, String username, Long walletId, BigDecimal amount, TransactionType type, CurrencyType currencyType, String currencySymbol, DEPOSITANDWITHDRAWALSYSTEM depositSystem) {
+    // USSD-specific
+    private String ussdCode;
+
+    public DepositRequest() {}
+
+    public DepositRequest(
+            String accountHolderName, String accountNumber, String bankCode, String bankName,
+            Long userId, String email, String username, Long walletId,
+            BigDecimal amount, TransactionType type, CurrencyType currencyType,
+            String currencySymbol, DEPOSITANDWITHDRAWALSYSTEM depositSystem,
+            BigDecimal processingFee, BigDecimal totalAmount, String ussdCode) {
         this.accountHolderName = accountHolderName;
-        this.accountNumber = accountNumber;
-        this.bankCode = bankCode;
-        this.bankName = bankName;
-        this.userId = userId;
-        this.email = email;
-        this.username = username;
-        this.walletId = walletId;
-        this.amount = amount;
-        this.type = type;
-        this.currencyType = currencyType;
-        this.currencySymbol = currencySymbol;
-        this.depositSystem = depositSystem;
+        this.accountNumber     = accountNumber;
+        this.bankCode          = bankCode;
+        this.bankName          = bankName;
+        this.userId            = userId;
+        this.email             = email;
+        this.username          = username;
+        this.walletId          = walletId;
+        this.amount            = amount;
+        this.type              = type;
+        this.currencyType      = currencyType;
+        this.currencySymbol    = currencySymbol;
+        this.depositSystem     = depositSystem;
+        this.processingFee     = processingFee;
+        this.totalAmount       = totalAmount;
+        this.ussdCode          = ussdCode;
     }
 
 
@@ -147,6 +160,30 @@ public class DepositRequest {
 
     public void setDepositSystem(DEPOSITANDWITHDRAWALSYSTEM depositSystem) {
         this.depositSystem = depositSystem;
+    }
+
+    public BigDecimal getProcessingFee() {
+        return this.processingFee;
+    }
+
+    public void setProcessingFee(BigDecimal processingFee) {
+        this.processingFee = processingFee;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return this.totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public String getUssdCode() {
+        return this.ussdCode;
+    }
+
+    public void setUssdCode(String ussdCode) {
+        this.ussdCode = ussdCode;
     }
 
 }

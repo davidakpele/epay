@@ -51,17 +51,118 @@ public class DepositServiceHandler implements DepositService {
                         HttpStatus.FORBIDDEN,
                         "The wallet does not belong to you.");
             }
+            
+            if (request.getDepositSystem() == null) {
+                return Error.createResponse("Deposit system is required.", HttpStatus.BAD_REQUEST,
+                        "Please provide a depositSystem: PAYSTACK, PAYSTACK_CARD, or PAYSTACK_USSD");
+            }
 
-            return processPaystackDeposit(wallet, request, token);
+            return switch (request.getDepositSystem()) {
+                case PAYSTACK       -> processPaystackDeposit(wallet, request, token);
+                case CARD  -> processPaystackCardDeposit(wallet, request, token);
+                case USSD  -> processPaystackUssdDeposit(wallet, request, token);
+                default -> Error.createResponse("Unsupported deposit system.", HttpStatus.BAD_REQUEST,
+                        "Use PAYSTACK, PAYSTACK_CARD, or PAYSTACK_USSD");
+            };
 
         } catch (BanKDetailsNotFound e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", e.getMessage(), "details", e.getDetails()));
-
         } catch (JsonProcessingException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Payment processing error", "details", "Failed to initialize payment."));
         }
+    }
+
+    private ResponseEntity<?> processPaystackCardDeposit(WalletDTO wallet, DepositRequest request, String token)throws JsonProcessingException {
+        BigDecimal previousBalance = resolveBalance(wallet, request.getCurrencyType().toString());
+        boolean creditSuccess = creditWallet(request, token);
+
+        if (!creditSuccess) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "error", "message", "Failed to credit wallet. Transaction aborted."));
+        }
+
+        String transactionId = generateTransactionId();
+
+        WalletDTO updated = walletServiceClient.findByUserId(request.getUserId(), token);
+        BigDecimal newBalance = resolveBalance(updated, request.getCurrencyType().toString());
+
+        DepositHistoryRequest historyRequest = buildHistoryRequest(request, previousBalance, newBalance, transactionId);
+        historyRequest.setDescription("CARD//INTO " + request.getUsername().toUpperCase()
+                + " " + request.getCurrencyType() + " ACCOUNT");
+
+        CompletableFuture.runAsync(() -> {
+            try { historyServiceClient.createDepositHistory(historyRequest, token); }
+            catch (Exception ignored) {}
+        });
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                notificationServiceWebClient.sendDepositNotification(
+                        request.getEmail(), request.getUsername(), request.getAmount(),
+                        request.getCurrencyType(), previousBalance, newBalance,
+                        request.getUsername().toUpperCase(), transactionId, request.getCurrencySymbol()
+                );
+            } catch (Exception ignored) {}
+        });
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(Map.of(
+                    "status", "success",
+                    "transactionId", transactionId,
+                    "previousBalance", previousBalance,
+                    "newBalance", newBalance,
+                    "currency", request.getCurrencyType().toString(),
+                    "depositMethod", "CARD",
+                    "timestamp", System.currentTimeMillis()
+            ));
+    }
+
+    private ResponseEntity<?> processPaystackUssdDeposit(WalletDTO wallet, DepositRequest request, String token)throws JsonProcessingException {
+
+        BigDecimal previousBalance = resolveBalance(wallet, request.getCurrencyType().toString());
+        boolean creditSuccess = creditWallet(request, token);
+
+        if (!creditSuccess) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "error", "message", "Failed to credit wallet. Transaction aborted."));
+        }
+
+        String transactionId = generateTransactionId();
+
+        WalletDTO updated = walletServiceClient.findByUserId(request.getUserId(), token);
+        BigDecimal newBalance = resolveBalance(updated, request.getCurrencyType().toString());
+
+        DepositHistoryRequest historyRequest = buildHistoryRequest(request, previousBalance, newBalance, transactionId);
+        historyRequest.setDescription("USSD//INTO " + request.getUsername().toUpperCase()
+                + " " + request.getCurrencyType() + " ACCOUNT");
+
+        CompletableFuture.runAsync(() -> {
+            try { historyServiceClient.createDepositHistory(historyRequest, token); }
+            catch (Exception ignored) {}
+        });
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                notificationServiceWebClient.sendDepositNotification(
+                        request.getEmail(), request.getUsername(), request.getAmount(),
+                        request.getCurrencyType(), previousBalance, newBalance,
+                        request.getUsername().toUpperCase(), transactionId, request.getCurrencySymbol()
+                );
+            } catch (Exception ignored) {}
+        });
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(Map.of(
+                    "status", "success",
+                    "transactionId", transactionId,
+                    "previousBalance", previousBalance,
+                    "newBalance", newBalance,
+                    "currency", request.getCurrencyType().toString(),
+                    "depositMethod", "USSD",
+                    "timestamp", System.currentTimeMillis()
+            ));
     }
 
 

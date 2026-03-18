@@ -26,6 +26,7 @@ import pesco.example.authentication_service.models.UserRecord;
 import pesco.example.authentication_service.models.Users;
 import pesco.example.authentication_service.repositories.UserRecordRepository;
 import pesco.example.authentication_service.repositories.UsersRepository;
+import pesco.example.authentication_service.responses.UserStatisticsResponse;
 import pesco.example.authentication_service.services.PasswordResetTokenService;
 import pesco.example.authentication_service.services.UserService;
 import pesco.example.authentication_service.utils.KeyWrapper;
@@ -251,6 +252,67 @@ public class UserServiceImplementations implements UserService {
         return UserDTO.fromEntity(user);
     }
 
+    @Transactional(readOnly = true)
+    public UserStatisticsResponse getUserStatistics(String period) {
 
+        long totalUsers    = userRepository.countAllRegularUsers();
+        long activeUsers   = userRepository.countActiveUsers();
+        long inactiveUsers = userRepository.countInactiveUsers();
+        long kycPending    = userRepository.countKycPending();
+
+        List<UserStatisticsResponse.AnalyticsDataPoint> trend =
+                buildRegistrationTrend(period.toUpperCase());
+
+        return UserStatisticsResponse.of(
+                totalUsers,
+                activeUsers,
+                inactiveUsers,
+                kycPending,
+                trend,
+                period.toUpperCase()
+        );
+    }
+
+    private List<UserStatisticsResponse.AnalyticsDataPoint> buildRegistrationTrend(String period) {
+        return switch (period) {
+
+            case "DAILY" -> {
+                LocalDateTime since = LocalDateTime.now().minusDays(30);
+                yield userRepository.countDailyRegistrations(since).stream()
+                        .map(row -> new UserStatisticsResponse.AnalyticsDataPoint(
+                                row[0].toString(),
+                                ((Number) row[1]).longValue()))
+                        .toList();
+            }
+
+            case "WEEKLY" -> {
+                LocalDateTime since = LocalDateTime.now().minusWeeks(12);
+                yield userRepository.countWeeklyRegistrations(since).stream()
+                        .map(row -> new UserStatisticsResponse.AnalyticsDataPoint(
+                                "Week " + row[1] + " " + row[0],
+                                ((Number) row[2]).longValue()))
+                        .toList();
+            }
+
+            case "MONTHLY" -> {
+                LocalDateTime since = LocalDateTime.now().minusMonths(12);
+                yield userRepository.countMonthlyRegistrations(since).stream()
+                        .map(row -> new UserStatisticsResponse.AnalyticsDataPoint(
+                                row[0] + "-" + String.format("%02d", ((Number) row[1]).intValue()),
+                                ((Number) row[2]).longValue()))
+                        .toList();
+            }
+
+            case "YEARLY" ->
+                userRepository.countYearlyRegistrations().stream()
+                        .map(row -> new UserStatisticsResponse.AnalyticsDataPoint(
+                                row[0].toString(),
+                                ((Number) row[1]).longValue()))
+                        .toList();
+
+            default -> throw new IllegalArgumentException(
+                    "Invalid period: " + period + ". Use DAILY, WEEKLY, MONTHLY or YEARLY");
+        };
+    }
 
 }

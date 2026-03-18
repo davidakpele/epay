@@ -116,5 +116,10 @@ namespace resiliences_service.Services
         {
             return await _repo.CountAllAsync();
         }
+
+        public async Task<List<AnalyticsDataPoint>> GetTransactionAnalyticsAsync(string period)
+        {
+            return await _repo.GetTransactionAnalyticsAsync(period);
+        }
     }
 }

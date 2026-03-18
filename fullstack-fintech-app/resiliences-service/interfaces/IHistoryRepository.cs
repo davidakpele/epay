@@ -19,5 +19,6 @@ namespace resiliences_service.interfaces
         Task<List<History>> FindAllRecentAsync(DateTime since, int page, int pageSize);
         Task<List<ulong>> FindRecentActiveUserIdsAsync(DateTime since);
         Task<long> CountAllAsync();
+        Task<List<AnalyticsDataPoint>> GetTransactionAnalyticsAsync(string period);
     }
 }

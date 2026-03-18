@@ -22,5 +22,7 @@ namespace resiliences_service.interfaces
         Task InvalidateUserCacheAsync(ulong userId);
         Task InvalidateAllCacheAsync();
         Task<long> GetTotalCountAsync();
+
+        Task<List<AnalyticsDataPoint>> GetTransactionAnalyticsAsync(string period);
     }
 }

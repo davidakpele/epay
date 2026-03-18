@@ -48,4 +48,72 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
 
     @Query("SELECT MAX(u.id) FROM Users u")
     Optional<Long> findMaxId();
+
+     // Total count by role (for USER role only, excluding ADMIN)
+    @Query("SELECT COUNT(u) FROM Users u WHERE u.role = 'USER'")
+    long countAllRegularUsers();
+
+    // Active users (enabled = true)
+    @Query("SELECT COUNT(u) FROM Users u WHERE u.enabled = true AND u.role = 'USER'")
+    long countActiveUsers();
+
+    // Inactive users (enabled = false)
+    @Query("SELECT COUNT(u) FROM Users u WHERE u.enabled = false AND u.role = 'USER'")
+    long countInactiveUsers();
+
+    // New users per period — DAILY (last 30 days)
+    @Query("""
+        SELECT FUNCTION('DATE', u.createdOn)  AS label,
+               COUNT(u)                        AS count
+        FROM   Users u
+        WHERE  u.createdOn >= :since
+        AND    u.role = 'USER'
+        GROUP  BY FUNCTION('DATE', u.createdOn)
+        ORDER  BY FUNCTION('DATE', u.createdOn) ASC
+        """)
+    List<Object[]> countDailyRegistrations(@Param("since") LocalDateTime since);
+
+    // New users per period — WEEKLY
+    @Query("""
+        SELECT FUNCTION('YEAR', u.createdOn)  AS year,
+               FUNCTION('WEEK', u.createdOn)  AS week,
+               COUNT(u)                        AS count
+        FROM   Users u
+        WHERE  u.createdOn >= :since
+        AND    u.role = 'USER'
+        GROUP  BY FUNCTION('YEAR', u.createdOn), FUNCTION('WEEK', u.createdOn)
+        ORDER  BY FUNCTION('YEAR', u.createdOn), FUNCTION('WEEK', u.createdOn) ASC
+        """)
+    List<Object[]> countWeeklyRegistrations(@Param("since") LocalDateTime since);
+
+    // New users per period — MONTHLY
+    @Query("""
+        SELECT FUNCTION('YEAR', u.createdOn)  AS year,
+               FUNCTION('MONTH', u.createdOn) AS month,
+               COUNT(u)                        AS count
+        FROM   Users u
+        WHERE  u.createdOn >= :since
+        AND    u.role = 'USER'
+        GROUP  BY FUNCTION('YEAR', u.createdOn), FUNCTION('MONTH', u.createdOn)
+        ORDER  BY FUNCTION('YEAR', u.createdOn), FUNCTION('MONTH', u.createdOn) ASC
+        """)
+    List<Object[]> countMonthlyRegistrations(@Param("since") LocalDateTime since);
+
+    // New users per period — YEARLY
+    @Query("""
+        SELECT FUNCTION('YEAR', u.createdOn) AS year,
+               COUNT(u)                       AS count
+        FROM   Users u
+        WHERE  u.role = 'USER'
+        GROUP  BY FUNCTION('YEAR', u.createdOn)
+        ORDER  BY FUNCTION('YEAR', u.createdOn) ASC
+        """)
+    List<Object[]> countYearlyRegistrations();
+
+    // KYC pending — users with incomplete profile
+    @Query("""
+        SELECT COUNT(r) FROM UserRecord r
+        WHERE  r.isProfileComplete = false
+        """)
+    long countKycPending();
 }

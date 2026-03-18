@@ -205,4 +205,4 @@ escrow-service:
   base-url: http://escrow-service:8085
 
 virtual-card-service:
-  base-url: http://virtual-card-service:8086
+  base-url: http://virtual-card-service:8037

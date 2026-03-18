@@ -4,5 +4,7 @@ public enum DEPOSITANDWITHDRAWALSYSTEM {
     PAYSTACK,
     FLUTTERWAVE,
     REMITTA,
-    CORE
+    CORE,
+    USSD, 
+    CARD
 }

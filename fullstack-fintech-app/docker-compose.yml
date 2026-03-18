@@ -389,6 +389,7 @@ services:
       - deposit-service
       - revenue-service
       - escrow-service
+      - virtual-card-service
       - redis
     networks:
     - banking-network

@@ -6,6 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.admin_api_service.dto.UserDTO;
 import com.example.admin_api_service.exceptions.UserClientNotFoundException;
+import com.example.admin_api_service.responses.UserStatisticsResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,6 +70,18 @@ public class UserServiceClient {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error converting response to UserDTO", e);
         }
+    }
+
+    public UserStatisticsResponse getUserStatistics(String token, String period) {
+        return this.webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/users/statistics")
+                        .queryParam("period", period)
+                        .build())
+                .headers(h -> h.setBearerAuth(token))
+                .retrieve()
+                .bodyToMono(UserStatisticsResponse.class)
+                .block();
     }
 
     private String extractDetailsFromError(String errorMessage) {
