@@ -484,4 +484,11 @@ public class VirtualCardService {
                 .cardLimit(cardLimit)
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public long getTotalCards() {
+        return virtualCardRepository.countByDeletedAtIsNull();
+    }
+
+    
 }

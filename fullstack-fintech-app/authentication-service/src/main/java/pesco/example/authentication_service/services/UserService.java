@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import pesco.example.authentication_service.dtos.PageResponse;
 import pesco.example.authentication_service.dtos.UserDTO;
 import pesco.example.authentication_service.models.Users;
+import pesco.example.authentication_service.responses.UserStatisticsResponse;
 
 public interface UserService {
 
@@ -37,4 +38,6 @@ public interface UserService {
     void blockUserAccount(Long id, boolean block);
 
     UserDTO getUserDetails(Long id);
+
+    UserStatisticsResponse getUserStatistics(String period);
 }

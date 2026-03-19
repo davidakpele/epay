@@ -161,7 +161,7 @@ public class SecurityConfiguration {
                     "/v3/api-docs/**",
                     "/swagger-resources/**",
                     "/webjars/**"
-                ).permitAll()
+                ).permitAll() 
                 .requestMatchers("/uploads/images/**").permitAll()
                 .requestMatchers("/static/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/user/{id}/block").hasAnyRole("ADMIN", "SUPER_ADMIN")

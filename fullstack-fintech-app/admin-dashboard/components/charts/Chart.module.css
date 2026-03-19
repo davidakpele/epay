@@ -1,0 +1,64 @@
+/* Analytics chart */
+.legend {
+  display: flex;
+  gap: 14px;
+}
+
+.legItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.legDotDark  { display: inline-block; width: 9px; height: 9px; border-radius: 3px; background: var(--green-dark); }
+.legDotLight { display: inline-block; width: 9px; height: 9px; border-radius: 3px; background: var(--green-accent); }
+
+.chartWrap {
+  position: relative;
+  height: 190px;
+}
+
+/* Donut chart */
+.donutWrap {
+  position: relative;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.donutLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.donutRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.76rem;
+}
+
+.donutLeft {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-muted);
+}
+
+.donutDot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.donutPct {
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--font-system);
+}

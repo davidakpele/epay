@@ -1,0 +1,121 @@
+.layout {
+  display: flex;
+  margin-top: 58px;
+  min-height: calc(100vh - 58px);
+  background: #f2f4f2;
+}
+
+.sidebarSpacer {
+  width: 210px;
+  flex-shrink: 0;
+}
+
+.main {
+  flex: 1;
+  padding: 20px 20px 40px;
+  min-width: 0;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.bcLink {
+  font-size: 0.78rem;
+  color: #7a9a7a;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+.bcLink:hover { color: #166701; }
+
+.bcSep { color: #aac4aa; flex-shrink: 0; }
+
+.bcCurrent {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2a3a2a;
+}
+
+/* Page title */
+.pageTitle {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #1a2e1a;
+  margin: 0 0 18px;
+  letter-spacing: -0.4px;
+  font-family: var(--font-system);
+}
+
+/* Stat cards grid — 4 equal columns */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.statCard {
+  border-radius: 14px;
+  padding: 18px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 100px;
+}
+
+.statLabel {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+.statValue {
+  font-size: 1.7rem;
+  font-weight: 700;
+  font-family: var(--font-system);
+  letter-spacing: -0.8px;
+  line-height: 1;
+}
+
+/* Body grid */
+.body {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 16px;
+  align-items: start;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.right { min-width: 0; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .statGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 1024px) {
+  .body { grid-template-columns: 1fr; }
+  .right { order: -1; }
+}
+
+@media (max-width: 768px) {
+  .sidebarSpacer { display: none; }
+  .main { padding: 12px 10px 30px; }
+  .statGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .statValue { font-size: 1.3rem; }
+}
+
+@media (max-width: 480px) {
+  .statGrid { grid-template-columns: 1fr; }
+}

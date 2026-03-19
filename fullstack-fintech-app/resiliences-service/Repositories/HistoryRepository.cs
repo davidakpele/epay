@@ -138,5 +138,115 @@ namespace resiliences_service.Repositories
                 .Distinct()
                 .ToListAsync();
         }
+
+        public async Task<long> CountAllAsync()
+        {
+            return await _context.Histories.LongCountAsync();
+        }
+
+        public async Task<List<AnalyticsDataPoint>> GetTransactionAnalyticsAsync(string period)
+        {
+            var query = _context.Histories.AsQueryable();
+
+            return period.ToUpper() switch
+            {
+                "DAILY" => (await query
+                    .Where(h => h.CreatedOn >= DateTime.UtcNow.AddDays(-30))
+                    .GroupBy(h => new { h.CreatedOn.Year, h.CreatedOn.Month, h.CreatedOn.Day })
+                    .Select(g => new
+                    {
+                        g.Key.Year,
+                        g.Key.Month,
+                        g.Key.Day,
+                        Count  = g.LongCount(),
+                        Amount = g.Sum(h => h.Amount)
+                    })
+                    .ToListAsync())
+                    .Select(g => new AnalyticsDataPoint
+                    {
+                        Label  = new DateTime(g.Year, g.Month, g.Day).ToString("dd MMM"),
+                        Count  = g.Count,
+                        Amount = g.Amount
+                    })
+                    .OrderBy(x => x.Label)
+                    .ToList(),
+
+                "WEEKLY" => (await query
+                    .Where(h => h.CreatedOn >= DateTime.UtcNow.AddDays(-84))
+                    .GroupBy(h => new { h.CreatedOn.Year, h.CreatedOn.Month, h.CreatedOn.Day })
+                    .Select(g => new
+                    {
+                        g.Key.Year,
+                        g.Key.Month,
+                        g.Key.Day,
+                        Count  = g.LongCount(),
+                        Amount = g.Sum(h => h.Amount)
+                    })
+                    .ToListAsync())
+                    .Select(g =>
+                    {
+                        var date = new DateTime(g.Year, g.Month, g.Day);
+                        var week = System.Globalization.ISOWeek.GetWeekOfYear(date);
+                        return new AnalyticsDataPoint
+                        {
+                            Label  = $"Week {week} {g.Year}",
+                            Count  = g.Count,
+                            Amount = g.Amount
+                        };
+                    })
+                    .GroupBy(x => x.Label)
+                    .Select(g => new AnalyticsDataPoint
+                    {
+                        Label  = g.Key,
+                        Count  = g.Sum(x => x.Count),
+                        Amount = g.Sum(x => x.Amount)
+                    })
+                    .OrderBy(x => x.Label)
+                    .ToList(),
+
+                "MONTHLY" => (await query
+                    .Where(h => h.CreatedOn >= DateTime.UtcNow.AddMonths(-12))
+                    .GroupBy(h => new { h.CreatedOn.Year, h.CreatedOn.Month })
+                    .Select(g => new
+                    {
+                        g.Key.Year,
+                        g.Key.Month,
+                        Count  = g.LongCount(),
+                        Amount = g.Sum(h => h.Amount)
+                    })
+                    .ToListAsync())
+                    .Select(g => new AnalyticsDataPoint
+                    {
+                        Label  = $"{g.Year}-{g.Month:D2}",
+                        Count  = g.Count,
+                        Amount = g.Amount
+                    })
+                    .OrderBy(x => x.Label)
+                    .ToList(),
+
+                "YEARLY" => (await query
+                    .GroupBy(h => h.CreatedOn.Year)
+                    .Select(g => new
+                    {
+                        Year   = g.Key,
+                        Count  = g.LongCount(),
+                        Amount = g.Sum(h => h.Amount)
+                    })
+                    .ToListAsync())
+                    .Select(g => new AnalyticsDataPoint
+                    {
+                        Label  = g.Year.ToString(),
+                        Count  = g.Count,
+                        Amount = g.Amount
+                    })
+                    .OrderBy(x => x.Label)
+                    .ToList(),
+
+                _ => throw new ArgumentException($"Invalid period: {period}")
+            };
+        }
+
+
+
     }
 }

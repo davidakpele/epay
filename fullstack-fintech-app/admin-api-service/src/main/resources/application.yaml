@@ -1,0 +1,208 @@
+spring:
+  application:
+    name: admin-api-service
+    
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.cassandra.autoconfigure.CassandraAutoConfiguration
+      - org.springframework.boot.cassandra.autoconfigure.CassandraDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
+    whitelabel:
+      enabled: false
+
+  web:
+    resources:
+      add-mappings: false
+  main:
+    allow-bean-definition-overriding: true
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/pesco_db
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: false
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      connection-timeout: 20000
+      pool-name: HikariPool
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        connection:
+          provider_disables_autocommit: true
+
+  cassandra:
+    contact-points: cassandra
+    port: 9042
+    local-datacenter: datacenter1
+    keyspace-name: epay_keyspace
+    username: ${CASSANDRA_USERNAME:cassandra}
+    password: ${CASSANDRA_PASSWORD:cassandra}
+
+  data:
+    rest:
+      base-path: /data-rest
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 1
+
+  websocket:
+    path: /ws
+
+  cloud:
+    task:
+      initialize-enabled: false
+      table-prefix: TASK_
+
+  grpc:
+    server:
+      port: 9090
+      address: 0.0.0.0
+    security:
+      enabled: false
+    client:
+      channels:
+        example-service:
+          address: localhost:9091
+          negotiation-type: plaintext
+
+  devtools:
+    restart:
+      enabled: false
+      exclude: "static/**,public/**"
+    livereload:
+      enabled: false
+
+  sql:
+    init:
+      mode: never
+jwt:
+  secret-key: 3hbXrhqhmvPD0bVq9Ce4hxTqALG701J7jRXyfKjqtzDPIlbdJ8YMIfZtHmPlC6Js9JVpELE2tj4KGP1VoCMA4Ya58WGF3Hs1
+  expiration-minutes: 1440
+  refresh-expiration-days: 7
+  issuer: "ePay"
+  audience: "Unified Dynamic Systems"
+  clock-skew-seconds: 30
+  algorithm: "HS256"
+  token-prefix: "Bearer"
+  authorization-header: "Authorization"
+  enable-token-blacklist: true
+  blacklist-cleanup-interval-minutes: 60
+  max-blacklist-size: 10000
+  cookie-name: "jwt-token"
+  http-only-cookie: true
+  secure-cookie: true
+  same-site-cookie: "Strict"
+  cors-allowed-origins: "http://localhost:3000,http://localhost:3001,http://localhost:8000"
+  enable-multi-factor-support: false
+  max-tokens-per-user: 5
+  log-token-issuance: false
+  enable-token-rotation: true
+  rotation-grace-period-minutes: 5
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, loggers, env
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /docs
+    enabled: true
+    try-it-out-enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+  show-actuator: false
+  packages-to-scan: com.example.admin_api_service
+
+datasource:
+  micrometer:
+    includes: all
+
+logging:
+  level:
+    root: INFO
+    com.example.admin_api_service: DEBUG
+    org.springframework.web: INFO 
+    org.springframework.web.servlet.mvc.method.annotation: WARN 
+    org.springframework.security: INFO 
+    org.springframework.security.web.FilterChainProxy: DEBUG 
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+server:
+  port: 8109
+  servlet:
+    context-path: /admin
+
+wallet-service:
+  base-url: http://wallet-service:8081
+
+authentication-service:
+  base-url: http://authentication-service:8187 
+
+history-service:
+  base-url: http://resiliences-service:8531
+
+notification-service:
+  base-url: http://notification-service:8079
+
+banklist-service:
+  base-url: http://resiliences-service:8531
+
+blacklist-service:
+  base-url: http://resiliences-service:8531
+
+revenue-service:
+  base-url: http://revenue-service:8084
+
+escrow-service:
+  base-url: http://escrow-service:8085
+
+virtual-card-service:
+  base-url: http://virtual-card-service:8037

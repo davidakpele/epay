@@ -1,0 +1,172 @@
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.searchBtn {
+  width: 30px;
+  height: 30px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.searchBtn:hover {
+  background: var(--green-accent);
+  color: #fff;
+  border-color: var(--green-accent);
+}
+
+.select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-family: var(--font-system);
+  font-size: 0.74rem;
+  color: var(--text);
+  background: var(--bg);
+  cursor: pointer;
+  outline: none;
+}
+
+.select:focus {
+  border-color: var(--green-dark);
+}
+
+.tableWrap {
+  padding: 0 18px 18px;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.table thead th {
+  text-align: left;
+  font-size: 0.69rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.table tbody tr:hover {
+  background: rgba(82, 183, 136, 0.04);
+}
+
+.table tbody td {
+  padding: 10px;
+  font-size: 0.8rem;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.txnId {
+  font-family: var(--font-system);
+  font-size: 0.72rem !important;
+  color: var(--text-muted) !important;
+}
+
+.userCell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.userAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4db825, #166701);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.amtPos {
+  color: var(--success) !important;
+  font-weight: 600;
+  font-family: var(--font-system);
+}
+
+.amtNeg {
+  color: var(--red) !important;
+  font-weight: 600;
+  font-family: var(--font-system);
+}
+
+.typeBadge {
+  font-size: 0.67rem;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.typeDep {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.typeWit {
+  background: var(--red-light);
+  color: var(--red);
+}
+
+.typeBit {
+  background: #eef4fb;
+  color: var(--blue);
+}
+
+.typeVir {
+  background: var(--yellow-light);
+  color: #8a6800;
+}
+
+.statusBadge {
+  font-size: 0.67rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.statusOk {
+  background: var(--success);
+  color: #fff;
+}
+
+.statusFail {
+  background: var(--red);
+  color: #fff;
+}

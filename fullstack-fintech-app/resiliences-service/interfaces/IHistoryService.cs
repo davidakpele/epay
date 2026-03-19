@@ -21,5 +21,8 @@ namespace resiliences_service.interfaces
         Task<List<History>?> GetCachedAllHistoriesAsync();
         Task InvalidateUserCacheAsync(ulong userId);
         Task InvalidateAllCacheAsync();
+        Task<long> GetTotalCountAsync();
+
+        Task<List<AnalyticsDataPoint>> GetTransactionAnalyticsAsync(string period);
     }
 }

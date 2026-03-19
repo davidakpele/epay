@@ -111,5 +111,15 @@ namespace resiliences_service.Services
 
         public async Task InvalidateAllCacheAsync() =>
             await _cache.InvalidateAllCacheAsync();
+
+        public async Task<long> GetTotalCountAsync()
+        {
+            return await _repo.CountAllAsync();
+        }
+
+        public async Task<List<AnalyticsDataPoint>> GetTransactionAnalyticsAsync(string period)
+        {
+            return await _repo.GetTransactionAnalyticsAsync(period);
+        }
     }
 }

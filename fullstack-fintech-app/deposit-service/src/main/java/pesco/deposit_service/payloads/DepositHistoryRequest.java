@@ -1,7 +1,6 @@
 package pesco.deposit_service.payloads;
 
 import java.math.BigDecimal;
-import lombok.Builder;
 import lombok.Data;
 import pesco.deposit_service.enums.CurrencyType;
 import pesco.deposit_service.enums.TransactionType;

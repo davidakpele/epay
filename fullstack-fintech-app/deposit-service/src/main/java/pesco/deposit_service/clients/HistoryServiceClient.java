@@ -27,7 +27,7 @@ public class HistoryServiceClient {
         long startTime = System.currentTimeMillis();
 
         this.historyServiceWebClient.post()
-        .uri("/history/create")
+        .uri("/history/create/deposit")
         .headers(headers -> {
             if (token != null && !token.isBlank()) {
                 headers.setBearerAuth(token);

@@ -30,6 +30,7 @@ import pesco.example.authentication_service.models.Users;
 import pesco.example.authentication_service.payloads.ChangePasswordRequest;
 import pesco.example.authentication_service.payloads.UpdateProfilePayload;
 import pesco.example.authentication_service.payloads.UserSignUpRequest;
+import pesco.example.authentication_service.responses.UserStatisticsResponse;
 import pesco.example.authentication_service.services.PasswordResetTokenService;
 import pesco.example.authentication_service.services.TwoFactorAuthenticationService;
 import pesco.example.authentication_service.services.UserRecordService;
@@ -289,5 +290,10 @@ public class UserController {
         return ResponseEntity.ok(userServices.getUserDetails(id));
     }
 
-
+    @GetMapping("/statistics")
+    public ResponseEntity<UserStatisticsResponse> getUserStatistics(@RequestParam(defaultValue = "MONTHLY") String period) {
+        return ResponseEntity.ok(userServices.getUserStatistics(period));
+    }
+    
+    
 }

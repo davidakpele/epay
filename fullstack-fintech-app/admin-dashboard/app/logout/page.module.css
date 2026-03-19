@@ -1,0 +1,244 @@
+/* ── Page ── */
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 24px 16px 80px;
+  position: relative;
+  overflow: hidden;
+  background: #143d08;
+}
+
+/* ── SVG waves (identical to login) ── */
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  line-height: 0;
+}
+.waveSvg {
+  width: 100%; height: 100%;
+  display: block;
+}
+
+/* ── Card ── */
+.card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  background: #f5f7f5;
+  border-radius: 24px;
+  padding: 44px 40px 36px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  animation: cardIn 0.45s cubic-bezier(0.22,1,0.36,1);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* ── Icon ring ── */
+.iconRing {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: var(--success-light);
+  border: 3px solid #c2e8cc;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 22px;
+  transition: border-color 0.4s, background 0.4s;
+  animation: pulse 2s ease-in-out infinite;
+}
+.iconRingDone {
+  animation: none;
+  border-color: var(--green-dark);
+  background: #d4f0da;
+}
+
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0   rgba(77,184,37,0.25); }
+  50%      { box-shadow: 0 0 0 14px rgba(77,184,37,0);   }
+}
+
+.iconInner {
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Text ── */
+.title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  margin: 0 0 8px;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.55;
+  margin: 0 0 28px;
+  max-width: 290px;
+}
+
+/* ── Progress bar ── */
+.barTrack {
+  width: 100%;
+  height: 6px;
+  background: #dde8dd;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #2d9e5f, #4db825);
+  transition: width 0.05s linear;
+  position: relative;
+}
+
+/* Shimmer on the bar */
+.barFill::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 40px; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  animation: shimmer 1s ease-in-out infinite;
+}
+@keyframes shimmer {
+  from { opacity: 0; }
+  50%  { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ── Bouncing dots ── */
+.dots {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 20px;
+}
+
+.dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  opacity: 0.7;
+  animation: bounce 1s ease-in-out infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.18s; }
+.dot:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes bounce {
+  0%,80%,100% { transform: translateY(0);   opacity: 0.5; }
+  40%         { transform: translateY(-8px); opacity: 1;   }
+}
+
+/* ── Animated checkmark ── */
+.checkWrap {
+  margin-bottom: 20px;
+}
+
+.checkSvg {
+  width: 52px; height: 52px;
+}
+
+.checkCircle {
+  stroke: var(--green-dark);
+  stroke-width: 2.5;
+  stroke-dasharray: 157;
+  stroke-dashoffset: 157;
+  animation: drawCircle 0.4s ease forwards;
+}
+.checkMark {
+  stroke: var(--green-dark);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  animation: drawCheck 0.3s ease 0.35s forwards;
+}
+
+@keyframes drawCircle {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes drawCheck {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Redirect text ── */
+.redirect {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0;
+}
+
+.ellipsis::after {
+  content: '';
+  display: inline-block;
+  animation: ellipsis 1.4s steps(4, end) infinite;
+  width: 1.5ch;
+  text-align: left;
+}
+@keyframes ellipsis {
+  0%  { content: '';    }
+  25% { content: '.';   }
+  50% { content: '..';  }
+  75% { content: '...'; }
+}
+
+/* ── Logo (bottom) ── */
+.logoWrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoIcon {
+  width: 32px; height: 32px;
+  background: var(--yellow);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+
+.logoText {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.4px;
+}
+.logoText span { color: var(--yellow); }
+
+/* ── Page footer ── */
+.pageFooter {
+  position: absolute;
+  bottom: 20px; left: 0; right: 0;
+  z-index: 1;
+  font-size: 0.76rem;
+  color: rgba(255,255,255,0.45);
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 460px) {
+  .card    { padding: 34px 24px 28px; border-radius: 18px; }
+  .title   { font-size: 1.25rem; }
+  .iconRing { width: 74px; height: 74px; }
+}
