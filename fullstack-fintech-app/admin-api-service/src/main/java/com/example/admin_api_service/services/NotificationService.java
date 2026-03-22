@@ -1,47 +1,42 @@
 package com.example.admin_api_service.services;
 
+import com.example.admin_api_service.Interfaces.INotificationService;
 import com.example.admin_api_service.clients.EmailService;
 import com.example.admin_api_service.enums.NotificationPriority;
 import com.example.admin_api_service.models.AdminUser;
 import com.example.admin_api_service.models.InAppNotification;
 import com.example.admin_api_service.repository.AdminUserRepository;
 import com.example.admin_api_service.repository.InAppNotificationRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NotificationService {
+public class NotificationService implements INotificationService{
 
     private final AdminUserRepository adminUserRepository;
     private final InAppNotificationRepository inAppNotificationRepository;
     private final EmailService emailService;
 
-    /**
-     * Notify all admins with high priority notification
-     */
+    @Override
     public void notifyAdmins(NotificationPriority priority, String title, String message) {
         notifyAdmins(priority, title, message, null);
     }
 
-    /**
-     * Notify all admins with optional additional data
-     */
-    public void notifyAdmins(NotificationPriority priority, String title, String message, Object data) {
+    private void notifyAdmins(NotificationPriority priority, String title, String message, Object data) {
         List<AdminUser> admins = adminUserRepository.findByIsActiveTrue();
 
         for (AdminUser admin : admins) {
             createInAppNotification(admin, priority, title, message, data);
         }
 
-        // For high priority, also send email
         if (priority == NotificationPriority.HIGH || priority == NotificationPriority.CRITICAL) {
             sendEmailToAdmins(priority, title, message, admins);
         }
@@ -49,9 +44,6 @@ public class NotificationService {
         log.info("Notification sent to {} admins: {} - {}", admins.size(), title, message);
     }
 
-    /**
-     * Notify a specific admin
-     */
     public void notifyAdmin(Long adminId, NotificationPriority priority, String title, String message) {
         adminUserRepository.findById(adminId).ifPresent(admin -> {
             createInAppNotification(admin, priority, title, message, null);
@@ -62,17 +54,13 @@ public class NotificationService {
         });
     }
 
-    /**
-     * Notify a specific admin with additional data
-     */
     public void notifyAdmin(Long adminId, NotificationPriority priority, String title, String message, Object data) {
         adminUserRepository.findById(adminId).ifPresent(admin -> {
             createInAppNotification(admin, priority, title, message, data);
         });
     }
 
-    private void createInAppNotification(AdminUser admin, NotificationPriority priority, 
-                                        String title, String message, Object data) {
+    private void createInAppNotification(AdminUser admin, NotificationPriority priority,  String title, String message, Object data) {
         InAppNotification notification = InAppNotification.builder()
                 .adminId(admin.getId())
                 .priority(priority)
@@ -103,10 +91,9 @@ public class NotificationService {
     }
 
     private String convertToJson(Object data) {
-        // Implement JSON conversion (using Jackson/Gson)
         try {
             return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(data);
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             log.error("Failed to convert notification data to JSON", e);
             return null;
         }

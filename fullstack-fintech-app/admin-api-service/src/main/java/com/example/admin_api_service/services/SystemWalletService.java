@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import com.example.admin_api_service.Interfaces.ISystemWalletService;
 import com.example.admin_api_service.components.ReferenceGenerator;
 import com.example.admin_api_service.components.WalletFundedEvent;
 import com.example.admin_api_service.enums.AlertStatus;
@@ -37,8 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
-public class SystemWalletService {
-
+public class SystemWalletService implements ISystemWalletService{
+    
     private final SystemWalletRepository systemWalletRepository;
     private final LiquidityTransactionRepository transactionRepository;
     private final LiquidityThresholdAlertRepository alertRepository;
@@ -236,10 +237,7 @@ public class SystemWalletService {
     }
 
 
-    private LiquidityTransaction buildTransaction(SystemWallet wallet,
-            LiquidityTransactionType type, BigDecimal amount,
-            BigDecimal before, BigDecimal after,
-            String reference, String description, Long adminId) {
+    private LiquidityTransaction buildTransaction(SystemWallet wallet, LiquidityTransactionType type, BigDecimal amount, BigDecimal before, BigDecimal after, String reference, String description, Long adminId) {
         return LiquidityTransaction.builder()
                 .systemWallet(wallet)
                 .type(type)
@@ -257,11 +255,7 @@ public class SystemWalletService {
     }
 
     @Transactional
-    public DashboardSummaryResponse buildDashboardSummary(
-            long totalUsers,
-            long totalHistory,
-            long totalVirtualCards
-    ) {
+    public DashboardSummaryResponse buildDashboardSummary(long totalUsers, long totalHistory, long totalVirtualCards) {
         List<SystemWallet> wallets = systemWalletRepository.findAll();
 
         List<SystemWalletResponse> walletResponses = wallets.stream()
