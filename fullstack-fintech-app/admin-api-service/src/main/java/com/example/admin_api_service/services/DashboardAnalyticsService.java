@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.example.admin_api_service.Interfaces.IDashboardAnalyticsService;
 import com.example.admin_api_service.clients.HistoryServiceClient;
 import com.example.admin_api_service.enums.AnalyticsPeriod;
 import com.example.admin_api_service.responses.AnalyticsDataPoint;
@@ -12,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class DashboardAnalyticsService {
+public class DashboardAnalyticsService implements IDashboardAnalyticsService{
 
     private final HistoryServiceClient historyServiceClient;
 

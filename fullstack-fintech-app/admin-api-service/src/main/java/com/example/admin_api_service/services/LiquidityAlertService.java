@@ -3,6 +3,8 @@ package com.example.admin_api_service.services;
 import java.util.List;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+
+import com.example.admin_api_service.Interfaces.ILiquidityAlertService;
 import com.example.admin_api_service.components.LiquidityAlertTriggeredEvent;
 import com.example.admin_api_service.enums.AlertStatus;
 import com.example.admin_api_service.models.LiquidityThresholdAlert;
@@ -17,15 +19,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
-public class LiquidityAlertService {
+public class LiquidityAlertService implements ILiquidityAlertService{
 
     private final LiquidityThresholdAlertRepository alertRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public void evaluateThreshold(SystemWallet wallet) {
         if (!wallet.isBelowThreshold()) return;
-
-        // Avoid duplicate active alerts for the same wallet
+        
         boolean hasActiveAlert = alertRepository
                 .findBySystemWalletIdAndStatus(wallet.getId(), AlertStatus.ACTIVE)
                 .stream().findAny().isPresent();

@@ -10,6 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.example.admin_api_service.Interfaces.IAuthService;
 import com.example.admin_api_service.models.AdminUser;
 import com.example.admin_api_service.payloads.LoginRequest;
 import com.example.admin_api_service.repository.AdminUserRepository;
@@ -25,7 +27,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class AuthService {
+public class AuthService implements IAuthService{
 
     private final AdminUserRepository adminUserRepository;
     private final JwtService jwtService;

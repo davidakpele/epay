@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.example.admin_api_service.Interfaces.ILiquidityReportService;
 import com.example.admin_api_service.enums.AlertStatus;
 import com.example.admin_api_service.enums.Currency;
 import com.example.admin_api_service.enums.LiquidityTransactionType;
@@ -22,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class LiquidityReportService {
+public class LiquidityReportService implements ILiquidityReportService{
 
     private final SystemWalletRepository walletRepository;
     private final LiquidityTransactionRepository transactionRepository;

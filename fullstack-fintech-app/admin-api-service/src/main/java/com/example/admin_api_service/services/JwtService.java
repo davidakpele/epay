@@ -14,6 +14,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.example.admin_api_service.Interfaces.IJwtService;
 import com.example.admin_api_service.components.JwtProperties;
 import com.example.admin_api_service.exceptions.JwtAuthenticationException;
 
@@ -32,8 +33,8 @@ import io.jsonwebtoken.security.SignatureException;
 import io.jsonwebtoken.security.WeakKeyException;
 
 @Service
-public class JwtService {
-
+public class JwtService implements IJwtService{
+    
     private final JwtProperties jwtProperties;
     private final Key signingKey;
 

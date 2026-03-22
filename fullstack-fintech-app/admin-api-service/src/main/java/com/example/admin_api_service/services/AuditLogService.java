@@ -1,32 +1,28 @@
 package com.example.admin_api_service.services;
 
+import com.example.admin_api_service.Interfaces.IAuditLogService;
 import com.example.admin_api_service.enums.AuditAction;
 import com.example.admin_api_service.models.AuditLog;
 import com.example.admin_api_service.repository.AuditLogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
 import jakarta.servlet.http.HttpServletRequest;
-
 import java.time.LocalDateTime;
 import java.util.Map;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AuditLogService {
+public class AuditLogService implements IAuditLogService{
 
     private final AuditLogRepository auditLogRepository;
     private final HttpServletRequest request; 
     private final ObjectMapper objectMapper;
-
+    
     /**
      * Log an audit event
      */
@@ -59,15 +55,13 @@ public class AuditLogService {
      * Log an audit event with before/after state
      */
     @Async
-    public void logWithState(AuditAction action, Long adminId, String details, 
-                            Object beforeState, Object afterState) {
+    public void logWithState(AuditAction action, Long adminId, String details, Object beforeState, Object afterState) {
         try {
             Map<String, Object> auditData = Map.of(
                 "before", beforeState,
                 "after", afterState,
                 "timestamp", LocalDateTime.now()
             );
-
             AuditLog auditLog = AuditLog.builder()
                     .action(action)
                     .adminId(adminId)
@@ -82,7 +76,6 @@ public class AuditLogService {
             
         } catch (JsonProcessingException e) {
             log.error("Failed to create audit log with state", e);
-            // Fallback to simple log
             log(action, adminId, details);
         }
     }

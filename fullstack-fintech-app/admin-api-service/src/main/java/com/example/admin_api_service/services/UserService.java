@@ -1,12 +1,14 @@
 package com.example.admin_api_service.services;
 
 import org.springframework.stereotype.Service;
+
+import com.example.admin_api_service.Interfaces.IUserService;
 import com.example.admin_api_service.dto.AdminDTO;
 import com.example.admin_api_service.models.AdminUser;
 import com.example.admin_api_service.repository.AdminUserRepository;
 
 @Service 
-public class UserService {
+public class UserService implements IUserService{
 
     private final AdminUserRepository userRepository;
     
