@@ -1,0 +1,16 @@
+package com.example.admin_api_service.enums;
+
+public enum FreezeReason {
+    AML_INVESTIGATION,
+    FRAUD_SUSPICION,
+    COURT_ORDER,
+    REGULATORY_DIRECTIVE,
+    KYC_EXPIRED,
+    KYC_FAILED,
+    CHARGEBACK_DISPUTE,
+    SUSPICIOUS_ACTIVITY,
+    USER_REQUEST,
+    ACCOUNT_COMPROMISE,
+    SANCTION_MATCH,
+    ADMIN_REVIEW
+}

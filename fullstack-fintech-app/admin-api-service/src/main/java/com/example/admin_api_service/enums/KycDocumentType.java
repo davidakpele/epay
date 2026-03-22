@@ -1,0 +1,16 @@
+package com.example.admin_api_service.enums;
+
+public enum KycDocumentType {
+    NATIONAL_ID,
+    INTERNATIONAL_PASSPORT,
+    DRIVERS_LICENSE,
+    VOTERS_CARD,
+    RESIDENCE_PERMIT,
+    PROOF_OF_ADDRESS,
+    UTILITY_BILL,
+    BANK_STATEMENT,
+    TAX_IDENTIFICATION,
+    CORPORATE_REGISTRATION,
+    SELFIE,
+    LIVENESS_CHECK
+}
