@@ -7,17 +7,14 @@ import com.example.admin_api_service.models.AdminUser;
 import com.example.admin_api_service.models.InAppNotification;
 import com.example.admin_api_service.repository.AdminUserRepository;
 import com.example.admin_api_service.repository.InAppNotificationRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 
 @Service
 @RequiredArgsConstructor
@@ -28,17 +25,11 @@ public class NotificationService implements INotificationService{
     private final InAppNotificationRepository inAppNotificationRepository;
     private final EmailService emailService;
 
-    /**
-     * Notify all admins with high priority notification
-     */
     @Override
     public void notifyAdmins(NotificationPriority priority, String title, String message) {
         notifyAdmins(priority, title, message, null);
     }
 
-    /**
-     * Notify all admins with optional additional data
-     */
     private void notifyAdmins(NotificationPriority priority, String title, String message, Object data) {
         List<AdminUser> admins = adminUserRepository.findByIsActiveTrue();
 
@@ -46,7 +37,6 @@ public class NotificationService implements INotificationService{
             createInAppNotification(admin, priority, title, message, data);
         }
 
-        // For high priority, also send email
         if (priority == NotificationPriority.HIGH || priority == NotificationPriority.CRITICAL) {
             sendEmailToAdmins(priority, title, message, admins);
         }
@@ -54,9 +44,6 @@ public class NotificationService implements INotificationService{
         log.info("Notification sent to {} admins: {} - {}", admins.size(), title, message);
     }
 
-    /**
-     * Notify a specific admin
-     */
     public void notifyAdmin(Long adminId, NotificationPriority priority, String title, String message) {
         adminUserRepository.findById(adminId).ifPresent(admin -> {
             createInAppNotification(admin, priority, title, message, null);
@@ -67,9 +54,6 @@ public class NotificationService implements INotificationService{
         });
     }
 
-    /**
-     * Notify a specific admin with additional data
-     */
     public void notifyAdmin(Long adminId, NotificationPriority priority, String title, String message, Object data) {
         adminUserRepository.findById(adminId).ifPresent(admin -> {
             createInAppNotification(admin, priority, title, message, data);
