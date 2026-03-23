@@ -100,7 +100,7 @@ public class ApprovalRequestServiceImpl implements IApprovalRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ApprovalRequest> getPendingRequestsForAdmin(String adminUserId, Pageable pageable) {
+    public Page<ApprovalRequest> getPendingRequestsForAdmin(Long adminUserId, Pageable pageable) {
         return requestRepository.findPendingRequestsForAdmin(adminUserId, pageable);
     }
 

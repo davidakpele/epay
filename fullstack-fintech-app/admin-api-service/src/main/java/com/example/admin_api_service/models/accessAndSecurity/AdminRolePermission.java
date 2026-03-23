@@ -35,40 +35,76 @@ public class AdminRolePermission {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "permission_id", insertable = false, updatable = false)
-    private AdminPermission permission;
+    private AdminPermission adminPermission;
 
     public AdminRolePermission() {
     }
 
-    public AdminRolePermission(String id, String roleId, String permissionId, String grantedBy, LocalDateTime grantedOn, AdminRole role, AdminPermission permission) {
+
+    public AdminRolePermission(String id, String roleId, String permissionId, String grantedBy, LocalDateTime grantedOn, AdminRole role, AdminPermission adminPermission) {
         this.id = id;
         this.roleId = roleId;
         this.permissionId = permissionId;
         this.grantedBy = grantedBy;
         this.grantedOn = grantedOn;
         this.role = role;
-        this.permission = permission;
+        this.adminPermission = adminPermission;
     }
 
-    // Getters & Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getId() {
+        return this.id;
+    }
 
-    public String getRoleId() { return roleId; }
-    public void setRoleId(String roleId) { this.roleId = roleId; }
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public String getPermissionId() { return permissionId; }
-    public void setPermissionId(String permissionId) { this.permissionId = permissionId; }
+    public String getRoleId() {
+        return this.roleId;
+    }
 
-    public String getGrantedBy() { return grantedBy; }
-    public void setGrantedBy(String grantedBy) { this.grantedBy = grantedBy; }
+    public void setRoleId(String roleId) {
+        this.roleId = roleId;
+    }
 
-    public LocalDateTime getGrantedOn() { return grantedOn; }
-    public void setGrantedOn(LocalDateTime grantedOn) { this.grantedOn = grantedOn; }
+    public String getPermissionId() {
+        return this.permissionId;
+    }
 
-    public AdminRole getRole() { return role; }
-    public void setRole(AdminRole role) { this.role = role; }
+    public void setPermissionId(String permissionId) {
+        this.permissionId = permissionId;
+    }
 
-    public AdminPermission getPermission() { return permission; }
-    public void setPermission(AdminPermission permission) { this.permission = permission; }
+    public String getGrantedBy() {
+        return this.grantedBy;
+    }
+
+    public void setGrantedBy(String grantedBy) {
+        this.grantedBy = grantedBy;
+    }
+
+    public LocalDateTime getGrantedOn() {
+        return this.grantedOn;
+    }
+
+    public void setGrantedOn(LocalDateTime grantedOn) {
+        this.grantedOn = grantedOn;
+    }
+
+    public AdminRole getRole() {
+        return this.role;
+    }
+
+    public void setRole(AdminRole role) {
+        this.role = role;
+    }
+
+    public AdminPermission getAdminPermission() {
+        return this.adminPermission;
+    }
+
+    public void setAdminPermission(AdminPermission adminPermission) {
+        this.adminPermission = adminPermission;
+    }
+   
 }

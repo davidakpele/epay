@@ -100,7 +100,7 @@ public class ServiceHealthLogServiceImpl implements IServiceHealthLogService {
     @Override
     @Transactional(readOnly = true)
     public List<ServiceHealthLog> getRecentAlerts(int limitPerService) {
-        return healthLogRepository.findAllByAlertTriggedTrueOrderByCheckedAtDesc(
+        return healthLogRepository.findAllByAlertTriggeredTrueOrderByCheckedAtDesc(
                 PageRequest.of(0, limitPerService, Sort.by("checkedAt").descending()));
     }
 

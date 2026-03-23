@@ -79,7 +79,7 @@ public class ApprovalRequestController {
 
     @GetMapping("/pending-for-me")
     public ResponseEntity<ApiResponse<Page<ApprovalRequest>>> getPendingForMe(
-            @AuthenticationPrincipal String adminId,
+            @AuthenticationPrincipal Long adminId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 

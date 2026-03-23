@@ -18,7 +18,7 @@ public interface ServiceHealthLogRepository extends JpaRepository<ServiceHealthL
     Page<ServiceHealthLog> findAllByServiceNameOrderByCheckedAtDesc(String serviceName, Pageable pageable);
     Page<ServiceHealthLog> findAllByStatus(ServiceHealthStatus status, Pageable pageable);
     Optional<ServiceHealthLog> findTopByServiceNameOrderByCheckedAtDesc(String serviceName);
-    List<ServiceHealthLog> findAllByAlertTriggedTrueOrderByCheckedAtDesc(Pageable pageable);
+    List<ServiceHealthLog> findAllByAlertTriggeredTrueOrderByCheckedAtDesc(Pageable pageable);
  
     // Latest log per distinct service name
     @Query("SELECT s FROM ServiceHealthLog s WHERE s.checkedAt = " +

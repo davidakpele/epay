@@ -27,7 +27,7 @@ public interface IApprovalRequestService {
  
     Page<ApprovalRequest> getRequestsByRequestedBy(String adminUserId, Pageable pageable);
  
-    Page<ApprovalRequest> getPendingRequestsForAdmin(String adminUserId, Pageable pageable);
+    Page<ApprovalRequest> getPendingRequestsForAdmin(Long adminUserId, Pageable pageable);
  
     // Approve the current step — advance to next or mark fully approved
     ApprovalRequest approveStep(String requestId, String approvedBy, String note);
