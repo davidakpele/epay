@@ -208,4 +208,10 @@ public class UserKycServiceImpl implements IUserKycService {
                 .map(UserKyc::getTier)
                 .orElse(KycTier.TIER_0);
     }
+
+    @Override
+    public boolean hasOpenKyc(Long userId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'hasOpenKyc'");
+    }
 }

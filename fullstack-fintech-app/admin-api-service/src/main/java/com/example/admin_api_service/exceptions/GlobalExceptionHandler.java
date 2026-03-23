@@ -2,7 +2,6 @@ package com.example.admin_api_service.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,16 +15,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import com.example.admin_api_service.dto.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 
 @RestControllerAdvice
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -70,7 +66,7 @@ public class GlobalExceptionHandler {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-
+        
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", 403);
@@ -110,8 +106,6 @@ public class GlobalExceptionHandler {
                 ex.getMessage(), request);
     }
 
-    // ── Security Firewall ─────────────────────────────────────────────────────
-
     @ExceptionHandler(RequestRejectedException.class)
     public ResponseEntity<Map<String, Object>> handleRequestRejected(
             RequestRejectedException ex, HttpServletRequest request) {
@@ -121,15 +115,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    // ── Not Found ─────────────────────────────────────────────────────────────
-
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotFound(
             UserNotFoundException ex, HttpServletRequest request) {
         return buildError(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request);
     }
-
-    // ── Fallback ──────────────────────────────────────────────────────────────
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGlobal(
@@ -155,7 +145,7 @@ public class GlobalExceptionHandler {
         ApiResponse<Void> response = ApiResponse.error(ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
- 
+
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ApiResponse<Void>> handleForbidden(ForbiddenException ex) {
         ApiResponse<Void> response = ApiResponse.error(ex.getMessage());
