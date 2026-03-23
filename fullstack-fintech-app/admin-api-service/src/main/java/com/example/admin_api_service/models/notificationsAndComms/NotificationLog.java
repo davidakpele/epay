@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.example.admin_api_service.enums.NotificationChannel;
 import com.example.admin_api_service.enums.NotificationLogStatus;
+import com.example.admin_api_service.enums.NotificationPriority;
 import com.example.admin_api_service.enums.NotificationTriggerEvent;
 
 @Entity
@@ -16,7 +17,6 @@ public class NotificationLog {
     @Column(name = "id", length = 36, nullable = false, updatable = false)
     private String id = UUID.randomUUID().toString();
 
-    // Template used — null if sent without a template (e.g. admin ad-hoc message)
     @Column(name = "template_id", length = 36)
     private String templateId;
 
@@ -27,7 +27,7 @@ public class NotificationLog {
     private Long walletId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "trigger_event", length = 60, nullable = false)
+    @Column(name = "trigger_event", length = 60)
     private NotificationTriggerEvent triggerEvent;
 
     @Enumerated(EnumType.STRING)
@@ -38,38 +38,46 @@ public class NotificationLog {
     @Column(name = "status", length = 20, nullable = false)
     private NotificationLogStatus status = NotificationLogStatus.PENDING;
 
-    // Recipient address: email address, phone number, or device token
+    /**
+     * Dispatch priority — controls queue ordering in the sending worker.
+     * Defaults to NORMAL.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "priority", length = 20, nullable = false)
+    private NotificationPriority priority = NotificationPriority.NORMAL;
+
+    /** Recipient address: email address, phone number, or device token */
     @Column(name = "recipient_address", length = 300, nullable = false)
     private String recipientAddress;
 
     @Column(name = "subject", length = 500)
     private String subject;
 
-    // Final rendered body after variable substitution
+    /** Final rendered body after variable substitution */
     @Column(name = "body", columnDefinition = "text", nullable = false)
     private String body;
 
-    // Context data used to render the template stored as JSON
+    /** Context data used to render the template, stored as JSON */
     @Column(name = "template_variables", columnDefinition = "json")
     private String templateVariables;
 
-    // ID of the entity that triggered this notification (transactionId, kycId, etc.)
+    /** ID of the entity that triggered this notification (transactionId, kycId, etc.) */
     @Column(name = "source_entity_id", length = 36)
     private String sourceEntityId;
 
-    // Type of the source entity e.g. "TRANSACTION", "KYC", "CHARGEBACK"
+    /** Type of the source entity e.g. "TRANSACTION", "KYC", "CHARGEBACK" */
     @Column(name = "source_entity_type", length = 50)
     private String sourceEntityType;
 
-    // Reference returned by the notification provider (e.g. SendGrid message ID, Twilio SID)
+    /** Reference returned by the notification provider (e.g. SendGrid message ID, Twilio SID) */
     @Column(name = "provider_reference", length = 200)
     private String providerReference;
 
-    // Name of the provider used e.g. "SendGrid", "Termii", "Firebase"
+    /** Name of the provider used e.g. "SendGrid", "Termii", "Firebase" */
     @Column(name = "provider_name", length = 100)
     private String providerName;
 
-    // Full provider response stored as JSON
+    /** Full provider response stored as JSON */
     @Column(name = "provider_response", columnDefinition = "json")
     private String providerResponse;
 
@@ -88,13 +96,21 @@ public class NotificationLog {
     @Column(name = "delivered_at")
     private LocalDateTime deliveredAt;
 
+    /** Populated when the recipient opens the message (email open tracking, in-app read) */
     @Column(name = "read_at")
     private LocalDateTime readAt;
 
     @Column(name = "next_retry_at")
     private LocalDateTime nextRetryAt;
 
-    // Whether this was triggered by the system or manually sent by an admin
+    /**
+     * When set, this notification will not be dispatched until this timestamp is reached.
+     * Null means dispatch immediately.
+     */
+    @Column(name = "scheduled_at")
+    private LocalDateTime scheduledAt;
+
+    /** Whether this was triggered by the system or manually sent by an admin */
     @Column(name = "is_manual", nullable = false)
     private boolean isManual = false;
 
@@ -107,7 +123,6 @@ public class NotificationLog {
     @Column(name = "updated_on", nullable = false)
     private LocalDateTime updatedOn = LocalDateTime.now();
 
-    // Navigation
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template_id", insertable = false, updatable = false)
     private NotificationTemplate template;
@@ -115,41 +130,12 @@ public class NotificationLog {
     @PreUpdate
     public void preUpdate() { this.updatedOn = LocalDateTime.now(); }
 
-    public NotificationLog() {
-    }
+    public NotificationLog() {}
 
-    public NotificationLog(String id, String templateId, Long userId, Long walletId, NotificationTriggerEvent triggerEvent, NotificationChannel channel, NotificationLogStatus status, String recipientAddress, String subject, String body, String templateVariables, String sourceEntityId, String sourceEntityType, String providerReference, String providerName, String providerResponse, String failureReason, int retryCount, int maxRetries, LocalDateTime sentAt, LocalDateTime deliveredAt, LocalDateTime readAt, LocalDateTime nextRetryAt, boolean isManual, String initiatedBy, LocalDateTime createdOn, LocalDateTime updatedOn, NotificationTemplate template) {
-        this.id = id;
-        this.templateId = templateId;
-        this.userId = userId;
-        this.walletId = walletId;
-        this.triggerEvent = triggerEvent;
-        this.channel = channel;
-        this.status = status;
-        this.recipientAddress = recipientAddress;
-        this.subject = subject;
-        this.body = body;
-        this.templateVariables = templateVariables;
-        this.sourceEntityId = sourceEntityId;
-        this.sourceEntityType = sourceEntityType;
-        this.providerReference = providerReference;
-        this.providerName = providerName;
-        this.providerResponse = providerResponse;
-        this.failureReason = failureReason;
-        this.retryCount = retryCount;
-        this.maxRetries = maxRetries;
-        this.sentAt = sentAt;
-        this.deliveredAt = deliveredAt;
-        this.readAt = readAt;
-        this.nextRetryAt = nextRetryAt;
-        this.isManual = isManual;
-        this.initiatedBy = initiatedBy;
-        this.createdOn = createdOn;
-        this.updatedOn = updatedOn;
-        this.template = template;
-    }
-
+    // -------------------------------------------------------------------------
     // Getters & Setters
+    // -------------------------------------------------------------------------
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -170,6 +156,9 @@ public class NotificationLog {
 
     public NotificationLogStatus getStatus() { return status; }
     public void setStatus(NotificationLogStatus status) { this.status = status; }
+
+    public NotificationPriority getPriority() { return priority; }
+    public void setPriority(NotificationPriority priority) { this.priority = priority; }
 
     public String getRecipientAddress() { return recipientAddress; }
     public void setRecipientAddress(String recipientAddress) { this.recipientAddress = recipientAddress; }
@@ -218,6 +207,9 @@ public class NotificationLog {
 
     public LocalDateTime getNextRetryAt() { return nextRetryAt; }
     public void setNextRetryAt(LocalDateTime nextRetryAt) { this.nextRetryAt = nextRetryAt; }
+
+    public LocalDateTime getScheduledAt() { return scheduledAt; }
+    public void setScheduledAt(LocalDateTime scheduledAt) { this.scheduledAt = scheduledAt; }
 
     public boolean isManual() { return isManual; }
     public void setManual(boolean manual) { isManual = manual; }
