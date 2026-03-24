@@ -15,7 +15,7 @@ import java.util.Map;
 
 
 @RestController
-@RequestMapping("/admin/2fa")
+@RequestMapping("/2fa")
 public class AdminTwoFactorAuthController {
 
     private final IAdminTwoFactorAuthService twoFactorAuthService;

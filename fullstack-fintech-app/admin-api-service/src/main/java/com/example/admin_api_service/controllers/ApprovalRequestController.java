@@ -16,7 +16,7 @@ import com.example.admin_api_service.payloads.ApprovalActionRequest;
 import com.example.admin_api_service.payloads.ApprovalRequestSubmit;
 
 @RestController
-@RequestMapping("/admin/approval-requests")
+@RequestMapping("/approval-requests")
 public class ApprovalRequestController {
 
     private final IApprovalRequestService approvalRequestService;

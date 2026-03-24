@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/admin/password")
+@RequestMapping("/password")
 public class AdminPasswordHistoryController {
 
     private static final int HISTORY_DEPTH = 5;

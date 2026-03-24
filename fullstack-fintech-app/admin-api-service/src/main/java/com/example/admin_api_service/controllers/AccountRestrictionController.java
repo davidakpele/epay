@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/admin/account-restrictions")
+@RequestMapping("/account-restrictions")
 public class AccountRestrictionController {
 
     private final IAccountRestrictionService restrictionService;

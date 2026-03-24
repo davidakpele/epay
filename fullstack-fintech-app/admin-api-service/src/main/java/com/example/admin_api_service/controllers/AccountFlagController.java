@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/admin/account-flags")
+@RequestMapping("/account-flags")
 public class AccountFlagController {
 
     private final IAccountFlagService flagService;

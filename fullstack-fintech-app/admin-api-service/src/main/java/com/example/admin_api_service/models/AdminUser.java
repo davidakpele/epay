@@ -76,7 +76,7 @@ public class AdminUser implements UserDetails {
     @Column(nullable = false, unique = true, length = 100)
     private String username;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     private AdminRole role;
 

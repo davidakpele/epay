@@ -20,7 +20,7 @@ import com.example.admin_api_service.payloads.ReorderStepsRequest;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/approval-workflows")
+@RequestMapping("/approval-workflows")
 public class ApprovalWorkflowController {
 
     private final IApprovalWorkflowService workflowService;

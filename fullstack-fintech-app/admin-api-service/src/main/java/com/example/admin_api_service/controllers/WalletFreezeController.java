@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/admin/wallet-freezes")
+@RequestMapping("/wallet-freezes")
 public class WalletFreezeController {
 
     private final IWalletFreezeService walletFreezeService;

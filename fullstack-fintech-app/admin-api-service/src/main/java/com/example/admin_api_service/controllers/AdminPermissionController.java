@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/permissions")
+@RequestMapping("/permissions")
 public class AdminPermissionController {
 
     private final IAdminPermissionService adminPermissionService;

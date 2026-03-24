@@ -11,10 +11,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.example.admin_api_service.dto.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@RestControllerAdvice
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class GlobalExceptionHandler {
 
@@ -32,7 +31,6 @@ public class GlobalExceptionHandler {
     public GlobalExceptionHandler(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
-    // ── Authentication ────────────────────────────────────────────────────────
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUsernameNotFound(
@@ -48,14 +46,19 @@ public class GlobalExceptionHandler {
                 "Invalid username or password", request);
     }
 
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Map<String, Object>> handleMediaTypeNotAcceptable(
+            HttpMediaTypeNotAcceptableException ex, HttpServletRequest request) {
+        return buildError(HttpStatus.NOT_ACCEPTABLE, "Not Acceptable",
+                "Requested media type is not supported", request);
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Map<String, Object>> handleAuthentication(
             AuthenticationException ex, HttpServletRequest request) {
         return buildError(HttpStatus.UNAUTHORIZED, "Unauthorized",
                 "Authentication is required to access this resource", request);
     }
-
-    // ── Authorization ─────────────────────────────────────────────────────────
 
     @ExceptionHandler(AuthorizationDeniedException.class)
     public void handleAuthorizationDenied(
@@ -76,7 +79,6 @@ public class GlobalExceptionHandler {
 
         objectMapper.writeValue(response.getWriter(), body);
     }
-    // ── JWT ───────────────────────────────────────────────────────────────────
 
     @ExceptionHandler(JwtAuthenticationException.class)
     public ResponseEntity<Map<String, Object>> handleJwtAuthentication(

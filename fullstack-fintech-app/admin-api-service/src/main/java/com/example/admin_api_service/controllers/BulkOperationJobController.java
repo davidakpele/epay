@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/admin/bulk-operations")
+@RequestMapping("/bulk-operations")
 public class BulkOperationJobController {
 
     private final IBulkOperationJobService jobService;

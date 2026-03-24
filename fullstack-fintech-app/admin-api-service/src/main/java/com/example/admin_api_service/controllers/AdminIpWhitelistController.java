@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/admin/ip-whitelist")
+@RequestMapping("/ip-whitelist")
 public class AdminIpWhitelistController {
 
     private final IAdminIpWhitelistService ipWhitelistService;

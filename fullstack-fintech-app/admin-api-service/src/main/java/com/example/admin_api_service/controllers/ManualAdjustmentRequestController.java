@@ -17,7 +17,7 @@ import com.example.admin_api_service.payloads.MarkExecutedRequest;
 import com.example.admin_api_service.payloads.ReasonRequest;
 
 @RestController
-@RequestMapping("/admin/manual-adjustments")
+@RequestMapping("/manual-adjustments")
 public class ManualAdjustmentRequestController {
 
     private final IManualAdjustmentRequestService adjustmentService;
