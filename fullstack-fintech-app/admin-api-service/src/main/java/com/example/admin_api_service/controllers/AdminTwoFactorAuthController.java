@@ -13,6 +13,7 @@ import com.example.admin_api_service.payloads.TwoFactorVerifyRequest;
 import java.util.List;
 import java.util.Map;
 
+
 @RestController
 @RequestMapping("/admin/2fa")
 public class AdminTwoFactorAuthController {
@@ -25,7 +26,7 @@ public class AdminTwoFactorAuthController {
 
     @PostMapping("/{adminUserId}/initiate")
     public ResponseEntity<ApiResponse<AdminTwoFactorAuth>> initiate(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @Valid @RequestBody TwoFactorInitiateRequest request) {
 
         AdminTwoFactorAuth twoFA = twoFactorAuthService.initiate2FA(
@@ -36,7 +37,7 @@ public class AdminTwoFactorAuthController {
 
     @PostMapping("/{adminUserId}/verify")
     public ResponseEntity<ApiResponse<AdminTwoFactorAuth>> verify(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @Valid @RequestBody TwoFactorVerifyRequest request) {
 
         AdminTwoFactorAuth twoFA = twoFactorAuthService.verify2FA(
@@ -46,7 +47,7 @@ public class AdminTwoFactorAuthController {
 
     @PostMapping("/{adminUserId}/enable")
     public ResponseEntity<ApiResponse<Void>> enable(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @Valid @RequestBody TwoFactorInitiateRequest request) {
 
         twoFactorAuthService.enable2FA(adminUserId, request.getMethod());
@@ -55,7 +56,7 @@ public class AdminTwoFactorAuthController {
 
     @PostMapping("/{adminUserId}/disable")
     public ResponseEntity<ApiResponse<Void>> disable(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @Valid @RequestBody TwoFactorDisableRequest request,
             @AuthenticationPrincipal String adminId) {
 
@@ -65,7 +66,7 @@ public class AdminTwoFactorAuthController {
 
     @GetMapping("/{adminUserId}/status")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getStatus(
-            @PathVariable String adminUserId) {
+            @PathVariable Long adminUserId) {
 
         boolean enabled = twoFactorAuthService.is2FAEnabled(adminUserId);
         boolean locked = twoFactorAuthService.is2FALocked(adminUserId);
@@ -81,7 +82,7 @@ public class AdminTwoFactorAuthController {
 
     @PostMapping("/{adminUserId}/validate")
     public ResponseEntity<ApiResponse<Boolean>> validateCode(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @RequestBody Map<String, String> body) {
 
         String code = body.get("code");
@@ -91,7 +92,7 @@ public class AdminTwoFactorAuthController {
 
     @PostMapping("/{adminUserId}/validate-backup")
     public ResponseEntity<ApiResponse<Boolean>> validateBackupCode(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @RequestBody Map<String, String> body) {
 
         String backupCode = body.get("backupCode");
@@ -101,7 +102,7 @@ public class AdminTwoFactorAuthController {
 
     @PostMapping("/{adminUserId}/backup-codes/regenerate")
     public ResponseEntity<ApiResponse<List<String>>> regenerateBackupCodes(
-            @PathVariable String adminUserId) {
+            @PathVariable Long adminUserId) {
 
         List<String> codes = twoFactorAuthService.regenerateBackupCodes(adminUserId);
         return ResponseEntity.ok(ApiResponse.success(codes,
@@ -110,7 +111,7 @@ public class AdminTwoFactorAuthController {
 
     @PostMapping("/{adminUserId}/reset-attempts")
     public ResponseEntity<ApiResponse<Void>> resetFailedAttempts(
-            @PathVariable String adminUserId) {
+            @PathVariable Long adminUserId) {
 
         twoFactorAuthService.resetFailedAttempts(adminUserId);
         return ResponseEntity.ok(ApiResponse.success(null, "Failed attempts reset"));

@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import com.example.admin_api_service.enums.PermissionAction;
 import com.example.admin_api_service.enums.PermissionModule;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "admin_permissions")
@@ -42,7 +43,7 @@ public class AdminPermission {
     private LocalDateTime createdOn = LocalDateTime.now();
 
     // ================= RELATIONSHIPS =================
-
+    @JsonIgnore
     @OneToMany(mappedBy = "adminPermission", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AdminRolePermission> rolePermissions = new ArrayList<>();
 

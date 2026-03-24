@@ -40,13 +40,12 @@ public class AdminIpWhitelistController {
         entry.setExpiresAt(request.getExpiresAt());
 
         AdminIpWhitelist created = ipWhitelistService.addToWhitelist(entry, adminId);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(created, "IP added to whitelist"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(created, "IP added to whitelist"));
     }
 
     @PostMapping("/admin/{adminUserId}")
     public ResponseEntity<ApiResponse<AdminIpWhitelist>> addEntryForAdmin(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @Valid @RequestBody IpWhitelistRequest request,
             @AuthenticationPrincipal String adminId) {
 
@@ -56,10 +55,8 @@ public class AdminIpWhitelistController {
         entry.setLabel(request.getLabel());
         entry.setScope(request.getScope());
         entry.setExpiresAt(request.getExpiresAt());
-
         AdminIpWhitelist created = ipWhitelistService.addToWhitelist(entry, adminId);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(created, "IP whitelisted for admin"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(created, "IP whitelisted for admin"));
     }
 
     @GetMapping

@@ -1,11 +1,7 @@
 package com.example.admin_api_service.services;
 
-import com.example.admin_api_service.Interfaces.IAdminIpWhitelistService;
-import com.example.admin_api_service.enums.IpWhitelistScope;
-import com.example.admin_api_service.exceptions.ConflictException;
-import com.example.admin_api_service.exceptions.ResourceNotFoundException;
-import com.example.admin_api_service.models.accessAndSecurity.AdminIpWhitelist;
-import com.example.admin_api_service.repository.AdminIpWhitelistRepository;
+import java.time.LocalDateTime;
+import java.util.List;
 
 import org.apache.commons.net.util.SubnetUtils;
 import org.springframework.data.domain.Page;
@@ -14,8 +10,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.example.admin_api_service.Interfaces.IAdminIpWhitelistService;
+import com.example.admin_api_service.enums.IpWhitelistScope;
+import com.example.admin_api_service.exceptions.ConflictException;
+import com.example.admin_api_service.exceptions.ResourceNotFoundException;
+import com.example.admin_api_service.models.accessAndSecurity.AdminIpWhitelist;
+import com.example.admin_api_service.repository.AdminIpWhitelistRepository;
 
 @Service
 @Transactional
@@ -53,9 +53,9 @@ public class AdminIpWhitelistServiceImpl implements IAdminIpWhitelistService {
         return ipWhitelistRepository.findAll(pageable);
     }
 
-    @Override
+
     @Transactional(readOnly = true)
-    public List<AdminIpWhitelist> getWhitelistEntriesForAdmin(String adminUserId) {
+    public List<AdminIpWhitelist> getWhitelistEntriesForAdmin(Long adminUserId) {
         return ipWhitelistRepository.findAllByAdminUserIdAndIsActiveTrue(adminUserId);
     }
 
@@ -75,9 +75,8 @@ public class AdminIpWhitelistServiceImpl implements IAdminIpWhitelistService {
         ipWhitelistRepository.save(entry);
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public boolean isIpAllowed(String ipAddress, String adminUserId) {
+    public boolean isIpAllowed(String ipAddress, Long adminUserId) {
         // Check global rules first
         if (isGlobalIpAllowed(ipAddress)) return true;
 
@@ -115,9 +114,7 @@ public class AdminIpWhitelistServiceImpl implements IAdminIpWhitelistService {
             ipWhitelistRepository.saveAll(expired);
         }
     }
-
-    // ── Private helpers ────────────────────────────────────────────────────────
-
+    
     private boolean matchesIpOrCidr(String ipAddress, String ipOrCidr) {
         if (!ipOrCidr.contains("/")) {
             return ipAddress.equals(ipOrCidr);
@@ -129,5 +126,17 @@ public class AdminIpWhitelistServiceImpl implements IAdminIpWhitelistService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public List<AdminIpWhitelist> getWhitelistEntriesForAdmin(String adminUserId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getWhitelistEntriesForAdmin'");
+    }
+
+    @Override
+    public boolean isIpAllowed(String ipAddress, String adminUserId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'isIpAllowed'");
     }
 }

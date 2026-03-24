@@ -24,7 +24,7 @@ public class AdminPasswordHistoryServiceImpl implements IAdminPasswordHistorySer
     }
 
     @Override
-    public AdminPasswordHistory recordPasswordChange(String adminUserId, String newPasswordHash,
+    public AdminPasswordHistory recordPasswordChange(Long adminUserId, String newPasswordHash,
                                                      String changeReason, String changedBy,
                                                      String ipAddress, String userAgent) {
         AdminPasswordHistory history = new AdminPasswordHistory();
@@ -39,7 +39,7 @@ public class AdminPasswordHistoryServiceImpl implements IAdminPasswordHistorySer
 
     @Override
     @Transactional(readOnly = true)
-    public boolean isPasswordReused(String adminUserId, String rawPassword, int historyDepth) {
+    public boolean isPasswordReused(Long adminUserId, String rawPassword, int historyDepth) {
         List<AdminPasswordHistory> recentHistory = passwordHistoryRepository
                 .findTopNByAdminUserIdOrderByCreatedOnDesc(adminUserId, historyDepth);
 
@@ -49,20 +49,20 @@ public class AdminPasswordHistoryServiceImpl implements IAdminPasswordHistorySer
 
     @Override
     @Transactional(readOnly = true)
-    public List<AdminPasswordHistory> getPasswordHistory(String adminUserId) {
+    public List<AdminPasswordHistory> getPasswordHistory(Long adminUserId) {
         return passwordHistoryRepository.findAllByAdminUserIdOrderByCreatedOnDesc(adminUserId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public AdminPasswordHistory getLatestPasswordRecord(String adminUserId) {
+    public AdminPasswordHistory getLatestPasswordRecord(Long adminUserId) {
         return passwordHistoryRepository.findTopByAdminUserIdOrderByCreatedOnDesc(adminUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("AdminPasswordHistory", "adminUserId", adminUserId));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public boolean isPasswordExpired(String adminUserId, int maxPasswordAgeDays) {
+    public boolean isPasswordExpired(Long adminUserId, int maxPasswordAgeDays) {
         return passwordHistoryRepository.findTopByAdminUserIdOrderByCreatedOnDesc(adminUserId)
                 .map(latest -> latest.getCreatedOn()
                         .plusDays(maxPasswordAgeDays)

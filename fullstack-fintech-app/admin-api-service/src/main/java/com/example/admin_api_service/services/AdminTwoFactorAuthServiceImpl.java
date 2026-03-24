@@ -51,8 +51,7 @@ public class AdminTwoFactorAuthServiceImpl implements IAdminTwoFactorAuthService
         this.objectMapper = objectMapper;
     }
 
-    @Override
-    public AdminTwoFactorAuth initiate2FA(String adminUserId, TwoFactorMethod method) {
+    public AdminTwoFactorAuth initiate2FA(Long adminUserId, TwoFactorMethod method) {
         twoFactorAuthRepository.findByAdminUserIdAndMethodAndIsEnabledTrue(adminUserId, method)
                 .ifPresent(existing -> {
                     throw new ConflictException("2FA method " + method + " is already active for this admin");
@@ -66,14 +65,13 @@ public class AdminTwoFactorAuthServiceImpl implements IAdminTwoFactorAuthService
 
         if (method == TwoFactorMethod.TOTP || method == TwoFactorMethod.AUTHENTICATOR_APP) {
             String secret = new DefaultSecretGenerator().generate();
-            twoFA.setSecret(secret); // Store encrypted in production via @Convert
+            twoFA.setSecret(secret);
         }
 
         return twoFactorAuthRepository.save(twoFA);
     }
 
-    @Override
-    public AdminTwoFactorAuth verify2FA(String adminUserId, TwoFactorMethod method, String code) {
+    public AdminTwoFactorAuth verify2FA(Long adminUserId, TwoFactorMethod method, String code) {
         AdminTwoFactorAuth twoFA = twoFactorAuthRepository
                 .findByAdminUserIdAndMethod(adminUserId, method)
                 .orElseThrow(() -> new ResourceNotFoundException("AdminTwoFactorAuth", "adminUserId+method", adminUserId));
@@ -92,8 +90,7 @@ public class AdminTwoFactorAuthServiceImpl implements IAdminTwoFactorAuthService
         return twoFactorAuthRepository.save(twoFA);
     }
 
-    @Override
-    public void enable2FA(String adminUserId, TwoFactorMethod method) {
+    public void enable2FA(Long adminUserId, TwoFactorMethod method) {
         AdminTwoFactorAuth twoFA = twoFactorAuthRepository
                 .findByAdminUserIdAndMethod(adminUserId, method)
                 .orElseThrow(() -> new ResourceNotFoundException("AdminTwoFactorAuth", "adminUserId+method", adminUserId));
@@ -119,8 +116,7 @@ public class AdminTwoFactorAuthServiceImpl implements IAdminTwoFactorAuthService
         twoFactorAuthRepository.save(twoFA);
     }
 
-    @Override
-    public void disable2FA(String adminUserId, TwoFactorMethod method, String disabledBy) {
+    public void disable2FA(Long adminUserId, TwoFactorMethod method, String disabledBy) {
         AdminTwoFactorAuth twoFA = twoFactorAuthRepository
                 .findByAdminUserIdAndMethod(adminUserId, method)
                 .orElseThrow(() -> new ResourceNotFoundException("AdminTwoFactorAuth", "adminUserId+method", adminUserId));
@@ -133,8 +129,7 @@ public class AdminTwoFactorAuthServiceImpl implements IAdminTwoFactorAuthService
         twoFactorAuthRepository.save(twoFA);
     }
 
-    @Override
-    public boolean validate2FACode(String adminUserId, String code) {
+    public boolean validate2FACode(Long adminUserId, String code) {
         return twoFactorAuthRepository.findByAdminUserIdAndIsEnabledTrue(adminUserId)
                 .stream()
                 .anyMatch(twoFA -> {
@@ -143,8 +138,7 @@ public class AdminTwoFactorAuthServiceImpl implements IAdminTwoFactorAuthService
                 });
     }
 
-    @Override
-    public boolean validateBackupCode(String adminUserId, String backupCode) {
+    public boolean validateBackupCode(Long adminUserId, String backupCode) {
         List<AdminTwoFactorAuth> methods = twoFactorAuthRepository.findByAdminUserIdAndIsEnabledTrue(adminUserId);
 
         for (AdminTwoFactorAuth twoFA : methods) {
@@ -171,8 +165,7 @@ public class AdminTwoFactorAuthServiceImpl implements IAdminTwoFactorAuthService
         return false;
     }
 
-    @Override
-    public List<String> regenerateBackupCodes(String adminUserId) {
+    public List<String> regenerateBackupCodes(Long adminUserId) {
         AdminTwoFactorAuth twoFA = twoFactorAuthRepository.findByAdminUserIdAndIsEnabledTrue(adminUserId)
                 .stream().findFirst()
                 .orElseThrow(() -> new BadRequestException("No active 2FA method found for this admin"));
@@ -193,43 +186,37 @@ public class AdminTwoFactorAuthServiceImpl implements IAdminTwoFactorAuthService
         return plainCodes; // Return plain codes once — never again
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public Optional<AdminTwoFactorAuth> getActive2FA(String adminUserId) {
+    public Optional<AdminTwoFactorAuth> getActive2FA(Long adminUserId) {
         return twoFactorAuthRepository.findByAdminUserIdAndIsEnabledTrue(adminUserId)
                 .stream().findFirst();
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public List<AdminTwoFactorAuth> getAll2FAMethods(String adminUserId) {
+    public List<AdminTwoFactorAuth> getAll2FAMethods(Long adminUserId) {
         return twoFactorAuthRepository.findAllByAdminUserId(adminUserId);
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public boolean is2FAEnabled(String adminUserId) {
+    public boolean is2FAEnabled(Long adminUserId) {
         return !twoFactorAuthRepository.findByAdminUserIdAndIsEnabledTrue(adminUserId).isEmpty();
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public boolean is2FALocked(String adminUserId) {
+    public boolean is2FALocked(Long adminUserId) {
         return twoFactorAuthRepository.findAllByAdminUserId(adminUserId).stream()
                 .anyMatch(twoFA -> twoFA.getLockedUntil() != null
                         && twoFA.getLockedUntil().isAfter(LocalDateTime.now()));
     }
 
-    @Override
-    public void resetFailedAttempts(String adminUserId) {
+    public void resetFailedAttempts(Long adminUserId) {
         twoFactorAuthRepository.findAllByAdminUserId(adminUserId).forEach(twoFA -> {
             twoFA.setFailedAttempts(0);
             twoFA.setLockedUntil(null);
         });
     }
 
-    @Override
-    public void incrementFailedAttempts(String adminUserId) {
+    public void incrementFailedAttempts(Long adminUserId) {
         twoFactorAuthRepository.findAllByAdminUserId(adminUserId).forEach(twoFA -> {
             int attempts = twoFA.getFailedAttempts() + 1;
             twoFA.setFailedAttempts(attempts);
@@ -239,8 +226,6 @@ public class AdminTwoFactorAuthServiceImpl implements IAdminTwoFactorAuthService
             twoFactorAuthRepository.save(twoFA);
         });
     }
-
-    // ── Private helpers ────────────────────────────────────────────────────────
 
     private void checkLockStatus(AdminTwoFactorAuth twoFA) {
         if (twoFA.getLockedUntil() != null && twoFA.getLockedUntil().isAfter(LocalDateTime.now())) {

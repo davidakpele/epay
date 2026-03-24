@@ -43,7 +43,7 @@ public class AdminSessionController {
 
     @GetMapping("/admin/{adminUserId}")
     public ResponseEntity<ApiResponse<Page<AdminSession>>> getSessionsByAdmin(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
@@ -54,7 +54,7 @@ public class AdminSessionController {
 
     @GetMapping("/admin/{adminUserId}/active")
     public ResponseEntity<ApiResponse<List<AdminSession>>> getActiveSessionsByAdmin(
-            @PathVariable String adminUserId) {
+            @PathVariable Long adminUserId) {
         return ResponseEntity.ok(ApiResponse.success(
                 adminSessionService.getActiveSessionsByAdminUser(adminUserId)));
     }
@@ -71,7 +71,7 @@ public class AdminSessionController {
 
     @DeleteMapping("/admin/{adminUserId}/all")
     public ResponseEntity<ApiResponse<Void>> revokeAllSessionsForAdmin(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @AuthenticationPrincipal String adminId) {
 
         adminSessionService.revokeAllSessionsForAdminUser(
@@ -81,7 +81,7 @@ public class AdminSessionController {
 
     @DeleteMapping("/admin/{adminUserId}/others")
     public ResponseEntity<ApiResponse<Void>> revokeOtherSessions(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @RequestParam String currentSessionId,
             @AuthenticationPrincipal String adminId) {
 

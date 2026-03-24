@@ -31,7 +31,7 @@ public class AdminPasswordHistoryController {
 
     @PostMapping("/{adminUserId}/change")
     public ResponseEntity<ApiResponse<Void>> changePassword(
-            @PathVariable String adminUserId,
+            @PathVariable Long adminUserId,
             @Valid @RequestBody PasswordChangeRequest request,
             @AuthenticationPrincipal String requestingAdminId,
             HttpServletRequest httpRequest) {
@@ -57,7 +57,7 @@ public class AdminPasswordHistoryController {
 
     @GetMapping("/{adminUserId}/history")
     public ResponseEntity<ApiResponse<List<AdminPasswordHistory>>> getPasswordHistory(
-            @PathVariable String adminUserId) {
+            @PathVariable Long adminUserId) {
 
         List<AdminPasswordHistory> history =
                 passwordHistoryService.getPasswordHistory(adminUserId);
@@ -66,7 +66,7 @@ public class AdminPasswordHistoryController {
 
     @GetMapping("/{adminUserId}/expired")
     public ResponseEntity<ApiResponse<Map<String, Object>>> checkExpiry(
-            @PathVariable String adminUserId) {
+            @PathVariable Long adminUserId) {
 
         boolean expired = passwordHistoryService
                 .isPasswordExpired(adminUserId, MAX_PASSWORD_AGE_DAYS);

@@ -39,6 +39,7 @@ public class AuthService implements IAuthService{
         this.authenticationManager = authenticationManager;
     }
 
+    @Override
     public ResponseEntity<?> login(LoginRequest request, HttpServletResponse response, HttpServletRequest httpRequest) {
         Map<String, Object> authResponse = new HashMap<>();
         Optional<AdminUser> userInfo = adminUserRepository.findByUsername(request.getUsername());
@@ -82,7 +83,10 @@ public class AuthService implements IAuthService{
                 "email", user.getEmail(),
                 "firstName", user.getFirstName(),
                 "lastName", user.getLastName(),
-                "role", user.getRole()
+                "role", Map.of(
+                    "id", user.getRole().getId(),
+                    "name", user.getRole().getName()
+                )
             ));
             authResponse.put("expiresIn", jwtService.getExpirationDate(accessToken));
 
@@ -97,6 +101,7 @@ public class AuthService implements IAuthService{
         }
     }
 
+    @Override
     public ResponseEntity<?> refreshToken(String refreshToken, HttpServletResponse response) {
         Map<String, Object> authResponse = new HashMap<>();
 
@@ -159,6 +164,7 @@ public class AuthService implements IAuthService{
         }
     }
 
+    @Override
     public ResponseEntity<?> logout(HttpServletResponse response) {
         Map<String, Object> authResponse = new HashMap<>();
         
@@ -178,6 +184,7 @@ public class AuthService implements IAuthService{
         }
     }
 
+    @Override
     public ResponseEntity<?> validateToken(String token) {
         Map<String, Object> authResponse = new HashMap<>();
         

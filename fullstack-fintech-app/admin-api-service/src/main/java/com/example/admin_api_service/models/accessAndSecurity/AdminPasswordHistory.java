@@ -14,8 +14,8 @@ public class AdminPasswordHistory {
     @Column(name = "id", length = 36, nullable = false, updatable = false)
     private String id = UUID.randomUUID().toString();
 
-    @Column(name = "admin_user_id", length = 36, nullable = false)
-    private String adminUserId;
+    @Column(name = "admin_user_id", nullable = false)
+    private Long adminUserId;
 
     // Bcrypt / Argon2 hash — never plaintext
     @Column(name = "password_hash", length = 500, nullable = false)
@@ -45,7 +45,7 @@ public class AdminPasswordHistory {
     public AdminPasswordHistory() {
     }
 
-    public AdminPasswordHistory(String id, String adminUserId, String passwordHash, String ipAddress, String userAgent, String changeReason, String changedBy, LocalDateTime createdOn, AdminUser adminUser) {
+    public AdminPasswordHistory(String id, Long adminUserId, String passwordHash, String ipAddress, String userAgent, String changeReason, String changedBy, LocalDateTime createdOn, AdminUser adminUser) {
         this.id = id;
         this.adminUserId = adminUserId;
         this.passwordHash = passwordHash;
@@ -61,8 +61,8 @@ public class AdminPasswordHistory {
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public String getAdminUserId() { return adminUserId; }
-    public void setAdminUserId(String adminUserId) { this.adminUserId = adminUserId; }
+    public Long getAdminUserId() { return adminUserId; }
+    public void setAdminUserId(Long adminUserId) { this.adminUserId = adminUserId; }
 
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }

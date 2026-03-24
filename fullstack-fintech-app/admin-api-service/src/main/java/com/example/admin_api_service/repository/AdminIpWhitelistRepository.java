@@ -11,9 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface AdminIpWhitelistRepository extends JpaRepository<AdminIpWhitelist, String> {
-
     @Query("SELECT a FROM AdminIpWhitelist a WHERE a.adminUserId = :adminUserId AND a.isActive = true")
-    List<AdminIpWhitelist> findAllByAdminUserIdAndIsActiveTrue(String adminUserId);
+    List<AdminIpWhitelist> findAllByAdminUserIdAndIsActiveTrue(Long adminUserId);
 
     @Query("SELECT a FROM AdminIpWhitelist a WHERE a.scope = :scope AND a.isActive = true")
     List<AdminIpWhitelist> findAllByScopeAndIsActiveTrue(IpWhitelistScope scope);
@@ -27,7 +26,7 @@ public interface AdminIpWhitelistRepository extends JpaRepository<AdminIpWhiteli
            "AND a.ipAddressOrCidr = :ipAddressOrCidr " +
            "AND a.isActive = true")
     boolean existsByAdminUserIdAndIpAddressOrCidrAndIsActiveTrue(
-            String adminUserId,
+            Long adminUserId,
             String ipAddressOrCidr
     );
 

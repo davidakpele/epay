@@ -7,6 +7,7 @@ import java.util.UUID;
 import com.example.admin_api_service.enums.IpWhitelistScope;
 import com.example.admin_api_service.models.AdminUser;
 
+
 @Entity
 @Table(
     name = "admin_ip_whitelists",
@@ -19,8 +20,8 @@ public class AdminIpWhitelist {
     private String id = UUID.randomUUID().toString();
 
     // Null = global rule; set = scoped to one admin
-    @Column(name = "admin_user_id", length = 36)
-    private String adminUserId;
+    @Column(name = "admin_user_id")
+    private Long adminUserId;
 
     // Single IP (192.168.1.1) or CIDR range (10.0.0.0/24)
     @Column(name = "ip_address_or_cidr", length = 50, nullable = false)
@@ -70,7 +71,7 @@ public class AdminIpWhitelist {
     public AdminIpWhitelist() {
     }
 
-    public AdminIpWhitelist(String id, String adminUserId, String ipAddressOrCidr, String label, IpWhitelistScope scope, boolean isActive, LocalDateTime expiresAt, String createdBy, String revokedBy, LocalDateTime revokedAt, String revokedReason, LocalDateTime createdOn, LocalDateTime updatedOn, AdminUser adminUser) {
+    public AdminIpWhitelist(String id, Long adminUserId, String ipAddressOrCidr, String label, IpWhitelistScope scope, boolean isActive, LocalDateTime expiresAt, String createdBy, String revokedBy, LocalDateTime revokedAt, String revokedReason, LocalDateTime createdOn, LocalDateTime updatedOn, AdminUser adminUser) {
         this.id = id;
         this.adminUserId = adminUserId;
         this.ipAddressOrCidr = ipAddressOrCidr;
@@ -91,8 +92,8 @@ public class AdminIpWhitelist {
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public String getAdminUserId() { return adminUserId; }
-    public void setAdminUserId(String adminUserId) { this.adminUserId = adminUserId; }
+    public Long getAdminUserId() { return adminUserId; }
+    public void setAdminUserId(Long adminUserId) { this.adminUserId = adminUserId; }
 
     public String getIpAddressOrCidr() { return ipAddressOrCidr; }
     public void setIpAddressOrCidr(String ipAddressOrCidr) { this.ipAddressOrCidr = ipAddressOrCidr; }

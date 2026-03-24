@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import com.example.admin_api_service.enums.TwoFactorMethod;
 import com.example.admin_api_service.models.AdminUser;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "admin_two_factor_auth")
@@ -14,8 +15,8 @@ public class AdminTwoFactorAuth {
     @Column(name = "id", length = 36, nullable = false, updatable = false)
     private String id = UUID.randomUUID().toString();
 
-    @Column(name = "admin_user_id", length = 36, nullable = false)
-    private String adminUserId;
+    @Column(name = "admin_user_id", nullable = false)
+    private Long adminUserId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "method", length = 20, nullable = false)
@@ -57,6 +58,7 @@ public class AdminTwoFactorAuth {
     private LocalDateTime updatedOn = LocalDateTime.now();
 
     // Navigation
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_user_id", insertable = false, updatable = false)
     private AdminUser adminUser;
@@ -69,7 +71,7 @@ public class AdminTwoFactorAuth {
     public AdminTwoFactorAuth() {
     }
 
-    public AdminTwoFactorAuth(String id, String adminUserId, TwoFactorMethod method, String secret, boolean isEnabled, boolean isVerified, String backupCodes, int backupCodesRemainingCount, LocalDateTime enabledAt, LocalDateTime lastUsedAt, int failedAttempts, LocalDateTime lockedUntil, LocalDateTime createdOn, LocalDateTime updatedOn, AdminUser adminUser) {
+    public AdminTwoFactorAuth(String id, Long adminUserId, TwoFactorMethod method, String secret, boolean isEnabled, boolean isVerified, String backupCodes, int backupCodesRemainingCount, LocalDateTime enabledAt, LocalDateTime lastUsedAt, int failedAttempts, LocalDateTime lockedUntil, LocalDateTime createdOn, LocalDateTime updatedOn, AdminUser adminUser) {
         this.id = id;
         this.adminUserId = adminUserId;
         this.method = method;
@@ -91,8 +93,8 @@ public class AdminTwoFactorAuth {
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public String getAdminUserId() { return adminUserId; }
-    public void setAdminUserId(String adminUserId) { this.adminUserId = adminUserId; }
+    public Long getAdminUserId() { return adminUserId; }
+    public void setAdminUserId(Long adminUserId) { this.adminUserId = adminUserId; }
 
     public TwoFactorMethod getMethod() { return method; }
     public void setMethod(TwoFactorMethod method) { this.method = method; }

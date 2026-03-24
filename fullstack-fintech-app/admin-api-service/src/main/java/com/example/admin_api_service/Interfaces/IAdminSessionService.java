@@ -8,7 +8,7 @@ import com.example.admin_api_service.enums.SessionTerminationReason;
 import com.example.admin_api_service.models.accessAndSecurity.AdminSession;
 
 public interface IAdminSessionService {
-    AdminSession createSession(String adminUserId, String accessToken, String refreshToken,
+    AdminSession createSession(Long adminUserId, String accessToken, String refreshToken,
                                String ipAddress, String userAgent, String deviceId,
                                String geoLocation, int accessTokenTtlMinutes);
  
@@ -18,15 +18,15 @@ public interface IAdminSessionService {
  
     Optional<AdminSession> getSessionByRefreshToken(String refreshToken);
  
-    Page<AdminSession> getSessionsByAdminUser(String adminUserId, Pageable pageable);
+    Page<AdminSession> getSessionsByAdminUser(Long adminUserId, Pageable pageable);
  
-    List<AdminSession> getActiveSessionsByAdminUser(String adminUserId);
+    List<AdminSession> getActiveSessionsByAdminUser(Long adminUserId);
  
     void revokeSession(String sessionId, String revokedBy, SessionTerminationReason reason);
  
-    void revokeAllSessionsForAdminUser(String adminUserId, SessionTerminationReason reason);
+    void revokeAllSessionsForAdminUser(Long adminUserId, SessionTerminationReason reason);
  
-    void revokeAllSessionsExcept(String adminUserId, String currentSessionId, SessionTerminationReason reason);
+    void revokeAllSessionsExcept(Long adminUserId, String currentSessionId, SessionTerminationReason reason);
  
     void updateLastActivity(String sessionId);
  
