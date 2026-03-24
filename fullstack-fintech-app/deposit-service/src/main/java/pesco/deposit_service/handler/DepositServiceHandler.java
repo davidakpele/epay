@@ -1,6 +1,7 @@
 package pesco.deposit_service.handler;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -51,18 +52,18 @@ public class DepositServiceHandler implements DepositService {
                         HttpStatus.FORBIDDEN,
                         "The wallet does not belong to you.");
             }
-            
+
             if (request.getDepositSystem() == null) {
                 return Error.createResponse("Deposit system is required.", HttpStatus.BAD_REQUEST,
-                        "Please provide a depositSystem: PAYSTACK, PAYSTACK_CARD, or PAYSTACK_USSD");
+                        "Please provide a depositSystem: PAYSTACK, CARD, or USSD");
             }
 
             return switch (request.getDepositSystem()) {
-                case PAYSTACK       -> processPaystackDeposit(wallet, request, token);
-                case CARD  -> processPaystackCardDeposit(wallet, request, token);
-                case USSD  -> processPaystackUssdDeposit(wallet, request, token);
+                case PAYSTACK -> processPaystackDeposit(wallet, request, token);
+                case CARD     -> processPaystackCardDeposit(wallet, request, token);
+                case USSD     -> processPaystackUssdDeposit(wallet, request, token);
                 default -> Error.createResponse("Unsupported deposit system.", HttpStatus.BAD_REQUEST,
-                        "Use PAYSTACK, PAYSTACK_CARD, or PAYSTACK_USSD");
+                        "Use PAYSTACK, CARD, or USSD");
             };
 
         } catch (BanKDetailsNotFound e) {
@@ -74,7 +75,12 @@ public class DepositServiceHandler implements DepositService {
         }
     }
 
-    private ResponseEntity<?> processPaystackCardDeposit(WalletDTO wallet, DepositRequest request, String token)throws JsonProcessingException {
+    // ─────────────────────────────────────────────────────────────────────────
+    // CARD
+    // ─────────────────────────────────────────────────────────────────────────
+    private ResponseEntity<?> processPaystackCardDeposit(WalletDTO wallet, DepositRequest request, String token)
+            throws JsonProcessingException {
+
         BigDecimal previousBalance = resolveBalance(wallet, request.getCurrencyType().toString());
         boolean creditSuccess = creditWallet(request, token);
 
@@ -88,38 +94,30 @@ public class DepositServiceHandler implements DepositService {
         WalletDTO updated = walletServiceClient.findByUserId(request.getUserId(), token);
         BigDecimal newBalance = resolveBalance(updated, request.getCurrencyType().toString());
 
-        DepositHistoryRequest historyRequest = buildHistoryRequest(request, previousBalance, newBalance, transactionId);
+        DepositHistoryRequest historyRequest = buildHistoryRequest(request, previousBalance, newBalance, transactionId, "CARD");
         historyRequest.setDescription("CARD//INTO " + request.getUsername().toUpperCase()
                 + " " + request.getCurrencyType() + " ACCOUNT");
 
-        CompletableFuture.runAsync(() -> {
-            try { historyServiceClient.createDepositHistory(historyRequest, token); }
-            catch (Exception ignored) {}
-        });
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                notificationServiceWebClient.sendDepositNotification(
-                        request.getEmail(), request.getUsername(), request.getAmount(),
-                        request.getCurrencyType(), previousBalance, newBalance,
-                        request.getUsername().toUpperCase(), transactionId, request.getCurrencySymbol()
-                );
-            } catch (Exception ignored) {}
-        });
+        dispatchHistory(historyRequest, token);
+        dispatchNotification(request, previousBalance, newBalance, transactionId);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(Map.of(
-                    "status", "success",
-                    "transactionId", transactionId,
-                    "previousBalance", previousBalance,
-                    "newBalance", newBalance,
-                    "currency", request.getCurrencyType().toString(),
-                    "depositMethod", "CARD",
-                    "timestamp", System.currentTimeMillis()
-            ));
+                .body(Map.of(
+                        "status", "success",
+                        "transactionId", transactionId,
+                        "previousBalance", previousBalance,
+                        "newBalance", newBalance,
+                        "currency", request.getCurrencyType().toString(),
+                        "depositMethod", "CARD",
+                        "timestamp", System.currentTimeMillis()
+                ));
     }
 
-    private ResponseEntity<?> processPaystackUssdDeposit(WalletDTO wallet, DepositRequest request, String token)throws JsonProcessingException {
+    // ─────────────────────────────────────────────────────────────────────────
+    // USSD
+    // ─────────────────────────────────────────────────────────────────────────
+    private ResponseEntity<?> processPaystackUssdDeposit(WalletDTO wallet, DepositRequest request, String token)
+            throws JsonProcessingException {
 
         BigDecimal previousBalance = resolveBalance(wallet, request.getCurrencyType().toString());
         boolean creditSuccess = creditWallet(request, token);
@@ -134,38 +132,28 @@ public class DepositServiceHandler implements DepositService {
         WalletDTO updated = walletServiceClient.findByUserId(request.getUserId(), token);
         BigDecimal newBalance = resolveBalance(updated, request.getCurrencyType().toString());
 
-        DepositHistoryRequest historyRequest = buildHistoryRequest(request, previousBalance, newBalance, transactionId);
+        DepositHistoryRequest historyRequest = buildHistoryRequest(request, previousBalance, newBalance, transactionId, "USSD");
         historyRequest.setDescription("USSD//INTO " + request.getUsername().toUpperCase()
                 + " " + request.getCurrencyType() + " ACCOUNT");
 
-        CompletableFuture.runAsync(() -> {
-            try { historyServiceClient.createDepositHistory(historyRequest, token); }
-            catch (Exception ignored) {}
-        });
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                notificationServiceWebClient.sendDepositNotification(
-                        request.getEmail(), request.getUsername(), request.getAmount(),
-                        request.getCurrencyType(), previousBalance, newBalance,
-                        request.getUsername().toUpperCase(), transactionId, request.getCurrencySymbol()
-                );
-            } catch (Exception ignored) {}
-        });
+        dispatchHistory(historyRequest, token);
+        dispatchNotification(request, previousBalance, newBalance, transactionId);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(Map.of(
-                    "status", "success",
-                    "transactionId", transactionId,
-                    "previousBalance", previousBalance,
-                    "newBalance", newBalance,
-                    "currency", request.getCurrencyType().toString(),
-                    "depositMethod", "USSD",
-                    "timestamp", System.currentTimeMillis()
-            ));
+                .body(Map.of(
+                        "status", "success",
+                        "transactionId", transactionId,
+                        "previousBalance", previousBalance,
+                        "newBalance", newBalance,
+                        "currency", request.getCurrencyType().toString(),
+                        "depositMethod", "USSD",
+                        "timestamp", System.currentTimeMillis()
+                ));
     }
 
-
+    // ─────────────────────────────────────────────────────────────────────────
+    // PAYSTACK (default / bank transfer)
+    // ─────────────────────────────────────────────────────────────────────────
     private ResponseEntity<?> processPaystackDeposit(WalletDTO wallet, DepositRequest request, String token)
             throws JsonProcessingException {
 
@@ -179,36 +167,15 @@ public class DepositServiceHandler implements DepositService {
 
         String transactionId = generateTransactionId();
 
-        CompletableFuture<BigDecimal> newBalanceFuture = CompletableFuture.supplyAsync(() -> {
+        BigDecimal newBalance = CompletableFuture.supplyAsync(() -> {
             WalletDTO updated = walletServiceClient.findByUserId(request.getUserId(), token);
             return resolveBalance(updated, request.getCurrencyType().toString());
-        });
+        }).join();
 
-        BigDecimal newBalance = newBalanceFuture.join();
+        DepositHistoryRequest historyRequest = buildHistoryRequest(request, previousBalance, newBalance, transactionId, "PAYSTACK");
 
-        DepositHistoryRequest historyRequest = buildHistoryRequest(request, previousBalance, newBalance, transactionId);
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                historyServiceClient.createDepositHistory(historyRequest, token);
-            } catch (Exception ignored) {}
-        });
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                notificationServiceWebClient.sendDepositNotification(
-                        request.getEmail(),
-                        request.getUsername(),
-                        request.getAmount(),
-                        request.getCurrencyType(),
-                        previousBalance,
-                        newBalance,
-                        request.getUsername().toUpperCase(),
-                        transactionId,
-                        request.getCurrencySymbol()
-                );
-            } catch (Exception ignored) {}
-        });
+        dispatchHistory(historyRequest, token);
+        dispatchNotification(request, previousBalance, newBalance, transactionId);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of(
@@ -217,21 +184,106 @@ public class DepositServiceHandler implements DepositService {
                         "previousBalance", previousBalance,
                         "newBalance", newBalance,
                         "currency", request.getCurrencyType().toString(),
+                        "depositMethod", "PAYSTACK",
                         "timestamp", System.currentTimeMillis()
                 ));
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Core builder — all fields mapped to C# History model
+    // ─────────────────────────────────────────────────────────────────────────
+    private DepositHistoryRequest buildHistoryRequest(
+            DepositRequest request,
+            BigDecimal previousBalance,
+            BigDecimal newBalance,
+            String transactionId,
+            String channel) {
+
+        String uName = request.getUsername().toUpperCase();
+
+        DepositHistoryRequest h = new DepositHistoryRequest();
+
+        // ── Core Identity ────────────────────────────────────────────
+        h.setTransactionId(transactionId);
+        h.setUserId(request.getUserId());
+        h.setWalletId(request.getWalletId());
+        h.setFullname(uName);                           // → AccountHolder
+
+        // ── Transaction Info ─────────────────────────────────────────
+        h.setType(TransactionType.DEPOSIT);
+        h.setDescription("DEPO//INTO " + uName + " " + request.getCurrencyType() + " ACCOUNT");
+        h.setMessage("Deposited " + request.getAmount() + " into your " + request.getCurrencyType() + " wallet.");
+        h.setCurrencyType(request.getCurrencyType());
+        h.setIpAddress(request.getIpAddress());                              // populate from HttpServletRequest if available
+
+        // ── Financial Amounts ────────────────────────────────────────
+        h.setAmount(request.getAmount());               // → GrossAmount
+        h.setFeeAmount(BigDecimal.ZERO);                // → FeeAmount   (extend later if Paystack charges fees)
+        h.setTaxAmount(BigDecimal.ZERO);                // → TaxAmount
+        h.setNetAmount(request.getAmount());            // → NetAmount   (gross - fee - tax)
+        h.setPreviousBalance(previousBalance);          // → PreviousBalance
+        h.setNewBalance(newBalance);                    // → AvailableBalance + RunningBalance
+
+        // ── Double-Entry Accounting ──────────────────────────────────
+        h.setDebitCredit("CREDIT");                     // deposits are always credits
+        h.setLedgerEntryType("DEPOSIT");                // → LedgerEntryType
+
+        // ── Channel & Device ─────────────────────────────────────────
+        h.setChannel(channel);                          // PAYSTACK | CARD | USSD → TransactionChannel
+        h.setDeviceId(request.getDeviceId());           // add getDeviceId() to DepositRequest if absent
+        h.setUserAgent(request.getUserAgent());         // add getUserAgent() to DepositRequest if absent
+        h.setGeoLocation(request.getGeoLocation());     // add getGeoLocation() to DepositRequest if absent
+        h.setInitiatedBy(request.getUserId().toString());
+        h.setStatus("SUCCESS");
+        h.setProcessedAt(Instant.now().toEpochMilli());        
+        // ── Idempotency ──────────────────────────────────────────────
+        h.setIdempotencyKey(request.getUserId() + "_" + transactionId);   
+        // ── Multi-Currency ───────────────────────────────────────────
+        h.setOriginalCurrency(request.getCurrencyType().toString());
+        h.setExchangeRate(BigDecimal.ONE);              // 1.0 unless FX conversion is involved
+
+        // ── Metadata ─────────────────────────────────────────────────
+        h.setCategory("DEPOSIT");                       // → TransactionCategory
+
+        return h;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Async helpers
+    // ─────────────────────────────────────────────────────────────────────────
+    private void dispatchHistory(DepositHistoryRequest historyRequest, String token) {
+        CompletableFuture.runAsync(() -> {
+            try { historyServiceClient.createDepositHistory(historyRequest, token); }
+            catch (Exception ignored) {}
+        });
+    }
+
+    private void dispatchNotification(DepositRequest request, BigDecimal previousBalance,
+                                       BigDecimal newBalance, String transactionId) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                notificationServiceWebClient.sendDepositNotification(
+                        request.getEmail(), request.getUsername(), request.getAmount(),
+                        request.getCurrencyType(), previousBalance, newBalance,
+                        request.getUsername().toUpperCase(), transactionId, request.getCurrencySymbol()
+                );
+            } catch (Exception ignored) {}
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Wallet helpers
+    // ─────────────────────────────────────────────────────────────────────────
     private boolean creditWallet(DepositRequest request, String token) {
         try {
-            CompletableFuture<Map<String, Object>> future = walletServiceClient.creditUserWallet(
+            Map<String, Object> result = walletServiceClient.creditUserWallet(
                     request.getUserId(),
                     request.getCurrencySymbol(),
                     request.getAmount().toString(),
                     request.getCurrencyType().toString(),
                     token
-            );
+            ).get(5, TimeUnit.SECONDS);
 
-            Map<String, Object> result = future.get(5, TimeUnit.SECONDS);
             return Boolean.TRUE.equals(result.get("success"));
 
         } catch (TimeoutException | ExecutionException e) {
@@ -240,30 +292,6 @@ public class DepositServiceHandler implements DepositService {
             Thread.currentThread().interrupt();
             return false;
         }
-    }
-
-    private DepositHistoryRequest buildHistoryRequest(
-            DepositRequest request,
-            BigDecimal previousBalance,
-            BigDecimal newBalance,
-            String transactionId) {
-
-        String uName = request.getUsername().toUpperCase();
-
-        DepositHistoryRequest h = new DepositHistoryRequest();
-        h.setTransactionId(transactionId);
-        h.setAmount(request.getAmount());
-        h.setCurrencyType(request.getCurrencyType());
-        h.setDescription("DEPO//INTO " + uName + " " + request.getCurrencyType() + " ACCOUNT");
-        h.setType(TransactionType.DEPOSIT);
-        h.setIp_address("");
-        h.setMessage("Deposited " + request.getAmount() + " into your " + request.getCurrencyType() + " wallet.");
-        h.setUserId(request.getUserId());
-        h.setWalletId(request.getWalletId());
-        h.setPreviousBalance(previousBalance);
-        h.setNewBalance(newBalance);
-        h.setFullname(uName);
-        return h;
     }
 
     private BigDecimal resolveBalance(WalletDTO wallet, String currencyCode) {

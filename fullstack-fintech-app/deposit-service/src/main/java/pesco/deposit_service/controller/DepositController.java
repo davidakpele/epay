@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
 import pesco.deposit_service.services.DepositService;
 import pesco.deposit_service.enums.TransactionType;
 import pesco.deposit_service.exceptions.Error;
@@ -25,7 +27,12 @@ public class DepositController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createDeposit(@RequestBody DepositRequest request,
-            @RequestHeader("Authorization") String authorizationHeader) {
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestHeader(value = "User-Agent", required = false) String userAgent,
+            @RequestHeader(value = "X-Geo-Location", required = false) String geoLocation,
+            @RequestHeader(value = "X-Device-Id", required = false) String deviceId,
+            HttpServletRequest httpRequest) {
+
         String token = authorizationHeader.replace("Bearer ", "");
         if (token.isBlank() || token.isEmpty()) {
             return Error.createResponse("UNAUTHORIZED*.",
@@ -41,6 +48,11 @@ public class DepositController {
             return Error.createResponse("Currency type is require.*", HttpStatus.BAD_REQUEST,
                     "Please provide the currency type you want deposit, e.g 'USD OR NGN'");
         }
+        
+        request.setUserAgent(userAgent);
+        request.setGeoLocation(geoLocation);
+        request.setDeviceId(deviceId);
+        request.setIpAddress(httpRequest.getRemoteAddr());
 
         if (request.getType().equals(TransactionType.DEPOSIT)) {
             return depositService.createDeposit(request, token);
