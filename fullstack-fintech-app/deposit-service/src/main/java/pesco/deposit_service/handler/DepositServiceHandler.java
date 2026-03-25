@@ -193,13 +193,14 @@ public class DepositServiceHandler implements DepositService {
     // Core builder — all fields mapped to C# History model
     // ─────────────────────────────────────────────────────────────────────────
     private DepositHistoryRequest buildHistoryRequest(
-            DepositRequest request,
-            BigDecimal previousBalance,
-            BigDecimal newBalance,
-            String transactionId,
-            String channel) {
+        DepositRequest request,
+        BigDecimal previousBalance,
+        BigDecimal newBalance,
+        String transactionId,
+        String channel) {
 
         String uName = request.getUsername().toUpperCase();
+        String now = Instant.now().toString();
 
         DepositHistoryRequest h = new DepositHistoryRequest();
 
@@ -207,43 +208,81 @@ public class DepositServiceHandler implements DepositService {
         h.setTransactionId(transactionId);
         h.setUserId(request.getUserId());
         h.setWalletId(request.getWalletId());
-        h.setFullname(uName);                           // → AccountHolder
+        h.setFullname(uName);
+        h.setSessionId(null);
+        h.setReferenceId(null);
+        h.setTerminalId(null);
+        h.setErId(null);
 
         // ── Transaction Info ─────────────────────────────────────────
         h.setType(TransactionType.DEPOSIT);
         h.setDescription("DEPO//INTO " + uName + " " + request.getCurrencyType() + " ACCOUNT");
         h.setMessage("Deposited " + request.getAmount() + " into your " + request.getCurrencyType() + " wallet.");
         h.setCurrencyType(request.getCurrencyType());
-        h.setIpAddress(request.getIpAddress());                              // populate from HttpServletRequest if available
+        h.setIpAddress(request.getIpAddress());
+        h.setStatus("SUCCESS");
+        h.setTimestamp(now);
 
         // ── Financial Amounts ────────────────────────────────────────
-        h.setAmount(request.getAmount());               // → GrossAmount
-        h.setFeeAmount(BigDecimal.ZERO);                // → FeeAmount   (extend later if Paystack charges fees)
-        h.setTaxAmount(BigDecimal.ZERO);                // → TaxAmount
-        h.setNetAmount(request.getAmount());            // → NetAmount   (gross - fee - tax)
-        h.setPreviousBalance(previousBalance);          // → PreviousBalance
-        h.setNewBalance(newBalance);                    // → AvailableBalance + RunningBalance
+        h.setAmount(request.getAmount()); 
+        h.setFeeAmount(BigDecimal.ZERO);
+        h.setTaxAmount(BigDecimal.ZERO);
+        h.setNetAmount(request.getAmount());
+        h.setPreviousBalance(previousBalance);
+        h.setNewBalance(newBalance);
 
         // ── Double-Entry Accounting ──────────────────────────────────
-        h.setDebitCredit("CREDIT");                     // deposits are always credits
-        h.setLedgerEntryType("DEPOSIT");                // → LedgerEntryType
+        h.setDebitCredit("CREDIT");
+        h.setLedgerEntryType("DEPOSIT");
 
-        // ── Channel & Device ─────────────────────────────────────────
-        h.setChannel(channel);                          // PAYSTACK | CARD | USSD → TransactionChannel
-        h.setDeviceId(request.getDeviceId());           // add getDeviceId() to DepositRequest if absent
-        h.setUserAgent(request.getUserAgent());         // add getUserAgent() to DepositRequest if absent
-        h.setGeoLocation(request.getGeoLocation());     // add getGeoLocation() to DepositRequest if absent
-        h.setInitiatedBy(request.getUserId().toString());
-        h.setStatus("SUCCESS");
-        h.setProcessedAt(Instant.now().toEpochMilli());        
-        // ── Idempotency ──────────────────────────────────────────────
-        h.setIdempotencyKey(request.getUserId() + "_" + transactionId);   
+        // ── Counterparty (null for deposits) ─────────────────────────
+        h.setCounterpartyWalletId(null);
+        h.setCounterpartyUserId(null);
+        h.setCounterpartyAccountHolder(null);
+        h.setBankCode(null);
+        h.setBankAccountNumber(null);
+        h.setRoutingNumber(null);
+        h.setExternalReference(null);
+
         // ── Multi-Currency ───────────────────────────────────────────
         h.setOriginalCurrency(request.getCurrencyType().toString());
-        h.setExchangeRate(BigDecimal.ONE);              // 1.0 unless FX conversion is involved
+        h.setExchangeRate(BigDecimal.ONE);
+
+        // ── Reversal & Disputes ──────────────────────────────────────
+        h.setParentHistoryId(null);
+        h.setReversalReason(null);
+        h.setDisputeStatus(null);
+        h.setDisputeReference(null);
+
+        // ── Idempotency & Retry ──────────────────────────────────────
+        h.setIdempotencyKey(request.getUserId() + "_" + transactionId);
+        h.setRetryCount(0);
+        h.setFailureReason(null);
+        h.setProcessedAt(now); 
+
+        // ── Channel & Device ─────────────────────────────────────────
+        h.setChannel(channel);
+        h.setDeviceId(request.getDeviceId());
+        h.setUserAgent(request.getUserAgent());
+        h.setGeoLocation(request.getGeoLocation());
+
+        // ── Compliance & Risk ────────────────────────────────────────
+        h.setRiskScore(BigDecimal.ZERO);
+        h.setAmlFlag(false);
+        h.setSanctionScreeningResult(null);
+        h.setComplianceNote(null);
+        h.setReviewedBy(null);
+
+        // ── Admin Audit ──────────────────────────────────────────────
+        h.setInitiatedBy(request.getUserId().toString());
+        h.setApprovedBy(null);
+        h.setApprovalTimestamp(null);
+        h.setAdminNote("Deposit of " + request.getCurrencyType() + " " + request.getAmount() + " via " + channel);
+        h.setManualAdjustmentFlag(false);
 
         // ── Metadata ─────────────────────────────────────────────────
-        h.setCategory("DEPOSIT");                       // → TransactionCategory
+        h.setCategory("DEPOSIT");
+        h.setTags(null);
 
         return h;
     }

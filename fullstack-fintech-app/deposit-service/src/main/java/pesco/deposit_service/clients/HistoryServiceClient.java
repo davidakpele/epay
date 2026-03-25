@@ -24,16 +24,23 @@ public class HistoryServiceClient {
     }
 
     public void createDepositHistory(DepositHistoryRequest historyRequest, String token) {
-        long startTime = System.currentTimeMillis();
+    long startTime = System.currentTimeMillis();
 
-        this.historyServiceWebClient.post()
+    try {
+        String payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(historyRequest);
+        log.info("[HistoryServiceClient] - Outgoing payload:\n{}", payload);
+    } catch (JsonProcessingException e) {
+        log.warn("[HistoryServiceClient] - Could not serialize payload: {}", e.getMessage());
+    }
+
+    this.historyServiceWebClient.post()
         .uri("/history/create/deposit")
         .headers(headers -> {
             if (token != null && !token.isBlank()) {
                 headers.setBearerAuth(token);
                 log.debug("[HistoryServiceClient] Authorization header set.");
             } else {
-                log.warn("[HistoryServiceClient] -  No token provided.");
+                log.warn("[HistoryServiceClient] - No token provided.");
             }
         })
         .bodyValue(historyRequest)
@@ -67,7 +74,7 @@ public class HistoryServiceClient {
             log.info("[HistoryServiceClient] - Finished | Signal: {} | Duration: {}ms", signal, elapsed);
         })
         .block();
-    }
+}
 
     private String extractDetailsFromError(String errorMessage) {
         log.debug("[HistoryServiceClient] Parsing error body: {}", errorMessage);
