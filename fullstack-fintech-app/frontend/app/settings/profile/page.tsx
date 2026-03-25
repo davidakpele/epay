@@ -20,10 +20,11 @@ import Footer from '@/components/Footer';
 import MobileNav from '@/components/MobileNav';
 import DepositModal from '@/components/DepositModal';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Toast } from '@/app/types/auth';
-import { userService, getUserId, updateCompleteProfileDetails, updateNotificationContainer, capitalizeFirstLetter } from '@/app/api/index';
+import { userService, getUserId, updateHasSeenMetaMap, updateCompleteProfileDetails, updateNotificationContainer, capitalizeFirstLetter, getUserEmail, getUserFirstName, getUserLastName, getHasSeenMetaMap } from '@/app/api/index';
+import KYCSuccessModal from '@/components/KYCSuccessModal';
+import { City, Country, State } from 'country-state-city';
 
 const UserProfile = () => {
   const [isPageLoading, setIsPageLoading] = useState(true);
@@ -37,7 +38,13 @@ const UserProfile = () => {
     bvn: '',
     firstName: '',
     lastName: '',
-    dob: ''
+    dob: '',
+    gender: '',
+    country: '',
+    countryCode: '',   // e.g. 'NG'
+    state: '',
+    stateCode: '',     // e.g. 'OY'
+    city: '',
   });
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isDepositOpen, setIsDepositOpen] = useState(false);
@@ -50,7 +57,10 @@ const UserProfile = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileImage, setProfileImage] = useState('/assets/images/user-profile.jpg');
   const [metaMapErrors, setMetaMapErrors] = useState<MetaMapErrors>({});
-
+  const [showKYCSuccess, setShowKYCSuccess] = useState(false);
+  const countries = Country.getAllCountries();
+  const states = State.getStatesOfCountry(metaMapData.countryCode);
+  const cities = City.getCitiesOfState(metaMapData.countryCode, metaMapData.stateCode);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -102,7 +112,12 @@ const UserProfile = () => {
 
   useEffect(() => {
     fetchUserProfile();
-    const hasSeenMetaMap = localStorage.getItem('hasSeenMetaMap');
+
+    const firstName = getUserFirstName() || '';
+    const lastName = getUserLastName() || '';
+    setMetaMapData(prev => ({ ...prev, firstName, lastName }));
+
+    const hasSeenMetaMap = getHasSeenMetaMap();
     if (!hasSeenMetaMap) {
       setTimeout(() => {
         setShowMetaMapModal(true);
@@ -169,28 +184,28 @@ const UserProfile = () => {
       } catch (error) {
           console.error('Error loading profile image:', error);
       }
-    }, []);
+  }, []);
   
-    useEffect(() => {
-      const handleStorageChange = () => {
-          try {
-              const storedData = localStorage.getItem('data');
-              if (storedData) {
-                  const parsedData = JSON.parse(storedData);
-                  const userPhoto = parsedData?.user?.photo;
-                  if (userPhoto && userPhoto !== '/assets/images/user-profile.jpg') {
-                      setProfileImage(userPhoto);
-                  } else {
-                      setProfileImage('/assets/images/user-profile.jpg');
-                  }
-              }
-          } catch (error) {
-              console.error('Error refreshing profile image:', error);
-          }
-      };
-      window.addEventListener('profileImageUpdated', handleStorageChange);
-      return () => window.removeEventListener('profileImageUpdated', handleStorageChange);
-    }, []);
+  useEffect(() => {
+    const handleStorageChange = () => {
+        try {
+            const storedData = localStorage.getItem('data');
+            if (storedData) {
+                const parsedData = JSON.parse(storedData);
+                const userPhoto = parsedData?.user?.photo;
+                if (userPhoto && userPhoto !== '/assets/images/user-profile.jpg') {
+                    setProfileImage(userPhoto);
+                } else {
+                    setProfileImage('/assets/images/user-profile.jpg');
+                }
+            }
+        } catch (error) {
+            console.error('Error refreshing profile image:', error);
+        }
+    };
+    window.addEventListener('profileImageUpdated', handleStorageChange);
+    return () => window.removeEventListener('profileImageUpdated', handleStorageChange);
+  }, []);
 
   const kycDocuments: KYCDocument[] = [
     {
@@ -432,45 +447,125 @@ const UserProfile = () => {
     setMetaMapStep(2);
   };
 
-  const handleMetaMapNext = () => {
-    const errors: MetaMapErrors = {};
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = Country.getAllCountries().find(c => c.isoCode === e.target.value);
+    setMetaMapData(prev => ({
+      ...prev,
+      country: selected?.name || '',
+      countryCode: e.target.value,
+      state: '', stateCode: '', 
+      city: '',
+    }));
+  };
 
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = State.getStatesOfCountry(metaMapData.countryCode)
+      .find(s => s.isoCode === e.target.value);
+    setMetaMapData(prev => ({
+      ...prev,
+      state: selected?.name || '',
+      stateCode: e.target.value,
+      city: '',
+    }));
+  };
+
+  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setMetaMapData(prev => ({ ...prev, city: e.target.value }));
+  };
+
+  const handleMetaMapNext = async () => {
+    const errors: MetaMapErrors = {};
+  
     if (!metaMapData.bvn.trim()) {
       errors.bvn = 'BVN is required';
     }
-
+  
     if (!metaMapData.firstName.trim()) {
       errors.firstName = 'First name is required';
     }
-
+  
     if (!metaMapData.lastName.trim()) {
       errors.lastName = 'Last name is required';
     }
-
+  
     if (!metaMapData.dob) {
       errors.dob = 'Date of birth is required';
     }
-
+  
+    if (!metaMapData.gender.trim()) {
+      errors.gender = 'Gender is required';
+    }
+  
+    if (!metaMapData.countryCode.trim()) {
+      errors.country = 'Country is required';
+    }
+  
+    if (!metaMapData.stateCode.trim()) {
+      errors.state = 'State is required';
+    }
+  
+    if (!metaMapData.city.trim()) {
+      errors.city = 'City is required';
+    }
+  
     if (Object.keys(errors).length > 0) {
       setMetaMapErrors(errors);
       return;
     }
+    const userId = getUserId();
+    const userEmail = getUserEmail();
 
-    setMetaMapErrors({});
-    localStorage.setItem('hasSeenMetaMap', 'true');
-    setShowMetaMapModal(false);
-    setMetaMapStep(1);
-    showToast('Verification submitted successfully!', 'success');
+    const finalData = {
+      bvn: metaMapData.bvn,
+      firstName: metaMapData.firstName,
+      lastName: metaMapData.lastName,
+      email: userEmail,
+      address: '',
+      telephone: '',
+      gender: metaMapData.gender,
+      dob: metaMapData.dob,
+      country: metaMapData.country,
+      state: metaMapData.state || '',
+      city: metaMapData.city || '',
+    };
+
+    const response = await userService.updateProfile(finalData, userId);
+     if (response.status === "success") {
+        setMetaMapErrors({});
+        updateHasSeenMetaMap(true);
+        setShowMetaMapModal(false);
+        setMetaMapStep(1);
+        setShowKYCSuccess(true);
+
+        updateNotificationContainer({
+          type: "profile_update",
+          description: "Your profile has been updated successfully",
+          date: new Date().toISOString()
+        });
+
+        if (typeof window !== 'undefined' && (window as any).refreshNavbarNotifications) {
+          (window as any).refreshNavbarNotifications();
+        }
+        showToast('Verification submitted successfully!', 'success');
+        await fetchUserProfile();
+     }
+ 
   };
 
+  const handleMetaMapSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setMetaMapData(prev => ({ ...prev, [name]: value }));
+    setMetaMapErrors(prev => ({ ...prev, [name]: undefined }));
+  };
   const handleMetaMapClose = () => {
     setShowMetaMapExit(true);
+    updateHasSeenMetaMap(false);
   };
 
   const handleMetaMapExit = () => {
-    localStorage.setItem('hasSeenMetaMap', 'true');
     setShowMetaMapModal(false);
     setShowMetaMapExit(false);
+    updateHasSeenMetaMap(false);
     setMetaMapStep(1);
   };
 
@@ -1039,7 +1134,7 @@ const UserProfile = () => {
                                 onChange={handleMetaMapChange}
                               />
                                 {metaMapErrors.bvn && (
-                                  <span className="error-message">{metaMapErrors.bvn}</span>
+                                  <span className="kyc-error-message">{metaMapErrors.bvn}</span>
                                 )}
                             </div>
 
@@ -1053,7 +1148,7 @@ const UserProfile = () => {
                                 onChange={handleMetaMapChange}
                               />
                               {metaMapErrors.firstName && (
-                                <span className="error-message">{metaMapErrors.firstName}</span>
+                                <span className="kyc-error-message">{metaMapErrors.firstName}</span>
                               )}
                             </div>
 
@@ -1067,10 +1162,10 @@ const UserProfile = () => {
                                 onChange={handleMetaMapChange}
                               />
                               {metaMapErrors.lastName && (
-                                <span className="error-message">{metaMapErrors.lastName}</span>
+                                <span className="kyc-error-message">{metaMapErrors.lastName}</span>
                               )}
                             </div>
-
+                             
                             <div className="metamap-form-group">
                               <label>Date of Birth</label>
                               <input 
@@ -1080,10 +1175,63 @@ const UserProfile = () => {
                                 value={metaMapData.dob}
                                 onChange={handleMetaMapChange}
                               />
-                              <small>Requested format: dd/mm/yyyy</small>
                                 {metaMapErrors.dob && (
-                                  <span className="error-message">{metaMapErrors.dob}</span>
+                                  <span className="kyc-error-message">{metaMapErrors.dob}</span>
                                 )}
+                            </div>
+                            <div className="metamap-form-group">
+                              <label>Gender</label>
+                              <select 
+                                className={`settings-select ${metaMapErrors.gender ? 'error' : ''}`}
+                                name='gender' 
+                                id="gender" 
+                                value={formData.gender}
+                                onChange={handleMetaMapSelectChange}>
+                                <option value="">--Select--</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                              </select>
+                              {metaMapErrors.gender && (
+                                <span className="kyc-error-message">{metaMapErrors.gender}</span>
+                              )}
+                            </div>
+
+                            {/* Country */}
+                            <div className="metamap-form-group">
+                              <label>Country</label>
+                              <select name="country" value={metaMapData.countryCode} onChange={handleCountryChange}>
+                                <option value="">-- Select Country --</option>
+                                {Country.getAllCountries().map(c => (
+                                  <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
+                                ))}
+                              </select>
+                              {metaMapErrors.country && <span className="kyc-error-message">{metaMapErrors.country}</span>}
+                            </div>
+
+                            {/* State */}
+                            <div className="metamap-form-group">
+                              <label>State</label>
+                              <select name="state" value={metaMapData.stateCode} onChange={handleStateChange}
+                                disabled={!metaMapData.countryCode}>
+                                <option value="">-- Select State --</option>
+                                {State.getStatesOfCountry(metaMapData.countryCode).map(s => (
+                                  <option key={s.isoCode} value={s.isoCode}>{s.name}</option>
+                                ))}
+                              </select>
+                              {metaMapErrors.state && <span className="kyc-error-message">{metaMapErrors.state}</span>}
+                            </div>
+
+                            {/* City */}
+                            <div className="metamap-form-group">
+                              <label>City</label>
+                              <select name="city" value={metaMapData.city} onChange={handleCityChange}
+                                disabled={!metaMapData.stateCode}>
+                                <option value="">-- Select City --</option>
+                                {City.getCitiesOfState(metaMapData.countryCode, metaMapData.stateCode).map(c => (
+                                  <option key={c.name} value={c.name}>{c.name}</option>
+                                ))}
+                              </select>
+                              {metaMapErrors.city && <span className="kyc-error-message">{metaMapErrors.city}</span>}
                             </div>
                           </div>
 
@@ -1102,11 +1250,15 @@ const UserProfile = () => {
         </div>
       </main>
        <MobileNav activeTab="profile" onPlusClick={() => setIsDepositOpen(true)} />
-      <DepositModal
-        isOpen={isDepositOpen} 
-        onClose={() => setIsDepositOpen(false)} 
-        theme={theme} 
-      />
+        <DepositModal
+          isOpen={isDepositOpen} 
+          onClose={() => setIsDepositOpen(false)} 
+          theme={theme} 
+        />
+        <KYCSuccessModal
+          isOpen={showKYCSuccess}
+          onClose={() => setShowKYCSuccess(false)}
+        />
     </div>
     </>
   );

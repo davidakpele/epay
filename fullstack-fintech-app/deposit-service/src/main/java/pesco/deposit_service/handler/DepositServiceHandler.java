@@ -95,7 +95,7 @@ public class DepositServiceHandler implements DepositService {
         BigDecimal newBalance = resolveBalance(updated, request.getCurrencyType().toString());
 
         DepositHistoryRequest historyRequest = buildHistoryRequest(request, previousBalance, newBalance, transactionId, "CARD");
-        historyRequest.setDescription("CARD//INTO " + request.getUsername().toUpperCase()
+        historyRequest.setDescription("DEPOSIT//INTO " + request.getUsername().toUpperCase()
                 + " " + request.getCurrencyType() + " ACCOUNT");
 
         dispatchHistory(historyRequest, token);
@@ -189,9 +189,6 @@ public class DepositServiceHandler implements DepositService {
                 ));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Core builder — all fields mapped to C# History model
-    // ─────────────────────────────────────────────────────────────────────────
     private DepositHistoryRequest buildHistoryRequest(
         DepositRequest request,
         BigDecimal previousBalance,
@@ -208,7 +205,7 @@ public class DepositServiceHandler implements DepositService {
         h.setTransactionId(transactionId);
         h.setUserId(request.getUserId());
         h.setWalletId(request.getWalletId());
-        h.setFullname(uName);
+        h.setAccountHolder(uName);              // was setFullname()
         h.setSessionId(null);
         h.setReferenceId(null);
         h.setTerminalId(null);
@@ -218,18 +215,19 @@ public class DepositServiceHandler implements DepositService {
         h.setType(TransactionType.DEPOSIT);
         h.setDescription("DEPO//INTO " + uName + " " + request.getCurrencyType() + " ACCOUNT");
         h.setMessage("Deposited " + request.getAmount() + " into your " + request.getCurrencyType() + " wallet.");
-        h.setCurrencyType(request.getCurrencyType());
+        h.setCurrencyType(request.getCurrencyType().toString());
         h.setIpAddress(request.getIpAddress());
         h.setStatus("SUCCESS");
         h.setTimestamp(now);
 
         // ── Financial Amounts ────────────────────────────────────────
-        h.setAmount(request.getAmount()); 
+        h.setGrossAmount(request.getAmount());  // was setAmount()
         h.setFeeAmount(BigDecimal.ZERO);
         h.setTaxAmount(BigDecimal.ZERO);
         h.setNetAmount(request.getAmount());
         h.setPreviousBalance(previousBalance);
-        h.setNewBalance(newBalance);
+        h.setAvailableBalance(newBalance);      // was setNewBalance()
+        h.setRunningBalance(newBalance);        // new — same value
 
         // ── Double-Entry Accounting ──────────────────────────────────
         h.setDebitCredit("CREDIT");
@@ -249,19 +247,19 @@ public class DepositServiceHandler implements DepositService {
         h.setExchangeRate(BigDecimal.ONE);
 
         // ── Reversal & Disputes ──────────────────────────────────────
-        h.setParentHistoryId(null);
+        h.setParentHistoryId(null);             // null — no parent for fresh deposit
         h.setReversalReason(null);
         h.setDisputeStatus(null);
         h.setDisputeReference(null);
 
         // ── Idempotency & Retry ──────────────────────────────────────
-        h.setIdempotencyKey(request.getUserId() + "_" + transactionId);
+        h.setIdempotencyKey(UUID.randomUUID().toString());
         h.setRetryCount(0);
         h.setFailureReason(null);
-        h.setProcessedAt(now); 
+        h.setProcessedAt(now);
 
         // ── Channel & Device ─────────────────────────────────────────
-        h.setChannel(channel);
+        h.setChannel("Web");
         h.setDeviceId(request.getDeviceId());
         h.setUserAgent(request.getUserAgent());
         h.setGeoLocation(request.getGeoLocation());
@@ -286,7 +284,6 @@ public class DepositServiceHandler implements DepositService {
 
         return h;
     }
-
     // ─────────────────────────────────────────────────────────────────────────
     // Async helpers
     // ─────────────────────────────────────────────────────────────────────────

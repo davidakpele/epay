@@ -24,48 +24,48 @@ namespace resiliences_service.Controllers
         [HttpPost("create/deposit")]
         public async Task<IActionResult> CreateDeposit([FromBody] History request)
         {
-            if (!ModelState.IsValid) return BadRequest(new { error = "Invalid input" });
+            if (!ModelState.IsValid) return BadRequest(new { message =  "Invalid input" });
             try { return StatusCode(201, await _historyService.CreateDepositAsync(request)); }
-            catch (Exception ex) { _logger.LogError(ex, "[HistoryController] CreateDeposit failed"); return StatusCode(500, new { error = "Failed to create deposit history" }); }
+            catch (Exception ex) { _logger.LogError(ex, "[HistoryController] CreateDeposit failed"); return StatusCode(500, new { message =  "Failed to create deposit history" }); }
         }
 
         [HttpPost("create/withdrawal")]
         public async Task<IActionResult> CreateWithdrawal([FromBody] History request)
         {
-            if (!ModelState.IsValid) return BadRequest(new { error = "Invalid input" });
+            if (!ModelState.IsValid) return BadRequest(new { message =  "Invalid input" });
             try { return StatusCode(201, await _historyService.CreateWithdrawalAsync(request)); }
-            catch (Exception ex) { _logger.LogError(ex, "[HistoryController] CreateWithdrawal failed"); return StatusCode(500, new { error = "Failed to create withdrawal history" }); }
+            catch (Exception ex) { _logger.LogError(ex, "[HistoryController] CreateWithdrawal failed"); return StatusCode(500, new { message =  "Failed to create withdrawal history" }); }
         }
 
         [HttpPost("create/credit")]
         public async Task<IActionResult> CreateCredit([FromBody] History request)
         {
-            if (!ModelState.IsValid) return BadRequest(new { error = "Invalid input" });
+            if (!ModelState.IsValid) return BadRequest(new { message =  "Invalid input" });
             try { return StatusCode(201, await _historyService.CreateCreditAsync(request)); }
-            catch (Exception ex) { _logger.LogError(ex, "[HistoryController] CreateWithdrawal failed"); return StatusCode(500, new { error = "Failed to create withdrawal history" }); }
+            catch (Exception ex) { _logger.LogError(ex, "[HistoryController] CreateWithdrawal failed"); return StatusCode(500, new { message =  "Failed to create withdrawal history" }); }
         }
 
         [HttpPost("create/swap")]
         public async Task<IActionResult> CreateSwap([FromBody] History request)
         {
-            if (!ModelState.IsValid) return BadRequest(new { error = "Invalid input" });
+            if (!ModelState.IsValid) return BadRequest(new { message =  "Invalid input" });
             try { return StatusCode(201, await _historyService.CreateSwapAsync(request)); }
-            catch (Exception ex) { _logger.LogError(ex, "[HistoryController] CreateSwap failed"); return StatusCode(500, new { error = "Failed to create swap history" }); }
+            catch (Exception ex) { _logger.LogError(ex, "[HistoryController] CreateSwap failed"); return StatusCode(500, new { message =  "Failed to create swap history" }); }
         }
 
         [HttpPost("create/feature")]
         public async Task<IActionResult> CreateFeatureHistory([FromBody] History request)
         {
-            if (!ModelState.IsValid) return BadRequest(new { error = "Invalid input" });
+            if (!ModelState.IsValid) return BadRequest(new { message = "Invalid input" });
             try { return StatusCode(201, await _historyService.CreateDepositAsync(request)); }
-            catch (Exception ex) { _logger.LogError(ex, "[HistoryController] CreateFeatureHistory failed"); return StatusCode(500, new { error = "Failed to create feature history" }); }
+            catch (Exception ex) { _logger.LogError(ex, "[HistoryController] CreateFeatureHistory failed"); return StatusCode(500, new { message =  "Failed to create feature history" }); }
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)
         {
             var history = await _historyService.GetByIdAsync(id);
-            return history == null ? NotFound(new { error = "History not found" }) : Ok(history);
+            return history == null ? NotFound(new { message = "History not found" }) : Ok(history);
         }
 
         [HttpDelete("{id}")]
@@ -198,7 +198,7 @@ namespace resiliences_service.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(500, new { error = "Failed to retrieve history count" });
+                return StatusCode(500, new { message =  "Failed to retrieve history count" });
             }
         }
 
@@ -209,7 +209,7 @@ namespace resiliences_service.Controllers
             {
                 var validPeriods = new[] { "DAILY", "WEEKLY", "MONTHLY", "YEARLY" };
                 if (!validPeriods.Contains(period.ToUpper()))
-                    return BadRequest(new { error = "Invalid period. Use DAILY, WEEKLY, MONTHLY or YEARLY" });
+                    return BadRequest(new { message =  "Invalid period. Use DAILY, WEEKLY, MONTHLY or YEARLY" });
 
                 var data = await _historyService.GetTransactionAnalyticsAsync(period.ToUpper());
                 return Ok(data);
@@ -217,7 +217,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[HistoryController] GetTransactionAnalytics failed");
-                return StatusCode(500, new { error = "Failed to retrieve transaction analytics" });
+                return StatusCode(500, new { message =  "Failed to retrieve transaction analytics" });
             }
         }
 

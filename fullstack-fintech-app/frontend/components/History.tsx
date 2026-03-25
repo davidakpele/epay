@@ -10,7 +10,7 @@ interface Transaction {
   type: 'credit' | 'debit';
   title: string;
   category: string;
-  amount: string;
+  netAmount: string;
   date: string;
   icon: React.ReactNode;
   ref: string;
@@ -75,14 +75,14 @@ const History = ({ theme, historyData }: HistoryProps) => {
     return apiTransactions.map(tx => {
       const type = mapTransactionType(tx.type, tx.description);
       const isCredit = ['deposit', 'credited', 'swap'].includes(type);
-      const amount = Math.abs(tx.amount || 0);
+      const netAmount = Math.abs(tx.netAmount || 0);
       
       return {
         id: tx.id || tx.transactionId,
         type: isCredit ? 'credit' : 'debit',
         title: tx.description || 'Transaction',
         category: type.charAt(0).toUpperCase() + type.slice(1),
-        amount: `${isCredit ? '+' : '-'}${tx.currencyType || '₦'}${formatAmount(amount)}`,
+        netAmount: `${isCredit ? '+' : '-'}${tx.currencyType || '₦'}${formatAmount(netAmount)}`,
         date: formatDate(tx.timestamp || tx.createdOn),
         icon: getTransactionIcon(type),
         ref: tx.transactionId || tx.referenceNo || 'N/A',
@@ -130,7 +130,7 @@ const History = ({ theme, historyData }: HistoryProps) => {
                 <p className="tx-meta">{tx.category} • {tx.date}</p>
               </div>
               <div className="tx-amount-box">
-                <p className={`tx-amount ${tx.type}`}>{tx.amount}</p>
+                <p className={`tx-amount ${tx.type}`}>{tx.netAmount}</p>
               </div>
             </div>
           ))
@@ -160,7 +160,7 @@ const History = ({ theme, historyData }: HistoryProps) => {
 
             <div className="tx-modal-body">
               <div className="tx-receipt-amount">
-                <span className={selectedTx.type}>{selectedTx.amount}</span>
+                <span className={selectedTx.type}>{selectedTx.netAmount}</span>
               </div>
 
               <div className="tx-info-grid">

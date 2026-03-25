@@ -1,8 +1,6 @@
 package pesco.deposit_service.payloads;
 
 import java.math.BigDecimal;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import pesco.deposit_service.enums.CurrencyType;
 import pesco.deposit_service.enums.TransactionType;
 
 public class DepositHistoryRequest {
@@ -11,93 +9,76 @@ public class DepositHistoryRequest {
     private Long userId;
     private Long walletId;
     private String transactionId;
-    private String fullname;                // → AccountHolder
-    private String sessionId;              // → SessionId
-    private String referenceId;            // → ReferenceId (referenceNo)
-    private String terminalId;             // → TerminalId
-    private String erId;                   // → ErId
+
+    private String accountHolder;          // was fullname
+    private String sessionId;
+    private String referenceId;
+    private String terminalId;
+    private String erId;
 
     // ── Transaction Info ─────────────────────────────────────────
     private TransactionType type;
-    private CurrencyType currencyType;
+    private String currencyType;           // send as String not enum
     private String description;
     private String message;
     private String status;
-    private String timestamp;           // was Long → now ISO-8601 String
-    private String processedAt;         // was Long → now ISO-8601 String
-    private String approvalTimestamp;   // was Long → now ISO-8601 String               // → Timestamp (epoch ms → DateTime on C#)
-
-    @JsonProperty("ip_address")
-    private String ipAddress;
+    private String timestamp;
+    private String processedAt;
+    private String approvalTimestamp;
+    private String ipAddress;             // was @JsonProperty("ip_address")
 
     // ── Financial Amounts ────────────────────────────────────────
-    private BigDecimal amount;             // → GrossAmount
-    private BigDecimal feeAmount;          // → FeeAmount
-    private BigDecimal taxAmount;          // → TaxAmount
-    private BigDecimal netAmount;          // → NetAmount
-    private BigDecimal previousBalance;    // → PreviousBalance
-    private BigDecimal newBalance;         // → AvailableBalance + RunningBalance
+    private BigDecimal grossAmount;        // was amount
+    private BigDecimal feeAmount;
+    private BigDecimal taxAmount;
+    private BigDecimal netAmount;
+    private BigDecimal previousBalance;
+    private BigDecimal availableBalance;   // was newBalance
+    private BigDecimal runningBalance;     // new — same value as availableBalance
 
-    // ── Double-Entry Accounting ──────────────────────────────────
-    private String debitCredit;            // → DebitCredit
-    private String ledgerEntryType;        // → LedgerEntryType
-
-    // ── Counterparty & Routing ───────────────────────────────────
-    private Long counterpartyWalletId;     // → CounterpartyWalletId
-    private Long counterpartyUserId;       // → CounterpartyUserId
-    private String counterpartyAccountHolder; // → CounterpartyAccountHolder
-    private String bankCode;               // → BankCode
-    private String bankAccountNumber;      // → BankAccountNumber
-    private String routingNumber;          // → RoutingNumber
-    private String externalReference;      // → ExternalReference
-
-    // ── Multi-Currency ───────────────────────────────────────────
-    private String originalCurrency;       // → OriginalCurrency
-    private BigDecimal exchangeRate;       // → ExchangeRate
-
-    // ── Reversal & Disputes ──────────────────────────────────────
-    private String parentHistoryId;        // → ParentHistoryId
-    private String reversalReason;         // → ReversalReason
-    private String disputeStatus;          // → DisputeStatus
-    private String disputeReference;       // → DisputeReference
-
-    // ── Idempotency & Retry ──────────────────────────────────────
-    private String idempotencyKey;         // → IdempotencyKey
-    private Integer retryCount;            // → RetryCount
-    private String failureReason;  
-
-    // ── Channel & Device ─────────────────────────────────────────
-    private String channel;                // → TransactionChannel
-    private String deviceId;              // → DeviceId
-    private String userAgent;             // → UserAgent
-    private String geoLocation;           // → GeoLocation
-
-    // ── Compliance & Risk ────────────────────────────────────────
-    private BigDecimal riskScore;          // → RiskScore
-    private Boolean amlFlag;              // → AmlFlag
-    private String sanctionScreeningResult; // → SanctionScreeningResult
-    private String complianceNote;         // → ComplianceNote
-    private String reviewedBy;             // → ReviewedBy
-
-    // ── Admin Audit ──────────────────────────────────────────────
-    private String initiatedBy;            // → InitiatedBy
-    private String approvedBy;             // → ApprovedBy
-    private String adminNote;             // → AdminNote
-    private Boolean manualAdjustmentFlag; // → ManualAdjustmentFlag
-
-    // ── Metadata ─────────────────────────────────────────────────
-    private String category;              // → TransactionCategory
-    private String tags;                  // → Tags (JSON string)
-
+    // ── rest stays the same ──────────────────────────────────────
+    private String debitCredit;
+    private String ledgerEntryType;
+    private Long counterpartyWalletId;
+    private Long counterpartyUserId;
+    private String counterpartyAccountHolder;
+    private String bankCode;
+    private String bankAccountNumber;
+    private String routingNumber;
+    private String externalReference;
+    private String originalCurrency;
+    private BigDecimal exchangeRate;
+    private String parentHistoryId;
+    private String reversalReason;
+    private String disputeStatus;
+    private String disputeReference;
+    private String idempotencyKey;
+    private Integer retryCount;
+    private String failureReason;
+    private String channel;
+    private String deviceId;
+    private String userAgent;
+    private String geoLocation;
+    private BigDecimal riskScore;
+    private Boolean amlFlag;
+    private String sanctionScreeningResult;
+    private String complianceNote;
+    private String reviewedBy;
+    private String initiatedBy;
+    private String approvedBy;
+    private String adminNote;
+    private Boolean manualAdjustmentFlag;
+    private String category;
+    private String tags;
 
     public DepositHistoryRequest() {
     }
 
-    public DepositHistoryRequest(Long userId, Long walletId, String transactionId, String fullname, String sessionId, String referenceId, String terminalId, String erId, TransactionType type, CurrencyType currencyType, String description, String message, String status, String timestamp, String processedAt, String approvalTimestamp, String ipAddress, BigDecimal amount, BigDecimal feeAmount, BigDecimal taxAmount, BigDecimal netAmount, BigDecimal previousBalance, BigDecimal newBalance, String debitCredit, String ledgerEntryType, Long counterpartyWalletId, Long counterpartyUserId, String counterpartyAccountHolder, String bankCode, String bankAccountNumber, String routingNumber, String externalReference, String originalCurrency, BigDecimal exchangeRate, String parentHistoryId, String reversalReason, String disputeStatus, String disputeReference, String idempotencyKey, Integer retryCount, String failureReason, String channel, String deviceId, String userAgent, String geoLocation, BigDecimal riskScore, Boolean amlFlag, String sanctionScreeningResult, String complianceNote, String reviewedBy, String initiatedBy, String approvedBy, String adminNote, Boolean manualAdjustmentFlag, String category, String tags) {
+    public DepositHistoryRequest(Long userId, Long walletId, String transactionId, String accountHolder, String sessionId, String referenceId, String terminalId, String erId, TransactionType type, String currencyType, String description, String message, String status, String timestamp, String processedAt, String approvalTimestamp, String ipAddress, BigDecimal grossAmount, BigDecimal feeAmount, BigDecimal taxAmount, BigDecimal netAmount, BigDecimal previousBalance, BigDecimal availableBalance, BigDecimal runningBalance, String debitCredit, String ledgerEntryType, Long counterpartyWalletId, Long counterpartyUserId, String counterpartyAccountHolder, String bankCode, String bankAccountNumber, String routingNumber, String externalReference, String originalCurrency, BigDecimal exchangeRate, String parentHistoryId, String reversalReason, String disputeStatus, String disputeReference, String idempotencyKey, Integer retryCount, String failureReason, String channel, String deviceId, String userAgent, String geoLocation, BigDecimal riskScore, Boolean amlFlag, String sanctionScreeningResult, String complianceNote, String reviewedBy, String initiatedBy, String approvedBy, String adminNote, Boolean manualAdjustmentFlag, String category, String tags) {
         this.userId = userId;
         this.walletId = walletId;
         this.transactionId = transactionId;
-        this.fullname = fullname;
+        this.accountHolder = accountHolder;
         this.sessionId = sessionId;
         this.referenceId = referenceId;
         this.terminalId = terminalId;
@@ -111,12 +92,13 @@ public class DepositHistoryRequest {
         this.processedAt = processedAt;
         this.approvalTimestamp = approvalTimestamp;
         this.ipAddress = ipAddress;
-        this.amount = amount;
+        this.grossAmount = grossAmount;
         this.feeAmount = feeAmount;
         this.taxAmount = taxAmount;
         this.netAmount = netAmount;
         this.previousBalance = previousBalance;
-        this.newBalance = newBalance;
+        this.availableBalance = availableBalance;
+        this.runningBalance = runningBalance;
         this.debitCredit = debitCredit;
         this.ledgerEntryType = ledgerEntryType;
         this.counterpartyWalletId = counterpartyWalletId;
@@ -176,12 +158,12 @@ public class DepositHistoryRequest {
         this.transactionId = transactionId;
     }
 
-    public String getFullname() {
-        return this.fullname;
+    public String getAccountHolder() {
+        return this.accountHolder;
     }
 
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
+    public void setAccountHolder(String accountHolder) {
+        this.accountHolder = accountHolder;
     }
 
     public String getSessionId() {
@@ -224,11 +206,11 @@ public class DepositHistoryRequest {
         this.type = type;
     }
 
-    public CurrencyType getCurrencyType() {
+    public String getCurrencyType() {
         return this.currencyType;
     }
 
-    public void setCurrencyType(CurrencyType currencyType) {
+    public void setCurrencyType(String currencyType) {
         this.currencyType = currencyType;
     }
 
@@ -288,12 +270,12 @@ public class DepositHistoryRequest {
         this.ipAddress = ipAddress;
     }
 
-    public BigDecimal getAmount() {
-        return this.amount;
+    public BigDecimal getGrossAmount() {
+        return this.grossAmount;
     }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
+    public void setGrossAmount(BigDecimal grossAmount) {
+        this.grossAmount = grossAmount;
     }
 
     public BigDecimal getFeeAmount() {
@@ -328,12 +310,20 @@ public class DepositHistoryRequest {
         this.previousBalance = previousBalance;
     }
 
-    public BigDecimal getNewBalance() {
-        return this.newBalance;
+    public BigDecimal getAvailableBalance() {
+        return this.availableBalance;
     }
 
-    public void setNewBalance(BigDecimal newBalance) {
-        this.newBalance = newBalance;
+    public void setAvailableBalance(BigDecimal availableBalance) {
+        this.availableBalance = availableBalance;
+    }
+
+    public BigDecimal getRunningBalance() {
+        return this.runningBalance;
+    }
+
+    public void setRunningBalance(BigDecimal runningBalance) {
+        this.runningBalance = runningBalance;
     }
 
     public String getDebitCredit() {

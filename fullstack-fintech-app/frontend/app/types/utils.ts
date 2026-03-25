@@ -233,6 +233,10 @@ export type MetaMapErrors = {
   firstName?: string;
   lastName?: string;
   dob?: string;
+  gender?:string;
+  country?:string;
+  state?:string;
+  city?:string;
 };
 
 export interface CardTheme {

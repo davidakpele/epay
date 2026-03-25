@@ -15,12 +15,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import jakarta.servlet.http.HttpServletRequest;
 import pesco.example.withdraw_service.bootstrap.UserTransactionsAgent;
 import pesco.example.withdraw_service.clients.BlackListServiceClient;
 import pesco.example.withdraw_service.clients.EscrowServiceClient;
@@ -36,13 +34,12 @@ import pesco.example.withdraw_service.dtos.UserDTO;
 import pesco.example.withdraw_service.dtos.UserRecordDTO;
 import pesco.example.withdraw_service.dtos.WalletBalanceDTO;
 import pesco.example.withdraw_service.dtos.WalletSectionDTO;
-import pesco.example.withdraw_service.dtos.WithdrawHistoryRequestDTO;
 import pesco.example.withdraw_service.enums.BanActions;
-import pesco.example.withdraw_service.enums.CurrencyStructType;
 import pesco.example.withdraw_service.enums.TransactionType;
 import pesco.example.withdraw_service.exceptions.Error;
 import pesco.example.withdraw_service.exceptions.UserClientNotFoundException;
 import pesco.example.withdraw_service.payloads.CreateEscrowRequest;
+import pesco.example.withdraw_service.payloads.CreditHistoryRequest;
 import pesco.example.withdraw_service.services.WalletService;
 import pesco.example.withdraw_service.utils.IdGeneratorUtil;
 import pesco.example.withdraw_service.utils.TransferBootstrap;
@@ -91,12 +88,11 @@ public class WalletServiceImp implements WalletService {
     }
     
     @Override
-    public ResponseEntity<?> processWithdraw(DeductWalletRequestDTO dto, String token, HttpServletRequest request) {
+    public ResponseEntity<?> processWithdraw(DeductWalletRequestDTO dto, String token) {
         String idempotencyKey = dto.getIdempotencyKey();
 
         // ── Idempotency gate ──────────────────────────────────────────────────────
-        HazelcastIdempotencyService.IdempotencyResult idempotencyResult =
-                idempotencyService.checkAndSetProcessing(idempotencyKey);
+        HazelcastIdempotencyService.IdempotencyResult idempotencyResult = idempotencyService.checkAndSetProcessing(idempotencyKey);
         if (idempotencyResult.isInvalid())   return Error.createResponse("Invalid idempotency key",  HttpStatus.BAD_REQUEST, idempotencyResult.getMessage());
         if (idempotencyResult.isDuplicate()) return Error.createResponse("Duplicate transaction",     HttpStatus.CONFLICT,    idempotencyResult.getMessage());
         if (idempotencyResult.isCompleted()) return ResponseEntity.ok(idempotencyResult.getResponse());
@@ -152,7 +148,6 @@ public class WalletServiceImp implements WalletService {
             }
 
             // ── 4. ALL security + balance + wallet + PIN checks in PARALLEL ───────
-            //       (was 2 separate parallel batches — now collapsed into ONE wait)
             CompletableFuture<Boolean> blacklistFuture     = CompletableFuture.supplyAsync(() -> blackListServiceClient.FindByWalletId(dto.getWalletId(), token));
             CompletableFuture<Boolean> highVolumeFuture    = CompletableFuture.supplyAsync(() ->
                     userTransactionsAgent.isHighVolumeOrFrequentTransactions(
@@ -166,10 +161,9 @@ public class WalletServiceImp implements WalletService {
                     userTransactionsAgent.isFraudulentBehavior(dto.getWalletId(), fromUser.getEmail(),
                             senderRecord.getFirstName(), senderRecord.getLastName(), token));
 
-            // These 3 were previously in a separate sequential batch — now run alongside fraud checks
-            CompletableFuture<WalletBalanceDTO>          senderBalanceFuture    = CompletableFuture.supplyAsync(() -> getCurrentBalance(dto.getSenderUserId(), currency));
-            CompletableFuture<WalletSectionDTO>          recipientWalletFuture  = CompletableFuture.supplyAsync(() -> walletServiceClient.getWalletSectionByUser(recipientUser.getId()));
-            CompletableFuture<FindUserWalletPinResponse> pinFuture              = CompletableFuture.supplyAsync(() ->
+            CompletableFuture<WalletBalanceDTO>          senderBalanceFuture   = CompletableFuture.supplyAsync(() -> getCurrentBalance(dto.getSenderUserId(), currency));
+            CompletableFuture<WalletSectionDTO>          recipientWalletFuture = CompletableFuture.supplyAsync(() -> walletServiceClient.getWalletSectionByUser(recipientUser.getId()));
+            CompletableFuture<FindUserWalletPinResponse> pinFuture             = CompletableFuture.supplyAsync(() ->
                     walletServiceClient.findUserWalletPin(
                             FindUserWalletPinRequest.newBuilder().setWalletId(dto.getWalletId()).build()));
 
@@ -182,6 +176,7 @@ public class WalletServiceImp implements WalletService {
 
             // ── 5. Evaluate security results ──────────────────────────────────────
             if (blacklistFuture.get()) {
+                idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Transaction blocked.", HttpStatus.FORBIDDEN, "Please contact support.");
             }
             if (highVolumeFuture.get()) {
@@ -227,8 +222,6 @@ public class WalletServiceImp implements WalletService {
             }
 
             // ── 9. Balance check + deduction — narrow synchronized block ──────────
-            //       Lock ONLY covers the critical section (balance check → deduct)
-            //       Escrow, history, notifications are all OUTSIDE the lock
             final BigDecimal feeAmount;
             final BigDecimal newSenderBalance;
             final BigDecimal recipientPreviousBalance = resolveBalance(recipientWalletAccount, currencyCode);
@@ -245,13 +238,11 @@ public class WalletServiceImp implements WalletService {
                     return Error.createResponse("Insufficient balance.", HttpStatus.BAD_REQUEST, "Low balance.");
                 }
 
-                // Deduction is the only truly critical section
                 withdrawResponse = deduction(
                         dto.getSenderUserId(), dto.getWalletId(),
                         currency, dto.getAmount().toString(),
                         dto.getRecipientUsername(), token);
             }
-            // Lock released — everything below runs freely in parallel
 
             if (!"success".equals(withdrawResponse.getStatus())) {
                 idempotencyService.clearKey(idempotencyKey);
@@ -271,7 +262,9 @@ public class WalletServiceImp implements WalletService {
                         .body(Map.of("status", "error", "message", "Failed to create escrow."));
             }
 
+            @SuppressWarnings("unchecked")
             Map<String, Object> escrowBody = (Map<String, Object>) escrowResponse.getBody();
+            @SuppressWarnings("unchecked")
             String ledgerId = (String) ((Map<String, Object>) escrowBody.get("ledger")).get("id");
             escrowServiceClient.updateLedgerStatus(ledgerId, "SUCCESS");
 
@@ -280,39 +273,72 @@ public class WalletServiceImp implements WalletService {
             String senderFullName          = buildFullName(senderRecord.getFirstName(),    senderRecord.getLastName());
             String recipientFullName       = buildFullName(recipientRecord.getFirstName(), recipientRecord.getLastName());
             String transactionId           = generateTransactionId();
-            String symbol                  = senderAccountBalance != null ? senderAccountBalance.getSymbol() : null;
+            String symbol                  = senderAccountBalance != null ? senderAccountBalance.getSymbol() : "";
             BigDecimal senderPrevBalance   = new BigDecimal(senderAccountBalance != null ? senderAccountBalance.getBalance() : "0.00");
 
-            String description1 = "RF//FRM " + senderFullName.toUpperCase() + " TO " + recipientFullName.toUpperCase() + "/MFY";
-            String description2 = recipientFullName.toUpperCase() + "/Transfer from " + senderFullName.toUpperCase();
+            String senderDescription    = "RF//FRM " + senderFullName.toUpperCase() + " TO " + recipientFullName.toUpperCase() + "/MFY";
+            String recipientDescription = recipientFullName.toUpperCase() + "/Transfer from " + senderFullName.toUpperCase();
 
-            // ── 12. Fetch recipient new balance + write histories in PARALLEL ──────
             CompletableFuture<BigDecimal> recipientNewBalanceFuture = CompletableFuture.supplyAsync(() -> {
                 WalletSectionDTO updated = walletServiceClient.getWalletSectionByUser(recipientUser.getId());
                 return resolveBalance(updated, currencyCode);
             });
 
-            // Start history writes immediately — they don't need recipientNewBalance
-            CompletableFuture<Void> senderHistory = createHistory(
-                    dto.getAmount(), currencyCode, description1, dto.getNote(),
-                    fromUser.getId(), dto.getWalletId(), TransactionType.DEBITED,
-                    recipientUser.getId(), recipientWalletAccount.getWalletId(),
-                    recipientFullName, senderFullName, symbol,
-                    transactionId, senderPrevBalance, newSenderBalance,
-                    senderFullName, token, request);
 
-            // Recipient history needs recipientNewBalance — chain it
-            CompletableFuture<Void> recipientHistory = recipientNewBalanceFuture.thenCompose(recipientNewBalance ->
-                    createHistory(
-                            dto.getAmount(), currencyCode, description2, dto.getNote(),
-                            recipientUser.getId(), recipientWalletAccount.getWalletId(),
-                            TransactionType.CREDITED, fromUser.getId(), dto.getWalletId(),
-                            fromUser.getUsername(), recipientUser.getUsername(), symbol,
-                            transactionId, recipientPreviousBalance, recipientNewBalance,
-                            recipientFullName, token, request));
+            CompletableFuture<Void> senderHistoryFuture = CompletableFuture.runAsync(() -> {
+                CreditHistoryRequest senderHistory = buildCreditHistoryRequest(
+                        /* amount          */ dto.getAmount(),
+                        /* feeAmount       */ feeAmount,
+                        /* currencyCode    */ currencyCode,
+                        /* symbol          */ symbol,
+                        /* description     */ senderDescription,
+                        /* note            */ dto.getNote(),
+                        /* type            */ TransactionType.DEBITED,
+                        /* userId          */ fromUser.getId(),
+                        /* walletId        */ dto.getWalletId(),
+                        /* accountHolder   */ senderFullName,     
+                        /* cpUserId        */ recipientUser.getId(),
+                        /* cpWalletId      */ recipientWalletAccount.getWalletId(),
+                        /* cpName          */ recipientFullName,
+                        /* previousBalance */ senderPrevBalance,
+                        /* newBalance      */ newSenderBalance,
+                        /* transactionId   */ transactionId,
+                        /* ipAddress        */ dto.getIpAddress(),
+                        /* deviceId         */ dto.getDeviceId(),
+                        /* GeoLocation      */ dto.getGeoLocation(),
+                        /* userAgent       */ dto.getUserAgent()
+                );
+                historyServiceClient.createUserCreditHistory(senderHistory, token);
+            });
+
+            CompletableFuture<Void> recipientHistoryFuture = recipientNewBalanceFuture.thenAcceptAsync(recipientNewBalance -> {
+                CreditHistoryRequest recipientHistory = buildCreditHistoryRequest(
+                        /* amount          */ dto.getAmount(),
+                        /* feeAmount       */ BigDecimal.ZERO,
+                        /* currencyCode    */ currencyCode,
+                        /* symbol          */ symbol,
+                        /* description     */ recipientDescription,
+                        /* note            */ dto.getNote(),
+                        /* type            */ TransactionType.CREDITED,
+                        /* userId          */ recipientUser.getId(),
+                        /* walletId        */ recipientWalletAccount.getWalletId(),
+                        /* accountHolder   */ recipientFullName,   
+                        /* cpUserId        */ fromUser.getId(),
+                        /* cpWalletId      */ dto.getWalletId(),
+                        /* cpName          */ senderFullName, 
+                        /* previousBalance */ recipientPreviousBalance,
+                        /* newBalance      */ recipientNewBalance,
+                        /* transactionId   */ transactionId,
+                        /* ipAddress        */ dto.getIpAddress(),
+                        /* deviceId         */ dto.getDeviceId(),
+                        /* GeoLocation      */ dto.getGeoLocation(),
+                         /* userAgent       */ dto.getUserAgent()
+                );
+                historyServiceClient.createUserCreditHistory(recipientHistory, token);
+            });
 
             // ── 13. Fire-and-forget: revenue + alerts (do NOT block response) ─────
-            BigDecimal recipientNewBalanceSnap = recipientNewBalanceFuture.get(); // needed for alert
+            BigDecimal recipientNewBalanceSnap = recipientNewBalanceFuture.get(); 
 
             CompletableFuture.runAsync(() -> revenueServiceClient.creditPlatformRevenue(feeAmount, currencyCode));
             CompletableFuture.runAsync(() -> notificationServiceClient.sendDebitAlert(
@@ -324,8 +350,8 @@ public class WalletServiceImp implements WalletService {
                     dto.getAmount(), currencyCode, recipientNewBalanceSnap,
                     transactionId, recipientPreviousBalance));
 
-            // ── 14. Await only audit histories before responding ──────────────────
-            CompletableFuture.allOf(senderHistory, recipientHistory).join();
+            // ── 14. Await both history writes before responding ───────────────────
+            CompletableFuture.allOf(senderHistoryFuture, recipientHistoryFuture).join();
 
             // ── 15. Build + cache response ────────────────────────────────────────
             Map<String, Object> jsonResponse = new LinkedHashMap<>();
@@ -346,57 +372,128 @@ public class WalletServiceImp implements WalletService {
         }
     }
 
+    private CreditHistoryRequest buildCreditHistoryRequest(
+            BigDecimal         amount,
+            BigDecimal         feeAmount,
+            String             currencyCode,
+            String             symbol,
+            String             description,
+            String             note,
+            TransactionType    type,
+            Long               userId,
+            Long               walletId,
+            String             accountHolder,
+            Long               counterpartyUserId,
+            Long               counterpartyWalletId,
+            String             counterpartyName,
+            BigDecimal         previousBalance,
+            BigDecimal         newBalance,
+            String             transactionId,
+            String             IpAddress,
+            String             deviceId,
+            String             geoLocation,
+            String             userAgent
+            ) {
 
-    private CompletableFuture<Void> createHistory(
-        BigDecimal amount,
-        String currencyType,
-        String description,
-        String note,
-        Long userId,
-        Long walletId,
-        TransactionType type,
-        Long 
-        recipientUserId,
-        Long recipientWalletId,
-        String recipientUsername,
-        String senderUsername,
-        String symbol,
-        String transactionId,
-        BigDecimal previousBalance,
-        BigDecimal newBalance,
-        String fullname,
-        String token,
-        HttpServletRequest request) {
+        String now = Instant.now().toString();
 
-        WithdrawHistoryRequestDTO historyRequest = new WithdrawHistoryRequestDTO();
-        
-        historyRequest.setSessionId(IdGeneratorUtil.generateSessionId());
-        historyRequest.setTransactionId(IdGeneratorUtil.generateTransactionId());
-        historyRequest.setReferenceNo(IdGeneratorUtil.generateReferenceNo());
-        historyRequest.setTerminalId(IdGeneratorUtil.generateTerminalId());
-        historyRequest.setErId(IdGeneratorUtil.generateErId());
-        historyRequest.setTimestamp(IdGeneratorUtil.getCurrentTimestamp());
-        historyRequest.setIpAddress(IdGeneratorUtil.getClientIpAddress(request));
-        
-        historyRequest.setAmount(amount);
-        historyRequest.setCurrencyType(currencyType);
-        historyRequest.setDescription(description);
-        historyRequest.setMessage("Transfer " + symbol + formatBigDecimal(amount) + " to " + recipientUsername);
-        historyRequest.setUserId(userId);
-        historyRequest.setWalletId(walletId);
-        historyRequest.setType(type.name().toUpperCase());
-        historyRequest.setRecipientUserId(recipientUserId);
-        historyRequest.setRecipientWalletId(recipientWalletId);
-        historyRequest.setReceiverFullName(recipientUsername);
-        historyRequest.setSenderFullName(senderUsername);
-        historyRequest.setPreviousBalance(previousBalance);
-        historyRequest.setAvailableBalance(newBalance);
-        historyRequest.setFullname(fullname);
-        historyRequest.setStatus("SUCCESS");
-        
-        historyServiceClient.createUserCreditHistory(historyRequest, token);
+        // Derive side-specific values from the transaction type
+        boolean    isSender    = (type == TransactionType.DEBITED);
+        BigDecimal taxAmount   = BigDecimal.ZERO;
+        BigDecimal netAmount   = isSender
+                ? amount.add(feeAmount).add(taxAmount).negate()
+                : amount;
+        String     dcFlag      = isSender ? "DEBIT"        : "CREDIT";
+        String     ledgerType  = isSender ? "Transfer" : "Credit";
 
-        return CompletableFuture.completedFuture(null);
+        CreditHistoryRequest h = new CreditHistoryRequest();
+
+        // ── Core Identity ────────────────────────────────────────────
+        h.setTransactionId(transactionId);
+        h.setUserId(userId);
+        h.setWalletId(walletId);
+        h.setAccountHolder(accountHolder.toUpperCase());
+        h.setSessionId(IdGeneratorUtil.generateSessionId());
+        h.setReferenceId(null);
+        h.setTerminalId(IdGeneratorUtil.generateTerminalId());
+        h.setErId(IdGeneratorUtil.generateErId());
+
+        // ── Transaction Info ─────────────────────────────────────────
+        h.setType(type);
+        h.setCurrencyType(currencyCode);
+        h.setDescription(description);
+        h.setMessage("Transfer " + symbol + formatBigDecimal(amount) + " to " + counterpartyName);
+        h.setStatus("SUCCESS");
+        h.setTimestamp(now);
+        h.setProcessedAt(now);
+        h.setApprovalTimestamp(null);
+        h.setIpAddress(IpAddress);
+        h.setUserAgent(userAgent);
+        h.setDeviceId(deviceId);
+        h.setGeoLocation(geoLocation);
+
+        // ── Financial Amounts ────────────────────────────────────────
+        h.setGrossAmount(amount);
+        h.setFeeAmount(feeAmount);  
+        h.setTaxAmount(taxAmount);
+        h.setNetAmount(netAmount);
+        h.setPreviousBalance(previousBalance);
+        h.setAvailableBalance(newBalance);
+        h.setRunningBalance(newBalance);
+
+        // ── Double-Entry Accounting ──────────────────────────────────
+        h.setDebitCredit(dcFlag);
+        h.setLedgerEntryType(ledgerType);
+
+        // ── Counterparty ─────────────────────────────────────────────
+        h.setCounterpartyUserId(counterpartyUserId);
+        h.setCounterpartyWalletId(counterpartyWalletId);
+        h.setCounterpartyAccountHolder(counterpartyName.toUpperCase());
+        h.setBankCode(null);
+        h.setBankAccountNumber(null);
+        h.setRoutingNumber(null);
+        h.setExternalReference(null);
+
+        // ── Multi-Currency ───────────────────────────────────────────
+        h.setOriginalCurrency(currencyCode);
+        h.setExchangeRate(BigDecimal.ONE);
+
+        // ── Reversal & Disputes ──────────────────────────────────────
+        h.setParentHistoryId(null);
+        h.setReversalReason(null);
+        h.setDisputeStatus(null);
+        h.setDisputeReference(null);
+
+        // ── Idempotency & Retry ──────────────────────────────────────
+        h.setIdempotencyKey(UUID.randomUUID().toString());
+        h.setRetryCount(0);
+        h.setFailureReason(null);
+
+        // ── Channel & Device ─────────────────────────────────────────
+        h.setChannel("API");
+        h.setDeviceId(deviceId);
+        h.setUserAgent(userAgent);
+        h.setGeoLocation(geoLocation);
+
+        // ── Compliance & Risk ────────────────────────────────────────
+        h.setRiskScore(BigDecimal.ZERO);
+        h.setAmlFlag(false);
+        h.setSanctionScreeningResult(null);
+        h.setComplianceNote(null);
+        h.setReviewedBy(null);
+
+        // ── Admin Audit ──────────────────────────────────────────────
+        h.setInitiatedBy(userId.toString());
+        h.setApprovedBy(null);
+        h.setAdminNote(type.name() + " of " + currencyCode + " " + formatBigDecimal(amount) + " via API");
+        h.setManualAdjustmentFlag(false);
+
+        // ── Metadata ─────────────────────────────────────────────────
+        h.setCategory("TRANSFER");
+        h.setTags(null);
+        h.setNote(note);
+
+        return h;
     }
 
     private WithdrawResponse deduction(Long userId, Long walletId, CurrencyType currency, String amount,
@@ -454,6 +551,7 @@ public class WalletServiceImp implements WalletService {
     }
 
     
+    @SuppressWarnings("unchecked")
     @Override
     public ResponseEntity<?> processTransfer(TransferWalletRequestDTO request, String token) {
         String idempotencyKey = request.getIdempotencyKey(); 
@@ -463,7 +561,7 @@ public class WalletServiceImp implements WalletService {
             return Error.createResponse("Invalid idempotency key", HttpStatus.BAD_REQUEST,
                     idempotencyResult.getMessage());
         }
-    
+        
         if (idempotencyResult.isDuplicate()) {
             idempotencyService.clearKey(idempotencyKey); 
             return Error.createResponse("Duplicate transaction", HttpStatus.CONFLICT,
@@ -670,10 +768,7 @@ public class WalletServiceImp implements WalletService {
                         .orElse(BigDecimal.ZERO)
                     : BigDecimal.ZERO;
                         jsonResponse.put("currency",recipientWalletAccount);
-                String newAmount  = request.getAmount().toString();
-                
-                CurrencyType currencyTypes = CurrencyType.valueOf(request.getCurrency().toUpperCase());
-
+               
                 CreateEscrowRequest escrowRequest = new CreateEscrowRequest();
                 escrowRequest.setSenderId(request.getSenderUserId());
                 escrowRequest.setRecipientId(null);

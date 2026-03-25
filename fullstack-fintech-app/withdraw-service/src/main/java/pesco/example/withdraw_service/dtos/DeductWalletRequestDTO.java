@@ -40,12 +40,17 @@ public class DeductWalletRequestDTO {
 
     @NotBlank(message = "Idempotency key is required")
     private String idempotencyKey;
-
+    
+    private String ipAddress;
+    private String deviceId;
+    private String userAgent;
+    private String geoLocation;
 
     public DeductWalletRequestDTO() {
     }
 
-    public DeductWalletRequestDTO(String username, String recipientUsername, BigDecimal amount, String currency, String note, Long senderUserId, Long walletId, String password, String idempotencyKey) {
+
+    public DeductWalletRequestDTO(String username, String recipientUsername, BigDecimal amount, String currency, String note, Long senderUserId, Long walletId, String password, String idempotencyKey, String ipAddress, String deviceId, String userAgent, String geoLocation) {
         this.username = username;
         this.recipientUsername = recipientUsername;
         this.amount = amount;
@@ -55,7 +60,12 @@ public class DeductWalletRequestDTO {
         this.walletId = walletId;
         this.password = password;
         this.idempotencyKey = idempotencyKey;
+        this.ipAddress = ipAddress;
+        this.deviceId = deviceId;
+        this.userAgent = userAgent;
+        this.geoLocation = geoLocation;
     }
+    
 
     public String getUsername() {
         return this.username;
@@ -127,6 +137,38 @@ public class DeductWalletRequestDTO {
 
     public void setIdempotencyKey(String idempotencyKey) {
         this.idempotencyKey = idempotencyKey;
+    }
+
+    public String getIpAddress() {
+        return this.ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    public String getDeviceId() {
+        return this.deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public String getUserAgent() {
+        return this.userAgent;
+    }
+
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+    }
+
+    public String getGeoLocation() {
+        return this.geoLocation;
+    }
+
+    public void setGeoLocation(String geoLocation) {
+        this.geoLocation = geoLocation;
     }
 
 }

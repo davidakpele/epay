@@ -114,6 +114,8 @@ export const getUsername = () => getFromStorage('username');
 export const getSessionId = () => getFromStorage('sessionId');
 export const getUserFullName = () => getFromStorage('userFullName');
 export const getUserEmail = () => getFromStorage('email');
+export const getUserFirstName = () => getFromStorage('firstName');
+export const getUserLastName = () => getFromStorage('lastName');
 export const getUserId = () => getFromStorage('userId');
 export const getUserIsVerified = () => getFromStorage('is_verify');
 export const getActiveWallet = () => getFromStorage('active_wallet');
@@ -371,4 +373,41 @@ export const updateProfileImageInStorage = (imageUrl: string) => {
     sessionStorage.setItem('data', updatedData);
     document.cookie = `data=${encodeURIComponent(updatedData)}; path=/; secure; samesite=None`;
     window.dispatchEvent(new Event('profileImageUpdated'));
+};
+
+
+export const updateHasSeenMetaMap = (status: boolean) => {
+  let existingData: any = {};
+  try {
+    const storedData = localStorage.getItem('data');
+    if (storedData) existingData = JSON.parse(storedData);
+  } catch (e) {
+    console.error("Failed to parse data", e);
+  }
+  
+  if (!existingData.user) existingData.user = {};
+  if (!existingData.user.records) existingData.user.records = [];
+  if (existingData.user) {
+    existingData.user.hasSeenMetaMap = status;
+  }
+  
+  const updatedData = JSON.stringify(existingData);
+  localStorage.setItem('data', updatedData);
+  sessionStorage.setItem('data', updatedData);
+  document.cookie = `data=${encodeURIComponent(updatedData)}; path=/; secure; samesite=None`;
+  window.dispatchEvent(new Event('hasSeenMetaMap'));
+}
+
+
+export const getHasSeenMetaMap = (): boolean => {
+  try {
+    const storedData = localStorage.getItem('data');
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      return parsedData?.user?.hasSeenMetaMap === true;
+    }
+  } catch (e) {
+    console.error("Failed to parse data", e);
+  }
+  return false;
 };
