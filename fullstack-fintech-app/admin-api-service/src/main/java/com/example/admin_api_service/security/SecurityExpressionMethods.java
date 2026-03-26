@@ -10,17 +10,36 @@ public class SecurityExpressionMethods {
 
     public boolean isOwner(Long resourceUserId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) return false;
-        AdminUser user = (AdminUser) auth.getPrincipal();
-        return user.getId().equals(resourceUserId);
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+
+        Object principal = auth.getPrincipal();
+
+        if (!(principal instanceof AdminUser user)) {
+            return false;
+        }
+
+        return resourceUserId != null && resourceUserId.equals(user.getId());
     }
 
-    public boolean isOwnerOrAdmin(Long resourceUserId) {  // ← add this
+    public boolean isOwnerOrAdmin(Long resourceUserId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) return false;
-        AdminUser user = (AdminUser) auth.getPrincipal();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+
+        Object principal = auth.getPrincipal();
+
+        if (!(principal instanceof AdminUser user)) {
+            return false;
+        }
+
         boolean isAdmin = user.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ADMIN"));
-        return isAdmin || user.getId().equals(resourceUserId);
+                .anyMatch(a -> "ADMIN".equals(a.getAuthority()));
+
+        return isAdmin || (resourceUserId != null && resourceUserId.equals(user.getId()));
     }
 }

@@ -21,7 +21,6 @@ import com.example.admin_api_service.services.DashboardAnalyticsService;
 import com.example.admin_api_service.services.SystemWalletService;
 import jakarta.servlet.http.HttpServletRequest;
 
-
 @RestController
 @PreAuthorize("isAuthenticated()")
 public class BusinessApiController {
