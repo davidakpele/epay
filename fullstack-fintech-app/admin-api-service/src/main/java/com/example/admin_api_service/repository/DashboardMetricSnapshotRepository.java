@@ -3,8 +3,6 @@ package com.example.admin_api_service.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
@@ -23,7 +21,7 @@ public interface DashboardMetricSnapshotRepository extends JpaRepository<Dashboa
     List<DashboardMetricSnapshot> findAllByMetricKeyAndGranularityAndDimensionKeyAndSnapshotAtBetweenOrderBySnapshotAtAsc(
             String metricKey, MetricGranularity granularity, String dimensionKey,
             LocalDateTime from, LocalDateTime to);
- 
+
     @Query("SELECT s FROM DashboardMetricSnapshot s " +
            "WHERE s.category = :category " +
            "AND s.granularity = :granularity " +

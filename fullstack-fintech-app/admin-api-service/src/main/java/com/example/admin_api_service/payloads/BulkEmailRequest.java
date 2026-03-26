@@ -16,7 +16,11 @@ public class BulkEmailRequest {
     private String subject;
     private String body;
     private boolean html;
-    private Map<String, String> personalizations; // For personalized content
-    private int batchSize = 50; // Default batch size
-    private int delayBetweenBatches = 1000; // Delay in milliseconds
+    private Map<String, String> personalizations;
+    
+    @Builder.Default
+    private int batchSize = 50; 
+    
+    @Builder.Default
+    private int delayBetweenBatches = 1000;
 }

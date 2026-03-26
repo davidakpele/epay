@@ -13,7 +13,6 @@ import {
   CheckCircle
 } from 'lucide-react';
 import './UserProfile.css';
-import { KYCDocument, LoginHistory, MetaMapErrors, UserData, UserSettings } from '@/app/types/utils';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -22,9 +21,11 @@ import DepositModal from '@/components/DepositModal';
 import LoadingScreen from '@/components/loader/Loadingscreen';
 import { useRouter } from 'next/navigation';
 import { Toast } from '@/app/types/auth';
+import { KYCDocument, LoginHistory, MetaMapErrors, UserData, UserSettings } from '@/app/types/utils';
 import { userService, getUserId, updateHasSeenMetaMap, updateCompleteProfileDetails, updateNotificationContainer, capitalizeFirstLetter, getUserEmail, getUserFirstName, getUserLastName, getHasSeenMetaMap } from '@/app/api/index';
 import KYCSuccessModal from '@/components/KYCSuccessModal';
 import { City, Country, State } from 'country-state-city';
+
 
 const UserProfile = () => {
   const [isPageLoading, setIsPageLoading] = useState(true);

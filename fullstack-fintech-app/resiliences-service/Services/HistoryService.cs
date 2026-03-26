@@ -121,5 +121,10 @@ namespace resiliences_service.Services
         {
             return await _repo.GetTransactionAnalyticsAsync(period);
         }
+
+        public async Task<List<History>> GetRecentAsync(int limit)
+        {
+            return await _repo.GetRecentAsync(limit);
+        }
     }
 }

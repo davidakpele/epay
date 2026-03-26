@@ -91,6 +91,7 @@ public class SecurityConfiguration {
         return source;
     }
     
+    @SuppressWarnings("removal")
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

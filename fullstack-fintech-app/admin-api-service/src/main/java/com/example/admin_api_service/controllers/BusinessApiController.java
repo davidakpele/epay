@@ -3,6 +3,7 @@ package com.example.admin_api_service.controllers;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,13 +13,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.example.admin_api_service.clients.HistoryServiceClient;
 import com.example.admin_api_service.clients.UserServiceClient;
 import com.example.admin_api_service.clients.VirtualCardServiceClient;
+import com.example.admin_api_service.dto.EnrichedTransactionDTO;
 import com.example.admin_api_service.enums.AnalyticsPeriod;
 import com.example.admin_api_service.responses.DashboardAnalyticsResponse;
 import com.example.admin_api_service.services.DashboardAnalyticsService;
 import com.example.admin_api_service.services.SystemWalletService;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -54,10 +58,8 @@ public class BusinessApiController {
         
         long totalVirtualCards = virtualCardServiceClient.getTotalVirtualCards(token);
 
-        return ResponseEntity.ok(
-                systemWalletService.buildDashboardSummary(totalUsers, totalHistory, totalVirtualCards)
+        return ResponseEntity.ok(systemWalletService.buildDashboardSummary(totalUsers, totalHistory, totalVirtualCards)
         );
-    
     }
 
     @PreAuthorize("@security.isOwnerOrAdmin(#userId)")
@@ -87,7 +89,6 @@ public class BusinessApiController {
         result.put("transactions", List.of());
         return ResponseEntity.ok(result);
     }
-    
 
     @PostMapping("/api/verify-user")
     public ResponseEntity<?> verifyUser(@RequestBody Map<String, String> body) {
@@ -108,8 +109,16 @@ public class BusinessApiController {
         return ResponseEntity.ok(dashboardAnalyticsService.getAnalytics(token, period));
     }
 
+    @GetMapping("/history/enriched")
+    public ResponseEntity<List<EnrichedTransactionDTO>> getEnrichedHistory(HttpServletRequest request) {
+        String token = extractToken(request);
+        
+        return ResponseEntity.ok(dashboardAnalyticsService.getEnrichedHistory(token));
+    } 
+
     private String extractToken(HttpServletRequest request) {
         return request.getHeader("Authorization").substring(7);
     }
+
     
 }

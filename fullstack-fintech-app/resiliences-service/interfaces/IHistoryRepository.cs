@@ -20,5 +20,6 @@ namespace resiliences_service.interfaces
         Task<List<ulong>> FindRecentActiveUserIdsAsync(DateTime since);
         Task<long> CountAllAsync();
         Task<List<AnalyticsDataPoint>> GetTransactionAnalyticsAsync(string period);
+        Task<List<History>> GetRecentAsync(int limit);
     }
 }

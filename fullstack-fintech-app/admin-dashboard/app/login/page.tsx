@@ -43,6 +43,18 @@ function WaveBackground() {
   );
 }
 
+// Store tokens after successful login
+function saveSession(data: {
+  accessToken: string;
+  refreshToken: string;
+  user: { id: number; username: string; email: string; firstName: string; lastName: string };
+}, remember: boolean) {
+  const storage = remember ? localStorage : sessionStorage;
+  storage.setItem("accessToken", data.accessToken);
+  storage.setItem("refreshToken", data.refreshToken);
+  storage.setItem("user", JSON.stringify(data.user));
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email,    setEmail]    = useState("");
@@ -50,11 +62,12 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(false);
   const [loading,  setLoading]  = useState(false);
-  const [errors,   setErrors]   = useState<{ email?: string; password?: string }>({});
+  const [errors,   setErrors]   = useState<{ email?: string; password?: string; general?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Client-side validation
     const newErrors: { email?: string; password?: string } = {};
     if (!email)    newErrors.email    = "Please enter your email address.";
     if (!password) newErrors.password = "Please enter your password.";
@@ -62,15 +75,40 @@ export default function LoginPage() {
 
     setErrors({});
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1400));
 
-    if (email && password) {
-      router.push("/");
-    } else {
-      setErrors({
-        email:    "Invalid email or password.",
-        password: "Invalid email or password.",
+    try {
+      const response = await fetch("http://localhost:8109/admin/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          // The API uses "username" field — we send the email value as username
+          // If your users log in with an actual username, rename this field accordingly
+          username: email,
+          password,
+        }),
       });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Save tokens & user info
+        saveSession(data, remember);
+        // Redirect to dashboard
+        router.push("/");
+      } else {
+        // Handle API-level errors (e.g. wrong credentials)
+        setErrors({
+          general: data.message || "Invalid credentials. Please try again.",
+        });
+      }
+    } catch (err) {
+      // Network / CORS / server-down errors
+      setErrors({
+        general: "Unable to reach the server. Please check your connection and try again.",
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -95,18 +133,41 @@ export default function LoginPage() {
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
 
-          {/* Email */}
+          {/* General / server error banner */}
+          {errors.general && (
+            <div style={{
+              background: "rgba(192,57,43,0.08)",
+              border: "1px solid rgba(192,57,43,0.3)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              color: "#c0392b",
+              fontSize: "0.82rem",
+              fontWeight: 500,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {errors.general}
+            </div>
+          )}
+
+          {/* Email / Username */}
           <div>
             <div className={styles.fieldWrap}>
               <span className={styles.fieldIcon}><Mail size={17} /></span>
               <input
                 className={styles.input}
                 style={errors.email ? { borderColor: "#c0392b", boxShadow: "0 0 0 3px rgba(192,57,43,0.1)" } : undefined}
-                type="email"
-                placeholder="Email Address"
+                type="text"
+                placeholder="Username or Email"
                 value={email}
                 onChange={e => { setEmail(e.target.value); if (errors.email) setErrors(prev => ({ ...prev, email: undefined })); }}
-                autoComplete="email"
+                autoComplete="username"
               />
             </div>
             {errors.email && (

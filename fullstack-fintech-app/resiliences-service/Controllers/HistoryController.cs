@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using resiliences_service.interfaces;
@@ -114,6 +115,13 @@ namespace resiliences_service.Controllers
         public async Task<IActionResult> GetRecentByUserId(ulong userId, [FromQuery] int minutes = 60)
         {
             var histories = await _historyService.GetRecentByUserIdAsync(userId, minutes);
+            return Ok(histories);
+        }
+
+        [HttpGet("recent")]
+        public async Task<IActionResult> GetRecent([FromQuery] int limit = 50)
+        {
+            var histories = await _historyService.GetRecentAsync(limit);
             return Ok(histories);
         }
 

@@ -92,6 +92,14 @@ namespace resiliences_service.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<History>> GetRecentAsync(int limit)
+        {
+            return await _context.Histories
+                .OrderByDescending(h => h.CreatedOn)
+                .Take(limit)
+                .ToListAsync();
+        }
+
         public async Task<List<History>> FindByUserIdWithFiltersAsync(ulong userId, DateTime? startDate, DateTime? endDate, string? transactionType, string? currency)
         {
             var query = _context.Histories.Where(h => h.UserId == userId);

@@ -26,7 +26,10 @@ public class EmailRequest {
     private String bcc;
     private String templateName;
     private Map<String, Object> templateVariables;
+
+    @Builder.Default
     private int priority = 3;
+
     private boolean trackOpens;
     private boolean trackClicks;
 }
