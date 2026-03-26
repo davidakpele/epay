@@ -6,7 +6,6 @@ import com.example.admin_api_service.enums.WebhookDeliveryStatus;
 import com.example.admin_api_service.exceptions.BadRequestException;
 import com.example.admin_api_service.exceptions.ResourceNotFoundException;
 import com.example.admin_api_service.models.notificationsAndComms.WebhookDeliveryLog;
-import com.example.admin_api_service.models.notificationsAndComms.WebhookEndpoint;
 import com.example.admin_api_service.repository.WebhookDeliveryLogRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,9 +38,8 @@ public class WebhookDeliveryLogServiceImpl implements IWebhookDeliveryLogService
     public WebhookDeliveryLog deliver(String webhookEndpointId, String eventType,
                                       String eventReferenceId, String eventReferenceType,
                                       String requestPayload) {
-        endpointService.getEndpointById(webhookEndpointId); // validate endpoint exists
+        endpointService.getEndpointById(webhookEndpointId); 
 
-        // Idempotency — skip if already delivered or in-flight for this event
         String idempotencyKey = webhookEndpointId + ":" + eventType + ":" + eventReferenceId;
         if (deliveryLogRepository.existsByIdempotencyKeyAndStatusIn(
                 idempotencyKey,
@@ -144,17 +142,14 @@ public class WebhookDeliveryLogServiceImpl implements IWebhookDeliveryLogService
             throw new BadRequestException("Only FAILED deliveries can be replayed");
         }
 
-        WebhookEndpoint endpoint = endpointService
-                .getEndpointById(original.getWebhookEndpointId());
+        endpointService.getEndpointById(original.getWebhookEndpointId());
 
-        // Create a fresh delivery log for the replay
         WebhookDeliveryLog replay = new WebhookDeliveryLog();
         replay.setWebhookEndpointId(original.getWebhookEndpointId());
         replay.setEventType(original.getEventType());
         replay.setEventReferenceId(original.getEventReferenceId());
         replay.setEventReferenceType(original.getEventReferenceType());
         replay.setRequestPayload(original.getRequestPayload());
-        // New idempotency key for the replay attempt
         replay.setIdempotencyKey(original.getIdempotencyKey() + ":replay:" + UUID.randomUUID());
         replay.setAttemptNumber(original.getAttemptNumber() + 1);
         replay.setManualReplay(true);
@@ -175,14 +170,10 @@ public class WebhookDeliveryLogServiceImpl implements IWebhookDeliveryLogService
         });
         if (!due.isEmpty()) {
             deliveryLogRepository.saveAll(due);
-            // In production, publish to a delivery worker queue here
         }
     }
 
-    // ── Private helpers ────────────────────────────────────────────────────────
-
     private void scheduleRetryOrFail(WebhookDeliveryLog log) {
-        // Attempt number is 1-based; RETRY_DELAYS_MINUTES is 0-indexed
         int retryIndex = log.getAttemptNumber() - 1;
         if (retryIndex < RETRY_DELAYS_MINUTES.length) {
             log.setStatus(WebhookDeliveryStatus.RETRYING);

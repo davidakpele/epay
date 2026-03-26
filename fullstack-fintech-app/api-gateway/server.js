@@ -1170,10 +1170,14 @@ app.use('/api', async (req, res) => {
         console.log(`Backend responded with status: ${response.status}`);
         
         if (response.status === 404) {
+            // If backend sent a structured error body, forward it directly
+            if (response.data && typeof response.data === 'object') {
+                addSecurityHeaders(res);
+                return res.status(404).json(response.data);
+            }
             console.warn(`Backend returned 404 for: ${url}`);
             return notFoundResponse(res, url);
         }
-        
         Object.entries(response.headers).forEach(([key, value]) => {
             if (key !== 'content-length' && key !== 'transfer-encoding') {
                 res.set(key, value);

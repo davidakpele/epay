@@ -45,7 +45,6 @@ public class SystemConfigurationServiceImpl implements ISystemConfigurationServi
                     + "' is not in the allowed values list for config: " + configKey);
         }
 
-        // Preserve previous value for rollback
         config.setPreviousValue(config.getConfigValue());
         config.setConfigValue(newValue);
         config.setUpdatedBy(updatedBy);

@@ -28,6 +28,7 @@ import { StatusInfo, Transaction, TransactionStatus, TransactionType } from '../
 import { formatAmount } from '../../lib/walletCrate';
 import LoadingScreen from '@/components/loader/Loadingscreen';
 import { getUserId, getWallet, historyService, setActiveWallet, setFiat } from '../../api';
+import DateFilterModal from '@/components/DateFilterModal';
 
 
 const TransactionReceipt = React.lazy(
@@ -107,19 +108,25 @@ const Wallet = () => {
     return apiData.map((item: any) => {
       const type = mapTransactionType(item.type, item.description);
       const status = mapTransactionStatus(item.status);
-      
+
       return {
         id: item.id || item.transactionId || "",
         type,
         currency: item.currencyType || 'NGN',
-        amount: Number(item.amount) || 0.0,
-        fiatAmount: Math.abs(Number(item.amount) || 0),
+
+        // ✅ FIX: use netAmount (or grossAmount as fallback) instead of item.amount
+        amount: Number(item.netAmount ?? item.grossAmount ?? item.amount) || 0.0,
+        fiatAmount: Math.abs(Number(item.netAmount ?? item.grossAmount ?? item.amount) || 0),
+
         status,
         date: item.timestamp || item.createdOn || "",
         description: item.description || item.message || "",
         transactionId: item.transactionId || undefined,
         sessionId: item.sessionId || undefined,
-        referenceNo: item.referenceNo || undefined,
+
+        // ✅ FIX: referenceNo → referenceId
+        referenceNo: item.referenceId || item.referenceNo || undefined,
+
         terminalId: item.terminalId || undefined,
         erId: item.erId || undefined,
         accountHolder: item.accountHolder || undefined,
@@ -595,138 +602,15 @@ const Wallet = () => {
 
                   {/* Date Filter Toggle */}
                   <div className="filter-toggle-csontainer">
-                    <button 
-                      className="filter-toggle-btn"
-                      onClick={toggleDateFilter}
-                    >
+                    <button className="filter-toggle-btn" onClick={toggleDateFilter}>
                       <svg className="filter-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M3 7C3 6.44772 3.44772 6 4 6H20C20.5523 6 21 6.44772 21 7C21 7.55228 20.5523 8 20 8H4C3.44772 8 3 7.55228 3 7Z" fill="currentColor"/>
-                        <path d="M3 12C3 11.4477 3.44772 11 4 11H20C20.5523 11 21 11.4477 21 12C21 12.5523 20.5523 13 20 13H4C3.44772 13 3 12.5523 3 12Z" fill="currentColor"/>
-                        <path d="M4 16C3.44772 16 3 16.4477 3 17C3 17.5523 3.44772 18 4 18H20C20.5523 18 21 17.5523 21 17C21 16.4477 20.5523 16 20 16H4Z" fill="currentColor"/>
+                        <path d="M3 6h18M7 12h10M11 18h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                       </svg>
                       <span>Date Filter</span>
-                        <i className={`fa ${showDateFilter ? 'fa-caret-up' : 'fa-caret-down'} text-light`}  aria-hidden="true"></i>
+                      <i className={`fa ${showDateFilter ? 'fa-caret-up' : 'fa-caret-down'}`} />
                     </button>
 
-                    {/* Date Filter Panel - Positioned Absolutely */}
-                      {showDateFilter && (
-                        <div className="custom-date-panel">
-                          <div className="custom-panel-header">
-                            <div className="custom-panel-title">
-                              <svg className="custom-calendar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2"/>
-                              </svg>
-                              <h3>Filter by Date</h3>
-                            </div>
-                            <button 
-                              className="custom-close-panel-btn"
-                              onClick={closeDateFilter}
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                              </svg>
-                            </button>
-                          </div>
-                          
-                          {/* Quick Filters */}
-                          <div className="custom-quick-filters-section">
-                            <h4 className="custom-quick-filters-title">Quick Select</h4>
-                            <div className="custom-quick-filter-buttons">
-                              <button 
-                                className="custom-quick-filter-btn"
-                                onClick={() => applyQuickDateFilter(0)}
-                              >
-                                Today
-                              </button>
-                              <button 
-                                className="custom-quick-filter-btn"
-                                onClick={() => applyQuickDateFilter(7)}
-                              >
-                                7 Days
-                              </button>
-                              <button 
-                                className="custom-quick-filter-btn"
-                                onClick={() => applyQuickDateFilter(30)}
-                              >
-                                30 Days
-                              </button>
-                            </div>
-                          </div>
-                          
-                          {/* Date Range Inputs */}
-                          <div className="custom-date-range-sectidon">
-                            <div className="custom-date-inputs">
-                              <div className="custom-date-input-group">
-                                <label className="custom-date-input-label">From Date</label>
-                                <div className="custom-date-input-wrapper">
-                                  <input
-                                    type="date"
-                                    value={dateFilter.startDate}
-                                    onChange={(e) => handleDateFilterChange('startDate', e.target.value)}
-                                    max={dateFilter.endDate || new Date().toISOString().split('T')[0]}
-                                    className="custom-date-input"
-                                  />
-                                  <svg className="custom-date-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                    <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                    <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                    <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2"/>
-                                  </svg>
-                                </div>
-                              </div>
-                              
-                              <div className="custom-date-input-group">
-                                <label className="custom-date-input-label">To Date</label>
-                                <div className="custom-date-input-wrapper">
-                                  <input
-                                    type="date"
-                                    value={dateFilter.endDate}
-                                    onChange={(e) => handleDateFilterChange('endDate', e.target.value)}
-                                    min={dateFilter.startDate}
-                                    max={new Date().toISOString().split('T')[0]}
-                                    className="custom-date-input"
-                                  />
-                                  <svg className="custom-date-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                    <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                    <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                    <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2"/>
-                                  </svg>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Filter Actions */}
-                          <div className="custom-filter-actions">
-                            <button 
-                              className="custom-clear-filters-btn"
-                              onClick={clearDateFilters}
-                              disabled={!dateFilter.startDate && !dateFilter.endDate}
-                            >
-                              Clear All
-                            </button>
-                            <div className="custom-action-buttons">
-                              <button 
-                                className="custom-cancel-filter-btn"
-                                onClick={closeDateFilter}
-                              >
-                                Cancel
-                              </button>
-                              <button 
-                                className="custom-apply-filter-btn"
-                                onClick={closeDateFilter}
-                              >
-                                Apply
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                
                   </div>
                 </div>
                 {(dateFilter.startDate || dateFilter.endDate) && (
@@ -852,6 +736,31 @@ const Wallet = () => {
                                 {statusInfo.text}
                               </span>
                             </div>
+
+                             {transaction.previousBalance !== undefined && (
+                  <div className="detail-item">
+                    <span className="detail-label">Previous Balance:</span>
+                    <span className="detail-value">
+                      {transaction.currency} {formatAmount(transaction.previousBalance)}
+                    </span>
+                  </div>
+                )}
+                {transaction.availableBalance !== undefined && (
+                  <div className="detail-item">
+                    <span className="detail-label">Available Balance:</span>
+                    <span className="detail-value">
+                      {transaction.currency} {formatAmount(transaction.availableBalance)}
+                    </span>
+                  </div>
+                )}
+                {transaction.originalData?.runningBalance !== undefined && (
+                  <div className="detail-item">
+                    <span className="detail-label">Running Balance:</span>
+                    <span className="detail-value">
+                      {transaction.currency} {formatAmount(transaction.originalData.runningBalance)}
+                    </span>
+                  </div>
+                )}
                           </div>
                           
                           <div className="transaction-actions">
@@ -997,6 +906,16 @@ const Wallet = () => {
           onClose={() => setIsWithdrawOpen(false)} 
           theme={theme} 
         />
+        <DateFilterModal
+        isOpen={showDateFilter}
+        onClose={() => setShowDateFilter(false)}
+        onApply={(start, end) => {
+          setDateFilter({ startDate: start, endDate: end });
+          setShowDateFilter(false);
+        }}
+        onClear={clearDateFilters}
+        initialStartDate={dateFilter.startDate}
+        initialEndDate={dateFilter.endDate}/>
     </div>
   );
 };

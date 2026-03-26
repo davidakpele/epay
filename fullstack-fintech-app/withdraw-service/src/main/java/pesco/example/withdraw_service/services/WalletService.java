@@ -10,6 +10,6 @@ public interface WalletService {
 
     ResponseEntity<?> processTransfer(TransferWalletRequestDTO request, String token);
 
-    public ResponseEntity<?> processWithdraw(DeductWalletRequestDTO dto, String token, HttpServletRequest httpServletRequest);
+    public ResponseEntity<?> processWithdraw(DeductWalletRequestDTO dto, String token);
 
 }

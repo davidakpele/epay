@@ -1,4 +1,8 @@
 spring:
+  mvc:
+    contentnegotiation:
+      favor-parameter: false
+      favor-path-extension: false
   application:
     name: admin-api-service
     

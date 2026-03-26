@@ -5,6 +5,13 @@ spring:
   application:
     name: deposit-service
 
+geolocation:
+  ip-api:
+    base-url: http://ip-api.com
+    timeout-seconds: 3
+  cache:
+    max-size: 5000
+    expire-hours: 24
 jwt:
   secret-key: 3hbXrhqhmvPD0bVq9Ce4hxTqALG701J7jRXyfKjqtzDPIlbdJ8YMIfZtHmPlC6Js9JVpELE2tj4KGP1VoCMA4Ya58WGF3Hs1
 flutterwave:

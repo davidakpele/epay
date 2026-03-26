@@ -26,23 +26,23 @@ namespace resiliences_service.Controllers
         public async Task<IActionResult> Create([FromBody] CreateBeneficiaryRequest req)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new { error = "Invalid request payload" });
+                return BadRequest(new { message =  "Invalid request payload" });
 
             if (req.BeneficiaryType == BeneficiaryType.bank)
             {
                 if (string.IsNullOrEmpty(req.AccountNumber))
-                    return BadRequest(new { error = "accountNumber is required for bank beneficiaries" });
+                    return BadRequest(new { message =  "accountNumber is required for bank beneficiaries" });
                 if (string.IsNullOrEmpty(req.AccountName))
-                    return BadRequest(new { error = "accountName is required for bank beneficiaries" });
+                    return BadRequest(new { message =  "accountName is required for bank beneficiaries" });
                 if (string.IsNullOrEmpty(req.BankCode))
-                    return BadRequest(new { error = "bankCode is required for bank beneficiaries" });
+                    return BadRequest(new { message =  "bankCode is required for bank beneficiaries" });
                 if (string.IsNullOrEmpty(req.BankName))
-                    return BadRequest(new { error = "bankName is required for bank beneficiaries" });
+                    return BadRequest(new { message =  "bankName is required for bank beneficiaries" });
             }
             else if (req.BeneficiaryType == BeneficiaryType.user)
             {
                 if (string.IsNullOrEmpty(req.RecipientUsername))
-                    return BadRequest(new { error = "recipientUsername is required for user beneficiaries" });
+                    return BadRequest(new { message =  "recipientUsername is required for user beneficiaries" });
             }
 
             var beneficiary = new Beneficiary
@@ -78,12 +78,12 @@ namespace resiliences_service.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { error = ex.Message });
+                return BadRequest(new { message =  ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[BeneficiaryController] Create failed");
-                return StatusCode(500, new { error = "Failed to create beneficiary" });
+                return StatusCode(500, new { message =  "Failed to create beneficiary" });
             }
         }
 
@@ -95,14 +95,14 @@ namespace resiliences_service.Controllers
             {
                 var beneficiary = await _service.GetByUserIdAsync(id);
                 if (beneficiary == null)
-                    return NotFound(new { error = "Beneficiary not found" });
+                    return NotFound(new { message =  "Beneficiary not found" });
 
                 return Ok(new { status = "success", message = "Beneficiary retrieved successfully", data = beneficiary });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[BeneficiaryController] GetById failed");
-                return StatusCode(500, new { error = "Failed to fetch beneficiary" });
+                return StatusCode(500, new { message =  "Failed to fetch beneficiary" });
             }
         }
 
@@ -118,7 +118,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[BeneficiaryController] GetAllByUserId failed");
-                return StatusCode(500, new { error = "Failed to fetch beneficiaries" });
+                return StatusCode(500, new { message =  "Failed to fetch beneficiaries" });
             }
         }
 
@@ -128,7 +128,7 @@ namespace resiliences_service.Controllers
         {
             if (!Enum.TryParse<BeneficiaryType>(type, true, out var beneficiaryType) ||
                 (beneficiaryType != BeneficiaryType.bank && beneficiaryType != BeneficiaryType.user))
-                return BadRequest(new { error = "Type must be 'bank' or 'user'" });
+                return BadRequest(new { message =  "Type must be 'bank' or 'user'" });
 
             try
             {
@@ -138,7 +138,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[BeneficiaryController] GetByType failed");
-                return StatusCode(500, new { error = "Failed to fetch beneficiaries" });
+                return StatusCode(500, new { message =  "Failed to fetch beneficiaries" });
             }
         }
 
@@ -147,7 +147,7 @@ namespace resiliences_service.Controllers
         public async Task<IActionResult> Search(uint userId, [FromQuery] string search)
         {
             if (string.IsNullOrEmpty(search))
-                return BadRequest(new { error = "Provide a search query parameter" });
+                return BadRequest(new { message =  "Provide a search query parameter" });
 
             try
             {
@@ -157,7 +157,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[BeneficiaryController] Search failed");
-                return StatusCode(500, new { error = "Failed to search beneficiaries" });
+                return StatusCode(500, new { message =  "Failed to search beneficiaries" });
             }
         }
 
@@ -169,14 +169,14 @@ namespace resiliences_service.Controllers
             {
                 var beneficiary = await _service.GetByUserIdAsync(id);
                 if (beneficiary == null)
-                    return NotFound(new { error = "Beneficiary not found" });
+                    return NotFound(new { message =  "Beneficiary not found" });
 
                 return Ok(new { status = "success", message = "Beneficiary verified", data = beneficiary });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[BeneficiaryController] Verify failed");
-                return StatusCode(500, new { error = "Failed to verify beneficiary" });
+                return StatusCode(500, new { message =  "Failed to verify beneficiary" });
             }
         }
 
@@ -185,7 +185,7 @@ namespace resiliences_service.Controllers
         public async Task<IActionResult> Update(uint id, [FromBody] CreateBeneficiaryRequest req)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new { error = "Invalid request payload" });
+                return BadRequest(new { message =  "Invalid request payload" });
 
             var beneficiary = new Beneficiary
             {
@@ -220,12 +220,12 @@ namespace resiliences_service.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { error = ex.Message });
+                return NotFound(new { message =  ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[BeneficiaryController] Update failed");
-                return StatusCode(500, new { error = "Failed to update beneficiary" });
+                return StatusCode(500, new { message =  "Failed to update beneficiary" });
             }
         }
 
@@ -240,12 +240,12 @@ namespace resiliences_service.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { error = ex.Message });
+                return NotFound(new { message =  ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[BeneficiaryController] Delete failed");
-                return StatusCode(500, new { error = "Failed to delete beneficiary" });
+                return StatusCode(500, new { message =  "Failed to delete beneficiary" });
             }
         }
 
@@ -254,7 +254,7 @@ namespace resiliences_service.Controllers
         public async Task<IActionResult> DeleteByIds([FromBody] DeleteBeneficiariesRequest req)
         {
             if (req.Ids == null || req.Ids.Count == 0)
-                return BadRequest(new { error = "Provide a valid list of IDs" });
+                return BadRequest(new { message =  "Provide a valid list of IDs" });
 
             try
             {
@@ -264,7 +264,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[BeneficiaryController] DeleteByIds failed");
-                return StatusCode(500, new { error = "Failed to delete beneficiaries" });
+                return StatusCode(500, new { message =  "Failed to delete beneficiaries" });
             }
         }
 
@@ -273,14 +273,14 @@ namespace resiliences_service.Controllers
         public async Task<IActionResult> CheckUserBeneficiary(uint userId, string recipientUsername)
         {
             if (string.IsNullOrWhiteSpace(recipientUsername))
-                return BadRequest(new { error = "recipientUsername is required" });
+                return BadRequest(new { message =  "recipientUsername is required" });
 
             try
             {
                 var beneficiary = await _service.GetByUserIdAndUsernameAsync(userId, recipientUsername);
                 
                 if (beneficiary == null)
-                    return NotFound(new { error = "Beneficiary not found" });
+                    return NotFound(new { message =  "Beneficiary not found" });
 
                 return Ok(new
                 {
@@ -292,7 +292,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[BeneficiaryController] CheckUserBeneficiary failed");
-                return StatusCode(500, new { error = "Failed to check beneficiary" });
+                return StatusCode(500, new { message =  "Failed to check beneficiary" });
             }
         }
 

@@ -13,6 +13,7 @@ import { AccountTransactionStatement } from '../../types/utils';
 import LoadingScreen from '@/components/loader/Loadingscreen';
 import {  ForwardAccountStatement, StatementItem } from '../../types/errors';
 import { capitalizeFirstLetter, formatAmount, getUserFullName, getUserId, getUsername, getWallet, historyService, userService } from '../../api';
+import { useRouter } from 'next/navigation';
 
 interface Toast {
   id: number;
@@ -45,7 +46,7 @@ const Statements = () => {
     const scrollTimer = useRef<NodeJS.Timeout | null>(null);
     const [errors, setErrors] = useState<ForwardAccountStatement>({});
     const [successMessage, setSuccessMessage] = useState('');
-    
+    const router = useRouter();
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [selectedTransaction, setSelectedTransaction] = useState<AccountTransactionStatement | null>(null);
     const [isCopied, setIsCopied] = useState(false);
@@ -332,8 +333,8 @@ const Statements = () => {
       }
     };
 
-    const handleBackToDashboard = () => {
-      console.log('Back to dashboard');
+   const handleBackToDashboard = () => {
+      router.back();
     };
 
     const hasActiveFilters = () => {
@@ -711,19 +712,18 @@ This is an official receipt for your records.
                   </div>
 
                   <div className="ah-filters-grid">
-                    <div className="account-row">
-                      <label className="account-ah-filter-label">Select Account:</label>
-                      <div className="statement-selectField" onClick={() => setIsModalOpen(true)}>
-                        <span className="statement-selectedText">
-                          {selectedCurrency.code ? `${selectedCurrency.name} (${selectedCurrency.code})` : "Select Wallet"}
-                        </span>
-                        <svg className="statement-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                          <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="account-divider"></div>
                     <div className="ah-filter-row ah-filter-row-3">
+                      <div className="ah-filter-group">
+                        <label className="account-ah-filter-label">Select Account</label>
+                        <div className="statement-selectField" onClick={() => setIsModalOpen(true)}>
+                          <span className="statement-selectedText">
+                            {selectedCurrency.code ? `${selectedCurrency.name} (${selectedCurrency.code})` : "Select Wallet"}
+                          </span>
+                          <svg className="statement-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                      </div>
                       <div className="ah-filter-group">
                         <label className="account-ah-filter-label">Transaction Type</label>
                         <select 
@@ -758,8 +758,7 @@ This is an official receipt for your records.
                           </svg>
                         </div>
                     </div> 
-                    </div>
-                           
+                    </div> 
                     <div className="ah-filter-row ah-filter-row-2">
                       <div className="ah-filter-group ah-filter-actions">
                         <button className="ah-search-btn" onClick={handleSearch} disabled={isSearchLoading} >

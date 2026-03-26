@@ -1191,7 +1191,7 @@ select.form-input {
   }
 
   .status-modal {
-    max-width: 90%;
+    max-width: 50%;
     padding: 24px;
   }
 

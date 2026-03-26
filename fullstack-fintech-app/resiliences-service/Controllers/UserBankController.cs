@@ -24,16 +24,16 @@ namespace resiliences_service.Controllers
         public async Task<IActionResult> CreateBank([FromBody] CreateBankPayload payload)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new { error = "Invalid request payload" });
+                return BadRequest(new { message =  "Invalid request payload" });
 
             if (string.IsNullOrEmpty(payload.BankCode))
-                return BadRequest(new { error = "Bank code is required" });
+                return BadRequest(new { message =  "Bank code is required" });
             if (string.IsNullOrEmpty(payload.BankName))
-                return BadRequest(new { error = "Bank name is required" });
+                return BadRequest(new { message =  "Bank name is required" });
             if (string.IsNullOrEmpty(payload.AccountHolderName))
-                return BadRequest(new { error = "Account holder name is required" });
+                return BadRequest(new { message =  "Account holder name is required" });
             if (string.IsNullOrEmpty(payload.AccountNumber))
-                return BadRequest(new { error = "Account number is required" });
+                return BadRequest(new { message =  "Account number is required" });
 
             try
             {
@@ -41,7 +41,7 @@ namespace resiliences_service.Controllers
                     payload.AccountNumber, payload.BankName);
 
                 if (exists)
-                    return BadRequest(new { error = "This bank details is already registered to a user in this platform" });
+                    return BadRequest(new { message =  "This bank details is already registered to a user in this platform" });
 
                 var bank = new UserBankList
                 {
@@ -58,7 +58,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[UserBankController] CreateBank failed");
-                return StatusCode(500, new { error = "Failed to create bank" });
+                return StatusCode(500, new { message =  "Failed to create bank" });
             }
         }
 
@@ -73,7 +73,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[UserBankController] FetchAllBanks failed");
-                return StatusCode(500, new { error = "Failed to fetch bank list" });
+                return StatusCode(500, new { message =  "Failed to fetch bank list" });
             }
         }
 
@@ -82,7 +82,7 @@ namespace resiliences_service.Controllers
         {
             var bank = await _service.FindByIdAsync(id);
             return bank == null
-                ? NotFound(new { error = "Bank not found" })
+                ? NotFound(new { message =  "Bank not found" })
                 : Ok(new { message = "Success", data = bank });
         }
 
@@ -91,7 +91,7 @@ namespace resiliences_service.Controllers
         {
             var bank = await _service.FindByAccountNumberAsync(accountNumber);
             return bank == null
-                ? NotFound(new { error = "Bank not found" })
+                ? NotFound(new { message =  "Bank not found" })
                 : Ok(new { message = "Success", data = bank });
         }
 
@@ -106,7 +106,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[UserBankController] GetByUserId failed");
-                return StatusCode(500, new { error = "Failed to fetch banks" });
+                return StatusCode(500, new { message =  "Failed to fetch banks" });
             }
         }
 
@@ -114,7 +114,7 @@ namespace resiliences_service.Controllers
         public async Task<IActionResult> DeleteByIds([FromBody] DeleteBanksPayload payload)
         {
             if (payload.Ids == null || payload.Ids.Count == 0)
-                return BadRequest(new { error = "Provide a valid list of IDs for deletion" });
+                return BadRequest(new { message =  "Provide a valid list of IDs for deletion" });
 
             try
             {
@@ -124,7 +124,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[UserBankController] DeleteByIds failed");
-                return StatusCode(500, new { error = "Failed to delete banks" });
+                return StatusCode(500, new { message =  "Failed to delete banks" });
             }
         }
 
@@ -137,7 +137,7 @@ namespace resiliences_service.Controllers
             {
                 var account = await _service.FindInternalAsync(accountNumber, bankCode);
                 if (account == null)
-                    return NotFound(new { error = "Account not found internally" });
+                    return NotFound(new { message =  "Account not found internally" });
 
                 return Ok(new
                 {
@@ -154,7 +154,7 @@ namespace resiliences_service.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[UserBankController] VerifyInternal failed");
-                return StatusCode(500, new { error = "Error verifying bank account" });
+                return StatusCode(500, new { message =  "Error verifying bank account" });
             }
         }
 
@@ -170,7 +170,7 @@ namespace resiliences_service.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(500, new { error = "Error verifying bank account" });
+                return StatusCode(500, new { message =  "Error verifying bank account" });
             }
         }
     }

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import com.example.admin_api_service.enums.SessionTerminationReason;
 import com.example.admin_api_service.models.AdminUser;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "admin_sessions")
@@ -14,8 +15,8 @@ public class AdminSession {
     @Column(name = "id", length = 36, nullable = false, updatable = false)
     private String id = UUID.randomUUID().toString();
 
-    @Column(name = "admin_user_id", length = 36, nullable = false)
-    private String adminUserId;
+    @Column(name = "admin_user_id", nullable = false)
+    private Long adminUserId;
 
     @Column(name = "access_token", length = 500, nullable = false, unique = true)
     private String accessToken;
@@ -57,7 +58,7 @@ public class AdminSession {
     @Column(name = "created_on", nullable = false, updatable = false)
     private LocalDateTime createdOn = LocalDateTime.now();
 
-    // Navigation
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_user_id", insertable = false, updatable = false)
     private AdminUser adminUser;
@@ -65,7 +66,7 @@ public class AdminSession {
     public AdminSession() {
     }
 
-    public AdminSession(String id, String adminUserId, String accessToken, String refreshToken, String ipAddress, String userAgent, String deviceId, String geoLocation, boolean isActive, SessionTerminationReason terminationReason, LocalDateTime expiresAt, LocalDateTime lastActivityAt, LocalDateTime revokedAt, String revokedBy, LocalDateTime createdOn, AdminUser adminUser) {
+    public AdminSession(String id, Long adminUserId, String accessToken, String refreshToken, String ipAddress, String userAgent, String deviceId, String geoLocation, boolean isActive, SessionTerminationReason terminationReason, LocalDateTime expiresAt, LocalDateTime lastActivityAt, LocalDateTime revokedAt, String revokedBy, LocalDateTime createdOn, AdminUser adminUser) {
         this.id = id;
         this.adminUserId = adminUserId;
         this.accessToken = accessToken;
@@ -83,13 +84,13 @@ public class AdminSession {
         this.createdOn = createdOn;
         this.adminUser = adminUser;
     }
-    
+
     // Getters & Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public String getAdminUserId() { return adminUserId; }
-    public void setAdminUserId(String adminUserId) { this.adminUserId = adminUserId; }
+    public Long getAdminUserId() { return adminUserId; }
+    public void setAdminUserId(Long adminUserId) { this.adminUserId = adminUserId; }
 
     public String getAccessToken() { return accessToken; }
     public void setAccessToken(String accessToken) { this.accessToken = accessToken; }

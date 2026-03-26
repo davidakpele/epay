@@ -1,8 +1,7 @@
 package com.example.admin_api_service.dto;
 
-
-import com.example.admin_api_service.enums.AdminRole;
 import com.example.admin_api_service.models.AdminUser;
+import com.example.admin_api_service.models.accessAndSecurity.AdminRole;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.time.LocalDateTime;
@@ -35,7 +34,7 @@ public class AdminDTO {
 
         AdminRole userRole = user.getRole();
         
-        dto.setRole(userRole != null ? userRole.name() : null);
+        dto.setRole(userRole != null ? userRole.getName() : null);
 
         return dto;
     }

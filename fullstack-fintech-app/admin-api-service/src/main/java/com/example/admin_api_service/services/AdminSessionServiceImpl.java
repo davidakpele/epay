@@ -27,7 +27,7 @@ public class AdminSessionServiceImpl implements IAdminSessionService {
     }
 
     @Override
-    public AdminSession createSession(String adminUserId, String accessToken, String refreshToken,
+    public AdminSession createSession(Long adminUserId, String accessToken, String refreshToken,
                                       String ipAddress, String userAgent, String deviceId,
                                       String geoLocation, int accessTokenTtlMinutes) {
         AdminSession session = new AdminSession();
@@ -65,13 +65,13 @@ public class AdminSessionServiceImpl implements IAdminSessionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AdminSession> getSessionsByAdminUser(String adminUserId, Pageable pageable) {
+    public Page<AdminSession> getSessionsByAdminUser(Long adminUserId, Pageable pageable) {
         return adminSessionRepository.findAllByAdminUserId(adminUserId, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<AdminSession> getActiveSessionsByAdminUser(String adminUserId) {
+    public List<AdminSession> getActiveSessionsByAdminUser(Long adminUserId) {
         return adminSessionRepository.findAllByAdminUserIdAndIsActiveTrue(adminUserId);
     }
 
@@ -86,7 +86,7 @@ public class AdminSessionServiceImpl implements IAdminSessionService {
     }
 
     @Override
-    public void revokeAllSessionsForAdminUser(String adminUserId, SessionTerminationReason reason) {
+    public void revokeAllSessionsForAdminUser(Long adminUserId, SessionTerminationReason reason) {
         List<AdminSession> sessions = adminSessionRepository.findAllByAdminUserIdAndIsActiveTrue(adminUserId);
         sessions.forEach(session -> {
             session.setActive(false);
@@ -97,7 +97,7 @@ public class AdminSessionServiceImpl implements IAdminSessionService {
     }
 
     @Override
-    public void revokeAllSessionsExcept(String adminUserId, String currentSessionId, SessionTerminationReason reason) {
+    public void revokeAllSessionsExcept(Long adminUserId, String currentSessionId, SessionTerminationReason reason) {
         List<AdminSession> sessions = adminSessionRepository
                 .findAllByAdminUserIdAndIsActiveTrueAndIdNot(adminUserId, currentSessionId);
         sessions.forEach(session -> {

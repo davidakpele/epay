@@ -611,19 +611,15 @@ const WithdrawModal = ({ isOpen, onClose, theme, onWithdrawReloadSuccess }: With
           setShowSuccessModal(true);
           setShowPinModal(false);
           clearIdempotencyKey();
-          const checkResponse = await beneficiaryService.checkBeneficiary(userId, recipientUsername);
-          if (
-            checkResponse?.status === 'success'
-          ) {
+
+          beneficiaryService.checkBeneficiary(userId, recipientUsername)
+          .then(checkResponse => {
             setShowBeneficiaryModal(false);
-            setIsSavingBeneficiary(false);
-            return;
-          }else{
+          })
+          .catch(error => {
             setShowBeneficiaryModal(true);
-          }
-          // setTimeout(() => {
-          //   
-          // }, 500);
+          });
+
         } else {
           const errorMessage = response.message || 'Transaction failed';
           showToast(errorMessage, 'warning');

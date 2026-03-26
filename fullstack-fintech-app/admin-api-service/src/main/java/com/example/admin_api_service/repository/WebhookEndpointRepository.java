@@ -16,9 +16,7 @@ public interface WebhookEndpointRepository extends JpaRepository<WebhookEndpoint
     
     List<WebhookEndpoint> findAllByOwnerIdAndOwnerType(String ownerId, String ownerType);
  
-    @Query("SELECT e FROM WebhookEndpoint e " +
-           "WHERE e.status = 'ACTIVE' " +
-           "AND JSON_CONTAINS(e.subscribedEvents, :eventType)")
-    List<WebhookEndpoint> findActiveSubscribersForEvent(
-            @Param("eventType") String eventType);
+    @Query(value = "SELECT * FROM webhook_endpoints e WHERE e.status = 'ACTIVE' AND JSON_CONTAINS(e.subscribed_events, :eventType)", 
+           nativeQuery = true)
+    List<WebhookEndpoint> findActiveSubscribersForEvent(@Param("eventType") String eventType);
 }

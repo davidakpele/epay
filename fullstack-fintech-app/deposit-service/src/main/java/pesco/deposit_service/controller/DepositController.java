@@ -8,7 +8,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
 import pesco.deposit_service.services.DepositService;
+import pesco.deposit_service.services.GeoLocationService;
+import pesco.deposit_service.components.IpExtractor;
 import pesco.deposit_service.enums.TransactionType;
 import pesco.deposit_service.exceptions.Error;
 import pesco.deposit_service.payloads.DepositRequest;
@@ -18,36 +22,60 @@ import pesco.deposit_service.payloads.DepositRequest;
 public class DepositController {
 
     private final DepositService depositService;
-
-    public DepositController(DepositService depositService) {
+    private final IpExtractor ipExtractor;
+    private final GeoLocationService geoLocationService;
+    
+    public DepositController(DepositService depositService, IpExtractor ipExtractor, GeoLocationService geoLocationService) {
         this.depositService = depositService;
+        this.ipExtractor = ipExtractor;
+        this.geoLocationService = geoLocationService;
     }
 
+
     @PostMapping("/create")
-    public ResponseEntity<?> createDeposit(@RequestBody DepositRequest request,
-            @RequestHeader("Authorization") String authorizationHeader) {
-        String token = authorizationHeader.replace("Bearer ", "");
-        if (token.isBlank() || token.isEmpty()) {
-            return Error.createResponse("UNAUTHORIZED*.",
-                    HttpStatus.UNAUTHORIZED, "Require token to access this endpoint, Missing valid token.");
+    public ResponseEntity<?> createDeposit(
+            @RequestBody DepositRequest request,
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestHeader(value = "User-Agent",      required = false) String userAgent,
+            @RequestHeader(value = "X-Geo-Location",  required = false) String geoLocation,
+            @RequestHeader(value = "X-Device-Id",     required = false) String deviceId,
+            HttpServletRequest httpRequest) {
+
+        String token = authorizationHeader.replace("Bearer ", "").trim();
+        if (token.isBlank()) {
+            return Error.createResponse("UNAUTHORIZED",
+                    HttpStatus.UNAUTHORIZED,
+                    "Missing valid token.");
         }
 
         if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            return Error.createResponse("Amount is required and must be greater than zero.", HttpStatus.BAD_REQUEST,
-                    "Please provide a valid amount you want to deposit.");
+            return Error.createResponse("Invalid amount.",
+                    HttpStatus.BAD_REQUEST,
+                    "Amount must be greater than zero.");
         }
 
-        if (request.getCurrencyType() == null || request.getCurrencyType().toString().isEmpty()) {
-            return Error.createResponse("Currency type is require.*", HttpStatus.BAD_REQUEST,
-                    "Please provide the currency type you want deposit, e.g 'USD OR NGN'");
+        if (request.getCurrencyType() == null || request.getCurrencyType().toString().isBlank()) {
+            return Error.createResponse("Currency type is required.",
+                    HttpStatus.BAD_REQUEST,
+                    "Please provide a currency type e.g. USD, NGN.");
         }
 
-        if (request.getType().equals(TransactionType.DEPOSIT)) {
-            return depositService.createDeposit(request, token);
+        // ── Enrich request with device/location context ──────────────
+        String ipAddress      = ipExtractor.extract(httpRequest);
+        String resolvedGeo    = geoLocationService.resolve(geoLocation, ipAddress);
+
+        request.setIpAddress(ipAddress);
+        request.setUserAgent(userAgent);
+        request.setDeviceId(deviceId);
+        request.setGeoLocation(resolvedGeo);
+
+        if (!TransactionType.DEPOSIT.equals(request.getType())) {
+            return Error.createResponse("Wrong transaction type.",
+                    HttpStatus.BAD_REQUEST,
+                    "Transaction type must be DEPOSIT.");
         }
 
-        return Error.createResponse("Wrong Transaction format.", HttpStatus.BAD_REQUEST,
-                "please change the transaction Type to Deposit");
+        return depositService.createDeposit(request, token);
     }
 
 }

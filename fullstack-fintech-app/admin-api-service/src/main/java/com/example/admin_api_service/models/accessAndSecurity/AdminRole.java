@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.example.admin_api_service.models.AdminUser;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "admin_roles")
@@ -39,9 +40,11 @@ public class AdminRole {
     private LocalDateTime updatedOn = LocalDateTime.now();
 
     // Navigation
+   
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AdminRolePermission> rolePermissions = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "role")
     private List<AdminUser> adminUsers = new ArrayList<>();
 

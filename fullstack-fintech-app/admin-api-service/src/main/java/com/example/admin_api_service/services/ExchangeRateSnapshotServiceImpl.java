@@ -2,7 +2,6 @@ package com.example.admin_api_service.services;
 
 import com.example.admin_api_service.Interfaces.IExchangeRateSnapshotService;
 import com.example.admin_api_service.enums.ExchangeRateSource;
-import com.example.admin_api_service.exceptions.BadRequestException;
 import com.example.admin_api_service.exceptions.ResourceNotFoundException;
 import com.example.admin_api_service.models.systemAndConfiguration.ExchangeRateSnapshot;
 import com.example.admin_api_service.repository.ExchangeRateSnapshotRepository;

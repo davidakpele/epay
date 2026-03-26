@@ -41,6 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,

@@ -91,6 +91,7 @@ public class SecurityConfiguration {
         return source;
     }
     
+    @SuppressWarnings("removal")
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -122,9 +123,10 @@ public class SecurityConfiguration {
                 .requestMatchers("/auth/**", "/error/**").permitAll()
                 .requestMatchers(
                     "/swagger-ui.html", "/swagger-ui/**",
-                    "/v3/api-docs", "/v3/api-docs/**", "/webjars/**"
+                    "/v3/api-docs", "/v3/api-docs/**", "/webjars/**",
+                    "/docs", "/docs/**" 
                 ).permitAll()
-                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "SUPER_ADMIN") 
+                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider)
@@ -132,7 +134,6 @@ public class SecurityConfiguration {
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(customAccessDeniedHandler())
             );
-
         return http.build();
     }
 

@@ -24,5 +24,7 @@ namespace resiliences_service.interfaces
         Task<long> GetTotalCountAsync();
 
         Task<List<AnalyticsDataPoint>> GetTransactionAnalyticsAsync(string period);
+        Task<List<History>> GetRecentAsync(int limit);
+    
     }
 }

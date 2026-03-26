@@ -23,7 +23,9 @@ public class DepositRequest {
     private CurrencyType currencyType;
     private String currencySymbol;
     private DEPOSITANDWITHDRAWALSYSTEM depositSystem;
-
+    private String deviceId;
+    private String userAgent;
+    private String geoLocation;
     // Card-specific
     private BigDecimal processingFee;
     private BigDecimal totalAmount;
@@ -31,32 +33,33 @@ public class DepositRequest {
     // USSD-specific
     private String ussdCode;
 
-    public DepositRequest() {}
+    private String ipAddress;
 
-    public DepositRequest(
-            String accountHolderName, String accountNumber, String bankCode, String bankName,
-            Long userId, String email, String username, Long walletId,
-            BigDecimal amount, TransactionType type, CurrencyType currencyType,
-            String currencySymbol, DEPOSITANDWITHDRAWALSYSTEM depositSystem,
-            BigDecimal processingFee, BigDecimal totalAmount, String ussdCode) {
-        this.accountHolderName = accountHolderName;
-        this.accountNumber     = accountNumber;
-        this.bankCode          = bankCode;
-        this.bankName          = bankName;
-        this.userId            = userId;
-        this.email             = email;
-        this.username          = username;
-        this.walletId          = walletId;
-        this.amount            = amount;
-        this.type              = type;
-        this.currencyType      = currencyType;
-        this.currencySymbol    = currencySymbol;
-        this.depositSystem     = depositSystem;
-        this.processingFee     = processingFee;
-        this.totalAmount       = totalAmount;
-        this.ussdCode          = ussdCode;
+    public DepositRequest() {
     }
 
+    public DepositRequest(String accountHolderName, String accountNumber, String bankCode, String bankName, Long userId, String email, String username, Long walletId, BigDecimal amount, TransactionType type, CurrencyType currencyType, String currencySymbol, DEPOSITANDWITHDRAWALSYSTEM depositSystem, String deviceId, String userAgent, String geoLocation, BigDecimal processingFee, BigDecimal totalAmount, String ussdCode, String ipAddress) {
+        this.accountHolderName = accountHolderName;
+        this.accountNumber = accountNumber;
+        this.bankCode = bankCode;
+        this.bankName = bankName;
+        this.userId = userId;
+        this.email = email;
+        this.username = username;
+        this.walletId = walletId;
+        this.amount = amount;
+        this.type = type;
+        this.currencyType = currencyType;
+        this.currencySymbol = currencySymbol;
+        this.depositSystem = depositSystem;
+        this.deviceId = deviceId;
+        this.userAgent = userAgent;
+        this.geoLocation = geoLocation;
+        this.processingFee = processingFee;
+        this.totalAmount = totalAmount;
+        this.ussdCode = ussdCode;
+        this.ipAddress = ipAddress;
+    }
 
     public String getAccountHolderName() {
         return this.accountHolderName;
@@ -162,6 +165,30 @@ public class DepositRequest {
         this.depositSystem = depositSystem;
     }
 
+    public String getDeviceId() {
+        return this.deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public String getUserAgent() {
+        return this.userAgent;
+    }
+
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+    }
+
+    public String getGeoLocation() {
+        return this.geoLocation;
+    }
+
+    public void setGeoLocation(String geoLocation) {
+        this.geoLocation = geoLocation;
+    }
+
     public BigDecimal getProcessingFee() {
         return this.processingFee;
     }
@@ -186,4 +213,12 @@ public class DepositRequest {
         this.ussdCode = ussdCode;
     }
 
+    public String getIpAddress() {
+        return this.ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+    
 }

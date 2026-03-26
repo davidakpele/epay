@@ -1,5 +1,13 @@
 package com.example.admin_api_service.services;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.example.admin_api_service.Interfaces.INotificationLogService;
 import com.example.admin_api_service.Interfaces.INotificationTemplateService;
 import com.example.admin_api_service.enums.NotificationChannel;
@@ -11,19 +19,8 @@ import com.example.admin_api_service.exceptions.ResourceNotFoundException;
 import com.example.admin_api_service.models.notificationsAndComms.NotificationLog;
 import com.example.admin_api_service.models.notificationsAndComms.NotificationTemplate;
 import com.example.admin_api_service.repository.NotificationLogRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 @Transactional
@@ -43,10 +40,6 @@ public class NotificationLogServiceImpl implements INotificationLogService {
         this.objectMapper = objectMapper;
     }
 
-    // -------------------------------------------------------------------------
-    // Send
-    // -------------------------------------------------------------------------
-
     @Override
     public NotificationLog send(String templateKey, NotificationChannel channel,
                                 String locale, Long userId, Long walletId,
@@ -61,19 +54,19 @@ public class NotificationLogServiceImpl implements INotificationLogService {
 
         NotificationLog log = new NotificationLog();
         log.setTemplateId(template.getId());
-        log.setTriggerEvent(template.getTriggerEvent()); 
+        log.setTemplateKey(templateKey);
         log.setUserId(userId);
         log.setWalletId(walletId);
         log.setChannel(channel);
-        log.setRecipientAddress(recipient); 
+        log.setRecipient(recipient);
         log.setSubject(renderedSubject);
         log.setBody(renderedBody);
-        log.setSourceEntityId(referenceId); 
-        log.setSourceEntityType(referenceType); 
+        log.setReferenceId(referenceId);
+        log.setReferenceType(referenceType);
         log.setPriority(priority != null ? priority : NotificationPriority.NORMAL);
         log.setMaxRetries(MAX_RETRIES);
         log.setStatus(NotificationLogStatus.PENDING);
-        log.setTemplateVariables(serializeVariables(variables)); 
+        log.setVariablesUsed(serializeVariables(variables));
         return notificationLogRepository.save(log);
     }
 
@@ -85,15 +78,14 @@ public class NotificationLogServiceImpl implements INotificationLogService {
         NotificationLog log = new NotificationLog();
         log.setUserId(userId);
         log.setChannel(channel);
-        log.setRecipientAddress(recipient); 
+        log.setRecipient(recipient);
         log.setSubject(subject);
         log.setBody(body);
         log.setPriority(priority != null ? priority : NotificationPriority.NORMAL);
-        log.setSourceEntityId(referenceId);
-        log.setSourceEntityType(referenceType);
+        log.setReferenceId(referenceId);
+        log.setReferenceType(referenceType);
         log.setMaxRetries(MAX_RETRIES);
         log.setStatus(NotificationLogStatus.PENDING);
-        log.setManual(true);
         return notificationLogRepository.save(log);
     }
 
@@ -110,23 +102,19 @@ public class NotificationLogServiceImpl implements INotificationLogService {
 
         NotificationLog log = new NotificationLog();
         log.setTemplateId(template.getId());
-        log.setTriggerEvent(template.getTriggerEvent());
+        log.setTemplateKey(templateKey);
         log.setUserId(userId);
         log.setChannel(channel);
-        log.setRecipientAddress(recipient);
+        log.setRecipient(recipient);
         log.setSubject(renderedSubject);
         log.setBody(renderedBody);
         log.setPriority(NotificationPriority.NORMAL);
         log.setMaxRetries(MAX_RETRIES);
         log.setStatus(NotificationLogStatus.PENDING);
         log.setScheduledAt(scheduledAt);
-        log.setTemplateVariables(serializeVariables(variables));
+        log.setVariablesUsed(serializeVariables(variables));
         return notificationLogRepository.save(log);
     }
-
-    // -------------------------------------------------------------------------
-    // Read
-    // -------------------------------------------------------------------------
 
     @Override
     @Transactional(readOnly = true)
@@ -162,21 +150,15 @@ public class NotificationLogServiceImpl implements INotificationLogService {
     @Override
     @Transactional(readOnly = true)
     public Page<NotificationLog> getLogsByReference(String referenceId, Pageable pageable) {
-        // referenceId maps to sourceEntityId on the model
-        return notificationLogRepository.findAllBySourceEntityId(referenceId, pageable);
+        return notificationLogRepository.findAllByReferenceId(referenceId, pageable);
     }
-
-    // -------------------------------------------------------------------------
-    // Status transitions
-    // -------------------------------------------------------------------------
-
+    
     @Override
     public NotificationLog markDelivered(String logId, String providerReference) {
         NotificationLog log = getLogById(logId);
         log.setStatus(NotificationLogStatus.DELIVERED);
         log.setProviderReference(providerReference);
         log.setDeliveredAt(LocalDateTime.now());
-        log.setUpdatedOn(LocalDateTime.now());
         return notificationLogRepository.save(log);
     }
 
@@ -184,8 +166,7 @@ public class NotificationLogServiceImpl implements INotificationLogService {
     public NotificationLog markOpened(String logId) {
         NotificationLog log = getLogById(logId);
         log.setStatus(NotificationLogStatus.OPENED);
-        log.setReadAt(LocalDateTime.now());
-        log.setUpdatedOn(LocalDateTime.now());
+        log.setOpenedAt(LocalDateTime.now());
         return notificationLogRepository.save(log);
     }
 
@@ -193,7 +174,6 @@ public class NotificationLogServiceImpl implements INotificationLogService {
     public NotificationLog markFailed(String logId, String failureReason) {
         NotificationLog log = getLogById(logId);
         log.setFailureReason(failureReason);
-        log.setUpdatedOn(LocalDateTime.now());
 
         if (log.getRetryCount() >= log.getMaxRetries()) {
             log.setStatus(NotificationLogStatus.FAILED);
@@ -209,7 +189,6 @@ public class NotificationLogServiceImpl implements INotificationLogService {
         NotificationLog log = getLogById(logId);
         log.setStatus(NotificationLogStatus.BOUNCED);
         log.setFailureReason(failureReason);
-        log.setUpdatedOn(LocalDateTime.now());
         return notificationLogRepository.save(log);
     }
 
@@ -226,7 +205,6 @@ public class NotificationLogServiceImpl implements INotificationLogService {
         log.setStatus(NotificationLogStatus.PENDING);
         log.setRetryCount(log.getRetryCount() + 1);
         log.setFailureReason(null);
-        log.setUpdatedOn(LocalDateTime.now());
         return notificationLogRepository.save(log);
     }
 
@@ -237,13 +215,8 @@ public class NotificationLogServiceImpl implements INotificationLogService {
             throw new ConflictException("Only PENDING notifications can be cancelled");
         }
         log.setStatus(NotificationLogStatus.CANCELLED);
-        log.setUpdatedOn(LocalDateTime.now());
         notificationLogRepository.save(log);
     }
-
-    // -------------------------------------------------------------------------
-    // Scheduler
-    // -------------------------------------------------------------------------
 
     @Override
     @Scheduled(fixedDelay = 30_000) // every 30 seconds
@@ -254,7 +227,6 @@ public class NotificationLogServiceImpl implements INotificationLogService {
         due.forEach(log -> {
             log.setStatus(NotificationLogStatus.SENDING);
             log.setSentAt(LocalDateTime.now());
-            log.setUpdatedOn(LocalDateTime.now());
         });
         if (!due.isEmpty()) {
             notificationLogRepository.saveAll(due);
@@ -262,10 +234,6 @@ public class NotificationLogServiceImpl implements INotificationLogService {
             // for the actual sending worker to pick up
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
 
     private String serializeVariables(Map<String, String> variables) {
         if (variables == null || variables.isEmpty()) return null;

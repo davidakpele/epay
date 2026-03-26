@@ -65,7 +65,7 @@ namespace resiliences_service.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.Property<DateTime>("UpdatedOn")
-                        .ValueGeneratedOnAddOrUpdate()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("UserId")
@@ -186,11 +186,50 @@ namespace resiliences_service.Migrations
                     b.Property<string>("AccountHolder")
                         .HasColumnType("text");
 
-                    b.Property<double>("Amount")
-                        .HasColumnType("double precision");
+                    b.Property<string>("AdminNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
-                    b.Property<double>("AvailableBalance")
-                        .HasColumnType("double precision");
+                    b.Property<bool>("AmlFlag")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ApprovalTimestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<decimal>("AvailableBalance")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("BankAccountNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("BankCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Category")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("Channel")
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("ComplianceNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("CounterpartyAccountHolder")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<decimal?>("CounterpartyUserId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<decimal?>("CounterpartyWalletId")
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<DateTime>("CreatedOn")
                         .ValueGeneratedOnAdd()
@@ -200,32 +239,125 @@ namespace resiliences_service.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(10)");
 
+                    b.Property<string>("DebitCredit")
+                        .HasColumnType("varchar(10)");
+
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<string>("DeviceId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DisputeReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DisputeStatus")
+                        .HasColumnType("varchar(30)");
+
                     b.Property<string>("ErId")
                         .HasColumnType("text");
+
+                    b.Property<decimal?>("ExchangeRate")
+                        .HasColumnType("decimal(18,8)");
+
+                    b.Property<string>("ExternalReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal>("FeeAmount")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("GeoLocation")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("GrossAmount")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("InitiatedBy")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
 
                     b.Property<string>("IpAddress")
                         .HasMaxLength(45)
                         .HasColumnType("character varying(45)")
                         .HasColumnName("ip_address");
 
+                    b.Property<string>("LedgerEntryType")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<bool>("ManualAdjustmentFlag")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Message")
                         .HasColumnType("text");
 
-                    b.Property<double>("PreviousBalance")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("NetAmount")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("OriginalCurrency")
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("ParentHistoryId")
+                        .HasMaxLength(36)
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("PreviousBalance")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ReferenceId")
                         .HasColumnType("text")
                         .HasColumnName("referenceNo");
 
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReversalReason")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ReviewedBy")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<decimal?>("RiskScore")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("RoutingNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<decimal>("RunningBalance")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("SanctionScreeningResult")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("SessionId")
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
-                        .HasColumnType("text");
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("json");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("TerminalId")
                         .HasColumnType("text");
@@ -243,6 +375,10 @@ namespace resiliences_service.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<decimal>("UserId")
                         .HasColumnType("numeric(20,0)");
 
@@ -250,6 +386,8 @@ namespace resiliences_service.Migrations
                         .HasColumnType("numeric(20,0)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentHistoryId");
 
                     b.ToTable("Histories");
                 });
@@ -390,6 +528,15 @@ namespace resiliences_service.Migrations
                         .HasDatabaseName("idx_wallet_maintenance_user_currency");
 
                     b.ToTable("WalletMaintenances");
+                });
+
+            modelBuilder.Entity("resiliences_service.Models.History", b =>
+                {
+                    b.HasOne("resiliences_service.Models.History", "ParentHistory")
+                        .WithMany()
+                        .HasForeignKey("ParentHistoryId");
+
+                    b.Navigation("ParentHistory");
                 });
 #pragma warning restore 612, 618
         }

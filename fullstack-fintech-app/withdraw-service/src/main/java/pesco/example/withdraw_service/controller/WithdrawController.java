@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import pesco.example.withdraw_service.components.IpExtractor;
 import pesco.example.withdraw_service.dtos.DeductWalletRequestDTO;
 import pesco.example.withdraw_service.dtos.TransferWalletRequestDTO;
 import pesco.example.withdraw_service.exceptions.Error;
+import pesco.example.withdraw_service.serviceImp.GeoLocationService;
 import pesco.example.withdraw_service.services.WalletService;
 import pesco.example.withdraw_service.utils.RateLimit;
 
@@ -26,21 +28,24 @@ import pesco.example.withdraw_service.utils.RateLimit;
 public class WithdrawController {
   
     private final WalletService walletService;
-    private final  HttpServletRequest httpServletRequest;
+    private final IpExtractor ipExtractor;
+    private final GeoLocationService geoLocationService;
 
-
-    public WithdrawController(WalletService walletService, HttpServletRequest httpServletRequest) {
+    public WithdrawController(WalletService walletService, IpExtractor ipExtractor, GeoLocationService geoLocationService) {
         this.walletService = walletService;
-        this.httpServletRequest = httpServletRequest;
+        this.ipExtractor = ipExtractor;
+        this.geoLocationService = geoLocationService;
     }
-
 
     @RateLimit(limit = 20, duration = 300) 
     @PostMapping("/user")
     public ResponseEntity<?> transferToUser(
-            @Valid @RequestBody DeductWalletRequestDTO dto, 
+            @Valid @RequestBody DeductWalletRequestDTO request, 
             @RequestHeader("Authorization") String authorizationHeader,
-            Authentication authentication) {
+            @RequestHeader(value = "User-Agent",      required = false) String userAgent,
+            @RequestHeader(value = "X-Geo-Location",  required = false) String geoLocation,
+            @RequestHeader(value = "X-Device-Id",     required = false) String deviceId,
+            HttpServletRequest httpRequest, Authentication authentication) {
 
         String token = authorizationHeader.replace("Bearer ", "");
         if (token.isBlank() || token.isEmpty()) {
@@ -48,11 +53,20 @@ public class WithdrawController {
                     HttpStatus.UNAUTHORIZED, "Require token to access this endpoint, Missing valid token.");
         }
         String extractedUser = authentication.getName();
-        if (!extractedUser.equals(dto.getUsername())) {
+        if (!extractedUser.equals(request.getUsername())) {
             return Error.createResponse("Access Denied", HttpStatus.FORBIDDEN,
                     "You are not authorized to operate this wallet.");
         }
-        return walletService.processWithdraw(dto, token, httpServletRequest);
+        
+        String ipAddress      = ipExtractor.extract(httpRequest);
+        String resolvedGeo    = geoLocationService.resolve(geoLocation, ipAddress);
+
+        request.setIpAddress(ipAddress);
+        request.setUserAgent(userAgent);
+        request.setDeviceId(deviceId);
+        request.setGeoLocation(resolvedGeo);
+
+        return walletService.processWithdraw(request, token);
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'CUSTOMER-SERVICE')")

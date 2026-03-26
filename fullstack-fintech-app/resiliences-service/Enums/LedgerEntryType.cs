@@ -7,6 +7,10 @@ namespace resiliences_service.Enums
         Revenue,
         Expense,
         Equity,
-        Contra
+        Contract,
+        Deposit,
+        Credit,
+        Withdraw,
+        Transfer
     }
 }

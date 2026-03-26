@@ -364,7 +364,6 @@ const Register = () => {
                         {isRequestingCode ? 'Sending...' : codeSent ? 'Resend Code' : 'Send Code'}
                       </button>
                     </div>
-                    {codeSent && <small className="helper-text">Code sent! Check your email inbox.</small>}
                   </div>
                 </>
               ) : (
@@ -446,7 +445,6 @@ const Register = () => {
                         {isRequestingCode ? 'Sending...' : codeSent ? 'Resend Code' : 'Send Code'}
                       </button>
                     </div>
-                    {codeSent && <small className="helper-text">Code sent via {phoneChannel}! Check your messages.</small>}
                   </div>
                 </>
               )}

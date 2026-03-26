@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -295,5 +296,9 @@ public class UserController {
         return ResponseEntity.ok(userServices.getUserStatistics(period));
     }
     
+    @PostMapping("/user/batch")
+    public List<UserDTO> getUsers(@RequestBody List<Long> ids) {
+        return userServices.getUsersByIds(ids);
+    }
     
 }

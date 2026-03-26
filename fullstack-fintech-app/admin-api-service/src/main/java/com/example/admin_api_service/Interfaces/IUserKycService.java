@@ -36,4 +36,6 @@ public interface IUserKycService {
     boolean isKycApproved(Long userId);
  
     KycTier getCurrentTier(Long userId);
+
+    boolean hasOpenKyc(Long userId);
 }

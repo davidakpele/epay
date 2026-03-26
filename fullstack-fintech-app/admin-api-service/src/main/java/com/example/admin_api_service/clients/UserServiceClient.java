@@ -1,11 +1,12 @@
 package com.example.admin_api_service.clients;
 
+import java.util.List;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import com.example.admin_api_service.dto.UserDTO;
 import com.example.admin_api_service.exceptions.UserClientNotFoundException;
+import com.example.admin_api_service.responses.UserAccount;
 import com.example.admin_api_service.responses.UserStatisticsResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -93,4 +94,17 @@ public class UserServiceClient {
             return "No details available";
         }
     }
+
+    public List<UserAccount> getUsersByIds(List<Long> ids, String token) {
+        return this.webClient.post()
+            .uri("/user/batch")
+            .headers(h -> h.setBearerAuth(token))
+            .bodyValue(ids)
+            .retrieve()
+            .bodyToFlux(UserAccount.class)
+            .collectList()
+            .block();
+    }
+
+    
 }

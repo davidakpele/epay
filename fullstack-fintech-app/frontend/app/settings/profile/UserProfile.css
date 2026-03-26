@@ -1248,7 +1248,7 @@
 .metamap-form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0px;
 }
 
 .metamap-form-group label {
@@ -1444,4 +1444,116 @@
 
 input.error {
   border-color: var(--bg-main);
+}
+
+.kyc-error-message{
+  color: #b41010e0;
+  font-size: 12px;
+  margin-top: -6px;
+  font-family: var(--font-system);
+}
+
+/* =============================================
+   METAMAP FORM — Country / State / City Fix
+   Add these rules to your UserProfile.css
+   ============================================= */
+
+/* Base select style — matches your existing inputs */
+.metamap-form-group select {
+  width: 100%;
+  padding: 11px 40px 11px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #1a202c;
+  font-size: 14px;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  line-height: 1.5;
+}
+
+.metamap-form-group select:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+}
+
+.metamap-form-group select:disabled {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+  opacity: 0.7;
+}
+
+.metamap-form-group select option {
+  color: #1a202c;
+  font-size: 14px;
+}
+
+/* Error state */
+.metamap-form-group select.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Match the input styling already in your form */
+.metamap-form-group input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #1a202c;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.metamap-form-group input:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+}
+
+.metamap-form-group input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.metamap-form-group input::placeholder {
+  color: #9ca3af;
+}
+
+/* Label */
+.metamap-form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+
+/* Error message */
+.kyc-error-message {
+  display: block;
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+/* small hint text (e.g. "Requested format: dd/mm/yyyy") */
+.metamap-form-group small {
+  display: block;
+  color: #6b7280;
+  font-size: 11.5px;
+  margin-top: 4px;
 }

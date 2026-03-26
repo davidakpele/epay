@@ -15,16 +15,19 @@ import com.example.admin_api_service.models.accessAndApprovals.ApprovalRequest;
 public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest, String> {
     Page<ApprovalRequest> findAllByStatus(ApprovalRequestStatus status, Pageable pageable);
     Page<ApprovalRequest> findAllByRequestedBy(String requestedBy, Pageable pageable);
-    List<ApprovalRequest> findAllByStatusInAndExpiresAtBefore(
-            List<ApprovalRequestStatus> statuses, LocalDateTime now);
+    List<ApprovalRequest> findAllByStatusInAndExpiresAtBefore(List<ApprovalRequestStatus> statuses, LocalDateTime now);
  
     // Pending requests where the current step requires a specific admin's role
-    @Query("SELECT ar FROM ApprovalRequest ar " +
-           "JOIN ApprovalStep s ON ar.currentStepId = s.id " +
-           "JOIN AdminRole r ON s.requiredRoleId = r.id " +
-           "JOIN AdminUser u ON u.role.id = r.id " +
-           "WHERE u.id = :adminUserId " +
-           "AND ar.status IN ('PENDING', 'IN_REVIEW')")
-    Page<ApprovalRequest> findPendingRequestsForAdmin(
-            @Param("adminUserId") String adminUserId, Pageable pageable);
+        @Query("""
+    SELECT ar FROM ApprovalRequest ar
+    JOIN ar.currentStep s
+    JOIN s.requiredRole r
+    JOIN AdminUser u
+    WHERE u.role = r
+    AND u.id = :adminUserId
+    AND ar.status IN (com.example.admin_api_service.enums.ApprovalRequestStatus.PENDING,
+                      com.example.admin_api_service.enums.ApprovalRequestStatus.IN_REVIEW)""")
+        Page<ApprovalRequest> findPendingRequestsForAdmin(
+        @Param("adminUserId") Long adminUserId,
+        Pageable pageable);
 }

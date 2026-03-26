@@ -2,7 +2,6 @@ package com.example.admin_api_service.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,20 +10,19 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.firewall.RequestRejectedException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
+import com.example.admin_api_service.dto.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-
-@RestControllerAdvice
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class GlobalExceptionHandler {
 
@@ -33,7 +31,6 @@ public class GlobalExceptionHandler {
     public GlobalExceptionHandler(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
-    // ── Authentication ────────────────────────────────────────────────────────
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUsernameNotFound(
@@ -49,14 +46,19 @@ public class GlobalExceptionHandler {
                 "Invalid username or password", request);
     }
 
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Map<String, Object>> handleMediaTypeNotAcceptable(
+            HttpMediaTypeNotAcceptableException ex, HttpServletRequest request) {
+        return buildError(HttpStatus.NOT_ACCEPTABLE, "Not Acceptable",
+                "Requested media type is not supported", request);
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Map<String, Object>> handleAuthentication(
             AuthenticationException ex, HttpServletRequest request) {
         return buildError(HttpStatus.UNAUTHORIZED, "Unauthorized",
                 "Authentication is required to access this resource", request);
     }
-
-    // ── Authorization ─────────────────────────────────────────────────────────
 
     @ExceptionHandler(AuthorizationDeniedException.class)
     public void handleAuthorizationDenied(
@@ -67,7 +69,7 @@ public class GlobalExceptionHandler {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-
+        
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", 403);
@@ -77,7 +79,6 @@ public class GlobalExceptionHandler {
 
         objectMapper.writeValue(response.getWriter(), body);
     }
-    // ── JWT ───────────────────────────────────────────────────────────────────
 
     @ExceptionHandler(JwtAuthenticationException.class)
     public ResponseEntity<Map<String, Object>> handleJwtAuthentication(
@@ -88,26 +89,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatus()).body(body);
     }
 
-    // ── Validation ────────────────────────────────────────────────────────────
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex, HttpServletRequest request) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(e -> e.getField() + ": " + e.getDefaultMessage())
-                .findFirst()
-                .orElse("Validation failed");
-        return buildError(HttpStatus.BAD_REQUEST, "Validation Error", message, request);
-    }
-
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(
             IllegalArgumentException ex, HttpServletRequest request) {
         return buildError(HttpStatus.BAD_REQUEST, "Validation Error",
                 ex.getMessage(), request);
     }
-
-    // ── Security Firewall ─────────────────────────────────────────────────────
 
     @ExceptionHandler(RequestRejectedException.class)
     public ResponseEntity<Map<String, Object>> handleRequestRejected(
@@ -118,21 +105,59 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    // ── Not Found ─────────────────────────────────────────────────────────────
-
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotFound(
             UserNotFoundException ex, HttpServletRequest request) {
         return buildError(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request);
     }
 
-    // ── Fallback ──────────────────────────────────────────────────────────────
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGlobal(
             Exception ex, HttpServletRequest request) {
         return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
                 "An unexpected error occurred", request);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex) {
+        ApiResponse<Void> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConflict(ConflictException ex) {
+        ApiResponse<Void> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(BadRequestException ex) {
+        ApiResponse<Void> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(ForbiddenException ex) {
+        ApiResponse<Void> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationErrors(
+            MethodArgumentNotValidException ex) {
+ 
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String field = ((FieldError) error).getField();
+            String message = error.getDefaultMessage();
+            errors.put(field, message);
+        });
+ 
+        ApiResponse<Void> response = new ApiResponse<>();
+        response.setSuccess(false);
+        response.setMessage("Validation failed");
+        response.setErrors(errors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

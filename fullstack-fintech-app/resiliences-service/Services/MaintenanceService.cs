@@ -108,7 +108,7 @@ namespace resiliences_service.Services
                 var type = record.Type?.ToString();
                 if (type == null || !chargeableTypes.Contains(type)) continue;
                 totals.TryGetValue(record.CurrencyType, out var current);
-                totals[record.CurrencyType] = current + (decimal)record.Amount;
+                totals[record.CurrencyType] = current + (decimal)record.NetAmount;
             }
 
             return totals;

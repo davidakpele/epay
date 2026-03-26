@@ -13,8 +13,8 @@ import com.example.admin_api_service.models.accessAndSecurity.AdminSession;
 public interface AdminSessionRepository extends JpaRepository<AdminSession, String> {
     Optional<AdminSession> findByAccessTokenAndIsActiveTrue(String accessToken);
     Optional<AdminSession> findByRefreshTokenAndIsActiveTrue(String refreshToken);
-    Page<AdminSession> findAllByAdminUserId(String adminUserId, Pageable pageable);
-    List<AdminSession> findAllByAdminUserIdAndIsActiveTrue(String adminUserId);
-    List<AdminSession> findAllByAdminUserIdAndIsActiveTrueAndIdNot(String adminUserId, String excludedId);
+    Page<AdminSession> findAllByAdminUserId(Long adminUserId, Pageable pageable);
+    List<AdminSession> findAllByAdminUserIdAndIsActiveTrue(Long adminUserId);
+    List<AdminSession> findAllByAdminUserIdAndIsActiveTrueAndIdNot(Long adminUserId, String excludedId);
     List<AdminSession> findAllByIsActiveTrueAndExpiresAtBefore(LocalDateTime now);
 }
