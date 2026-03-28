@@ -95,7 +95,6 @@ public class PDFService implements IPDFService{
                     
                     canvas.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
         }
@@ -129,165 +128,166 @@ public class PDFService implements IPDFService{
         }
     }
 
+    @Override
     public byte[] generateBankStatementPDF(List<BankStatement> statements) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfWriter writer = new PdfWriter(baos);
         PdfDocument pdf = new PdfDocument(writer);
-        Document document = new Document(pdf);
-        document.setMargins(20, 20, 50, 20); 
-        FooterEventHandler footerHandler = new FooterEventHandler(statements.size());
-        pdf.addEventHandler(PdfDocumentEvent.END_PAGE, footerHandler);
-
-        Paragraph logoParagraph = new Paragraph();
-        logoParagraph.setTextAlignment(TextAlignment.CENTER);
-        logoParagraph.setMarginBottom(5);
-
-        Image logo = loadLogoFromResources();
-        logo.setWidth(60);
-        logo.setMaxHeight(30);
-        logoParagraph.add(logo);
-        document.add(logoParagraph);
-        
-        Paragraph header = new Paragraph("ACCOUNT STATEMENT")
-                .setTextAlignment(TextAlignment.CENTER)
-                .setBold()
-                .setFontSize(14)
-                .setMarginBottom(2);
-        document.add(header);
-
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy hh:mm:ss a", Locale.ENGLISH);
-        String formattedDate = now.format(formatter);
-
-        Paragraph generatedOn = new Paragraph("Generated on " + formattedDate)
-                .setFontColor(DARK_GRAY)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setFontSize(8)
-                .setMarginBottom(15);
-        document.add(generatedOn);
-
-        // Check if we have multiple currencies
-        boolean hasMultipleCurrencies = hasMultipleCurrencies(statements);
-        String primaryCurrencyType = getPrimaryCurrency(statements);
-        String currencySymbol = getCurrencySymbol(primaryCurrencyType);
-
-        Table gridTable = new Table(new float[]{1, 1}); 
-        gridTable.setWidth(UnitValue.createPercentValue(100));
-        gridTable.setMarginBottom(15);
-
-        Cell leftColumn = new Cell();
-        leftColumn.setPadding(0)
-          .setBorder(Border.NO_BORDER);
-
-        Paragraph accountTitle = new Paragraph("Account Information")
-                .setFontColor(ColorConstants.BLACK)
-                .setBold()
-                .setFontSize(10)
-                .setMarginBottom(8);
-        leftColumn.add(accountTitle);
-
-        Table infoTable = new Table(new float[]{1, 1});
-        infoTable.setWidth(UnitValue.createPercentValue(100));
-
-        final String CUSTOMER_ADDRESS_TEXT = "Nil";
-        
-        addAccountInfoRow(infoTable, "Account Number:", "1234567890");
-        addAccountInfoRow(infoTable, "Account Holder:", "John Doe");
-        addAccountInfoRow(infoTable, "Account Type:", "Premium Savings");
-        addAccountInfoRow(infoTable, "Branch:", "Main Downtown");
-        addAccountInfoRow(infoTable, "Statement Date:", LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MMM-yy")).toUpperCase());
-        addAccountInfoRow(infoTable, "Customer Address:", CUSTOMER_ADDRESS_TEXT);
-
-        leftColumn.add(infoTable);
-        gridTable.addCell(leftColumn);
-
-        Cell rightColumn = new Cell();
-        rightColumn.setPadding(0)
-           .setBorder(Border.NO_BORDER);
-
-        Paragraph summaryTitle = new Paragraph("Financial Summary")
-                .setFontColor(ColorConstants.BLACK)
-                .setBold()
-                .setFontSize(10)
-                .setMarginBottom(8);
-        rightColumn.add(summaryTitle);
-
-        Table summaryTable = new Table(new float[]{1, 1});
-        summaryTable.setWidth(UnitValue.createPercentValue(100));
-
-        if (hasMultipleCurrencies) {
-            // For multiple currencies, Financial Summary only shows minimal info
-            addSummaryTextRow(summaryTable, "Summary:", "See Currency Breakdown Below");
-            addSummaryTextRow(summaryTable, "Details:", "Refer to currency table");
-        } else {
-            // For single currency, calculate and show normal financial summary
-            double totalCredits = statements.stream()
-                    .filter(s -> "DEPOSIT".equalsIgnoreCase(s.getType()) || 
+        try (Document document = new Document(pdf)) {
+            document.setMargins(20, 20, 50, 20);
+            FooterEventHandler footerHandler = new FooterEventHandler(statements.size());
+            pdf.addEventHandler(PdfDocumentEvent.END_PAGE, footerHandler);
+            
+            Paragraph logoParagraph = new Paragraph();
+            logoParagraph.setTextAlignment(TextAlignment.CENTER);
+            logoParagraph.setMarginBottom(5);
+            
+            Image logo = loadLogoFromResources();
+            logo.setWidth(60);
+            logo.setMaxHeight(30);
+            logoParagraph.add(logo);
+            document.add(logoParagraph);
+            
+            Paragraph header = new Paragraph("ACCOUNT STATEMENT")
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setBold()
+                    .setFontSize(14)
+                    .setMarginBottom(2);
+            document.add(header);
+            
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy hh:mm:ss a", Locale.ENGLISH);
+            String formattedDate = now.format(formatter);
+            
+            Paragraph generatedOn = new Paragraph("Generated on " + formattedDate)
+                    .setFontColor(DARK_GRAY)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setFontSize(8)
+                    .setMarginBottom(15);
+            document.add(generatedOn);
+            
+            // Check if we have multiple currencies
+            boolean hasMultipleCurrencies = hasMultipleCurrencies(statements);
+            String primaryCurrencyType = getPrimaryCurrency(statements);
+            String currencySymbol = getCurrencySymbol(primaryCurrencyType);
+            
+            Table gridTable = new Table(new float[]{1, 1});
+            gridTable.setWidth(UnitValue.createPercentValue(100));
+            gridTable.setMarginBottom(15);
+            
+            Cell leftColumn = new Cell();
+            leftColumn.setPadding(0)
+                    .setBorder(Border.NO_BORDER);
+            
+            Paragraph accountTitle = new Paragraph("Account Information")
+                    .setFontColor(ColorConstants.BLACK)
+                    .setBold()
+                    .setFontSize(10)
+                    .setMarginBottom(8);
+            leftColumn.add(accountTitle);
+            
+            Table infoTable = new Table(new float[]{1, 1});
+            infoTable.setWidth(UnitValue.createPercentValue(100));
+            
+            final String CUSTOMER_ADDRESS_TEXT = "Nil";
+            
+            addAccountInfoRow(infoTable, "Account Number:", "1234567890");
+            addAccountInfoRow(infoTable, "Account Holder:", "John Doe");
+            addAccountInfoRow(infoTable, "Account Type:", "Premium Savings");
+            addAccountInfoRow(infoTable, "Branch:", "Main Downtown");
+            addAccountInfoRow(infoTable, "Statement Date:", LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MMM-yy")).toUpperCase());
+            addAccountInfoRow(infoTable, "Customer Address:", CUSTOMER_ADDRESS_TEXT);
+            
+            leftColumn.add(infoTable);
+            gridTable.addCell(leftColumn);
+            
+            Cell rightColumn = new Cell();
+            rightColumn.setPadding(0)
+                    .setBorder(Border.NO_BORDER);
+            
+            Paragraph summaryTitle = new Paragraph("Financial Summary")
+                    .setFontColor(ColorConstants.BLACK)
+                    .setBold()
+                    .setFontSize(10)
+                    .setMarginBottom(8);
+            rightColumn.add(summaryTitle);
+            
+            Table summaryTable = new Table(new float[]{1, 1});
+            summaryTable.setWidth(UnitValue.createPercentValue(100));
+            
+            if (hasMultipleCurrencies) {
+                // For multiple currencies, Financial Summary only shows minimal info
+                addSummaryTextRow(summaryTable, "Summary:", "See Currency Breakdown Below");
+                addSummaryTextRow(summaryTable, "Details:", "Refer to currency table");
+            } else {
+                // For single currency, calculate and show normal financial summary
+                double totalCredits = statements.stream()
+                        .filter(s -> "DEPOSIT".equalsIgnoreCase(s.getType()) ||
                                 "TRANSFER".equalsIgnoreCase(s.getType()) || 
                                 "CREDIT".equalsIgnoreCase(s.getType()))
-                    .mapToDouble(BankStatement::getAmount)
-                    .sum();
-                    
-            double totalDebits = statements.stream()
-                    .filter(s -> !("DEPOSIT".equalsIgnoreCase(s.getType()) || 
+                        .mapToDouble(BankStatement::getAmount)
+                        .sum();
+                
+                double totalDebits = statements.stream()
+                        .filter(s -> !("DEPOSIT".equalsIgnoreCase(s.getType()) ||
                                 "TRANSFER".equalsIgnoreCase(s.getType()) || 
                                 "CREDIT".equalsIgnoreCase(s.getType())))
-                    .mapToDouble(BankStatement::getAmount)
-                    .sum();
+                        .mapToDouble(BankStatement::getAmount)
+                        .sum();
+                
+                double openingBalance = statements.isEmpty() ? 0 : statements.get(statements.size() - 1).getBalance() + totalDebits - totalCredits;
+                double closingBalance = statements.isEmpty() ? 0 : statements.get(0).getBalance();
+                
+                addSummaryRow(summaryTable, "Opening Balance", openingBalance, currencySymbol);
+                addSummaryRow(summaryTable, "Total Credits", totalCredits, currencySymbol);
+                addSummaryRow(summaryTable, "Total Debits", totalDebits, currencySymbol);
+                addSummaryRow(summaryTable, "Closing Balance", closingBalance, currencySymbol);
+            }
             
-            double openingBalance = statements.isEmpty() ? 0 : statements.get(statements.size() - 1).getBalance() + totalDebits - totalCredits;
-            double closingBalance = statements.isEmpty() ? 0 : statements.get(0).getBalance();
+            addSummaryTextRow(summaryTable, "Period Covered:", getPeriodCovered(statements));
+            addSummaryTextRow(summaryTable, "Currency:", hasMultipleCurrencies ? "MULTIPLE" : primaryCurrencyType);
             
-            addSummaryRow(summaryTable, "Opening Balance", openingBalance, currencySymbol);
-            addSummaryRow(summaryTable, "Total Credits", totalCredits, currencySymbol);
-            addSummaryRow(summaryTable, "Total Debits", totalDebits, currencySymbol);
-            addSummaryRow(summaryTable, "Closing Balance", closingBalance, currencySymbol);
+            rightColumn.add(summaryTable);
+            gridTable.addCell(rightColumn);
+            
+            document.add(gridTable);
+            
+            // ADD SEPARATE CURRENCY BREAKDOWN TABLE (ONLY WHEN MULTIPLE CURRENCIES)
+            if (hasMultipleCurrencies) {
+                addCurrencyBreakdownTable(document, statements);
+            }
+            
+            Paragraph transactionsTitle = new Paragraph("Transaction Details")
+                    .setFontColor(ColorConstants.BLACK)
+                    .setBold()
+                    .setFontSize(12)
+                    .setMarginBottom(8);
+            document.add(transactionsTitle);
+            
+            // Create transaction table with proper structure
+            float[] transactionWidths = {1.8f, 3, 1.2f, 1.2f, 1.2f, 1f};
+            Table transactionTable = new Table(transactionWidths);
+            transactionTable.setWidth(UnitValue.createPercentValue(100));
+            transactionTable.setKeepTogether(true);
+            transactionTable.setMarginBottom(15);
+            
+            // Add headers
+            addTransactionHeader(transactionTable, "Date");
+            addTransactionHeader(transactionTable, "Description");
+            addTransactionHeader(transactionTable, "Credit");
+            addTransactionHeader(transactionTable, "Debit");
+            addTransactionHeader(transactionTable, "Balance");
+            addTransactionHeader(transactionTable, "Currency");
+            
+            boolean alternate = false;
+            for (BankStatement statement : statements) {
+                addTransactionRow(transactionTable, statement, alternate, hasMultipleCurrencies);
+                alternate = !alternate;
+            }
+            
+            document.add(transactionTable);
+            addWatermark(pdf);
         }
-        
-        addSummaryTextRow(summaryTable, "Period Covered:", getPeriodCovered(statements));
-        addSummaryTextRow(summaryTable, "Currency:", hasMultipleCurrencies ? "MULTIPLE" : primaryCurrencyType);
-
-        rightColumn.add(summaryTable);
-        gridTable.addCell(rightColumn);
-
-        document.add(gridTable);
-
-        // ADD SEPARATE CURRENCY BREAKDOWN TABLE (ONLY WHEN MULTIPLE CURRENCIES)
-        if (hasMultipleCurrencies) {
-            addCurrencyBreakdownTable(document, statements);
-        }
-
-        Paragraph transactionsTitle = new Paragraph("Transaction Details")
-                .setFontColor(ColorConstants.BLACK)
-                .setBold()
-                .setFontSize(12)
-                .setMarginBottom(8);
-        document.add(transactionsTitle);
-
-        // Create transaction table with proper structure
-        float[] transactionWidths = {1.8f, 3, 1.2f, 1.2f, 1.2f, 1f};
-        Table transactionTable = new Table(transactionWidths);
-        transactionTable.setWidth(UnitValue.createPercentValue(100));
-        transactionTable.setKeepTogether(true);
-        transactionTable.setMarginBottom(15);
-
-        // Add headers
-        addTransactionHeader(transactionTable, "Date");
-        addTransactionHeader(transactionTable, "Description");
-        addTransactionHeader(transactionTable, "Credit");
-        addTransactionHeader(transactionTable, "Debit");
-        addTransactionHeader(transactionTable, "Balance");
-        addTransactionHeader(transactionTable, "Currency");
-
-        boolean alternate = false;
-        for (BankStatement statement : statements) {
-            addTransactionRow(transactionTable, statement, alternate, hasMultipleCurrencies);
-            alternate = !alternate;
-        }
-
-        document.add(transactionTable);
-        addWatermark(pdf);
-        document.close();
         return baos.toByteArray();
     }
 
@@ -603,28 +603,27 @@ public class PDFService implements IPDFService{
             PdfCanvas canvas = new PdfCanvas(pdf.getPage(i));
             Rectangle pageSize = pdf.getPage(i).getPageSize();
 
-            Canvas canvasModel = new Canvas(canvas, pageSize);
-
-            canvas.saveState();
-            PdfExtGState gs = new PdfExtGState();
-            gs.setFillOpacity(0.2f);
-            canvas.setExtGState(gs);
-
-            canvasModel.setFont(com.itextpdf.kernel.font.PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD));
-            canvasModel.setFontSize(80);
-            canvasModel.setFontColor(WATERMARK_COLOR);
-
-            canvasModel.showTextAligned(
-                    "CONFIDENTIAL",
-                    pageSize.getWidth() / 2,
-                    pageSize.getHeight() / 2,
-                    TextAlignment.CENTER,
-                    com.itextpdf.layout.properties.VerticalAlignment.MIDDLE,
-                    (float) Math.toRadians(45)
-            );
-
-            canvas.restoreState();
-            canvasModel.close();
+            try (Canvas canvasModel = new Canvas(canvas, pageSize)) {
+                canvas.saveState();
+                PdfExtGState gs = new PdfExtGState();
+                gs.setFillOpacity(0.2f);
+                canvas.setExtGState(gs);
+                
+                canvasModel.setFont(com.itextpdf.kernel.font.PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD));
+                canvasModel.setFontSize(80);
+                canvasModel.setFontColor(WATERMARK_COLOR);
+                
+                canvasModel.showTextAligned(
+                        "CONFIDENTIAL",
+                        pageSize.getWidth() / 2,
+                        pageSize.getHeight() / 2,
+                        TextAlignment.CENTER,
+                        com.itextpdf.layout.properties.VerticalAlignment.MIDDLE,
+                        (float) Math.toRadians(45)
+                );
+                
+                canvas.restoreState();
+            }
         }
     }
 
@@ -746,6 +745,7 @@ public class PDFService implements IPDFService{
         return startDate + " to " + endDate;
     }
 
+    @Override
     public void generateAndSendBankStatement(String email, String username, List<BankStatement> statements) {
         try {
             byte[] pdfBytes = generateBankStatementPDF(statements);
