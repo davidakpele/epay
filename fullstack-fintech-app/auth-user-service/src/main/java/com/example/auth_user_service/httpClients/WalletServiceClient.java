@@ -37,7 +37,7 @@ import com.example.auth_user_service.wallet.grpc.WithdrawResponse;
 import io.grpc.StatusRuntimeException;
 
 @Service
-public class WalletServiceClient implements IWalletServiceClient{
+public class WalletServiceClient implements IWalletServiceClient {
 
     private final WalletServiceGrpc.WalletServiceBlockingStub walletServiceStub;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -49,7 +49,7 @@ public class WalletServiceClient implements IWalletServiceClient{
 
     public WalletServiceClient(GrpcChannelFactory channelFactory) {
         this.walletServiceStub = WalletServiceGrpc.newBlockingStub(
-            channelFactory.createChannel("wallet-service")  // matches yml key
+            channelFactory.createChannel("wallet-service")
         );
     }
 
@@ -62,49 +62,40 @@ public class WalletServiceClient implements IWalletServiceClient{
             "userId", String.valueOf(userId)
         );
 
-        public CompletableFuture<Map<String, Object>> createUserWallet(Long userId) {
-            String url = walletSocketUrl + "?userId=" + userId;
+        CompletableFuture<Map<String, Object>> responseFuture = new CompletableFuture<>();
 
-            Map<String, Object> request = Map.of(
-                "type", "create_wallet",
-                "userId", String.valueOf(userId)
-            );
+        try {
+            String json = objectMapper.writeValueAsString(request);
+            StandardWebSocketClient client = new StandardWebSocketClient();
+            WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
 
-            CompletableFuture<Map<String, Object>> responseFuture = new CompletableFuture<>();
+            client.execute(new TextWebSocketHandler() {
+                @Override
+                public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+                    session.sendMessage(new TextMessage(json));
+                }
 
-            try {
-                String json = objectMapper.writeValueAsString(request);
-                StandardWebSocketClient client = new StandardWebSocketClient();
+                @Override
+                protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+                    Map<String, Object> res = objectMapper.readValue(
+                        message.getPayload(), new TypeReference<>() {}
+                    );
+                    responseFuture.complete(res);
+                    session.close();
+                }
 
-                WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
+                @Override
+                public void handleTransportError(WebSocketSession session, Throwable exception) {
+                    responseFuture.completeExceptionally(exception);
+                }
+            }, headers, URI.create(url));
 
-                client.execute(new TextWebSocketHandler() {
-                    @Override
-                    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-                        session.sendMessage(new TextMessage(json));
-                    }
-
-                    @Override
-                    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-                        Map<String, Object> res = objectMapper.readValue(
-                            message.getPayload(), new TypeReference<>() {}
-                        );
-                        responseFuture.complete(res);
-                        session.close();
-                    }
-
-                    @Override
-                    public void handleTransportError(WebSocketSession session, Throwable exception) {
-                        responseFuture.completeExceptionally(exception);
-                    }
-                }, headers, URI.create(url));
-
-            } catch (Exception e) {
-                responseFuture.completeExceptionally(e);
-            }
-
-            return responseFuture.orTimeout(5, TimeUnit.SECONDS);
+        } catch (JsonProcessingException e) {
+            responseFuture.completeExceptionally(e);
         }
+
+        return responseFuture.orTimeout(5, TimeUnit.SECONDS);
+    }
 
     @Override
     public WalletSectionDTO getWalletSectionByUser(Long userId) {
@@ -133,7 +124,6 @@ public class WalletServiceClient implements IWalletServiceClient{
             if (e.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
                 throw new WalletNotFoundException("Wallet not found for userId: " + userId);
             }
-
             throw new RuntimeException("gRPC error while fetching wallet section: " + e.getMessage(), e);
         }
     }
@@ -146,7 +136,6 @@ public class WalletServiceClient implements IWalletServiceClient{
             if (e.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
                 throw new WalletNotFoundException("Wallet or currency not found for userId: " + request.getUserId());
             }
-
             throw new RuntimeException("gRPC error while fetching balance by currency: " + e.getMessage(), e);
         }
     }
@@ -154,7 +143,7 @@ public class WalletServiceClient implements IWalletServiceClient{
     @Override
     public WithdrawResponse walletDeduct(WalletDeductionRequest payloads) {
         return walletServiceStub.withdrawIn(payloads);
-    }    
+    }
 
     public static BigDecimal parseFormattedString(String formattedValue) throws ParseException {
         String pattern = "#,##0.00";
@@ -162,16 +151,14 @@ public class WalletServiceClient implements IWalletServiceClient{
         symbols.setGroupingSeparator(',');
         symbols.setDecimalSeparator('.');
         DecimalFormat decimalFormat = new DecimalFormat(pattern, symbols);
-
         Number number = decimalFormat.parse(formattedValue);
         return new BigDecimal(number.toString());
     }
-    
+
     @Override
     public void onWebSocketMessage(String messageJson) {
         try {
-            Map<String, Object> message = new ObjectMapper().readValue(messageJson, new TypeReference<>() {
-            });
+            Map<String, Object> message = new ObjectMapper().readValue(messageJson, new TypeReference<>() {});
             if ("balance_response".equals(message.get("type"))) {
                 String correlationId = (String) message.get("correlationId");
                 CompletableFuture<BigDecimal> future = pendingRequests.remove(correlationId);
@@ -182,6 +169,7 @@ public class WalletServiceClient implements IWalletServiceClient{
                 }
             }
         } catch (JsonProcessingException | ParseException e) {
+            // consider logging this
         }
     }
 
@@ -193,7 +181,9 @@ public class WalletServiceClient implements IWalletServiceClient{
         } catch (IOException e) {
             throw new RuntimeException("Failed to send WebSocket message", e);
         }
-    }  
-    
-}
+    }
 
+    public Map<String, CompletableFuture<BigDecimal>> getPendingRequests() {
+        return pendingRequests;
+    }
+}
