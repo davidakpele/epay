@@ -27,7 +27,7 @@ spring:
       max-file-size: 2MB
       max-request-size: 2MB
       file-size-threshold: 0
-      location: /tmp
+      location: /tmp 
   file:
     upload-dir: ${FILE_UPLOAD_DIR:/var/www/uploads/images} 
     max-file-size: 2MB

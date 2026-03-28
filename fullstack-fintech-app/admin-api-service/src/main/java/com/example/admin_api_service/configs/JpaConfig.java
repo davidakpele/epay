@@ -18,7 +18,7 @@ import jakarta.persistence.EntityManagerFactory;
 public class JpaConfig {
 
     @Bean
-    @Primary  // ← resolves the NoUniqueBeanDefinitionException
+    @Primary  
     public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }

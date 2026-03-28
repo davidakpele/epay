@@ -3,7 +3,6 @@ package pesco.example.authentication_service.repositories;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import pesco.example.authentication_service.models.UserTracer;
-
 import java.util.Optional;
 
 @Repository
