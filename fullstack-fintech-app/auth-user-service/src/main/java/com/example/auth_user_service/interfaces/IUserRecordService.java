@@ -8,7 +8,7 @@ import com.example.auth_user_service.dtos.UserDTO;
 import com.example.auth_user_service.models.UserRecord;
 import com.example.auth_user_service.payloads.UpdateProfilePayload;
 
-public interface UserRecordService {
+public interface IUserRecordService {
 
     UserDTO getUserDetailsById(Long id);
 

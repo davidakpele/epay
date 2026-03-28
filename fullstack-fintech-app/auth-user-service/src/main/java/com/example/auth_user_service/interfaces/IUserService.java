@@ -8,7 +8,7 @@ import com.example.auth_user_service.dtos.UserDTO;
 import com.example.auth_user_service.models.Users;
 import com.example.auth_user_service.responses.UserStatisticsResponse;
 
-public interface UserService {
+public interface IUserService {
 
     Users getUserByUsername(String username);
 

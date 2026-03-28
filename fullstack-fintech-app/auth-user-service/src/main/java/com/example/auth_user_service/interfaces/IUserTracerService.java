@@ -3,7 +3,7 @@ package com.example.auth_user_service.interfaces;
 import com.example.auth_user_service.models.UserTracer;
 import com.example.auth_user_service.models.Users;
 
-public interface UserTracerService {
+public interface IUserTracerService {
 
     boolean hasActiveSession(Long userId);
     

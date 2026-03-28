@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.example.auth_user_service.enums.AttemptType;
 
-public interface UserAttemptService {
+public interface IUserAttemptService {
 
     ResponseEntity<?> createFailAttempt(Long id, AttemptType login);
 
