@@ -65,7 +65,7 @@ public class PDFService implements IPDFService{
     // Inner class for footer event handler
     private static class FooterEventHandler implements IEventHandler {
         private int transactionCount;
-        private int totalPages;
+        // private int totalPages;
         private int currentPage = 0;
         
         public FooterEventHandler(int transactionCount) {
@@ -80,26 +80,19 @@ public class PDFService implements IPDFService{
             Rectangle pageSize = page.getPageSize();
             
             currentPage++;
-            
-            // Only add footer to the last page
             if (currentPage == pdf.getNumberOfPages()) {
-                // Create footer at bottom of page
                 float footerY = pageSize.getBottom() + 20;
                 
                 try {
                     PdfCanvas pdfCanvas = new PdfCanvas(page.newContentStreamBefore(), page.getResources(), pdf);
-                    Canvas canvas = new Canvas(pdfCanvas, pageSize);
-                    
-                    // Add footer content - pass pageSize directly
-                    addFooterContent(canvas, footerY, transactionCount, pageSize);
-                    
-                    canvas.close();
-                } catch (Exception e) {
-                }
+                    try (Canvas canvas = new Canvas(pdfCanvas, pageSize)) {
+                        addFooterContent(canvas, footerY, pageSize);
+                    }
+                } catch (Exception e) {}
             }
         }
         
-        private void addFooterContent(com.itextpdf.layout.Canvas canvas, float y, int transactionCount, Rectangle pageSize) {
+        private void addFooterContent(com.itextpdf.layout.Canvas canvas, float y, Rectangle pageSize) {
             float pageWidth = pageSize.getWidth();
             
             Paragraph footer = new Paragraph()
@@ -695,19 +688,19 @@ public class PDFService implements IPDFService{
             return "$"; // Default to USD symbol
         }
         
-        switch (currencyType.toUpperCase()) {
-            case "USD": return "$";
-            case "EUR": return "€";
-            case "NGN": return "₦";
-            case "GBP": return "£";
-            case "JPY": return "¥";
-            case "AUD": return "A$";
-            case "CAD": return "C$";
-            case "CHF": return "CHF ";
-            case "CNY": return "¥";
-            case "INR": return "₹";
-            default: return currencyType + " ";
-        }
+        return switch (currencyType.toUpperCase()) {
+            case "USD" -> "$";
+            case "EUR" -> "€";
+            case "NGN" -> "₦";
+            case "GBP" -> "£";
+            case "JPY" -> "¥";
+            case "AUD" -> "A$";
+            case "CAD" -> "C$";
+            case "CHF" -> "CHF ";
+            case "CNY" -> "¥";
+            case "INR" -> "₹";
+            default -> currencyType + " ";
+        };
     }
 
     private Cell createTransactionCell(String text, Color backgroundColor) {

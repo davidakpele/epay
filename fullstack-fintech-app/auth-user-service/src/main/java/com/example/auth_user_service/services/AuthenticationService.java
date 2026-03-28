@@ -35,7 +35,6 @@ import com.example.auth_user_service.models.UserRecord;
 import com.example.auth_user_service.models.UserTracer;
 import com.example.auth_user_service.models.Users;
 import com.example.auth_user_service.exceptions.Error;
-
 import com.example.auth_user_service.models.VerificationToken;
 import com.example.auth_user_service.payloads.UserSignInRequest;
 import com.example.auth_user_service.payloads.UserSignUpRequest;
