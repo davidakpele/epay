@@ -26,7 +26,6 @@ import { userService, getUserId, updateHasSeenMetaMap, updateCompleteProfileDeta
 import KYCSuccessModal from '@/components/KYCSuccessModal';
 import { City, Country, State } from 'country-state-city';
 
-
 const UserProfile = () => {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);

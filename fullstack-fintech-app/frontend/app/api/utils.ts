@@ -411,3 +411,30 @@ export const getHasSeenMetaMap = (): boolean => {
   }
   return false;
 };
+
+export const markWelcomeAsSeen = (): void => {
+  updateStorage((user) => {
+    user.hasSeenWelcome = true;
+  });
+};
+
+export const hasSeenWelcome = (): boolean => {
+  try {
+    const storedData = localStorage.getItem('data');
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      return parsedData?.user?.hasSeenWelcome === true;
+    }
+  } catch (e) {
+    console.error("Failed to parse data", e);
+  }
+  return false;
+};
+
+export const markWelcomeAsSeenForSession = (): void => {
+  sessionStorage.setItem('epay_welcome_seen', 'true');
+};
+
+export const hasSeenWelcomeInSession = (): boolean => {
+  return sessionStorage.getItem('epay_welcome_seen') === 'true';
+};
