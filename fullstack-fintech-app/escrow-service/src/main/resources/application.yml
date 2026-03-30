@@ -53,7 +53,7 @@ history-service:
   base-url: http://history-service:8080
 
 authentication-service:
-  base-url: http://authentication-service:8080
+  base-url: http://auth-user-service:8080
 
 notification-service:
   base-url: http://notification-service:8079

@@ -116,7 +116,7 @@ services:
       - nginx_cache:/var/cache/nginx:rw
       - nginx_run:/var/run:rw
     depends_on:
-      - authentication-service
+      - auth-user-service
       - wallet-service
       - deposit-service
       - withdraw-service
@@ -152,10 +152,10 @@ services:
         labels: "service=nginx"
  
   # Spring Boot Services
-  authentication-service:
-    build: ./authentication-service
-    container_name: authentication-service
-    image: davidakpele/authentication-service:latest
+  auth-user-service:
+    build: ./auth-user-service
+    container_name: auth-user-service
+    image: davidakpele/auth-user-service:latest
     ports:
       - "8187:8187"
     volumes:
@@ -185,7 +185,7 @@ services:
       - resiliences-service
       - revenue-service
       - notification-service
-      - authentication-service
+      - auth-user-service
       - escrow-service
     networks:
       - banking-network
@@ -241,12 +241,12 @@ services:
       - "8037:8037"
     depends_on:
       postgres:
-        condition: service_healthy  # Wait for postgres to be healthy
+        condition: service_healthy
       resiliences-service:
         condition: service_started
       wallet-service:
         condition: service_started
-      authentication-service:
+      auth-user-service:
         condition: service_started
       notification-service:
         condition: service_started
@@ -315,7 +315,7 @@ services:
       - notification-service
       - wallet-service
       - resiliences-service
-      - authentication-service
+      - auth-user-service
     networks:
       - banking-network
 
@@ -348,7 +348,7 @@ services:
       - ASPNETCORE_URLS=http://+:8531
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=pesco_db;Username=postgres;Password=root
       - Redis__ConnectionString=redis:6379,abortConnect=false
-      - ServiceUrls__UserService=http://authentication-service:8187
+      - ServiceUrls__UserService=http://auth-user-service:8187
       - ServiceUrls__WalletService=http://wallet-service:8035
       - ServiceUrls__RevenueService=http://revenue-service:8083
       - ServiceUrls__NotificationService=http://notification-service:8079
@@ -382,7 +382,7 @@ services:
     depends_on:
       - postgres
       - notification-service
-      - authentication-service
+      - auth-user-service
       - resiliences-service
       - withdraw-service
       - wallet-service

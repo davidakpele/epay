@@ -1,10 +1,13 @@
 package com.example.auth_user_service.services;
 
 import java.util.Optional;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.example.auth_user_service.exceptions.Error;
 import com.example.auth_user_service.interfaces.IPasswordResetTokenService;
 import com.example.auth_user_service.models.PasswordResetToken;
@@ -13,6 +16,7 @@ import com.example.auth_user_service.payloads.ChangePasswordRequest;
 import com.example.auth_user_service.repositories.PasswordResetTokenRepository;
 import com.example.auth_user_service.repositories.UsersRepository;
 
+@Service
 public class PasswordResetTokenService implements IPasswordResetTokenService{
     
     private final PasswordResetTokenRepository passwordResetTokenRepository;

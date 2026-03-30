@@ -33,7 +33,7 @@ wallet-websocket:
   url: ws://wallet-service:8035/ws/wallet
 
 auth-service:
-  base-url: http://authentication-service:8187
+  base-url: http://auth-user-service:8187
 
 banklist-service:
   base-url: http://resiliences-service:8531

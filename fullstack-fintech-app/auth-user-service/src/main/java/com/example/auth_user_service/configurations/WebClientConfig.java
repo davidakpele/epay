@@ -2,12 +2,17 @@ package com.example.auth_user_service.configurations;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.example.auth_user_service.exceptions.Extraction;
+import com.example.auth_user_service.httpClients.NotificationServiceClient;
+
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.netty.resolver.DefaultAddressResolverGroup;
@@ -79,5 +84,13 @@ public class WebClientConfig {
                 .baseUrl(administratorServiceBaseUrl)
                 .defaultHeader("Content-Type", "application/json")
                 .build();
+    }
+
+    @Bean
+    public NotificationServiceClient notificationServiceClient(
+            WebClient notificationServiceWebClient,
+            Extraction extraction
+    ) {
+        return new NotificationServiceClient(notificationServiceWebClient, extraction);
     }
 }
