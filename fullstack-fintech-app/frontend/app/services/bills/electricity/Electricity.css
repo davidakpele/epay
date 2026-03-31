@@ -766,8 +766,8 @@
   display: none;
 }
 
-.radio-outer.checked .radio-inner {
-  display: block;
+.eletricity-radio-outer.checked .eletricity-radio-inner {
+  display: block !important;
 }
 
 .eletricity-country-list::-webkit-scrollbar {

@@ -1,0 +1,214 @@
+/* ────────────────────────────────────────────────
+   WelcomeModal.css  –  ePay onboarding modal
+   ──────────────────────────────────────────────── */
+
+/* Overlay + backdrop */
+.wm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: wm-fade-in 0.25s ease both;
+}
+
+.wm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+/* Card */
+.wm-card {
+  position: relative;
+  z-index: 1;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.18),
+    0 4px 16px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 720px;
+  padding: 48px 48px 44px;
+  overflow: hidden;
+  animation: wm-slide-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Subtle green top-bar accent */
+.wm-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #04581b 0%, #04581b 50%, #04581b 100%);
+  border-radius: 10px 10px 0 0;
+}
+
+/* Close button */
+.wm-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f2;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  z-index: 2;
+}
+
+.wm-close:hover {
+  background: #e2ede5;
+  color: var(--bg-main);
+  transform: scale(1.08);
+}
+
+/* Body layout */
+.wm-body {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+/* Text column */
+.wm-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.wm-title {
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  color: var(--bg-main);
+  line-height: 1.25;
+  margin: 0 0 20px;
+  letter-spacing: -0.3px;
+}
+
+.wm-name {
+  color: var(--bg-main);
+}
+
+.wm-line {
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 15.5px;
+  color: #374151;
+  line-height: 1.65;
+  margin: 0 0 10px;
+}
+
+.wm-line:last-of-type {
+  margin-bottom: 0;
+}
+
+.wm-highlight {
+  color: var(--bg-main);
+  font-weight: 600;
+}
+
+/* CTA button */
+.wm-cta {
+  display: inline-block;
+  margin-top: 28px;
+  padding: 14px 44px;
+  background: var(--bg-main);
+  color: #fff;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+  box-shadow: 0 4px 14px rgba(26, 107, 47, 0.35);
+}
+
+.wm-cta:hover {
+  background: var(--bg-main);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--bg-main);
+}
+
+.wm-cta:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px var(--bg-main);
+}
+
+/* Illustration column */
+.wm-illustration {
+  flex-shrink: 0;
+  width: 295px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wm-image {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ── Animations ── */
+@keyframes wm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes wm-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .wm-card {
+    padding: 36px 24px 32px;
+    border-radius: 16px;
+  }
+
+  .wm-body {
+    flex-direction: column-reverse;
+    gap: 20px;
+  }
+
+  .wm-illustration {
+    width: 200px;
+  }
+
+  .wm-title {
+    font-size: 22px;
+    margin-bottom: 14px;
+  }
+
+  .wm-cta {
+    width: 100%;
+    text-align: center;
+  }
+}

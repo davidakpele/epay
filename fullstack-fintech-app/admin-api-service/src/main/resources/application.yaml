@@ -188,7 +188,7 @@ wallet-service:
   base-url: http://wallet-service:8081
 
 authentication-service:
-  base-url: http://authentication-service:8187 
+  base-url: http://auth-user-service:8187 
 
 history-service:
   base-url: http://resiliences-service:8531

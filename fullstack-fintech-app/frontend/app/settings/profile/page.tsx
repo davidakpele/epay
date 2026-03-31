@@ -26,7 +26,6 @@ import { userService, getUserId, updateHasSeenMetaMap, updateCompleteProfileDeta
 import KYCSuccessModal from '@/components/KYCSuccessModal';
 import { City, Country, State } from 'country-state-city';
 
-
 const UserProfile = () => {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
@@ -59,9 +58,7 @@ const UserProfile = () => {
   const [profileImage, setProfileImage] = useState('/assets/images/user-profile.jpg');
   const [metaMapErrors, setMetaMapErrors] = useState<MetaMapErrors>({});
   const [showKYCSuccess, setShowKYCSuccess] = useState(false);
-  const countries = Country.getAllCountries();
-  const states = State.getStatesOfCountry(metaMapData.countryCode);
-  const cities = City.getCitiesOfState(metaMapData.countryCode, metaMapData.stateCode);
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -117,22 +114,16 @@ const UserProfile = () => {
     const firstName = getUserFirstName() || '';
     const lastName = getUserLastName() || '';
     setMetaMapData(prev => ({ ...prev, firstName, lastName }));
-
-    const hasSeenMetaMap = getHasSeenMetaMap();
-    if (!hasSeenMetaMap) {
-      setTimeout(() => {
-        setShowMetaMapModal(true);
-      }, 1000);
-    }
   }, []);
 
   const fetchUserProfile = async () => {
     try {
       const userId = getUserId();
       const response = await userService.getById(userId);
-      
+
       setUserProfile(response);
       const userRecord = response.records?.[0] || {};
+
       const mappedUserData: UserData = {
         id: response.id || userId,
         fullName: `${userRecord.firstName || ''} ${userRecord.lastName || ''}`.trim(),
@@ -149,22 +140,30 @@ const UserProfile = () => {
         status: response.status || 'Active',
         kycLevel: response.kycLevel || 1
       };
-      
+
       setUserData(mappedUserData);
-      const loadingTimer = setTimeout(() => {
-        setIsPageLoading(false);
-      }, 2000);
-  
-      return () => clearTimeout(loadingTimer);
+
+      const isProfileIncomplete = !userRecord.telephone
+        || !userRecord.gender
+        || !userRecord.dateofBirth
+        || !userRecord.country
+        || !userRecord.city;
+
+      const hasSeenMetaMap = getHasSeenMetaMap();
+
+      if (isProfileIncomplete && !hasSeenMetaMap) {
+        setTimeout(() => setShowMetaMapModal(true), 1000);
+      }
+
+      const firstName = userRecord.firstName || getUserFirstName() || '';
+      const lastName = userRecord.lastName || getUserLastName() || '';
+      setMetaMapData(prev => ({ ...prev, firstName, lastName }));
+
     } catch (error) {
       console.error('Error fetching user profile:', error);
       showToast('Failed to load user profile');
     } finally {
-      const loadingTimer = setTimeout(() => {
-        setIsPageLoading(false);
-      }, 2000);
-  
-      return () => clearTimeout(loadingTimer);
+      setTimeout(() => setIsPageLoading(false), 2000);
     }
   };
 

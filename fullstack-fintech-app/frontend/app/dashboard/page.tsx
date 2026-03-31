@@ -24,6 +24,7 @@ import { eventEmitter } from '../utils/eventEmitter';
 import KycCheckProgress from '@/components/Kyc/page';
 import { UserSettings } from '../types/utils';
 import { Toast } from '../types/auth';
+import WelcomeModal from '@/components/WelcomeModal';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(false);
@@ -429,6 +430,10 @@ const Dashboard = () => {
       <Sidebar />
       <main className={`main-content ${isDepositOpen ? 'dashboard-blur' : ''}`}>
         <Header theme={theme} toggleTheme={toggleTheme} />
+        <WelcomeModal
+          userName={getUserFullName()?.split(' ')[0] || 'David'}
+          imageSrc="/assets/images/welcome-img.png"
+        />
         <div className="scrollable-content">
           <div className="welcome-message">
             <div className="user-avatar">

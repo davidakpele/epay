@@ -135,7 +135,7 @@ export const getWallet = (currency: string): UserWallet | null => {
 // --- Setters / Updaters ---
 
 const updateStorage = (updater: (user: UserData) => void) => {
-  let existingData: StorageData = {};
+  let existingData: StorageData = {};  
   try {
     const storedData = localStorage.getItem('data');
     if (storedData) existingData = JSON.parse(storedData);
@@ -405,6 +405,24 @@ export const getHasSeenMetaMap = (): boolean => {
     if (storedData) {
       const parsedData = JSON.parse(storedData);
       return parsedData?.user?.hasSeenMetaMap === true;
+    }
+  } catch (e) {
+    console.error("Failed to parse data", e);
+  }
+  return false;
+};
+export const markWelcomeAsSeen = (): void => {
+  updateStorage((user) => {
+    user.hasSeenWelcome = true;
+  });
+};
+
+export const hasSeenWelcome = (): boolean => {
+  try {
+    const storedData = localStorage.getItem('data');
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      return parsedData?.user?.hasSeenWelcome === true;
     }
   } catch (e) {
     console.error("Failed to parse data", e);

@@ -123,7 +123,7 @@ public class WalletServiceImp implements WalletService {
                 idempotencyService.clearKey(idempotencyKey);
                 String msg = e.getCause().getMessage();
                 if (msg.startsWith("SENDER_NOT_FOUND:"))    return Error.createResponse("Sender not found",    HttpStatus.BAD_REQUEST, msg.substring(17));
-                if (msg.startsWith("RECIPIENT_NOT_FOUND:")) return Error.createResponse("Recipient not found", HttpStatus.BAD_REQUEST, msg.substring(20));
+                if (msg.startsWith("RECIPIENT_NOT_FOUND:")) return Error.createResponse("User with username " + dto.getRecipientUsername() + " does not exist.", HttpStatus.BAD_REQUEST, msg.substring(20));
                 throw e;
             }
 
