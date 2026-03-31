@@ -366,7 +366,7 @@ const BettingPage = () => {
                             <span>{p.name}</span>
                           </div>
                           <div className={`betting-radio-outer ${selectedProvider2.id === p.id ? 'checked' : ''}`}>
-                            <div className="radio-inner" />
+                            <div className="betting-radio-inner" />
                           </div>
                         </div>
                       ))}

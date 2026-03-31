@@ -11,6 +11,7 @@ export interface UserWallet {
 }
 
 export interface UserData {
+  hasSeenWelcome?: boolean; 
   token?: string;
   username?: string;
   userId?: string | number;

@@ -768,12 +768,12 @@
   display: none;
 }
 
-.betting-radio-outer.checked .radio-inner {
+.betting-radio-outer.checked .betting-radio-inner {
   display: block;
 }
 
 .betting-country-list::-webkit-scrollbar {
-  width: 2px !important;
+  width: 1px !important;
 }
 
 .betting-country-list::-webkit-scrollbar-track {

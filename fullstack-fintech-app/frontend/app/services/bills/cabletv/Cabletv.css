@@ -767,7 +767,7 @@
   display: none;
 }
 
-.cable-radio-outer.checked .radio-inner {
+.cable-radio-outer.checked .cable-radio-inner {
   display: block;
 }
 

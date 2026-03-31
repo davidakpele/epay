@@ -766,7 +766,7 @@
   display: none;
 }
 
-.data-radio-outer.checked .radio-inner {
+.data-radio-outer.checked .data-radio-inner {
   display: block;
 }
 

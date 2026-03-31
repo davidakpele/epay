@@ -82,7 +82,7 @@ const Statements = () => {
       status: 'All Statuses',
     });
     
-    const transactionTypes = ['All Types', 'TRANSFER', 'DEPOSIT', 'WITHDRAW', 'Payment', 'BILLS', 'CREDITED'];
+    const transactionTypes = ['All Types', 'TRANSFER', 'DEPOSIT', 'PAYMENT', 'DEBITED', 'BILLS', 'CREDITED'];
     const statuses = ['All Statuses', 'Completed', 'Pending', 'Failed'];
     
     const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {

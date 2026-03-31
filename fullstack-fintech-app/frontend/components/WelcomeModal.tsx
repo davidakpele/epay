@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import './WelcomeModal.css';
-import { hasSeenWelcome, markWelcomeAsSeen } from '@/app/api/utils';
+import { hasSeenWelcome, markWelcomeAsSeen } from '@/app/api';
 
 interface WelcomeModalProps {
   userName?: string;
@@ -16,56 +16,42 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const userHasSeenWelcome = hasSeenWelcome();
-
-    const hasSeenInSession = sessionStorage.getItem('epay_welcome_seen');
-    
-    if (!userHasSeenWelcome && !hasSeenInSession) {
-        setVisible(true);
+    if (!hasSeenWelcome()) {
+      setVisible(true);
     }
-    }, []);
+  }, []);
 
-    const handleClose = () => {
-        markWelcomeAsSeen();
-        
-        sessionStorage.setItem('epay_welcome_seen', 'true');
-        
-        setVisible(false);
-    };
+  const handleClose = () => {
+    markWelcomeAsSeen();
+    setVisible(false);
+  };
 
   if (!visible) return null;
 
   return (
     <div className="wm-overlay" role="dialog" aria-modal="true" aria-label="Welcome modal">
       <div className="wm-backdrop" onClick={handleClose} />
-
       <div className="wm-card">
-        {/* Close button */}
         <button className="wm-close" onClick={handleClose} aria-label="Close">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M1 1l16 16M17 1L1 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         </button>
-
-        {/* Content area */}
         <div className="wm-body">
           <div className="wm-text">
             <h2 className="wm-title">
               Welcome to ePay, <span className="wm-name">{userName}!</span>
             </h2>
-
             <p className="wm-line">Thank you for choosing ePay!</p>
             <p className="wm-line">We're thrilled to have you on board.</p>
             <p className="wm-line">
               Manage your finances easily and securely with our platform.{' '}
               <span className="wm-highlight">Happy transacting!</span>
             </p>
-
             <button className="wm-cta" onClick={handleClose}>
               Get Started
             </button>
           </div>
-
           <div className="wm-illustration">
             <img
               src={imageSrc}

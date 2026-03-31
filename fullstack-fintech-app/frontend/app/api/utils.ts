@@ -135,7 +135,7 @@ export const getWallet = (currency: string): UserWallet | null => {
 // --- Setters / Updaters ---
 
 const updateStorage = (updater: (user: UserData) => void) => {
-  let existingData: StorageData = {};
+  let existingData: StorageData = {};  
   try {
     const storedData = localStorage.getItem('data');
     if (storedData) existingData = JSON.parse(storedData);
@@ -411,7 +411,6 @@ export const getHasSeenMetaMap = (): boolean => {
   }
   return false;
 };
-
 export const markWelcomeAsSeen = (): void => {
   updateStorage((user) => {
     user.hasSeenWelcome = true;
@@ -429,12 +428,4 @@ export const hasSeenWelcome = (): boolean => {
     console.error("Failed to parse data", e);
   }
   return false;
-};
-
-export const markWelcomeAsSeenForSession = (): void => {
-  sessionStorage.setItem('epay_welcome_seen', 'true');
-};
-
-export const hasSeenWelcomeInSession = (): boolean => {
-  return sessionStorage.getItem('epay_welcome_seen') === 'true';
 };

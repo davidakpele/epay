@@ -766,7 +766,7 @@
   display: none;
 }
 
-.airtime-radio-outer.checked .radio-inner {
+.airtime-radio-outer.checked .airtime-radio-inner {
   display: block;
 }
 

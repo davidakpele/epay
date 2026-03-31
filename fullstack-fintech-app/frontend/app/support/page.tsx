@@ -14,6 +14,7 @@ import {FormData} from '../types/utils';
 import { contactMethods, faqs, quickLinks } from '../lib/SupportData';
 import DepositModal from '@/components/DepositModal';
 import LoadingScreen from '@/components/loader/Loadingscreen';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const Support = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
@@ -21,6 +22,7 @@ const Support = () => {
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
     const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const [formData, setFormData] = useState<FormData>({
         name: '',
         email: '',
@@ -142,7 +144,20 @@ const Support = () => {
                         <Clock size={14} />
                         <span>{method.availability}</span>
                         </div>
-                        <button className="contact-action">{method.action}</button>
+                        <button 
+                            className="contact-action"
+                            onClick={() => {
+                                if (method.title === 'Live Chat') {
+                                setIsChatOpen(true);
+                                } else if (method.title === 'Email Support') {
+                                window.location.href = 'mailto:support@epay.com?subject=ePay Support Request';
+                                } else if (method.title === 'Phone Support') {
+                                window.location.href = 'tel:+2349000000000';
+                                }
+                            }}
+                            >
+                            {method.action}
+                            </button>
                     </div>
                     ))}
                 </div>
@@ -335,6 +350,7 @@ const Support = () => {
             <Footer theme={theme} />
         </div>
       </main>
+      <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       <MobileNav activeTab="none" onPlusClick={() => setIsDepositOpen(true)} />
         <DepositModal 
         isOpen={isDepositOpen} 
