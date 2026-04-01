@@ -38,8 +38,6 @@ public class NotificationServiceClient implements INotificationServiceClient {
             requestBody.put("link", verificationLink);
             requestBody.put("message", content);
 
-            log.info("[REQUEST] POST /send/verification-message | body: " + requestBody);
-
             this.notificationServiceWebClient.post()
                     .uri("/send/verification-message")
                     .bodyValue(requestBody)
@@ -47,8 +45,6 @@ public class NotificationServiceClient implements INotificationServiceClient {
                     .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
                             clientResponse -> clientResponse.bodyToMono(String.class)
                                     .flatMap(errorMessage -> {
-                                        log.warning("[RESPONSE ERROR] POST /send/verification-message | status: "
-                                                + clientResponse.statusCode() + " | body: " + errorMessage);
                                         if (clientResponse.statusCode().is4xxClientError()) {
                                             String details = extraction.extractDetailsFromError(errorMessage);
                                             return Mono.error(new UserClientNotFoundException("Notification failed", details));
@@ -59,7 +55,6 @@ public class NotificationServiceClient implements INotificationServiceClient {
                     .doOnSuccess(response -> log.info("[RESPONSE] POST /send/verification-message | status: "
                             + response.getStatusCode()))
                     .block();
-
         } catch (Exception ex) {
             log.severe("[EXCEPTION] POST /send/verification-message | error: " + ex.getMessage());
         }
