@@ -345,7 +345,7 @@ const Support = () => {
                     </div>
                 </div>
                 </section>
-            </div>
+            </div>  
             </div>
             <Footer theme={theme} />
         </div>

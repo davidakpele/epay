@@ -264,7 +264,7 @@ const Statements = () => {
             date: item.timestamp || item.createdOn || "",
             description: item.description || item.message || "",
             type: item.type || "Transfer",
-            amount: Number(item.amount) || 0,
+            netAmount: Number(item.netAmount) || 0,
             status: mapStatus(item.status),
             reference: item.referenceNo || item.transactionId || "",
             currencyType: item.currencyType || selectedCurrency.code || 'USD',
@@ -383,7 +383,7 @@ const Statements = () => {
         description: item.description ?? '',
         type: item.type ?? '',
         currencyType: item.currencyType || selectedCurrency.code || 'USD',
-        amount: item.amount ?? 0,
+        netAmount: item.amount ?? 0,
         balance: item.availableBalance || item.previousBalance || 0, 
         reference: item.reference ?? ''
       }));
@@ -856,9 +856,9 @@ This is an official receipt for your records.
                                       <div className={`ah-transaction-icon ${
                                         isCreditTransaction(transaction.type) ? 'credit' : 
                                         isDebitTransaction(transaction.type) ? 'debit' : 
-                                        transaction.amount >= 0 ? 'credit' : 'debit'
+                                        transaction.netAmount >= 0 ? 'credit' : 'debit'
                                       }`}>
-                                        {isCreditTransaction(transaction.type) || (!isDebitTransaction(transaction.type) && transaction.amount >= 0) ? 
+                                        {isCreditTransaction(transaction.type) || (!isDebitTransaction(transaction.type) && transaction.netAmount >= 0) ? 
                                           <ArrowDownLeft size={18} /> : 
                                           <ArrowUpRight size={18} />
                                         }
@@ -876,12 +876,12 @@ This is an official receipt for your records.
                                     <span className={`ah-amount ${
                                       isCreditTransaction(transaction.type) ? 'credit' : 
                                       isDebitTransaction(transaction.type) ? 'debit' : 
-                                      transaction.amount >= 0 ? 'credit' : 'debit'
+                                      transaction.netAmount >= 0 ? 'credit' : 'debit'
                                     }`}>
                                       {isCreditTransaction(transaction.type) ? '+' : 
                                       isDebitTransaction(transaction.type) ? '-' : 
-                                      transaction.amount >= 0 ? '+' : '-'}
-                                      {formatAmount(Math.abs(transaction.amount))}
+                                      transaction.netAmount >= 0 ? '+' : '-'}
+                                      {formatAmount(Math.abs(transaction.netAmount))}
                                     </span>
                                   </td>
                                   <td>

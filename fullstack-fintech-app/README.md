@@ -75,7 +75,7 @@ Our security architecture successfully blocks **50%+ of attack attempts** includ
 ### Technology Stack
 - **Java/Spring Boot**: Core banking services with integrated security filters
 - **Golang**: High-performance services with built-in security
-- **Rust**: Security-critical services (maintenance and escrow)
+- **.NET**: Security-critical services (maintenance and escrow)
 - **NGINX**: Advanced security proxy with WAF capabilities
 - **Redis & Hazelcast**: Distributed caching and idempotency key management
 - **RabbitMQ**: Secure asynchronous messaging
@@ -220,7 +220,7 @@ External Request → NGINX Security Layer → Spring Security Filters → Applic
 
 
 ### 🔧 Maintenance Service Overview
-- The **Maintenance Service** (built in Rust) handles automated system maintenance operations including:
+- The **Maintenance Service** (built in .net) handles automated system maintenance operations including:
 
 #### 💰 Automated Fee Processing
    - **Monthly Maintenance Fees:** Automatically charges maintenance fees to user wallets
@@ -254,7 +254,6 @@ External Request → NGINX Security Layer → Spring Security Filters → Applic
 
 - Java 21::knowledge
 - .Net 1.19+ ::knowledge
-- Rust 0.1.0 axum ::knowledge
 - Docker & Docker Compose ::knowledge
 - Ngnix ::knowledge
 - Redis ::knowledge

@@ -550,6 +550,9 @@
   justify-content: start;
   align-items: start;
 }
+.amount.has-blur {
+  margin-top: 10px;
+}
 
 .action-buttons {
   display: flex;
@@ -804,4 +807,9 @@
   .feature-grid .feature-card:nth-child(n+5) {
     display: none;
   }
+}
+.blurred-balance{
+  font-family: "Narnoor", serif !important;
+  font-weight: 400 !important;
+  margin-top:10px
 }

@@ -481,9 +481,14 @@ const Dashboard = () => {
               
               <div className="balance-row">
                 <div className="wallet-balance-label">Available Balance</div>
-                <div className="amount">
-                  {selectedCurrency?.symbol || '₦'} {showBalance ? formatBalance(getCurrentBalance()) : '*****'}
-                </div>
+                <div className={`amount ${!showBalance ? 'has-blur' : ''}`}>
+                    {selectedCurrency?.symbol || '₦'}{' '}
+                    {showBalance ? (
+                      formatBalance(getCurrentBalance())
+                    ) : (
+                      <span className="blurred-balance">*****</span>
+                    )}
+                  </div>
               </div>
             </div>
 
