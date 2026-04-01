@@ -212,6 +212,7 @@ export interface AccountTransactionStatement {
   description: string;
   type: string;
   amount: number;
+  netAmount: number;
   status: string;
   reference: string;
   currencyType: string;

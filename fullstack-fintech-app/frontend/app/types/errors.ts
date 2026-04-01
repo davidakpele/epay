@@ -27,7 +27,7 @@ export interface StatementItem {
   description: string;
   type: string;
   currencyType: string;
-  amount: number;
+  netAmount: number;
   balance: number;
   reference: string;
 }

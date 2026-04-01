@@ -14,7 +14,7 @@
 
 .support-hero {
   background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-main) 100%);
-  padding: 80px 24px 100px;
+  padding: 15px 24px 100px;
   position: relative;
   overflow: hidden;
 }
