@@ -79,4 +79,19 @@ public class UserAttemptService implements IUserAttemptService{
         return ResponseEntity.notFound().build();
     }
 
+    @Override
+    public ResponseEntity<?> deleteAttempt(Long id) {
+       
+        UserRecord user = userRecordRepository.findByUserId(id).orElse(null);
+        user.setLocked(false);
+        userRecordRepository.save(user);
+        UserAttempt attempt = userAttemptRepository.findByUserId(id);
+        if (attempt == null) {
+            return ResponseEntity.notFound().build();
+        }
+        userAttemptRepository.deleteById(attempt.getId());
+
+        return ResponseEntity.ok("User attempt record deleted successfully.");
+    }
+
 }
