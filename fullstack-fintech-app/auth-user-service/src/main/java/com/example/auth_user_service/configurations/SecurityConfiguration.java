@@ -154,6 +154,7 @@ public class SecurityConfiguration {
                 .requestMatchers("/auth/**", "/error/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/user/username/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/user/{id}").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/user/attempt/delete/**").permitAll()
                 .requestMatchers("/cache/users/**").permitAll()
                 .requestMatchers("/user/list").permitAll()
                 .requestMatchers("/home/**").permitAll()

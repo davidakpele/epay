@@ -47,7 +47,9 @@ public class ValidationFilter extends OncePerRequestFilter {
                 sendErrorResponse(response, "Invalid input detected in query parameters");
                 return;
             }
-            if (containsMaliciousInput(path)) {
+
+            // Only check path traversal on the URL path, NOT SQL/XSS keywords
+            if (PATH_TRAVERSAL_PATTERN.matcher(path).find()) {
                 sendErrorResponse(response, "Invalid input detected in URL path");
                 return;
             }
@@ -63,7 +65,6 @@ public class ValidationFilter extends OncePerRequestFilter {
             }
         }
 
-        // Continue filter chain with wrapped request
         filterChain.doFilter(wrappedRequest, response);
     }
 

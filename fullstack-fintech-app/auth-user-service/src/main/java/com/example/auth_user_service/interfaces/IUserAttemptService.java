@@ -9,5 +9,6 @@ public interface IUserAttemptService {
     ResponseEntity<?> createFailAttempt(Long id, AttemptType login);
 
     ResponseEntity<?> UpdateUserAccount(Long id);
-
+    
+    ResponseEntity<?> deleteAttempt(Long id);
 }

@@ -340,6 +340,9 @@ public class AuthenticationService implements IAuthenticationService{
         String otp = keysWrapper.generateOTP();
         String jwt = keysWrapper.generateUniqueKey();
 
+        // Resolve URL on the main thread BEFORE the async lambda
+        String baseUrl = keysWrapper.getUrl();
+
         TwoFactorAuthentication existing = twoFactorAuthenticationServiceImplementation.findByUser(user.getId());
         if (existing != null) {
             twoFactorAuthenticationServiceImplementation.deleteTwoFactorOtp(existing);
@@ -347,12 +350,18 @@ public class AuthenticationService implements IAuthenticationService{
 
         TwoFactorAuthentication newOtp = twoFactorAuthenticationServiceImplementation
                 .createTwoFactorOtp(user, otp, jwt);
+
         CompletableFuture.runAsync(() ->
                 notificationServiceClient.sendOptEmail(
                         user.getEmail(), otp,
-                        keysWrapper.getUrl() + "/auth/security/password",
-                        keysWrapper.getUrl() + "/auth/security/configuring-two-factor-authentication",
-                        keysWrapper.getUrl() + "/auth/security/configuring-two-factor-authentication-recovery-methods"));
+                        baseUrl + "/auth/security/password",           // use pre-resolved URL
+                        baseUrl + "/auth/security/configuring-two-factor-authentication",
+                        baseUrl + "/auth/security/configuring-two-factor-authentication-recovery-methods"))
+            .exceptionally(ex -> {
+                System.err.println("[2FA] Failed to send OTP email to " + user.getEmail() + ": " + ex.getMessage());
+                ex.printStackTrace();
+                return null;
+            });
 
         authResponse.put("message", "Two-factor authentication is enabled.");
         authResponse.put("twoFactorAuthEnabled", true);

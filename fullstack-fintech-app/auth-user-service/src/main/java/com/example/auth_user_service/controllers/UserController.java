@@ -26,6 +26,7 @@ import com.example.auth_user_service.configurations.FileStorageConfig;
 import com.example.auth_user_service.dtos.PageResponse;
 import com.example.auth_user_service.dtos.UserDTO;
 import com.example.auth_user_service.interfaces.IPasswordResetTokenService;
+import com.example.auth_user_service.interfaces.IUserAttemptService;
 import com.example.auth_user_service.interfaces.IUserRecordService;
 import com.example.auth_user_service.interfaces.IUserService;
 import com.example.auth_user_service.models.Users;
@@ -49,14 +50,18 @@ public class UserController {
     private final FileStorageConfig fileStorageConfig;
     private final KeyWrapper keysWrapper;
     private final IPasswordResetTokenService passwordResetTokenService;
+    private final IUserAttemptService userAttemptService;
 
-    public UserController(IUserService userServices, IUserRecordService userRecordService, FileStorageConfig fileStorageConfig, KeyWrapper keysWrapper, IPasswordResetTokenService passwordResetTokenService) {
+
+    public UserController(IUserService userServices, IUserRecordService userRecordService, FileStorageConfig fileStorageConfig, KeyWrapper keysWrapper, IPasswordResetTokenService passwordResetTokenService, IUserAttemptService userAttemptService) {
         this.userServices = userServices;
         this.userRecordService = userRecordService;
         this.fileStorageConfig = fileStorageConfig;
         this.keysWrapper = keysWrapper;
         this.passwordResetTokenService = passwordResetTokenService;
+        this.userAttemptService = userAttemptService;
     }
+    
     
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/my-referral/{id}")
@@ -293,6 +298,11 @@ public class UserController {
     @GetMapping("/statistics")
     public ResponseEntity<UserStatisticsResponse> getUserStatistics(@RequestParam(defaultValue = "MONTHLY") String period) {
         return ResponseEntity.ok(userServices.getUserStatistics(period));
+    }
+
+    @DeleteMapping("/attempt/delete/{userId}")
+    public ResponseEntity<?> deleteAttempt(@PathVariable Long userId) {
+        return userAttemptService.deleteAttempt(userId);
     }
     
     // @PostMapping("/user/batch")
