@@ -7,23 +7,25 @@ public class BankStatement {
     private String description;
     private String currencyType;
     private String type;
-    private Double amount;
+    private Double netAmount;
     private Double balance;
     private String reference;
 
     public BankStatement() {
     }
 
-    public BankStatement(String id, String date, String description, String currencyType, String type, Double amount, Double balance, String reference) {
+
+    public BankStatement(String id, String date, String description, String currencyType, String type, Double netAmount, Double balance, String reference) {
         this.id = id;
         this.date = date;
         this.description = description;
         this.currencyType = currencyType;
         this.type = type;
-        this.amount = amount;
+        this.netAmount = netAmount;
         this.balance = balance;
         this.reference = reference;
     }
+   
 
     public String getId() {
         return this.id;
@@ -65,12 +67,12 @@ public class BankStatement {
         this.type = type;
     }
 
-    public Double getAmount() {
-        return this.amount;
+    public Double getNetAmount() {
+        return this.netAmount;
     }
 
-    public void setAmount(Double amount) {
-        this.amount = amount;
+    public void setNetAmount(Double netAmount) {
+        this.netAmount = netAmount;
     }
 
     public Double getBalance() {
