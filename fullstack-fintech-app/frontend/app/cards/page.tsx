@@ -15,6 +15,7 @@ import { getFiat, getToken, getUserFullName, getUserId, setActiveWallet, setFiat
 import { virtualCardService, walletService } from '@/app/api';
 import { Currency } from '@/app/types/api';
 import { useRouter } from 'next/navigation';
+import SupportChatBot from '@/components/SupportChatBot';
 
 type CardStatus = 'Active' | 'Pending' | 'On Review';
 type CardNetwork = 'Visa' | 'Master';
@@ -163,7 +164,7 @@ const VirtualCardsPage = () => {
   const [requestHistory, setRequestHistory]         = useState<CardRequest[]>([]);
   const [statusCounts, setStatusCounts]             = useState({ Pending: 0, 'On Review': 0, Active: 0 });
   const [modalAmount, setModalAmount]               = useState('');
-
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const userFullName = getUserFullName() || 'User';
   const router = useRouter();
 
@@ -1034,6 +1035,17 @@ try {
 
       <MobileNav activeTab="none" onPlusClick={() => setIsDepositOpen(true)} />
       <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} theme={theme} />
+        {!isChatOpen && (
+          <button
+            className="chat-fab"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
+          >
+            <i className="fa-solid fa-comment-dots"></i>
+          </button>
+        )}
+
+        <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

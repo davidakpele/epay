@@ -13,6 +13,7 @@ import { Building2, ChevronRight, CreditCard,  Grip, ShoppingBag, ShoppingCart, 
 import './Shopping.css';
 import { Toast } from '@/app/types/auth';
 import { shoppingProviders } from '@/app/lib/ImageProvider';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const paymentOptions = [
   { id: 'wallet',   label: 'Wallet Balance', icon: <Wallet style={{color:"var(--bg-main)"}}/> },
@@ -28,7 +29,7 @@ const ShoppingBill = () => {
   const [isPageLoading, setIsPageLoading]         = useState(true);
   const [isSubmitting, setIsSubmitting]           = useState(false);
   const [toasts, setToasts]                       = useState<Toast[]>([]);
-
+  const [isChatOpen, setIsChatOpen]               = useState(false);
   // Form
   const [orderId, setOrderId]                     = useState('');
   const [selectedPayment, setSelectedPayment]     = useState<string | null>(null);
@@ -326,6 +327,17 @@ const ShoppingBill = () => {
         onClose={() => setIsDepositOpen(false)}
         theme={theme}
       />
+      {!isChatOpen && (
+        <button
+          className="chat-fab"
+          onClick={() => setIsChatOpen(true)}
+          aria-label="Open support chat"
+        >
+          <i className="fa-solid fa-comment-dots"></i>
+        </button>
+      )}
+      
+      <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

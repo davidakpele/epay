@@ -12,6 +12,7 @@ import LoadingScreen from '@/components/loader/Loadingscreen';
 import { Toast } from '../../types/auth';
 import { bankCollectionService, getUserId } from '../../api/index';
 import Select from 'react-select';
+import SupportChatBot from '@/components/SupportChatBot';
 
 type BankAccount = {
   id: string;
@@ -176,7 +177,7 @@ const Banks = () => {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
   const [accountExist, setAccountExist] = useState(false);
-
+  const [isChatOpen, setIsChatOpen] = useState(false);
   // Multi-select state
   const [selectedBanks, setSelectedBanks] = useState<Set<string>>(new Set());
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
@@ -783,6 +784,17 @@ const Banks = () => {
         onClose={() => setIsDepositOpen(false)}
         theme={theme}
       />
+      {!isChatOpen && (
+          <button
+            className="chat-fab"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
+          >
+            <i className="fa-solid fa-comment-dots"></i>
+          </button>
+        )}
+
+        <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

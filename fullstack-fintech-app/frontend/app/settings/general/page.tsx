@@ -27,6 +27,7 @@ import LoadingScreen from '@/components/loader/Loadingscreen';
 import { capitalizeFirstLetter, getToken, getUserId, getUserIsSetTransfer, getUsername, getUserWalletId, updateProfileImageInStorage, userService, walletService, getUserDetails, formatDateToDDMMYYYY, updateProfileDetails, updateNotificationContainer, configService } from '../../api';
 import { Toast } from '@/app/types/auth';
 import { useRouter } from 'next/navigation';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'preferences' | 'pin'>('profile');
@@ -48,6 +49,7 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [updating2FA, setUpdating2FA] = useState(false);
   const [updatingBiometric, setUpdatingBiometric] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const user_details = getUserDetails();
   const router = useRouter();
@@ -1511,6 +1513,17 @@ const Settings = () => {
             onClose={() => setIsDepositOpen(false)} 
             theme={theme} 
           />
+          {!isChatOpen && (
+            <button
+              className="chat-fab"
+              onClick={() => setIsChatOpen(true)}
+              aria-label="Open support chat"
+            >
+              <i className="fa-solid fa-comment-dots"></i>
+            </button>
+          )}
+
+      <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
     </>
    

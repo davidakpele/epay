@@ -12,6 +12,7 @@ import "./Bills.css"
 import { filters, services } from '../lib/BillsData';
 import LoadingScreen from '@/components/loader/Loadingscreen';
 import { BILLS_HERO_IMAGE, getBillServiceImage } from '../lib/ImageProvider';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const Bills = () => {
     const [isDepositOpen, setIsDepositOpen] = useState(false);
@@ -19,7 +20,7 @@ const Bills = () => {
     const [selectedFilter, setSelectedFilter] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [isPageLoading, setIsPageLoading] = useState(true);
-    
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const filteredServices = services.filter(service => {
       const matchesFilter = selectedFilter === 'all' || service.category === selectedFilter;
       const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -157,6 +158,17 @@ const Bills = () => {
         onClose={() => setIsDepositOpen(false)} 
         theme={theme} 
       />
+      {!isChatOpen && (
+          <button
+            className="chat-fab"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
+          >
+            <i className="fa-solid fa-comment-dots"></i>
+          </button>
+        )}
+
+        <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

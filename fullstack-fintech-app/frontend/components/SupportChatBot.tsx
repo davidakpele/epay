@@ -78,7 +78,12 @@ const SupportChatBot: React.FC<SupportChatBotProps> = ({ isOpen, onClose }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const conversationHistory = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
-  const userName = (getUserFullName() || 'Chief').split(' ')[0];
+  const [userName, setUserName] = useState('Chief');
+
+  useEffect(() => {
+    const name = getUserFullName();
+    if (name) setUserName(name.split(' ')[0]);
+  }, []);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isTyping]);
   useEffect(() => { if (subView === 'chat' || tab === 'conversation') setTimeout(() => inputRef.current?.focus(), 300); }, [subView, tab]);

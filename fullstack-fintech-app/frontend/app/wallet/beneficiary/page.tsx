@@ -9,6 +9,7 @@ import { useState, useMemo, useEffect } from "react";
 import "./BeneficiaryManager.css";
 import LoadingScreen from "@/components/loader/Loadingscreen";
 import { beneficiaryService, getUserId, historyService } from "@/app/api";
+import SupportChatBot from "@/components/SupportChatBot";
 
 interface Transaction {
     id: string | number;
@@ -58,7 +59,7 @@ const BeneficiaryManager = () => {
     const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
     const [isLoadingBeneficiaries, setIsLoadingBeneficiaries] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const formatBeneficiary = (apiBeneficiary: any): Beneficiary => {
         const isEpay = apiBeneficiary.beneficiaryType === 'user';
     
@@ -703,112 +704,124 @@ const BeneficiaryManager = () => {
                     </div>
                 </div>
 
+    
                 {/* Transaction History Section */}
-                {/* Transaction History Section */}
-<div className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden">
-    <div className="p-4 border-b border-gray-100">
-        <h3 className="font-bold text-gray-900 flex items-center gap-2">
-            <i className="fas fa-history text-[#166701]"></i>
-            Transaction History
-            <span className="text-sm font-normal text-gray-500">
-                ({selectedBeneficiary.transactions.length})
-            </span>
-        </h3>
-    </div>
-
-    {/* Loading State */}
-    {isLoadingTransactions ? (
-        <div className="p-12 text-center">
-            <div className="w-16 h-16 border-4 border-[#166701] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <h4 className="font-bold text-gray-900 text-sm mb-1">Loading Transactions...</h4>
-            <p className="text-xs text-gray-500">Please wait while we fetch your transaction history.</p>
-        </div>
-    ) : (
-        /* Transactions List with Scrollbar */
-        <div className={`${selectedBeneficiary.transactions.length > 5 ? 'history-transaction-scrollable' : ''}`}>
-            {selectedBeneficiary.transactions.length === 0 ? (
-                <div className="p-8 text-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i className="fas fa-inbox text-2xl text-gray-400"></i>
+                <div className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100">
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                            <i className="fas fa-history text-[#166701]"></i>
+                            Transaction History
+                            <span className="text-sm font-normal text-gray-500">
+                                ({selectedBeneficiary.transactions.length})
+                            </span>
+                        </h3>
                     </div>
-                    <h4 className="font-bold text-gray-900 text-sm mb-1">No Transactions Yet</h4>
-                    <p className="text-xs text-gray-500">No transaction history available for this beneficiary.</p>
-                </div>
-            ) : (
-                <div className="space-y-2 p-4">
-                    {selectedBeneficiary.transactions.map((transaction) => (
-                        <div 
-                            key={transaction.id} 
-                            className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors"
-                        >
-                            <div className="flex items-start justify-between mb-2">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                        transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT'
-                                            ? 'bg-green-100 text-green-600'
-                                            : 'bg-red-100 text-red-600'
-                                    }`}>
-                                        <i className={`fas ${
-                                            transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT'
-                                                ? 'fa-arrow-down'
-                                                : 'fa-arrow-up'
-                                        }`}></i>
+
+                    {/* Loading State */}
+                    {isLoadingTransactions ? (
+                        <div className="p-12 text-center">
+                            <div className="w-16 h-16 border-4 border-[#166701] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <h4 className="font-bold text-gray-900 text-sm mb-1">Loading Transactions...</h4>
+                            <p className="text-xs text-gray-500">Please wait while we fetch your transaction history.</p>
+                        </div>
+                    ) : (
+                        /* Transactions List with Scrollbar */
+                        <div className={`${selectedBeneficiary.transactions.length > 5 ? 'history-transaction-scrollable' : ''}`}>
+                            {selectedBeneficiary.transactions.length === 0 ? (
+                                <div className="p-8 text-center">
+                                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i className="fas fa-inbox text-2xl text-gray-400"></i>
                                     </div>
-                                    <div>
-                                        <h5 className="font-bold text-gray-900 text-sm">{transaction.type}</h5>
-                                        <p className="text-xs text-gray-500 mt-0.5">
-                                            {new Date(transaction.date).toLocaleDateString('en-GB', {
-                                                day: 'numeric',
-                                                month: 'short',
-                                                year: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
-                                        </p>
-                                    </div>
+                                    <h4 className="font-bold text-gray-900 text-sm mb-1">No Transactions Yet</h4>
+                                    <p className="text-xs text-gray-500">No transaction history available for this beneficiary.</p>
                                 </div>
-                                <div className="text-right">
-                                    <p className={`font-bold text-sm ${
-                                        transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT'
-                                            ? 'text-green-600'
-                                            : 'text-red-600'
-                                    }`}>
-                                        {transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT' ? '+' : '-'}
-                                        {transaction.currencyType === 'NGN' ? '₦' : 
-                                         transaction.currencyType === 'USD' ? '$' : 
-                                         transaction.currencyType === 'EUR' ? '€' : 
-                                         transaction.currencyType === 'GBP' ? '£' : ''}
-                                        {parseFloat(transaction.amount).toLocaleString('en-US', {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2
-                                        })}
-                                    </p>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                                        transaction.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                        transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                        'bg-red-100 text-red-700'
-                                    }`}>
-                                        {transaction.status}
-                                    </span>
+                            ) : (
+                                <div className="space-y-2 p-4">
+                                    {selectedBeneficiary.transactions.map((transaction) => (
+                                        <div 
+                                            key={transaction.id} 
+                                            className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors"
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                                        transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT'
+                                                            ? 'bg-green-100 text-green-600'
+                                                            : 'bg-red-100 text-red-600'
+                                                    }`}>
+                                                        <i className={`fas ${
+                                                            transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT'
+                                                                ? 'fa-arrow-down'
+                                                                : 'fa-arrow-up'
+                                                        }`}></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-bold text-gray-900 text-sm">{transaction.type}</h5>
+                                                        <p className="text-xs text-gray-500 mt-0.5">
+                                                            {new Date(transaction.date).toLocaleDateString('en-GB', {
+                                                                day: 'numeric',
+                                                                month: 'short',
+                                                                year: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className={`font-bold text-sm ${
+                                                        transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT'
+                                                            ? 'text-green-600'
+                                                            : 'text-red-600'
+                                                    }`}>
+                                                        {transaction.type === 'CREDITED' || transaction.type === 'CREDIT' || transaction.type === 'DEPOSIT' ? '+' : '-'}
+                                                        {transaction.currencyType === 'NGN' ? '₦' : 
+                                                        transaction.currencyType === 'USD' ? '$' : 
+                                                        transaction.currencyType === 'EUR' ? '€' : 
+                                                        transaction.currencyType === 'GBP' ? '£' : ''}
+                                                        {parseFloat(transaction.amount).toLocaleString('en-US', {
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 2
+                                                        })}
+                                                    </p>
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                                                        transaction.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                        transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                        'bg-red-100 text-red-700'
+                                                    }`}>
+                                                        {transaction.status}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {transaction.description && (
+                                                <p className="text-xs text-gray-600 mt-2 pl-13">{transaction.description}</p>
+                                            )}
+                                            {transaction.reference && (
+                                                <p className="text-xs text-gray-400 mt-1 pl-13 font-mono">Ref: {transaction.reference}</p>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
-                            {transaction.description && (
-                                <p className="text-xs text-gray-600 mt-2 pl-13">{transaction.description}</p>
                             )}
-                            {transaction.reference && (
-                                <p className="text-xs text-gray-400 mt-1 pl-13 font-mono">Ref: {transaction.reference}</p>
+                                </div>
                             )}
                         </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    )}
-</div>
-            </div>
-        </div>
-    </>
-)}
+                        </div>
+                    </div>
+                    </>
+                )}
+
+                {!isChatOpen && (
+                <button
+                    className="chat-fab"
+                    onClick={() => setIsChatOpen(true)}
+                    aria-label="Open support chat"
+                >
+                    <i className="fa-solid fa-comment-dots"></i>
+                </button>
+                )}
+        
+                <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
         </div>
     );
 };

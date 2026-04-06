@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authService, getSessionId, removeAuthToken } from '@/app/api';
+import { authService, getSessionId, getUserId, removeAuthToken } from '@/app/api';
 
 export default function Logout() {
   const router = useRouter();
@@ -21,19 +21,26 @@ export default function Logout() {
       // Wait 3 seconds before making request
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      const sessionId = getSessionId();
-      if(sessionId == null){
+      const userId = getUserId();
+  
+      if (!userId || userId == 'undefined' || userId == 'null') {
+        // If no session or user ID, just redirect to login
         router.push('/auth/login');
         return;
       }
-      const response = await authService.logout(sessionId);
-      if (response?.status === 'success') {
-        removeAuthToken();
-        router.push('/auth/login');
-        window.location.reload();
-      } else {
-        throw new Error(response?.data?.message || 'Logout failed');
-      }
+      await authService.logout(userId).then(response => {
+        if (response.status=="success") {
+          removeAuthToken();
+          router.push('/auth/login');
+        } else {
+          throw new Error(response?.data?.message || 'Logout failed');
+        }
+      }).catch(error => {
+        console.error('Logout error:', error);
+        // removeAuthToken();
+        // router.push('/auth/login');
+        // window.location.reload();
+      });
     };
     
     checkAuth();

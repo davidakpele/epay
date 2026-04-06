@@ -25,9 +25,11 @@ import KycCheckProgress from '@/components/Kyc/page';
 import { UserSettings } from '../types/utils';
 import { Toast } from '../types/auth';
 import WelcomeModal from '@/components/WelcomeModal';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [error, setError] = useState('');
   const [wallet, setWallet] = useState<any>(null);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -598,6 +600,17 @@ const Dashboard = () => {
         theme={theme}
         onWithdrawReloadSuccess={handleTransactionSuccess}/> 
       </Suspense>
+        {!isChatOpen && (
+          <button
+            className="chat-fab"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
+          >
+            <i className="fa-solid fa-comment-dots"></i>
+          </button>
+        )}
+
+        <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

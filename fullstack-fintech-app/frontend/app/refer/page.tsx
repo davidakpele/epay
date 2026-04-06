@@ -21,6 +21,7 @@ import './Refer.css';
 import { referralData } from '../lib/referralData';
 import { ReferredUser } from '../types/utils';
 import LoadingScreen from '@/components/loader/Loadingscreen';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const PAGE_SIZE = 5;
 
@@ -36,7 +37,7 @@ const Refer = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<'joinedDate' | 'totalEarningsFromUser' | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-
+  const [isChatOpen, setIsChatOpen] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setIsPageLoading(false), 2000);
     return () => clearTimeout(t);
@@ -375,6 +376,17 @@ const Refer = () => {
 
       <MobileNav activeTab="none" onPlusClick={() => setIsDepositOpen(true)} />
       <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} theme={theme} />
+      {!isChatOpen && (
+        <button
+          className="chat-fab"
+          onClick={() => setIsChatOpen(true)}
+          aria-label="Open support chat"
+        >
+          <i className="fa-solid fa-comment-dots"></i>
+        </button>
+      )}
+
+      <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

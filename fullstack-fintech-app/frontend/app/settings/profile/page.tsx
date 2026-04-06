@@ -25,6 +25,7 @@ import { KYCDocument, LoginHistory, MetaMapErrors, UserData, UserSettings } from
 import { userService, getUserId, updateHasSeenMetaMap, updateCompleteProfileDetails, updateNotificationContainer, capitalizeFirstLetter, getUserEmail, getUserFirstName, getUserLastName, getHasSeenMetaMap } from '@/app/api/index';
 import KYCSuccessModal from '@/components/KYCSuccessModal';
 import { City, Country, State } from 'country-state-city';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const UserProfile = () => {
   const [isPageLoading, setIsPageLoading] = useState(true);
@@ -34,6 +35,7 @@ const UserProfile = () => {
   const [showMetaMapModal, setShowMetaMapModal] = useState(false);
   const [metaMapStep, setMetaMapStep] = useState(1);
   const [showMetaMapExit, setShowMetaMapExit] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [metaMapData, setMetaMapData] = useState({
     bvn: '',
     firstName: '',
@@ -1259,6 +1261,17 @@ const UserProfile = () => {
           isOpen={showKYCSuccess}
           onClose={() => setShowKYCSuccess(false)}
         />
+         {!isChatOpen && (
+          <button
+            className="chat-fab"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
+          >
+            <i className="fa-solid fa-comment-dots"></i>
+          </button>
+        )}
+
+        <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
     </>
   );

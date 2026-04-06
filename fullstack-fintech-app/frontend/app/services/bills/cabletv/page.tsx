@@ -13,6 +13,7 @@ import { ChevronDown, CircleDollarSign, ChevronRight, Tv } from 'lucide-react';
 import './Cabletv.css';
 import { Toast } from '@/app/types/auth';
 import { CableProviders, DSTV_OPTIONS, GOTV_OPTIONS, STARTIME_OPTIONS } from '@/app/lib/CableService';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const CableSubscription = () => {
   const [isDepositOpen, setIsDepositOpen]     = useState(false);
@@ -20,7 +21,7 @@ const CableSubscription = () => {
   const [isPageLoading, setIsPageLoading]     = useState(true);
   const [isSubmitting, setIsSubmitting]       = useState(false);
   const [toasts, setToasts]                   = useState<Toast[]>([]);
-
+  const [isChatOpen, setIsChatOpen]           = useState(false);
   // Provider modal
   const [isModalOpen, setIsModalOpen]         = useState(false);
   const [searchTerm, setSearchTerm]           = useState('');
@@ -417,6 +418,17 @@ const CableSubscription = () => {
         onClose={() => setIsDepositOpen(false)}
         theme={theme}
       />
+      {!isChatOpen && (
+        <button
+          className="chat-fab"
+          onClick={() => setIsChatOpen(true)}
+          aria-label="Open support chat"
+        >
+          <i className="fa-solid fa-comment-dots"></i>
+        </button>
+      )}
+      
+      <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

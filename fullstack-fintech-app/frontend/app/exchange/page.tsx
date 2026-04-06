@@ -13,6 +13,7 @@ import { ChevronDown, ChevronRight, ArrowLeftRight, TrendingUp, Clock, CheckCirc
 import './Swap.css';
 import { Toast } from '@/app/types/auth';
 import { getToken, getUserId, getWalletList, setWalletContainer, updateNotificationContainer } from '@/app/api';
+import SupportChatBot from '@/components/SupportChatBot';
 
 interface Currency {
   code: string;
@@ -56,7 +57,7 @@ const SwapPage = () => {
   const [theme, setTheme]                       = useState<'light' | 'dark'>('light');
   const [isPageLoading, setIsPageLoading]       = useState(true);
   const [toasts, setToasts]                     = useState<Toast[]>([]);
-
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [fromCurrency, setFromCurrency]         = useState<Currency>(currencies[0]);
   const [toCurrency, setToCurrency]             = useState<Currency>(currencies[1]);
   const [fromAmount, setFromAmount]             = useState('');
@@ -813,6 +814,17 @@ const SwapPage = () => {
 
       <MobileNav activeTab="exchange" onPlusClick={() => setIsDepositOpen(true)} />
       <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} theme={theme} />
+      {!isChatOpen && (
+        <button
+          className="chat-fab"
+          onClick={() => setIsChatOpen(true)}
+          aria-label="Open support chat"
+        >
+          <i className="fa-solid fa-comment-dots"></i>
+        </button>
+      )}
+
+      <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

@@ -14,6 +14,7 @@ import LoadingScreen from '@/components/loader/Loadingscreen';
 import {  ForwardAccountStatement, StatementItem } from '../../types/errors';
 import { capitalizeFirstLetter, formatAmount, getUserFullName, getUserId, getUsername, getWallet, historyService, userService } from '../../api';
 import { useRouter } from 'next/navigation';
+import SupportChatBot from '@/components/SupportChatBot';
 
 interface Toast {
   id: number;
@@ -51,7 +52,7 @@ const Statements = () => {
     const [selectedTransaction, setSelectedTransaction] = useState<AccountTransactionStatement | null>(null);
     const [isCopied, setIsCopied] = useState(false);
     const [isStatementPreviewOpen, setIsStatementPreviewOpen] = useState(true);
-    
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     
@@ -1340,6 +1341,17 @@ This is an official receipt for your records.
           onClose={() => setIsDepositOpen(false)} 
           theme={theme} 
         />
+        {!isChatOpen && (
+          <button
+            className="chat-fab"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
+          >
+            <i className="fa-solid fa-comment-dots"></i>
+          </button>
+        )}
+
+        <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       </div>
     </>
   )
