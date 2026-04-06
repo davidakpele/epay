@@ -284,3 +284,27 @@ body {
     transform: translateX(100%);
   }
 }
+
+.chat-fab {
+  color: #fff;
+  cursor: pointer;
+  z-index: 999;
+  background: #1a7a1a;
+  border: none;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+  transition: transform .2s, box-shadow .2s;
+  display: flex;
+  position: fixed;
+  bottom: 74px;
+  right: 8px;
+  box-shadow: 0 4px 16px #00000040;
+}
+.chat-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
