@@ -1,36 +1,5 @@
 package com.example.auth_user_service.services;
 
-import com.itextpdf.kernel.colors.Color;
-import com.itextpdf.kernel.colors.ColorConstants;
-import com.itextpdf.kernel.colors.DeviceRgb;
-import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfPage;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
-import com.itextpdf.kernel.pdf.extgstate.PdfExtGState;
-import com.itextpdf.layout.Canvas;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.borders.SolidBorder;
-import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.UnitValue;
-import com.example.auth_user_service.dtos.BankStatement;
-import com.example.auth_user_service.interfaces.INotificationServiceClient;
-import com.example.auth_user_service.interfaces.IPDFService;
-import com.itextpdf.io.font.constants.StandardFonts;
-import com.itextpdf.io.image.ImageDataFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
-import com.itextpdf.kernel.events.PdfDocumentEvent;
-import com.itextpdf.kernel.events.Event;
-import com.itextpdf.kernel.events.IEventHandler;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,8 +16,41 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import com.itextpdf.kernel.font.PdfFont; 
-import com.itextpdf.kernel.font.PdfFontFactory; 
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+
+import com.example.auth_user_service.dtos.BankStatement;
+import com.example.auth_user_service.interfaces.INotificationServiceClient;
+import com.example.auth_user_service.interfaces.IPDFService;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.colors.Color;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.colors.DeviceRgb;
+import com.itextpdf.kernel.events.Event;
+import com.itextpdf.kernel.events.IEventHandler;
+import com.itextpdf.kernel.events.PdfDocumentEvent;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.Rectangle;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfPage;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
+import com.itextpdf.kernel.pdf.extgstate.PdfExtGState;
+import com.itextpdf.layout.Canvas;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.borders.SolidBorder;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue; 
 
 @Service
 public class PDFService implements IPDFService{
@@ -218,14 +220,14 @@ public class PDFService implements IPDFService{
                         .filter(s -> "DEPOSIT".equalsIgnoreCase(s.getType()) ||
                                 "TRANSFER".equalsIgnoreCase(s.getType()) || 
                                 "CREDIT".equalsIgnoreCase(s.getType()))
-                        .mapToDouble(BankStatement::getAmount)
+                        .mapToDouble(BankStatement::getNetAmount)
                         .sum();
                 
                 double totalDebits = statements.stream()
                         .filter(s -> !("DEPOSIT".equalsIgnoreCase(s.getType()) ||
                                 "TRANSFER".equalsIgnoreCase(s.getType()) || 
                                 "CREDIT".equalsIgnoreCase(s.getType())))
-                        .mapToDouble(BankStatement::getAmount)
+                        .mapToDouble(BankStatement::getNetAmount)
                         .sum();
                 
                 double openingBalance = statements.isEmpty() ? 0 : statements.get(statements.size() - 1).getBalance() + totalDebits - totalCredits;
@@ -346,20 +348,22 @@ public class PDFService implements IPDFService{
             // Sort by date (oldest first)
             currencyStatements.sort(Comparator.comparing(BankStatement::getDate));
             
-            double totalCredits = currencyStatements.stream()
-                    .filter(s -> "DEPOSIT".equalsIgnoreCase(s.getType()) || 
-                                "TRANSFER".equalsIgnoreCase(s.getType()) || 
-                                "CREDIT".equalsIgnoreCase(s.getType()))
-                    .mapToDouble(BankStatement::getAmount)
-                    .sum();
+            double totalCredits = statements.stream()
+                .filter(s -> s.getType() != null && (
+                        "DEPOSIT".equalsIgnoreCase(s.getType()) ||
+                        "TRANSFER".equalsIgnoreCase(s.getType()) ||
+                        "CREDIT".equalsIgnoreCase(s.getType())))
+                .mapToDouble(s -> s.getNetAmount() != null ? s.getNetAmount() : 0.0)
+                .sum();
+
+        double totalDebits = statements.stream()
+                .filter(s -> s.getType() == null || !(
+                        "DEPOSIT".equalsIgnoreCase(s.getType()) ||
+                        "TRANSFER".equalsIgnoreCase(s.getType()) ||
+                        "CREDIT".equalsIgnoreCase(s.getType())))
+                .mapToDouble(s -> s.getNetAmount() != null ? s.getNetAmount() : 0.0)
+                .sum();
                     
-            double totalDebits = currencyStatements.stream()
-                    .filter(s -> !("DEPOSIT".equalsIgnoreCase(s.getType()) || 
-                                "TRANSFER".equalsIgnoreCase(s.getType()) || 
-                                "CREDIT".equalsIgnoreCase(s.getType())))
-                    .mapToDouble(BankStatement::getAmount)
-                    .sum();
-            
             // Get oldest and newest statements
             BankStatement oldest = currencyStatements.get(0);
             BankStatement newest = currencyStatements.get(currencyStatements.size() - 1);
@@ -650,17 +654,16 @@ public class PDFService implements IPDFService{
         String creditAmount = "-";
         String debitAmount = "-";
         
-        String transactionType = statement.getType().toUpperCase();
-        
+        String transactionType = statement.getType() != null ? statement.getType().toUpperCase() : "";
         // CREDIT transactions: DEPOSIT, TRANSFER (incoming), CREDIT
         if ("DEPOSIT".equals(transactionType) || "TRANSFER".equals(transactionType) || "CREDIT".equals(transactionType)) {
-            creditAmount = String.format("%s%,.2f", transactionCurrencySymbol, statement.getAmount());
+            creditAmount = String.format("%s%,.2f", transactionCurrencySymbol, statement.getNetAmount());
             debitAmount = "-";
         }
         // DEBIT transactions: WITHDRAW, DEBIT, and any other types
         else {
             creditAmount = "-";
-            debitAmount = String.format("%s%,.2f", transactionCurrencySymbol, statement.getAmount());
+            debitAmount = String.format("%s%,.2f", transactionCurrencySymbol, statement.getNetAmount());
         }
         
         // 3. Credit cell
@@ -753,7 +756,7 @@ public class PDFService implements IPDFService{
             
             notificationServiceClient.sendBankStatementEmail(email, username, pdfResource, period);
             
-        } catch (IOException e) {
+        } catch (Exception e) { // catch ALL exceptions, not just IOException
             throw new RuntimeException("Failed to generate and send bank statement: " + e.getMessage(), e);
         }
     }

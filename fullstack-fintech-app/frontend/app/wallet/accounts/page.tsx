@@ -29,6 +29,7 @@ import { formatAmount } from '../../lib/walletCrate';
 import LoadingScreen from '@/components/loader/Loadingscreen';
 import { getUserId, getWallet, historyService, setActiveWallet, setFiat } from '../../api';
 import DateFilterModal from '@/components/DateFilterModal';
+import SupportChatBot from '@/components/SupportChatBot';
 
 
 const TransactionReceipt = React.lazy(
@@ -68,7 +69,7 @@ const Wallet = () => {
   const [searchHistoryTerm, setSearchHistoryTerm] = useState('');
   const tabs: string[] = ["All", "Swaps", "Withdrawals", "Deposits", "Credited"];
   const [deleteModalTransaction, setDeleteModalTransaction] = useState<Transaction | null>(null);
-
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const fetchTransactionHistory = async () => {
     if (isFetchingRef.current) {
       return;
@@ -916,6 +917,17 @@ const Wallet = () => {
         onClear={clearDateFilters}
         initialStartDate={dateFilter.startDate}
         initialEndDate={dateFilter.endDate}/>
+        {!isChatOpen && (
+        <button
+          className="chat-fab"
+          onClick={() => setIsChatOpen(true)}
+          aria-label="Open support chat"
+        >
+          <i className="fa-solid fa-comment-dots"></i>
+        </button>
+      )}
+
+      <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

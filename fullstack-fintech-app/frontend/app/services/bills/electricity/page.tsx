@@ -13,6 +13,7 @@ import { ChevronDown,CircleDollarSign, ChevronRight, Search } from 'lucide-react
 import "./Electricity.css"
 import { Toast } from '@/app/types/auth';
 import { ElectricyProviders } from '@/app/lib/ElectricityProvider';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const networks = [
   { id: 'mtn', name: 'MTN', bg: '#FFC300', color: '#000', abbr: 'MTN' },
@@ -39,7 +40,7 @@ const ElectricitySubscription = () => {
     const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toasts, setToasts] = useState<Toast[]>([]);
-    
+    const [isChatOpen, setIsChatOpen]           = useState(false);
     const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
         setToasts((prev) => {
             if (prev.length >= 5) return prev;
@@ -367,6 +368,17 @@ const ElectricitySubscription = () => {
 
       <MobileNav activeTab="none" onPlusClick={() => setIsDepositOpen(true)} />
       <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} theme={theme} />
+        {!isChatOpen && (
+        <button
+          className="chat-fab"
+          onClick={() => setIsChatOpen(true)}
+          aria-label="Open support chat"
+        >
+          <i className="fa-solid fa-comment-dots"></i>
+        </button>
+      )}
+      
+      <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

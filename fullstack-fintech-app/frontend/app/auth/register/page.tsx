@@ -6,6 +6,7 @@ import "./Register.css";
 import { countries } from '@/components/countries';
 import { authService } from '@/app/api';
 import { Country, Toast } from '@/app/types/auth';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const Register = () => {
   const [regMode, setRegMode] = useState<'email' | 'phone'>('email');
@@ -34,7 +35,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
-
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const usernameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -480,6 +481,17 @@ const Register = () => {
             </div>
           </div>
         )}
+        {!isChatOpen && (
+            <button
+            className="chat-fab"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
+            >
+            <i className="fa-solid fa-comment-dots"></i>
+            </button>
+        )}
+
+        <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       </div>
     </>
   );

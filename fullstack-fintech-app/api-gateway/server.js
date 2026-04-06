@@ -511,13 +511,14 @@ class NonceValidator {
 class InFlightTracker {
     constructor() {
         this.requests = new Map();
-        this.timeout = 30000;
+        this.timeout = 200;
     }
 
-    generateRequestHash(method, uri, body) {
+    generateRequestHash(method, uri, body, clientIp = '') {
         const hash = crypto.createHash('sha256');
         hash.update(method);
         hash.update(uri);
+        hash.update(clientIp);
         if (body) {
             hash.update(typeof body === 'string' ? body : JSON.stringify(body));
         }
@@ -663,16 +664,17 @@ async function securityMiddleware(req, res, next) {
         tracer.recordRpc('security.check');
         tracer.recordBinary('http.method', req.method);
         tracer.recordBinary('http.path', req.originalUrl);
-        
+
         const clientIp = getRealClientIp(req);
         tracer.recordBinary('client.ip', clientIp);
-        
+
         const method = req.method;
         const uri = req.originalUrl;
         const headers = req.headers;
         const idempotencyKey = headers['x-idempotency-key'];
         const contentLength = parseInt(headers['content-length'] || '0', 10);
 
+        // WAF check
         const wafResult = wafRules.validateRequest(method, headers, contentLength);
         if (wafResult) {
             console.warn(`WAF blocked request from ${clientIp}: ${wafResult.error} - ${wafResult.reason}`);
@@ -683,6 +685,7 @@ async function securityMiddleware(req, res, next) {
             return blockedResponse(res, wafResult.error, wafResult.reason);
         }
 
+        // Nonce check
         const nonce = headers['x-request-nonce'];
         if (nonce) {
             const nonceResult = nonceValidator.validateNonce(nonce);
@@ -694,6 +697,7 @@ async function securityMiddleware(req, res, next) {
             tracer.recordBinary('security.nonce.valid', true);
         }
 
+        // Idempotency check
         if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && idempotencyKey) {
             const cached = deduplicator.checkDuplicate(idempotencyKey);
             if (cached) {
@@ -707,27 +711,36 @@ async function securityMiddleware(req, res, next) {
             tracer.recordBinary('idempotency.key', idempotencyKey);
         }
 
-        const requestHash = inFlightTracker.generateRequestHash(method, uri, req.body);
-        
-        if (inFlightTracker.isDuplicate(requestHash)) {
-            console.warn(`Duplicate in-flight request detected: ${requestHash}`);
-            tracer.recordBinary('duplicate.in_flight', true);
-            tracer.recordAnnotation('duplicate.rejected');
-            return blockedResponse(res, 'Duplicate request', 'An identical request is already being processed');
+        // In-flight duplicate check — mutations only, scoped per IP
+        if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+            const requestHash = inFlightTracker.generateRequestHash(method, uri, req.body, clientIp);
+
+            if (inFlightTracker.isDuplicate(requestHash)) {
+                console.warn(`Duplicate in-flight request detected from ${clientIp}: ${requestHash}`);
+                tracer.recordBinary('duplicate.in_flight', true);
+                tracer.recordAnnotation('duplicate.rejected');
+                return blockedResponse(res, 'Duplicate request', 'An identical request is already being processed');
+            }
+
+            inFlightTracker.markInFlight(requestHash);
+            req.requestHash = requestHash;
         }
 
-        inFlightTracker.markInFlight(requestHash);
-
+        // Security scan
         const scanResult = securityScanner.scanRequest(method, uri, headers, req.body);
         if (scanResult) {
             console.warn(`Request blocked from IP ${clientIp}: ${scanResult.error} - ${scanResult.reason}`);
-            inFlightTracker.completeRequest(requestHash);
+
+            // Clean up in-flight entry if we marked one
+            if (req.requestHash) {
+                inFlightTracker.completeRequest(req.requestHash);
+            }
+
             securityMetrics.incrementBlocked();
-            
             tracer.recordBinary('security.threat_detected', true);
             tracer.recordBinary('security.threat_type', scanResult.error);
             tracer.recordBinary('security.threat_reason', scanResult.reason);
-            
+
             if (scanResult.error.includes('SQL')) {
                 securityMetrics.incrementSqlInjection();
                 tracer.recordAnnotation('sql_injection.blocked');
@@ -735,14 +748,13 @@ async function securityMiddleware(req, res, next) {
                 securityMetrics.incrementXss();
                 tracer.recordAnnotation('xss.blocked');
             }
-            
+
             return blockedResponse(res, scanResult.error, scanResult.reason);
         }
 
         tracer.recordBinary('security.passed', true);
         tracer.recordAnnotation('security.cleared');
-        
-        req.requestHash = requestHash;
+
         req.idempotencyKey = idempotencyKey;
 
         next();
@@ -764,11 +776,6 @@ app.use((req, res, next) => {
                 tracer.recordBinary('idempotency.cached', true);
                 tracer.recordAnnotation('cache.stored');
             });
-        }
-        
-        if (req.requestHash) {
-            inFlightTracker.completeRequest(req.requestHash);
-            inFlightTracker.cleanupExpired();
         }
         
         return originalJson.call(this, data);

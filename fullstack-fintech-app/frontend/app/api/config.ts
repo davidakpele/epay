@@ -24,7 +24,7 @@ export const API_URLS = {
     LOGIN: `${SERVICE_URLS.AUTH}/auth/login`,
     REGISTER: `${SERVICE_URLS.AUTH}/auth/register`,
     PROFILE: `${SERVICE_URLS.AUTH}/auth/profile`,
-    LOGOUT: (sessionId: string) => `${SERVICE_URLS.AUTH}/auth/logout?sessionId=${sessionId}`,
+    LOGOUT: (id: string) => `${SERVICE_URLS.AUTH}/auth/logout?userId=${id}`,
     REFRESH_TOKEN: `${SERVICE_URLS.AUTH}/auth/refresh-token`,
     VERIFYTOKEN: (token: string) => `${SERVICE_URLS.AUTH}/auth/verify-otp-token?token=${token}`,
     VERIFYOTP: `${SERVICE_URLS.AUTH}/auth/verify-otp`,

@@ -7,13 +7,14 @@ import "./Login.css";
 import { authService, setAuthToken, updateNotificationContainer } from '@/app/api';
 import { Toast } from '@/app/types/auth';
 import { LoginFormErrors } from '@/app/types/errors';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
   });
-
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [errors, setErrors] = useState<LoginFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -239,6 +240,18 @@ const Login = () => {
             Forgot Password
           </Link>
         </div>
+
+        {!isChatOpen && (
+          <button
+            className="chat-fab"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
+          >
+            <i className="fa-solid fa-comment-dots"></i>
+          </button>
+        )}
+
+        <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       </div>
     </div>
   );

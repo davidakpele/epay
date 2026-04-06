@@ -13,6 +13,7 @@ import { ChevronDown, ChevronRight, CircleDollarSign, Trophy } from 'lucide-reac
 import './Betting.css';
 import { Toast } from '@/app/types/auth';
 import { BettingProviders } from '@/app/lib/ImageProvider';
+import SupportChatBot from '@/components/SupportChatBot';
 
 
 const quickAmounts = [500, 1000, 2000, 5000, 10000];
@@ -23,7 +24,7 @@ const BettingPage = () => {
   const [isPageLoading, setIsPageLoading]       = useState(true);
   const [isSubmitting, setIsSubmitting]         = useState(false);
   const [toasts, setToasts]                     = useState<Toast[]>([]);
-
+  const [isChatOpen, setIsChatOpen]             = useState(false);
   // Provider modal
   const [isModalOpen, setIsModalOpen]           = useState(false);
   const [searchTerm, setSearchTerm]             = useState('');
@@ -387,6 +388,17 @@ const BettingPage = () => {
         onClose={() => setIsDepositOpen(false)}
         theme={theme}
       />
+       {!isChatOpen && (
+          <button
+            className="chat-fab"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
+          >
+            <i className="fa-solid fa-comment-dots"></i>
+          </button>
+        )}
+
+    <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 };

@@ -8,6 +8,7 @@ import { authService } from '@/app/api';
 import { Country, Toast } from '@/app/types/auth';
 import { ResetPasswordFormErrors } from '@/app/types/errors';
 import { countries } from '@/components/countries';
+import SupportChatBot from '@/components/SupportChatBot';
 
 const ForgotPassword = () => {
     const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ const ForgotPassword = () => {
         confirmPassword: '',
         verificationCode: '',
     });
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const [regMode, setRegMode] = useState<'email' | 'phone'>('email');
     const [errors, setErrors] = useState<ResetPasswordFormErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -397,6 +399,17 @@ const ForgotPassword = () => {
             </div>
           </div>
         )}
+         {!isChatOpen && (
+            <button
+            className="chat-fab"
+            onClick={() => setIsChatOpen(true)}
+            aria-label="Open support chat"
+            >
+            <i className="fa-solid fa-comment-dots"></i>
+            </button>
+        )}
+
+        <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       </div>
     </div>
   );

@@ -314,34 +314,25 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout(
-            @RequestParam(name = "sessionId", required = false) String sessionId) {
-
+    @GetMapping("/logout")
+    public ResponseEntity<Map<String, Object>> logout(@RequestParam(name = "userId", required = false) Long userId) {
+        
         Map<String, Object> response = new HashMap<>();
 
-        if (sessionId == null || sessionId.isEmpty()) {
+        if (userId == null || userId <= 0) {
             response.put("status", "error");
-            response.put("message", "Session ID is required for logout");
+            response.put("message", "User ID is required and must be a valid positive number");
             response.put("timestamp", LocalDateTime.now());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        userTracerService.deleteSession(sessionId);
+        userTracerService.deleteByUserId(userId);
 
         response.put("status", "success");
         response.put("message", "Logged out successfully");
         response.put("timestamp", LocalDateTime.now());
 
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/cracked-logout")
-    public ResponseEntity<String> logoutUserId(
-            @RequestParam(name = "userId", required = true) Long userId,
-            HttpServletResponse response) {
-            userTracerService.deleteByUserId(userId);
-        return ResponseEntity.ok("Logged out successfully");
+        return ResponseEntity.ok(response);    
     }
 
     public static String FormatBigDecimal(BigDecimal amount) {
