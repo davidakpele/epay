@@ -268,12 +268,7 @@ const VerifyAccountContent = () => {
             </div>
 
             <div className="verification-actions">
-              <button
-                type="button"
-                className="btn-resend"
-                onClick={handleResendCode}
-                disabled={isResending || countdown > 0}
-              >
+              <button type="button" className="btn-resend" onClick={handleResendCode} disabled={isResending || countdown > 0}>
                 {isResending ? (
                   <>
                     <div className="spinner spinner-small"></div>
