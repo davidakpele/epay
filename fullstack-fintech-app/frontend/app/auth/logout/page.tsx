@@ -25,13 +25,13 @@ export default function Logout() {
   
       if (!userId || userId == 'undefined' || userId == 'null') {
         // If no session or user ID, just redirect to login
-        router.push('/auth/login');
+        router.push('/default');
         return;
       }
       await authService.logout(userId).then(response => {
         if (response.status=="success") {
           removeAuthToken();
-          router.push('/auth/login');
+          router.push('/default');
         } else {
           throw new Error(response?.data?.message || 'Logout failed');
         }

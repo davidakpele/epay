@@ -45,7 +45,17 @@ export const authService = {
 
     verifyTwoFactorAuth:(token, verificationCode)=>{
 
-    }
+    },
+    
+    forgotPassword: (payload) => {
+        console.log('Forgot password payload:', payload);
+        // return makePublicRequest(API_URLS.AUTH.VERIFYOTP, 'POST', payload);
+    },
+
+    forgotUsername: (payload) => {
+        console.log('Forgot username payload:', payload);
+        // return makePublicRequest(API_URLS.AUTH.VERIFYOTP, 'POST', payload);
+    },
 };
 
 export default authService;

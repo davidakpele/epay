@@ -102,11 +102,11 @@
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center center;
+  background-position: center top; 
   background-repeat: no-repeat;
   opacity: 0;
   transition: opacity 1.4s ease-in-out;
-  animation: kenburns 6s ease-in-out infinite alternate;
+  animation: kenburns 8s ease-in-out infinite alternate;
 }
 
 .heroSlide.active {
@@ -115,7 +115,7 @@
 
 @keyframes kenburns {
   from { transform: scale(1); }
-  to   { transform: scale(1.06); }
+  to   { transform: scale(1.03); } 
 }
 
 .heroSlide1 { background-image: url('../../public/assets/images/Login_Background_1.jpg'); }
@@ -185,12 +185,37 @@
   background: rgba(255, 255, 255, 0.97);
   border-radius: 6px;
   padding: 20px 22px 18px;
-  width: 280px;
+  width: 350px;
   flex-shrink: 0;
   box-shadow: var(--shadow-card);
   animation: slideUp 0.8s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.RegisterCard {
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 6px;
+  padding: 20px 22px 18px;
+  width: 350px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-card);
+  animation: slideUp 0.8s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.ForgetUsernameCard {
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 6px;
+  padding: 20px 22px 18px;
+  width: 350px;
+  flex-shrink: 0;
+}
+.ResetPasswordCard {
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 6px;
+  padding: 20px 22px 18px;
+  width: 350px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-card);
+  animation: slideUp 0.8s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 .cardHeader {
   background: var(--green-main);
   margin: -20px -22px 16px;
@@ -202,9 +227,9 @@
 
 .cardHeaderTitle {
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -328,9 +353,8 @@
   color: var(--white);
   font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 00;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
   border: 1.5px solid var(--green-main);
   border-radius: 4px;
   padding: 11px;
@@ -406,7 +430,7 @@
 }
 
 .cardRegister a:hover {
-  background: #071f02;
+  background: var(--bg-main);
 }
 
 /* ── BOTTOM BANNER ── */
@@ -628,7 +652,7 @@
 
 /* ── REGISTER CARD ── */
 .registerCard {
-  width: 320px;
+  width: 350px;
   animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -707,10 +731,400 @@
 }
 
 .btnRegisterToggle:hover {
-  background: #071f02;
+  background: var(--bg-main);
 }
 
-/* Responsive: make register card full width on mobile too */
+.verificationWrapper {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    gap: 0;
+    display: flex;
+    overflow: hidden;
+    height:40px
+}
+.verificationWrapper.formControl {
+    border: none;
+    flex: 1;
+}
+.formControl {
+    color: #555;
+    box-sizing: border-box;
+    border: 1px solid #fff;
+    border-radius: 2px;
+    outline: none;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 12px;
+    transition: border-color .2s;
+    font-family: Karla, sans-serif !important;
+}
+.btnRequestCode {
+    background-color: var(--bg-main);
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+    border: none;
+    padding: 0 15px;
+    font-family: Karla, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.ResetPasswordSubtitleHeader{
+    font-size: 10px;
+    justify-content: center;
+    justify-items: center;
+    font-weight: 600;
+    font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    color:#333;
+}
+
+.toggleContainer {
+    background: rgb(241, 243, 245);
+    border: 1px solid rgb(222, 226, 230);
+    border-radius: 8px;
+    margin-bottom: 24px;
+    padding: 1px;
+    display: flex;
+    width: 100%;
+    max-width: 380px;
+    align-items: center;
+    justify-items: center;
+    margin-bottom: 20px;
+}
+
+.toggleContainer button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 400;
+  color: #6c757d;
+  cursor: pointer;
+  border-radius: 6px;
+  font-family: "Karla", sans-serif;
+  transition: all 0.2s ease;
+}
+
+.toggleContainer button.active {
+  background-color: var(--bg-main);
+  color: #ffffff;
+}
+
+.btnSubmit {
+    width: 100%;
+    background: var(--bg-main);
+    border: 1px solid var(--bg-main);
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 400;
+    font-family: "Karla", sans-serif;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btnSubmit:not(:disabled) {
+  background-color: var(--bg-main);
+  border-color: var(--bg-main);
+  color: #ffffff;
+}
+
+.forgotPasswordLink {
+  font-size: 0.85rem;
+  color: var(--bg-main);
+  text-decoration:underline;
+  font-weight: 500;
+  font-family: "Karla", sans-serif;
+  text-align: right;
+  justify-content: flex-end;
+  justify-items: flex-end;
+  display: flex;
+  margin-top: 8px;
+}
+
+
+.phoneInputGroup {
+  display: flex;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.countryDropdown {
+  background: #f8f9fa;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  border-right: 1px solid #ddd;
+  color: #555;
+  white-space: nowrap;
+}
+
+.phoneInputGroup .formControl {
+  border: none;
+}
+
+.phoneHelper {
+  font-size: 11px;
+  color: #427e00;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: flex-end;  
+  align-items: center;  
+  padding-right: 20px; 
+  z-index: 10001;
+  font-family: "Karla", sans-serif !important;
+}
+
+.modalContent {
+  background: #fff;
+  width: 20rem;
+  height: 30rem;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 100%; 
+  margin-bottom:100px;
+}
+
+.modalHeader h3 {
+  font-size: 15px;
+  margin: 0 0 16px 0;
+  color: #333;
+  font-family: "Karla", sans-serif !important;
+}
+
+.searchContainer {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.searchContainer i {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  color: #adb5bd;
+}
+
+.searchContainer input {
+    width: 100%;
+    padding: 5px 5px 5px 36px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #888c92;
+    font-family: "Karla", sans-serif;
+    box-sizing: border-box; 
+    outline: none;
+    height:35px
+}
+
+.searchContainer input:focus {
+  border: 1px solid var(--bg-main);
+  outline: none;
+}
+
+.countryList {
+  display: block;
+  max-height: 400px; 
+  overflow-y: auto; 
+  padding-right: 8px;
+}
+.countryItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #f8f9fa;
+  cursor: pointer;
+  font-size: 13px;
+  color: #444;
+  font-family: "Karla", sans-serif !important;
+}
+
+.radioOuter {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.radioOuter.checked {
+  border-color: var(--bg-main);
+}
+
+.radioInner {
+  width: 10px;
+  height: 10px;
+  background: var(--bg-main);
+  border-radius: 50%;
+  display: none;
+}
+
+.radioOuter.checked .radioInner {
+  display: block;
+}
+
+.countryList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.countryList::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.countryList::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.countryList.isScrolling::-webkit-scrollbar-thumb,
+.countryList::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-main);
+}
+
+.noResults {
+  text-align: center;
+  padding: 20px;
+  color: #adb5bd;
+  font-size: 14px;
+}
+
+.OTPCard {
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 6px;
+  padding: 20px 22px 18px;
+  width: 350px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-card);
+  animation: slideUp 0.8s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.logoContainer {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.otpInfo {
+  color: #555;
+  text-align: center;
+  margin-top: 24px;
+  font-size: 13px;
+  font-family: "Karla", sans-serif;
+  color: #6c757d;
+  margin-bottom:15px;
+}
+
+.otpInfo a {
+  color: #d43f12;
+  text-decoration: underline;
+  font-size: 13px;
+  font-family: "Karla", sans-serif;
+}
+
+.verificationContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+}
+
+.codeInputs {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.codeInput {
+  width: 55px;
+  height: 55px;
+  text-align: center;
+  font-size: 24px;
+  border: 2px solid #ddd;
+  color: #555;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.2s;
+  font-family: "Karla", sans-serif;
+  background: white;
+}
+
+.codeInput:focus {
+  border-color: var(--bg-main);
+  box-shadow: 0 0 0 3px rgba(212, 63, 18, 0.1);
+}
+
+.codeInput:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.verificationActions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.btnResend {
+  background: transparent;
+  color: #d43f12;
+  border: 1px solid #d43f12;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  font-family: "Karla", sans-serif;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top:16px
+}
+
+.btnResend:hover:not(:disabled) {
+  background: rgba(212, 63, 18, 0.1);
+}
+
+.btnResend:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 @media (max-width: 1000px) {
   .registerCard {
     width: 100%;
@@ -759,7 +1173,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 36px 20px 32px;
+     padding: 36px 20px 32px;
     gap: 0;
     min-height: inherit;
     width: 100%;
@@ -772,9 +1186,35 @@
 
   .loginCard {
     width: 100%;
-    max-width: 340px;
-    margin: 0 auto;
+    padding:20px;
+    max-width: 350px !important;
   }
+  .RegisterCard {
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 6px;
+    padding: 20px 22px 18px;
+    width: 100%;
+    max-width: 340px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-card);
+  }
+   .ForgetUsernameCard {
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 6px;
+    padding: 20px 22px 18px;
+    width: 100%;
+    max-width: 340px;
+    flex-shrink: 0;
+  }
+   .ResetPasswordCard {
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 6px;
+    padding: 20px 22px 18px;
+    width: 100%;
+    max-width: 340px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-card);
+   }
 
   .bottomCards {
     grid-template-columns: 1fr;
@@ -798,10 +1238,122 @@
   .bottomBanner {
     display: none;
   }
+
+  .modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10001;
+    font-family: "Karla", sans-serif !important;
+  }
 }
 
 @media (max-width: 400px) {
   .cardSelects {
     flex-direction: column;
   }
+}
+
+.forgotPasswordContainer {
+    text-align: end;
+    margin-top: 20px;
+    font-family: "Karla", sans-serif;
+}
+
+.forgotPasswordLink {
+  font-size: 0.85rem;
+  color: #d43f12;
+  text-decoration:underline;
+  font-weight: 500;
+}
+
+.passwordError, .usernameError {
+  color: #fd5353;
+  font-size: 0.75rem;
+  margin-top: 5px;
+}
+
+/* Paste hint */
+.codeInput::placeholder {
+  font-size: 14px;
+  color: #aaa;
+}
+
+
+@media (max-width: 768px) {
+  .codeInput{
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  .codeInputs {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .codeInput {
+    width: 55px;
+    height: 55px;
+    font-size: 18px;
+  }
+  
+  .codeInputs {
+    gap: 8px;
+  }
+  
+  .verificationActions {
+    gap: 10px;
+  }
+}
+
+.btnOTP{
+  background-color: var(--bg-main);
+  color: #fff;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px;
+  font-family: Karla, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  transition: background .3s;
+  display: flex;
+}
+.btnOTP:disabled {
+  cursor: not-allowed;
+  background-color: #a3c180;
+}
+
+.backToLogin {
+  display: flex;
+  justify-content: center;  
+  align-items: center;
+  width: 100%;
+  margin-top: 30px;
+}
+
+.backToLogin button {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: "Karla", sans-serif;
+  text-align: center !important;
+}
+
+.backToLogin button:hover {
+  color: #d43f12;
+  text-decoration: underline;
 }

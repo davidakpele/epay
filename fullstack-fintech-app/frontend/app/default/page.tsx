@@ -4,49 +4,80 @@ import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import styles from './Default.module.css'; 
 import './Default.css'; 
-import { Toast } from '@/app/types/auth';
+import { Country, Toast } from '@/app/types/auth';
 import { LoginFormErrors } from '@/app/types/errors';
 import { authService, setAuthToken, updateNotificationContainer } from '@/app/api';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { countries } from '@/components/countries';
 
 type LoginState = 'idle' | 'error' | 'loading' | 'success';
 
-export default function KashlyLoginPage() {
+export default function Default() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [userId, setUserId] = useState('');
   const [rememberUser, setRememberUser] = useState(false);
   const [loginState, setLoginState] = useState<LoginState>('idle');
   const [showRegister, setShowRegister] = useState(false);
+  const [showForgetUsernameForm, setshowForgetUsernameForm] = useState(false);
+  const [showResetPasswordForm, setShowResetPasswordForm] = useState(false);
+  const [showOTPForm, setShowOTPForm] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
-  
-  const [formData, setFormData] = useState({
-      username: '',
-      password: '',
-    });
-
-  const [registerData, setRegisterData] = useState({
-    firstname: '',
-    lastname: '',
-    email: '',
-    verificationCode: '',
-    password: '',
-    confirmPassword: '',
-  });
-
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [errors, setErrors] = useState<LoginFormErrors>({});
   const [registerErrors, setRegisterErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRegisterSubmitting, setIsRegisterSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isScrolling, setIsScrolling] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRequestingCode, setIsRequestingCode] = useState(false);
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const firstnameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const forgotPinEmailRef = useRef<HTMLInputElement>(null);
+  const resetEmailRef = useRef<HTMLInputElement>(null);
+  const resetPhoneRef = useRef<HTMLInputElement>(null);
+  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
+  const [regMode, setRegMode] = useState<'email' | 'phone'>('email');
+  const [codeSent, setCodeSent] = useState(false);
+   const [code, setCode] = useState(['', '', '', '']);
+  const [isResending, setIsResending] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
+
+  const [formData, setFormData] = useState({
+    firstname: '',
+    lastname: '',
+    username: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    verificationCode: '',
+  });
+
+  const [registerData, setRegisterData] = useState({
+    firstname: '', lastname: '', username: '',  phone: '',
+    email: '', verificationCode: '', password: '', confirmPassword: '',
+  });
+
+  // ── Dedicated state for Forgot Pin form ──
+  const [forgotPinData, setForgotPinData] = useState({ email: '' });
+  const [forgotPinErrors, setForgotPinErrors] = useState<Record<string, string>>({});
+  const [isForgotPinSubmitting, setIsForgotPinSubmitting] = useState(false);
+
+  // ── Dedicated state for Reset Password form ──
+  const [resetPasswordData, setResetPasswordData] = useState({ email: '', phone: '' });
+  const [resetPasswordErrors, setResetPasswordErrors] = useState<Record<string, string>>({});
+  const [isResetPasswordSubmitting, setIsResetPasswordSubmitting] = useState(false);
 
   useEffect(() => {
     document.title = showRegister ? "Create Account" : "Sign-In Account";
@@ -62,14 +93,31 @@ export default function KashlyLoginPage() {
     usernameRef.current?.focus();
   }, []);
 
-  /* ── Slideshow ── */
+  useEffect(() => {
+    if (inputRefs.current[0]) {
+    inputRefs.current[0].focus();
+    }
+  }, []);
+  
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+    timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+    }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [countdown]);
+
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % 3);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
-
 
   const showToast = (msg: string, type: 'warning' | 'success' = 'warning') => {
     setToasts((prev) => {
@@ -131,12 +179,19 @@ export default function KashlyLoginPage() {
       showToast('Last name required');
       return false;
     }
+    if (!registerData.username.trim()) {
+      newErrors.username = 'Username required';
+      setRegisterErrors(newErrors);
+      showToast('Username required');
+      return false;
+    }
     if (!registerData.email.trim()) {
       newErrors.email = 'Email required';
       setRegisterErrors(newErrors);
       showToast('Email required');
       return false;
     }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(registerData.email)) {
       newErrors.email = 'Invalid email address';
@@ -150,18 +205,21 @@ export default function KashlyLoginPage() {
       showToast('Verification code required');
       return false;
     }
+
     if (!registerData.password) {
       newErrors.password = 'Password required';
       setRegisterErrors(newErrors);
       showToast('Password required');
       return false;
     }
+
     if (registerData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
       setRegisterErrors(newErrors);
       showToast('Password must be at least 6 characters');
       return false;
     }
+
     if (registerData.password !== registerData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
       setRegisterErrors(newErrors);
@@ -170,6 +228,77 @@ export default function KashlyLoginPage() {
     }
 
     setRegisterErrors({});
+    return true;
+  };
+
+  const validateForgotPinForm = () => {
+    const newErrors: Record<string, string> = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!forgotPinData.email.trim()) {
+      newErrors.email = 'Email is required';
+      setForgotPinErrors(newErrors);
+      showToast('Email is required');
+      forgotPinEmailRef.current?.focus();
+      return false;
+    }
+    if (!emailRegex.test(forgotPinData.email.trim())) {
+      newErrors.email = 'Invalid email address';
+      setForgotPinErrors(newErrors);
+      showToast('Invalid email address');
+      forgotPinEmailRef.current?.focus();
+      return false;
+    }
+
+    setForgotPinErrors({});
+    return true;
+  };
+
+  const validateResetPasswordForm = () => {
+    const newErrors: Record<string, string> = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (regMode === 'email') {
+      if (!resetPasswordData.email.trim()) {
+        newErrors.email = 'Email is required';
+        setResetPasswordErrors(newErrors);
+        showToast('Email is required');
+        resetEmailRef.current?.focus();
+        return false;
+      }
+      if (!emailRegex.test(resetPasswordData.email.trim())) {
+        newErrors.email = 'Invalid email address';
+        setResetPasswordErrors(newErrors);
+        showToast('Invalid email address');
+        resetEmailRef.current?.focus();
+        return false;
+      }
+    } else {
+      // phone mode
+      if (!selectedCountry) {
+        newErrors.phone = 'Please select a country code';
+        setResetPasswordErrors(newErrors);
+        showToast('Please select a country code');
+        return false;
+      }
+      if (!resetPasswordData.phone.trim()) {
+        newErrors.phone = 'Phone number is required';
+        setResetPasswordErrors(newErrors);
+        showToast('Phone number is required');
+        resetPhoneRef.current?.focus();
+        return false;
+      }
+      const digitsOnly = resetPasswordData.phone.replace(/\D/g, '');
+      if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+        newErrors.phone = 'Enter a valid phone number';
+        setResetPasswordErrors(newErrors);
+        showToast('Enter a valid phone number');
+        resetPhoneRef.current?.focus();
+        return false;
+      }
+    }
+
+    setResetPasswordErrors({});
     return true;
   };
 
@@ -189,7 +318,23 @@ export default function KashlyLoginPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleForgotPinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForgotPinData(prev => ({ ...prev, [name]: value }));
+    if (forgotPinErrors[name]) {
+      setForgotPinErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleResetPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setResetPasswordData(prev => ({ ...prev, [name]: value }));
+    if (resetPasswordErrors[name]) {
+      setResetPasswordErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
@@ -217,8 +362,9 @@ export default function KashlyLoginPage() {
         sessionId: response.sessionId
       };
       if (response.twoFactorAuthEnabled === true) {
-        router.push(`/auth/verify?token=${response.jwt}`);
-        return; 
+        setShowOTPForm(true);
+        router.replace(`?token=${response.jwt}`, { scroll: false });
+        return;
       } else if (response.is_profile_complete === false) {
         setAuthToken(payload);
         router.push("/settings/profile");
@@ -230,8 +376,6 @@ export default function KashlyLoginPage() {
           type: "MESSAGES",
           description: "User logged in successfully"
         });
-
-        setFormData({ username: '', password: '' });
         router.push('/dashboard');
       }
       
@@ -254,17 +398,285 @@ export default function KashlyLoginPage() {
     if (!validateRegisterForm()) return;
 
     setIsRegisterSubmitting(true);
-    try {
-      // Replace with your actual register API call
-      // await authService.register(registerData);
+      try {
+        const payload = {
+          firstname: registerData.firstname,
+          lastname: registerData.lastname,
+          username: registerData.username,
+          email: registerData.email,
+          phone: '',    
+          password: registerData.password,
+          confirmPassword: registerData.confirmPassword,
+          verificationCode: registerData.verificationCode,
+          regMode: 'email',
+          verificationMethod: 'EMAIL',
+        };
+
+      await authService.register(payload);
       showToast('Account created successfully!', 'success');
-      setRegisterData({ firstname: '', lastname: '', email: '', verificationCode: '', password: '', confirmPassword: '' });
+      setRegisterData({
+        firstname: '', lastname: '', username: '',
+        email: '', phone: '', 
+        verificationCode: '', password: '', confirmPassword: '',
+      });
+      setCodeSent(false);
       setShowRegister(false);
     } catch (error: any) {
-      showToast(error.toString());
+      const errorMsg = error.toString();
+      if (errorMsg.includes('internet connection')) {
+        showToast('You are offline. Please check your network.');
+      } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
+        showToast('Service unavailable. The server might be down.');
+      } else {
+        showToast(errorMsg);
+      }
     } finally {
       setIsRegisterSubmitting(false);
     }
+  };
+
+  const handleForgotPinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForgotPinForm()) return;
+
+    setIsForgotPinSubmitting(true);
+    try {
+      await authService.forgotUsername(forgotPinData.email);
+      showToast('Your username has been sent to your email!', 'success');
+      setForgotPinData({ email: '' });
+      setForgotPinErrors({});
+      showForm('login');
+    } catch (error: any) {
+      const errorMsg = error.toString();
+      if (errorMsg.includes('internet connection')) {
+        showToast('You are offline. Please check your network.');
+      } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
+        showToast('Service unavailable. The server might be down.');
+      } else {
+        showToast(errorMsg);
+      }
+    } finally {
+      setIsForgotPinSubmitting(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateResetPasswordForm()) return;
+
+    setIsResetPasswordSubmitting(true);
+    try {
+      const payload =
+        regMode === 'email'
+          ? { identifier: resetPasswordData.email, method: 'EMAIL' }
+          : { identifier: `${selectedCountry?.code}${resetPasswordData.phone}`, method: 'PHONE' };
+
+      await authService.forgotPassword(payload);
+      showToast('Password reset code sent successfully!', 'success');
+      setResetPasswordData({ email: '', phone: '' });
+      setResetPasswordErrors({});
+    } catch (error: any) {
+      const errorMsg = error.toString();
+      if (errorMsg.includes('internet connection')) {
+        showToast('You are offline. Please check your network.');
+      } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
+        showToast('Service unavailable. The server might be down.');
+      } else {
+        showToast(errorMsg);
+      }
+    } finally {
+      setIsResetPasswordSubmitting(false);
+    }
+  };
+
+  const handleRequestCode = async () => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!registerData.email.trim()) {
+      showToast('Please enter your email address first');
+      emailRef.current?.focus();
+      return;
+    }
+    if (!emailRegex.test(registerData.email.trim())) {
+      showToast('Invalid email address');
+      emailRef.current?.focus();
+      return;
+    }
+
+    setIsRequestingCode(true);
+    try {
+      const response = await authService.sendVerifyCode(registerData.email, 'EMAIL');
+      if (response.status !== 201) {
+        setCodeSent(false);
+        throw new Error('Failed to send verification code. Please try again.');
+      } else {
+        setCodeSent(true);
+        showToast('Verification code sent to your email!', 'success');
+      }
+    } catch (error: any) {
+      showToast(error.toString());
+    } finally {
+      setIsRequestingCode(false);
+    }
+  };
+
+  const handleSwitchMode = (mode: 'email' | 'phone') => {
+    setRegMode(mode);
+    setResetPasswordData({ email: '', phone: '' });
+    setResetPasswordErrors({});
+    setSelectedCountry(null);
+    setIsResetPasswordSubmitting(false);
+  };
+
+  const showForm = (form: 'login' | 'register' | 'forgotPin' | 'resetPassword') => {
+    setShowRegister(form === 'register');
+    setshowForgetUsernameForm(form === 'forgotPin');
+    setShowResetPasswordForm(form === 'resetPassword');
+  };
+
+  const handleScroll = () => {
+      setIsScrolling(true);
+      if (scrollTimer.current) clearTimeout(scrollTimer.current);
+      scrollTimer.current = setTimeout(() => {
+      setIsScrolling(false);
+      }, 1000);
+  };
+
+  const filteredCountries = countries.filter(c => 
+    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleOTPChange = (index: number, value: string) => {
+    if (value.length > 1) return;
+    if (value && !/^\d$/.test(value)) return;
+
+    const newCode = [...code];
+    newCode[index] = value;
+    setCode(newCode);
+
+    if (value && index < 3) {
+        inputRefs.current[index + 1]?.focus();
+    }
+    if (value && index === 3) {
+        const verificationCode = newCode.join('');
+        // if (verificationCode.length === 4) {
+        // handleSubmitWithCode(verificationCode);
+        // }
+    }
+  };
+
+  const handleOTPSubmitWithCode = async (verificationCode: string) => {
+    if (!token) {
+        showToast('Invalid verification session. Please login again.');
+        router.push('/auth/login');
+        return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+        const payload = { otp: verificationCode };
+        await authService.verifyOtp(payload)
+        .then((response) => {
+            const payload = {
+                token: response.jwt,
+                username: response.username,
+                userId: response.userId,
+                email: response.email,
+                referral_link: response.referral_link,
+                referral_username: response.referral_username,
+                twoFactorAuthEnabled: response.twoFactorAuthEnabled,
+                is_verify: response.is_verify,
+                fullname: response.fullname,
+                country: response.country,
+                state: response.state,
+                city: response.city,
+                dob: response.date_of_birth,
+                gender: response.gender,
+                telephone: response.telephone || "",
+                isCompleteProfile: response.is_profile_complete,
+                sessionId: response.sessionId
+            };
+            updateNotificationContainer({
+                type: "welcome",
+                description: "Welcome to our platform!",
+                date: new Date().toISOString()
+            });
+        
+            setAuthToken(payload);
+            showToast('Verification successful!', 'success');
+            setTimeout(() => {
+                router.push('/dashboard');
+            }, 1000);
+        }) .catch((error) => {
+            showToast(error)
+        })
+        
+        showToast('Verification successful!', 'success');
+        setTimeout(() => {
+        router.push('/dashboard');
+        }, 1000);
+    } catch (error: any) {
+        const errorMsg = error.toString();
+        if (errorMsg.includes('Invalid verification code') || errorMsg.includes('invalid') || errorMsg.includes('Invalid')) {
+        showToast('Invalid verification code. Please try again.');
+        setCode(['', '', '', '']);
+        inputRefs.current[0]?.focus();
+        } else if (errorMsg.includes('expired') || errorMsg.includes('Expired')) {
+        showToast('Verification code has expired. Please request a new one.');
+        } else if (errorMsg.includes('internet connection')) {
+        showToast('You are offline. Please check your network.');
+        } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
+        showToast('Service unavailable. The server might be down.');
+        } else {
+        showToast(errorMsg || 'Verification failed. Please try again.');
+        }
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+  
+  const handleOTPKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+    if (!code[index] && index > 0) {
+        const newCode = [...code];
+        newCode[index - 1] = '';
+        setCode(newCode);
+        inputRefs.current[index - 1]?.focus();
+    }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+    inputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 3) {
+    inputRefs.current[index + 1]?.focus();
+    }
+  };
+  
+  const handleOTPPaste = (e: React.ClipboardEvent) => {
+      e.preventDefault();
+      const pastedData = e.clipboardData.getData('text').trim();
+      
+      // Check if pasted data is a 4-digit number
+      if (/^\d{4}$/.test(pastedData)) {
+      const digits = pastedData.split('');
+      const newCode = [...code];
+      
+      digits.forEach((digit, index) => {
+          if (index < 4) {
+          newCode[index] = digit;
+          }
+      });
+      
+      setCode(newCode);
+      
+      // Focus last input
+      setTimeout(() => {
+          const lastFilledIndex = newCode.findIndex(digit => digit === '');
+          const focusIndex = lastFilledIndex === -1 ? 3 : Math.min(lastFilledIndex, 3);
+          inputRefs.current[focusIndex]?.focus();
+      }, 0);
+      } else {
+      showToast('Please paste a valid 4-digit code');
+      }
   };
 
   const btnClass = [
@@ -317,8 +729,8 @@ export default function KashlyLoginPage() {
             </div>
 
             {/* ── LOGIN FORM ── */}
-            {!showRegister && (
-              <form onSubmit={handleSubmit} noValidate>
+            {!showRegister && !showForgetUsernameForm && !showOTPForm && !showResetPasswordForm && (
+              <form onSubmit={handleLoginSubmit} noValidate>
                 <div className={styles.loginCard} id="loginCard">
                   <div className={styles.cardHeader}>
                     <div className={styles.cardHeaderTitle}>Internet Banking</div>
@@ -348,7 +760,7 @@ export default function KashlyLoginPage() {
                     <input
                       ref={passwordRef}
                       autoComplete='off'
-                      type={showPassword ? 'text' : 'password'}
+                      type={showLoginPassword ? 'text' : 'password'}
                       name="password"
                       id='password'
                       className={styles.cardInput}
@@ -356,6 +768,14 @@ export default function KashlyLoginPage() {
                       onChange={handleChange}
                       placeholder="•••••"
                     /> 
+                     <button
+                      type="button"
+                      className={styles.eyeBtn}
+                      onClick={() => setShowLoginPassword(p => !p)}
+                      aria-label="Toggle password"
+                    >
+                      <i className={`fa-solid ${showLoginPassword ? 'fa-eye-slash' : 'fa-eye'}`} style={{fontSize:"12px"}}></i>
+                    </button>
                   </div>
                   <p className={styles.inputHint}>If Corporate, format is Corp ID.User ID</p>
 
@@ -376,8 +796,8 @@ export default function KashlyLoginPage() {
                     type="submit"
                     ref={btnRef}
                     className={btnClass}
-                    disabled={isSubmitting}
-                  >
+                    onClick={handleLoginSubmit}
+                    disabled={isSubmitting}>
                     {isSubmitting ? (
                       <>
                         <div className="spinner"></div>
@@ -389,19 +809,17 @@ export default function KashlyLoginPage() {
                   </button>
 
                   <div className={styles.cardLinks}>
-                    <Link href="/auth/forgot-pin" className={styles.cardLink}>Forgot Pin</Link>
+                    <Link href="#" className={styles.cardLink} onClick={() => showForm('forgotPin')}>Forgot Pin</Link>
                     <span className={styles.cardLinkSep}>|</span>
-                    <Link href="/auth/forgot-password" className={styles.cardLink}>Forgot Password</Link>
-                    <span className={styles.cardLinkSep}>|</span>
-                    <Link href="/auth/forgot-user-id" className={styles.cardLink}>Forgot User ID</Link>
+                    <Link href="#" className={styles.cardLink} onClick={() => showForm('resetPassword')}>Forgot Password</Link>
+              
                   </div>
 
                   <div className={styles.cardRegister}>
                     <button
                       type="button"
                       className={styles.btnRegisterToggle}
-                      onClick={() => setShowRegister(true)}
-                    >
+                      onClick={() => showForm('register')}>
                       Instant Self-Registration
                     </button>
                   </div>
@@ -412,12 +830,12 @@ export default function KashlyLoginPage() {
             {/* ── REGISTER FORM ── */}
             {showRegister && (
               <form onSubmit={handleRegisterSubmit} noValidate>
-                <div className={`${styles.loginCard} ${styles.registerCard}`} id="registerCard">
+                <div className={`${styles.RegisterCard} ${styles.registerCard}`} id="registerCard">
                   <div className={styles.cardHeader}>
                     <button
                       type="button"
                       className={styles.cardBackBtn}
-                      onClick={() => setShowRegister(false)}
+                      onClick={() => showForm('login')}
                       aria-label="Back to login"
                     >
                       <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
@@ -460,13 +878,16 @@ export default function KashlyLoginPage() {
                       />
                     </div>
                   </div>
-
+                 <div className={styles.inputGroup}>
+                    <input ref={usernameRef} type="text" name="username" className={`${styles.cardInput} ${registerErrors.username ? styles.inputError : ''}`} value={registerData.username} onChange={handleRegisterChange} placeholder="Username" />
+                  </div>
                   {/* Email */}
                   <div className={styles.inputGroup}>
                     <svg className={styles.inputIcon} viewBox="0 0 24 24" fill="currentColor">
                       <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                     </svg>
                     <input
+                      ref={emailRef}
                       autoComplete='off'
                       type="email"
                       name="email"
@@ -479,18 +900,12 @@ export default function KashlyLoginPage() {
 
                   {/* Verification Code */}
                   <div className={styles.inputGroup}>
-                    <svg className={styles.inputIcon} viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 14l-3-3 1.41-1.41L11 12.17l4.59-4.58L17 9l-6 6z"/>
-                    </svg>
-                    <input
-                      autoComplete='off'
-                      type="text"
-                      name="verificationCode"
-                      className={`${styles.cardInput} ${registerErrors.verificationCode ? styles.inputError : ''}`}
-                      value={registerData.verificationCode}
-                      onChange={handleRegisterChange}
-                      placeholder="Verification code"
-                    />
+                    <div className={styles.verificationWrapper}>
+                      <input type="text" name="verificationCode" value={registerData.verificationCode} className={`${styles.formControl} ${registerErrors.verificationCode ? styles.inputError : ''}`} onChange={handleRegisterChange} placeholder="Enter code" />
+                      <button type="button" className={styles.btnRequestCode} onClick={handleRequestCode} disabled={isRequestingCode}>
+                        {isRequestingCode ? 'Sending...' : codeSent ? 'Resend Code' : 'Send Code'}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Password */}
@@ -513,15 +928,7 @@ export default function KashlyLoginPage() {
                       onClick={() => setShowRegisterPassword(p => !p)}
                       aria-label="Toggle password"
                     >
-                      {showRegisterPassword ? (
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                          <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/>
-                        </svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                        </svg>
-                      )}
+                      <i className={`fa-solid ${showRegisterPassword ? 'fa-eye-slash' : 'fa-eye'}`} style={{fontSize:"12px"}}></i>
                     </button>
                   </div>
 
@@ -542,11 +949,9 @@ export default function KashlyLoginPage() {
                   </div>
 
                   <button
-                    type="submit"
-                    className={btnClass}
-                    disabled={isRegisterSubmitting}
-                    style={{ marginTop: '6px' }}
-                  >
+                  type="submit"
+                  className={btnClass} 
+                  style={{ marginTop: '6px' }}>
                     {isRegisterSubmitting ? (
                       <>
                         <div className="spinner"></div>
@@ -573,6 +978,255 @@ export default function KashlyLoginPage() {
                 </div>
               </form>
             )}
+
+            {/* ── FORGOT PIN (Retrieve Username) Form ── */}
+            {!showRegister && showForgetUsernameForm && !showOTPForm && !showResetPasswordForm && (
+              <form onSubmit={handleForgotPinSubmit} noValidate>
+                <div className={styles.ForgetUsernameCard}>
+                  <div className={styles.cardHeader}>
+                    <button
+                      type="button"
+                      className={styles.cardBackBtn}
+                      onClick={() => showForm('login')}
+                      aria-label="Back to login"
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                      </svg>
+                    </button>
+                    <h2 className={styles.cardHeaderTitle}>Retrieve Username</h2>
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <svg className={styles.inputIcon} viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    <input
+                      ref={forgotPinEmailRef}
+                      autoComplete='off'
+                      type="email"
+                      name="email"
+                      className={`${styles.cardInput} ${forgotPinErrors.email ? styles.inputError : ''}`}
+                      value={forgotPinData.email}
+                      onChange={handleForgotPinChange}
+                      placeholder="Enter your registered email"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={btnClass}
+                    style={{ marginTop: '6px' }}
+                    disabled={isForgotPinSubmitting}
+                  >
+                    {isForgotPinSubmitting ? (
+                      <>
+                        <div className="spinner"></div>
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      'Submit'
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* ── RESET PASSWORD Form ── */}
+            {!showRegister && !showForgetUsernameForm && !showOTPForm && showResetPasswordForm && (
+              <div className={styles.ResetPasswordCard}>
+                <div className={styles.cardHeader}>
+                  <button
+                    type="button"
+                    className={styles.cardBackBtn}
+                    onClick={() => showForm('login')}
+                    aria-label="Back to login">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    </svg>
+                  </button>
+                  <h2 className={styles.cardHeaderTitle}>Reset Your Password</h2>
+                </div>
+              
+                <div className={styles.toggleContainer}>
+                  <button 
+                    type="button"
+                    className={regMode === 'email' ? styles.active : ''} 
+                    onClick={() => handleSwitchMode('email')}>
+                    Email
+                  </button>
+                  <button 
+                    type="button"
+                    className={regMode === 'phone' ? styles.active : ''} 
+                    onClick={() => handleSwitchMode('phone')}>
+                    Phone
+                  </button>
+                </div>
+
+                <form onSubmit={handleResetPasswordSubmit} noValidate>
+                  {regMode === 'email' ? (
+                   
+                   <div className={styles.inputGroup}>
+                    <svg className={styles.inputIcon} viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                     <input
+                        ref={resetEmailRef}
+                        autoComplete='off'
+                        type="email"
+                        name="email"
+                        className={`${styles.cardInput} ${resetPasswordErrors.email ? styles.inputError : ''}`}
+                        value={resetPasswordData.email}
+                        onChange={handleResetPasswordChange}
+                        placeholder="Email"
+                      />
+                  </div>
+                  ) : (
+                    <div className={styles.formGroup}>
+                      <div className={styles.phoneInputGroup}>
+                        <div
+                          className={`${styles.countryDropdown} ${resetPasswordErrors.phone ? styles.inputError : ''}`}
+                          onClick={() => setIsModalOpen(true)}
+                        >
+                          <span>
+                            {selectedCountry 
+                              ? `${selectedCountry.abbr3} (${selectedCountry.code})` 
+                              : 'Country'}
+                          </span>
+                          <i className="fa fa-chevron-down"></i>
+                        </div>
+                        <input
+                          ref={resetPhoneRef}
+                          autoComplete='off'
+                          type="tel"
+                          name="phone"
+                          className={`${styles.formControl} ${resetPasswordErrors.phone ? styles.inputError : ''}`}
+                          value={resetPasswordData.phone}
+                          onChange={handleResetPasswordChange}
+                          placeholder="Phone number"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className={styles.btnSubmit}
+                    disabled={isResetPasswordSubmitting}
+                  >
+                    {isResetPasswordSubmitting ? (
+                      <>
+                        <div className={styles.spinner}></div>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      'Send password reset code'
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {!showRegister && !showForgetUsernameForm && !showResetPasswordForm && showOTPForm && (
+              <div className={styles.OTPCard}>
+                <div className={styles.cardHeader}>
+                  <button
+                    type="button"
+                    className={styles.cardBackBtn}
+                    onClick={() => showForm('login')}
+                    aria-label="Back to login">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    </svg>
+                  </button>
+                  <h2 className={styles.cardHeaderTitle}>Two-Factor Authentication</h2>
+                </div>
+
+                <div className={styles.otpInfo}>
+                  <p>Enter the 4-digit code sent to your email/phone to complete login.</p>
+                </div>
+                
+                <form onSubmit={(e) => { e.preventDefault(); handleOTPSubmitWithCode(code.join('')); }} className={styles.otpForm}>
+                  <div className={styles.codeInputs} onPaste={handleOTPPaste}>
+                    {code.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => { inputRefs.current[index] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOTPChange(index, e.target.value)}
+                        onKeyDown={(e) => handleOTPKeyDown(index, e)}
+                        onPaste={index === 0 ? handleOTPPaste : undefined}
+                        className={styles.codeInput}
+                        autoComplete="one-time-code"
+                        disabled={isSubmitting}
+                      />
+                    ))}
+                  </div>
+                  <div className={styles.verificationActions}>
+                    <button type="submit" className={styles.btnResend} disabled={isSubmitting}>
+                    {isResending ? (
+                        <>
+                          <div className={styles.spinner + ' ' + styles.spinnerSmall}></div>
+                          <span>Sending...</span>
+                        </>
+                      ) : countdown > 0 ? (
+                        `Resend in ${countdown}s`
+                      ) : (
+                        'Resend Code'
+                      )}
+                    </button>
+
+                    <button type="submit" className={styles.btnOTP} disabled={isSubmitting || code.join('').length !== 4}>
+                      {isSubmitting ? (
+                        <>
+                          <div className={styles.spinner}></div>
+                          <span>Verifying...</span>
+                        </>
+                      ) : (
+                        'Verify'
+                      )}
+                    </button>
+                  </div>
+                </form>
+
+                 <div className={styles.backToLogin}>
+                  <button type="button" className={styles.forgotPasswordLink}  onClick={() => showForm('login')}>
+                    ← Back to Login
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── COUNTRY MODAL (shared) ── */}
+            {isModalOpen && (
+              <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>
+                <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.modalHeader}><h3>Select Country</h3></div>
+                  <div className={styles.searchContainer}>
+                    <i className="fa fa-search"></i>
+                    <input type="text" placeholder="Search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                  </div>
+                  <div 
+                    className={`${styles.countryList} ${isScrolling ? styles.isScrolling : ''}`}
+                    onScroll={handleScroll}
+                  >
+                    {filteredCountries.map((c) => (
+                      <div key={c.name} className={styles.countryItem} onClick={() => { setSelectedCountry(c); setIsModalOpen(false); setSearchTerm('') }}>
+                        <span>{c.name} ({c.code})</span>
+                        <div className={`${styles.radioOuter} ${selectedCountry?.name === c.name ? styles.checked : ''}`}>
+                          <div className={styles.radioInner}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
 
           {/* ── BOTTOM BANNER ── */}
@@ -612,8 +1266,7 @@ export default function KashlyLoginPage() {
                   <button
                     type="button"
                     className={styles.btnOpen}
-                    onClick={() => setShowRegister(true)}
-                  >
+                   onClick={() => showForm('register')}>
                     Open Account
                   </button>
                 </div>

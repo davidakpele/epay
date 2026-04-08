@@ -14,11 +14,11 @@ export default function Home() {
         if (token && userData) {
           router.push('/dashboard');
         } else {
-          router.push('/auth/login');
+          router.push('/default');
         }
       } catch (error) {
         console.error('Error checking authentication:', error);
-        router.push('/auth/login');
+        router.push('/default');
       }
     };
 
