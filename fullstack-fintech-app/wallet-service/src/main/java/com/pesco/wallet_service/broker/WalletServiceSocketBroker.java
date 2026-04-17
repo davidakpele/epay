@@ -653,18 +653,22 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
             String transactionId = "SWAP_" + System.currentTimeMillis() + "_" + userId;
             
             String swapCurrency = fromCurrency + "/" + toCurrency;
-
+            BigDecimal feeAmount = (BigDecimal) calculation.get("feeAmount");
             SwapHistoryRequest historyPayload = new SwapHistoryRequest();
             historyPayload.setAmount(amount);
             historyPayload.setWalletId(walletId);
             historyPayload.setCurrencyType(toCurrency);
             historyPayload.setTransactionType("SWAP");
             historyPayload.setDescription("SWAP " + swapCurrency + " : cut " + exchangeRate);
-            historyPayload.setUserFullName(userFullName);
+            historyPayload.setAccountHolder(userFullName); 
             historyPayload.setPreviousBalance(previousBalanceOnFromWallet);
             historyPayload.setAvailable(availableBalance);
             historyPayload.setUserId(user.getId());
-
+            historyPayload.setExchangeRate(exchangeRate);
+            historyPayload.setOriginalCurrency(fromCurrency);
+            historyPayload.setFeeAmount(feeAmount);
+            historyPayload.setNetAmount(finalAmount);
+            historyPayload.setStatus("COMPLETED");
             CompletableFuture<Void> saveHistory = createHistory(historyPayload, token);
             notificationServiceClient.sendSwapAlert(
                 userEmail,

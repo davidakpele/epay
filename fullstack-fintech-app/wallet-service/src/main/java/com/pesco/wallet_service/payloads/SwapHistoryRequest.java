@@ -3,107 +3,102 @@ package com.pesco.wallet_service.payloads;
 import java.math.BigDecimal;
 import lombok.Data;
 
-@Data  
+@Data
 public class SwapHistoryRequest {
-    private BigDecimal amount;
-    private BigDecimal previousBalance;
-    private BigDecimal available;
+
+    // ── existing fields ────────────────────────────────────────────────
+    private BigDecimal amount;           // → GrossAmount
+    private BigDecimal previousBalance;  // → PreviousBalance
+    private BigDecimal available;        // → AvailableBalance
     private String description;
-    private String userFullName;
+    private String accountHolder;        // was userFullName → AccountHolder
     private Long userId;
-    private String currencyType;
-    private String transactionType;
+    private String currencyType;         // toCurrency → CurrencyType
+    private String transactionType;      // "SWAP" → Type (must match C# enum)
     private Long walletId;
 
+    // ── previously missing fields ──────────────────────────────────────
+    private BigDecimal exchangeRate;     // → ExchangeRate
+    private String originalCurrency;     // fromCurrency → OriginalCurrency
+    private BigDecimal feeAmount;        // → FeeAmount
+    private BigDecimal netAmount;        // finalAmount (post-fee) → NetAmount
+    private String status;              // "COMPLETED" → Status
 
     public SwapHistoryRequest() {
     }
 
-
-    public SwapHistoryRequest(BigDecimal amount, BigDecimal previousBalance, BigDecimal available, String description, String userFullName, Long userId, String currencyType, String transactionType, Long walletId) {
+    public SwapHistoryRequest(
+            BigDecimal amount,
+            BigDecimal previousBalance,
+            BigDecimal available,
+            String description,
+            String accountHolder,
+            Long userId,
+            String currencyType,
+            String transactionType,
+            Long walletId,
+            BigDecimal exchangeRate,
+            String originalCurrency,
+            BigDecimal feeAmount,
+            BigDecimal netAmount,
+            String status) {
         this.amount = amount;
         this.previousBalance = previousBalance;
         this.available = available;
         this.description = description;
-        this.userFullName = userFullName;
+        this.accountHolder = accountHolder;
         this.userId = userId;
         this.currencyType = currencyType;
         this.transactionType = transactionType;
         this.walletId = walletId;
+        this.exchangeRate = exchangeRate;
+        this.originalCurrency = originalCurrency;
+        this.feeAmount = feeAmount;
+        this.netAmount = netAmount;
+        this.status = status;
     }
 
-    public BigDecimal getAmount() {
-        return this.amount;
-    }
+    // ── existing getters/setters ───────────────────────────────────────
+    public BigDecimal getAmount() { return this.amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
+    public BigDecimal getPreviousBalance() { return this.previousBalance; }
+    public void setPreviousBalance(BigDecimal previousBalance) { this.previousBalance = previousBalance; }
 
-    public BigDecimal getPreviousBalance() {
-        return this.previousBalance;
-    }
+    public BigDecimal getAvailable() { return this.available; }
+    public void setAvailable(BigDecimal available) { this.available = available; }
 
-    public void setPreviousBalance(BigDecimal previousBalance) {
-        this.previousBalance = previousBalance;
-    }
+    public String getDescription() { return this.description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public BigDecimal getAvailable() {
-        return this.available;
-    }
+    public String getAccountHolder() { return this.accountHolder; }
+    public void setAccountHolder(String accountHolder) { this.accountHolder = accountHolder; }
 
-    public void setAvailable(BigDecimal available) {
-        this.available = available;
-    }
+    public Long getUserId() { return this.userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
-    public String getDescription() {
-        return this.description;
-    }
+    public String getCurrencyType() { return this.currencyType; }
+    public void setCurrencyType(String currencyType) { this.currencyType = currencyType; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public String getTransactionType() { return this.transactionType; }
+    public void setTransactionType(String transactionType) { this.transactionType = transactionType; }
 
-    public String getUserFullName() {
-        return this.userFullName;
-    }
+    public Long getWalletId() { return this.walletId; }
+    public void setWalletId(Long walletId) { this.walletId = walletId; }
 
-    public void setUserFullName(String userFullName) {
-        this.userFullName = userFullName;
-    }
+    // ── new getters/setters ────────────────────────────────────────────
+    public BigDecimal getExchangeRate() { return this.exchangeRate; }
+    public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
 
-    public Long getUserId() {
-        return this.userId;
-    }
+    public String getOriginalCurrency() { return this.originalCurrency; }
+    public void setOriginalCurrency(String originalCurrency) { this.originalCurrency = originalCurrency; }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
+    public BigDecimal getFeeAmount() { return this.feeAmount; }
+    public void setFeeAmount(BigDecimal feeAmount) { this.feeAmount = feeAmount; }
 
-    public String getCurrencyType() {
-        return this.currencyType;
-    }
+    public BigDecimal getNetAmount() { return this.netAmount; }
+    public void setNetAmount(BigDecimal netAmount) { this.netAmount = netAmount; }
 
-    public void setCurrencyType(String currencyType) {
-        this.currencyType = currencyType;
-    }
-
-    public String getTransactionType() {
-        return this.transactionType;
-    }
-
-    public void setTransactionType(String transactionType) {
-        this.transactionType = transactionType;
-    }
-
-    public Long getWalletId() {
-        return this.walletId;
-    }
-
-    public void setWalletId(Long walletId) {
-        this.walletId = walletId;
-    }
-
-
-
+    public String getStatus() { return this.status; }
+    public void setStatus(String status) { this.status = status; }
 }
