@@ -57,7 +57,7 @@
 
               <!-- Greeting -->
               <p style="margin:0 0 6px 0;font-size:15px;color:#374151;font-weight:500;">
-                Thank You!
+                Thank You! <span th:text="${username}"></span>
               </p>
 
               <!-- Intro -->
@@ -71,7 +71,7 @@
                 <tr>
                   <td align="center" style="padding:22px 24px;">
                     <p style="margin:0 0 10px 0;font-size:15px;font-weight:700;color:##166701;line-height:1.5;">
-                      Congratulations, your account is now verified and ready to use!
+                      <span th:text="${message}"></span>
                     </p>
                     <p style="margin:0;font-size:14px;color:#4B7A4B;line-height:1.65;" th:text="${message}">
                       You can now log in and start using ePay for secure and fast transactions.

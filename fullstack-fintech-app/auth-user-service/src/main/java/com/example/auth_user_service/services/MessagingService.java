@@ -88,10 +88,12 @@ public class MessagingService implements IMessagingService{
    
     @Override
     public void sendWelcomeMessage(String recipient, String username, ContactMethod method) {
-        String message = "Welcome " + username + "! Your account has been verified successfully.";
-        
+        String message = "Welcome " + username + "! 🎉\n\n"
+                + "Your account has been successfully registered and verified.\n"
+                + "Your wallet has also been created and is ready for use.\n\n"
+                + "You can now start sending, receiving, and managing your funds seamlessly.";
         switch (method) {
-            case EMAIL -> emailService.sendWelcomeEmail(recipient, username);
+            case EMAIL -> emailService.sendWelcomeEmail(recipient, username, message);
             case SMS -> smsService.sendVerificationCode(recipient, message);
             case WHATSAPP -> whatsAppService.sendCustomMessage(recipient, message);
         }

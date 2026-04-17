@@ -8,7 +8,7 @@ import { Country, Toast } from '@/app/types/auth';
 import { LoginFormErrors } from '@/app/types/errors';
 import { authService, setAuthToken, updateNotificationContainer } from '@/app/api';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { countries } from '@/components/countries';
 
 type LoginState = 'idle' | 'error' | 'loading' | 'success';
@@ -50,8 +50,6 @@ export default function Default() {
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
 
   const [formData, setFormData] = useState({
     firstname: '',
@@ -559,19 +557,10 @@ export default function Default() {
     }
     if (value && index === 3) {
         const verificationCode = newCode.join('');
-        // if (verificationCode.length === 4) {
-        // handleSubmitWithCode(verificationCode);
-        // }
     }
   };
 
   const handleOTPSubmitWithCode = async (verificationCode: string) => {
-    if (!token) {
-        showToast('Invalid verification session. Please login again.');
-        router.push('/auth/login');
-        return;
-    }
-
     setIsSubmitting(true);
 
     try {

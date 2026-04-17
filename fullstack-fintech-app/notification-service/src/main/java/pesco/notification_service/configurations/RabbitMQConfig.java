@@ -20,6 +20,7 @@ public class RabbitMQConfig {
     public static final String USER_OTP_QUEUE = "user.otp";
     public static final String RESET_PASSWORD_QUEUE = "password.reset"; 
     public static final String REGISTRATION_OTP_QUEUE = "registration.otp";
+    public static final String WELCOME_MESSAGE_QUEUE = "welcome.message";
 
     // Wallet Queues
     public static final String CREDIT_WALLET_QUEUE = "credit.wallet";
@@ -45,6 +46,7 @@ public class RabbitMQConfig {
     public static final String ROUTING_KEY_SWAP_WALLET = "wallet.swap";
     public static final String ROUTING_KEY_BLOCK_USER_WALLET = "wallet.block-user";
     public static final String ROUTING_KEY_REGISTRATION_OTP = "auth.registration";
+    public static final String ROUTING_KEY_WELCOME_MESSAGE = "auth.welcome";
 
     // Declare the exchanges
     @Bean
@@ -81,6 +83,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue registrationOtpQueue() {
         return new Queue(REGISTRATION_OTP_QUEUE);
+    }
+
+    @Bean
+    public Queue welcomeMessageQueue() {
+        return new Queue(WELCOME_MESSAGE_QUEUE);
     }
 
     @Bean
@@ -137,6 +144,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding registrationOtpBinding(Queue registrationOtpQueue, TopicExchange authExchange) {
         return BindingBuilder.bind(registrationOtpQueue).to(authExchange).with(ROUTING_KEY_REGISTRATION_OTP); 
+    }
+
+    @Bean
+    public Binding welcomeMessageBinding(Queue welcomeMessageQueue, TopicExchange authExchange) {
+        return BindingBuilder.bind(welcomeMessageQueue).to(authExchange).with(ROUTING_KEY_WELCOME_MESSAGE);
     }
 
     // Bindings for Wallet Exchange
