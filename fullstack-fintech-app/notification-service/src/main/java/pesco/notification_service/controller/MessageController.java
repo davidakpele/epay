@@ -29,6 +29,7 @@ import pesco.notification_service.payloads.PasswordResetRequest;
 import pesco.notification_service.payloads.RegistrationOtpMessage;
 import pesco.notification_service.payloads.SwapCurrencyPayload;
 import pesco.notification_service.payloads.UserOTPMessage;
+import pesco.notification_service.payloads.WelcomeMessagePayload;
 
 
 @RestController
@@ -251,6 +252,30 @@ public class MessageController {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
             error.put("message", "Failed to send Swap message.");
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
+
+    @PostMapping("/send/welcome-message")
+    public ResponseEntity<Map<String, Object>> createWelcomeMessage(HttpServletRequest httpRequest, @Valid @RequestBody WelcomeMessagePayload request) {
+               
+        try {
+            authenticationMessageProducer.sendWelcomeNotification(
+                    request.getEmail(),
+                    request.getUsername(),
+                    request.getMessage()
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", request);
+            response.put("message", "Welcome message successfully sent!");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", "Failed to send welcome message.");
             return ResponseEntity.internalServerError().body(error);
         }
     }

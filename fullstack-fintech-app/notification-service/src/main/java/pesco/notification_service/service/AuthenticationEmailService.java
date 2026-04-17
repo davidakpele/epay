@@ -15,6 +15,7 @@ import pesco.notification_service.payloads.AccountVerificationRequest;
 import pesco.notification_service.payloads.PasswordResetRequest;
 import pesco.notification_service.payloads.RegistrationOtpMessage;
 import pesco.notification_service.payloads.UserOTPMessage;
+import pesco.notification_service.payloads.WelcomeMessagePayload;
 import pesco.notification_service.utils.CustomerServiceEmailProperty;
 
 import java.util.Random;
@@ -67,6 +68,7 @@ public class AuthenticationEmailService {
         }
     }
 
+    @SuppressWarnings("null")
     @Async
     public CompletableFuture<Void> sendEmailVerificationMessage(String email, String message, String link,
             String username) {
@@ -111,6 +113,7 @@ public class AuthenticationEmailService {
 
     }
 
+    @SuppressWarnings("null")
     @Async
     public CompletableFuture<Void> sendOTPMessage(String email, String otp, String restPassword,
             String configTwoFactorAuth,
@@ -155,6 +158,7 @@ public class AuthenticationEmailService {
         }
     }
 
+    @SuppressWarnings("null")
     @Async
     public CompletableFuture<Void> sendPasswordResetMessage(String email, String username, String content, String url,
             String customerEmail) {
@@ -197,6 +201,21 @@ public class AuthenticationEmailService {
         }
     }
 
+
+    @RabbitListener(queues = RabbitMQConfig.REGISTRATION_OTP_QUEUE)
+    public void receiveWelcomeNotification(WelcomeMessagePayload registrationOtpMessage) {
+        if (registrationOtpMessage != null) {
+            sendWelcomeNotification(
+                    registrationOtpMessage.getEmail(),
+                    registrationOtpMessage.getUsername(),
+                    registrationOtpMessage.getMessage()
+            );
+        } else {
+            System.out.println("Failed to deserialize email request.");
+        }
+    }
+
+    @SuppressWarnings("null")
     @Async
     public CompletableFuture<Void> sendRegistrationOtpMessage(String email, String message) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
@@ -223,5 +242,31 @@ public class AuthenticationEmailService {
             throw new MailSendException("Failed to send email: " + e.getMessage(), e);
         }   
     }
+
+    @SuppressWarnings("null")
+    @Async
+    public CompletableFuture<Void> sendWelcomeNotification(String email, String username, String message) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {   
+            // Create MimeMessageHelper
+            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
+            // Prepare the HTML template
+            Context context = new Context();
+            context.setVariable("username", username);
+            context.setVariable("message", message);
+            String htmlContent = templateEngine.process("success", context);
+            // Set email attributes
+            mimeMessageHelper.setTo(email);
+            mimeMessageHelper.setSubject("Welcome to Our Service!");
+            mimeMessageHelper.setText(htmlContent, true);
+            // Send the email
+            javaMailSender.send(mimeMessage);
+            return CompletableFuture.completedFuture(null);
+        } catch (MessagingException | MailException e) {
+            throw new MailSendException("Failed to send email: " + e.getMessage(), e);
+        }
+
+    }
+
 
 }

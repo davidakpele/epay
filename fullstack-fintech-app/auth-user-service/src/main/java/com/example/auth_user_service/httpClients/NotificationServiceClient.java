@@ -189,13 +189,11 @@ public class NotificationServiceClient implements INotificationServiceClient {
     }
 
     @Override
-    public Object sendWelcomeEmail(String recipient, String username) {
-        String content = "Welcome " + username + "! Your account has been verified successfully. Welcome aboard!";
+    public Object sendWelcomeEmail(String recipient, String username, String message) {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("email", recipient);
         requestBody.put("username", username);
-        requestBody.put("message", content);
-
+        requestBody.put("message", message);
         log.info("[REQUEST] POST /send/welcome-message | body: " + requestBody);
 
         try {

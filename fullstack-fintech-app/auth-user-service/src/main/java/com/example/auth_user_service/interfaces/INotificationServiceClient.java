@@ -11,7 +11,7 @@ public interface INotificationServiceClient {
 
     void sendBankStatementEmail(String email, String username, ByteArrayResource pdfResource, String period);
 
-    Object sendWelcomeEmail(String recipient, String username);
+    Object sendWelcomeEmail(String recipient, String username, String message);
 
     Object sendRegistrationOTPMessage(String recipient, String message);
     
