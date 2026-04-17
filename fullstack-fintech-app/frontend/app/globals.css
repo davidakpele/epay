@@ -300,11 +300,16 @@ body {
   transition: transform .2s, box-shadow .2s;
   display: flex;
   position: fixed;
-  bottom: 74px;
+  bottom: 15px;
   right: 8px;
   box-shadow: 0 4px 16px #00000040;
 }
 .chat-fab:hover {
   transform: scale(1.08);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+@media (max-width: 640px) {
+  .chat-fab {
+    bottom: 74px !important;
+  }
 }
