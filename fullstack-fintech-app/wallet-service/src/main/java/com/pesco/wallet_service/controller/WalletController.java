@@ -50,7 +50,7 @@ public class WalletController {
     }
 
     @GetMapping("/{walletId}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")         
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN') and @security.isOwner(#userId)")       
     public ResponseEntity<?> getWalletById(@PathVariable Long walletId) {
         try {
             Optional<WalletSettings> walletSettings = walletSettingsRepository.findByWalletId(walletId);
@@ -65,7 +65,7 @@ public class WalletController {
     }
 
     @GetMapping("/userId/{userId}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")          // FIX: hasAnyRole not hasRole
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN') and @security.isOwner(#userId)")
     public ResponseEntity<?> getWalletByUserId(@PathVariable Long userId) {
         if (userId == null || userId <= 0) {
             return ResponseEntity.badRequest()
@@ -74,15 +74,15 @@ public class WalletController {
         return walletService.getWalletByUserId(userId);
     }
 
+    @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.isOwnerOrAdmin(#userId)")
     @GetMapping("/{userId}/{currency}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")          // FIX: hasAnyRole not hasRole
     public ResponseEntity<?> getByCurrency(@PathVariable Long userId,
-                                           @PathVariable String currency) {
+                                        @PathVariable String currency) {
         return walletService.getWalletByUserIdAndCurrencyType(userId, currency);
     }
 
     @PostMapping("/create/pin")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")          // FIX: hasAnyRole not hasRole
+    @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.isOwnerOrAdmin(#userId)")
     public ResponseEntity<?> userSetTransferPin(@RequestBody CreateTransferPinRequest request,
                                                 Authentication authentication) {
         String providedPin     = request.getTransferPin();
@@ -126,7 +126,7 @@ public class WalletController {
     }
 
     @PostMapping("/verify/pin")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")          // FIX: hasAnyRole not hasRole
+    @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.isOwnerOrAdmin(#userId)")
     public ResponseEntity<?> verifyPin(@RequestBody CreateTransferPinRequest request,
                                        Authentication authentication) {
         String providedPin     = request.getTransferPin();
@@ -173,7 +173,6 @@ public class WalletController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    // Already public via SecurityConfiguration — no @PreAuthorize needed
     @GetMapping("/cache/{userId}")
     public ResponseEntity<Map<String, Object>> getCacheWalletByUserId(@PathVariable Long userId) {
         Wallet wallet = walletCacheService.getCachedWalletByUserId(userId);

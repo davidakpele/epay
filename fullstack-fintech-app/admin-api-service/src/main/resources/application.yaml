@@ -5,9 +5,8 @@ spring:
       favor-path-extension: false
   application:
     name: admin-api-service
-    
   autoconfigure:
-    exclude:
+    exclude: 
       - org.springframework.boot.cassandra.autoconfigure.CassandraAutoConfiguration
       - org.springframework.boot.cassandra.autoconfigure.CassandraDataAutoConfiguration
       - org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration
@@ -25,6 +24,9 @@ spring:
       add-mappings: false
   main:
     allow-bean-definition-overriding: true
+  security:
+      filter:
+        dispatcher-types: REQUEST,ERROR,ASYNC
 
   datasource:
     url: jdbc:postgresql://postgres:5432/pesco_db
@@ -178,11 +180,6 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-
-server:
-  port: 8109
-  servlet:
-    context-path: /admin
 
 wallet-service:
   base-url: http://wallet-service:8081

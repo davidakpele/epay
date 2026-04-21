@@ -44,23 +44,13 @@ public class ApplicationConfiguration {
                 UsersDetailsDTO userDTO = userServiceClient.getUserByUsername(username, token);
 
                 if (userDTO != null) {
-                    List<SimpleGrantedAuthority> authorities = userDTO.getRecords().stream()
-                            .map(record -> new SimpleGrantedAuthority("ROLE_USER"))
-                            .toList();
-                    return new org.springframework.security.core.userdetails.User(
-                            userDTO.getUsername(),
-                            "", 
-                            userDTO.isEnabled(),
-                            true, 
-                            true, 
-                            !isAccountLocked(userDTO), 
-                            authorities
-                    );
+                    return userDTO; // ← return directly, no wrapping
                 } else {
                     throw new UsernameNotFoundException("User not found: " + username);
                 }
+            } catch (UsernameNotFoundException e) {
+                throw e;
             } catch (Exception e) {
-                // Log the error and throw an exception to prevent unauthorized access
                 throw new UsernameNotFoundException("Unable to fetch user details for: " + username, e);
             }
         };
@@ -89,14 +79,6 @@ public class ApplicationConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return mapper;
     }
     
 }

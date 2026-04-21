@@ -20,8 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
-
-    // Wallet rate limit
     private static final int WALLET_RATE_LIMIT = 60; 
     private static final int WALLET_BURST_LIMIT = 120;
 

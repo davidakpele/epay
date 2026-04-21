@@ -1,27 +1,16 @@
-server:
-  port: 8035
-  error:
-    include-message: always
-    include-binding-errors: always
-    include-stacktrace: never
-    include-exception: false
-    whitelabel:
-      enabled: false
 spring:
   application:
     name: wallet-service
-  data:
-    redis:
-      host: redis
-      port: 6379
-  web:
-    resources:
-      add-mappings: false
-  main:
-    allow-bean-definition-overriding: true
-  security:
-      filter:
-        dispatcher-types: REQUEST,ERROR,ASYNC
+  mvc:
+    contentnegotiation:
+      favor-parameter: false
+      favor-path-extension: false
+  autoconfigure:
+    exclude: 
+      - org.springframework.boot.cassandra.autoconfigure.CassandraAutoConfiguration
+      - org.springframework.boot.cassandra.autoconfigure.CassandraDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
   datasource:
     url: jdbc:postgresql://postgres:5432/pesco_db
     username: postgres
@@ -49,6 +38,29 @@ spring:
             non_contextual_creation: true
         connection:
           provider_disables_autocommit: true
+
+server:
+  port: 8035
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
+    whitelabel:
+      enabled: false
+  
+  data:
+    redis:
+      host: redis
+      port: 6379
+  web:
+    resources:
+      add-mappings: false
+  main:
+    allow-bean-definition-overriding: true
+  security:
+      filter:
+        dispatcher-types: REQUEST,ERROR,ASYNC
 
 jwt:
   secret-key: 3hbXrhqhmvPD0bVq9Ce4hxTqALG701J7jRXyfKjqtzDPIlbdJ8YMIfZtHmPlC6Js9JVpELE2tj4KGP1VoCMA4Ya58WGF3Hs1
