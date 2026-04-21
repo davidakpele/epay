@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 @Component
 public class InputValidationFilter extends OncePerRequestFilter {
 
-    // Compiled patterns for better performance
     private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile(
         "(\\.\\./|\\.\\\\|%2e%2e%2f|%2e%2e/|%2e%2e%5c|\\.\\.\\/|/\\.\\./|\\\\\\.\\.\\\\)", 
         Pattern.CASE_INSENSITIVE

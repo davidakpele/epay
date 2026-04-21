@@ -6,7 +6,6 @@ import com.pesco.wallet_service.security.InputValidationFilter;
 import com.pesco.wallet_service.security.RateLimitingFilter;
 import com.pesco.wallet_service.security.SecurityHeadersFilter;
 import com.pesco.wallet_service.util.CustomAuthenticationEntryPoint;
-import com.pesco.wallet_service.util.JwtProperties;
 import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +20,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -74,11 +75,14 @@ public class SecurityConfiguration {
         return source;
     }
 
+    @SuppressWarnings("removal")
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
+            .oauth2ResourceServer(AbstractHttpConfigurer::disable)  
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp.policyDirectives(
                     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
@@ -98,8 +102,6 @@ public class SecurityConfiguration {
             .addFilterBefore(rateLimitingFilter,              UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter,                   UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
-
-                // ── Public — no token required ───────────────────────────────────
                 .requestMatchers(
                     "/wallet/cache/**",
                     "/wallet/internal/debit/maintenance",
@@ -111,32 +113,57 @@ public class SecurityConfiguration {
                     "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**"
                 ).permitAll()
 
-                // ── Admin-only paths ─────────────────────────────────────────────
-                // JWT has "ADMIN" / "SUPER_ADMIN" → filter normalises to
-                // "ROLE_ADMIN" / "ROLE_SUPER_ADMIN" → hasAuthority checks match
                 .requestMatchers("/actuator/**", "/admin/**")
-                    .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
-
-                // ── Wallet — all authenticated roles ────────────────────────────
+                .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
                 .requestMatchers("/wallet/**")
-                    .hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_SUPER_ADMIN")
-
-                // ── Everything else — any valid token ────────────────────────────
+                .hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider)
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(authenticationEntryPoint)
-                .accessDeniedHandler(customAccessDeniedHandler())
-            )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
+                .accessDeniedHandler(customAccessDeniedHandler()));
         return http.build();
     }
 
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/ws/**");
+    public HttpFirewall httpFirewall() {
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+        // Block URL encoding and special characters
+        firewall.setAllowSemicolon(false);
+        firewall.setAllowUrlEncodedPercent(false);
+        firewall.setAllowBackSlash(false);
+        firewall.setAllowUrlEncodedSlash(false);
+        firewall.setAllowUrlEncodedPeriod(false);
+        firewall.setAllowUrlEncodedDoubleSlash(false);
+        firewall.setAllowNull(false);
+        
+        // Block path traversal attempts
+        firewall.setAllowUrlEncodedLineFeed(false);
+        firewall.setAllowUrlEncodedCarriageReturn(false);
+        firewall.setAllowUrlEncodedParagraphSeparator(false);
+        
+        // Restrict HTTP methods
+        firewall.setAllowedHttpMethods(Arrays.asList(
+            "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"
+        ));
+        
+        // Block suspicious patterns in URLs
+        firewall.setAllowedHostnames(hostname -> {
+            String lower = hostname.toLowerCase();
+            return !lower.contains("..") && 
+                   !lower.contains("%2e") && 
+                   !lower.contains("0x");
+        });
+        
+        return firewall;
+    }
+
+    @Bean
+    public org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer webSecurityCustomizer(
+            HttpFirewall firewall
+    ) {
+        return web -> web.httpFirewall(firewall);
     }
 
     @Bean

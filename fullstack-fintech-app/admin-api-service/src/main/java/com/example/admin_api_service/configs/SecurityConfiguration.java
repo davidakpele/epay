@@ -29,7 +29,7 @@ import com.example.admin_api_service.security.RateLimitingFilter;
 import com.example.admin_api_service.security.SecurityHeadersFilter;
 import jakarta.servlet.http.HttpServletResponse;
 
-@Configuration
+@Configuration 
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfiguration {

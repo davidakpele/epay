@@ -1,13 +1,10 @@
 package com.pesco.wallet_service.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pesco.wallet_service.exceptions.JwtAuthenticationException;
-import com.pesco.wallet_service.services.JwtService;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,12 +16,16 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import com.pesco.wallet_service.bootstrap.UsersDetailsDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pesco.wallet_service.dtos.UserDTO;
+import com.pesco.wallet_service.exceptions.JwtAuthenticationException;
+import com.pesco.wallet_service.services.JwtService;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -80,13 +81,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserDetails userDetails = isAdmin
                         ? adminDetailsService.loadUserByUsername(username)
                         : userDetailsService.loadUserByUsername(username);
-
+                
                 if (jwtService.isTokenValid(jwt, userDetails)) {
+
+                    UserDTO userDTO = new UserDTO();
+
+                    if (userDetails instanceof UsersDetailsDTO details) {
+                        userDTO.setId(details.getId());
+                        userDTO.setEmail(details.getEmail());
+                        userDTO.setUsername(details.getUsername());
+                        userDTO.setEnabled(details.isEnabled());
+                    } else if (userDetails instanceof UserDTO dto) {
+                        userDTO = dto;
+                    } else {
+                        userDTO.setUsername(username);
+                    }
+
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
-                                    userDetails, null, authorities);
+                                    userDTO, null, authorities);
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+
                 } else {
                     handleAuthenticationError(response, "Invalid or expired token");
                     return;
