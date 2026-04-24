@@ -156,6 +156,8 @@ management:
       exposure:
         include: health, info, metrics, prometheus, loggers, env
   endpoint:
+    prometheus:
+      enabled: true
     health:
       show-details: when-authorized
   metrics:

@@ -67,6 +67,18 @@ logging:
     org.springframework.web: DEBUG
   
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, loggers, env
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
   tracing:
     sampling:
       probability: 1.0
