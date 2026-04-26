@@ -2,7 +2,7 @@
   "title": "Banking — Java Microservices Overview",
   "uid": "banking-java-overview",
   "schemaVersion": 38,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
   "time": { "from": "now-1h", "to": "now" },
   "tags": ["banking", "java", "microservices"],
@@ -13,7 +13,7 @@
         "label": "Service",
         "type": "query",
         "datasource": { "type": "prometheus", "uid": "-- Default --" },
-        "query": "label_values(up{language=\"java\"}, service)",
+        "query": "label_values(up{job!=\"prometheus\"}, job)",
         "multi": true,
         "includeAll": true,
         "allValue": ".*",
@@ -40,7 +40,8 @@
       },
       "targets": [
         {
-          "expr": "count(up{language=\"java\"} == 1)",
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "count(up{job!=\"prometheus\"} == 1)",
           "legendFormat": "UP"
         }
       ]
@@ -63,7 +64,8 @@
       },
       "targets": [
         {
-          "expr": "count(up{language=\"java\"} == 0) or vector(0)",
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "count(up{job!=\"prometheus\"} == 0) or vector(0)",
           "legendFormat": "DOWN"
         }
       ]
@@ -75,7 +77,8 @@
       "options": { "colorMode": "value", "graphMode": "area" },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{language=\"java\"}[1m]))",
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[1m]))",
           "legendFormat": "RPS"
         }
       ]
@@ -100,85 +103,172 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\",language=\"java\"}[5m])) / sum(rate(http_server_requests_seconds_count{language=\"java\"}[5m]))",
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\", job=~\"$service\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m]))",
           "legendFormat": "Error %"
         }
       ]
     },
     {
+      "type": "stat",
+      "title": "Total Services Monitored",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "options": { "colorMode": "value", "graphMode": "none" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "count(up{job!=\"prometheus\"})",
+          "legendFormat": "Total"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Service Health Status",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 6 },
+      "options": { "sortBy": [{ "displayName": "Status" }] },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              { "id": "displayName", "value": "Status" },
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "1": { "text": "UP", "color": "green" } } },
+                  { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" } } }
+                ]
+              },
+              { "id": "custom.displayMode", "value": "color-background" }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "up{job!=\"prometheus\"}",
+          "legendFormat": "{{job}}",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "renameByName": { "job": "Service", "Value": "Status" } } }
+      ]
+    },
+    {
       "type": "timeseries",
       "title": "Request Rate per Service",
-      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 8 },
       "fieldConfig": { "defaults": { "unit": "reqps" } },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{language=\"java\", service=~\"$service\"}[1m])) by (service)",
-          "legendFormat": "{{ service }}"
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[1m])) by (job)",
+          "legendFormat": "{{ job }}"
         }
       ]
     },
     {
       "type": "timeseries",
       "title": "P99 Latency per Service",
-      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 10, "w": 12, "h": 8 },
       "fieldConfig": { "defaults": { "unit": "s" } },
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{language=\"java\", service=~\"$service\"}[5m])) by (le, service))",
-          "legendFormat": "P99 {{ service }}"
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le, job))",
+          "legendFormat": "P99 {{ job }}"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "JVM Heap Usage per Service",
-      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "title": "JVM Heap Used vs Max",
+      "gridPos": { "x": 0, "y": 18, "w": 12, "h": 8 },
       "fieldConfig": { "defaults": { "unit": "bytes" } },
       "targets": [
         {
-          "expr": "jvm_memory_used_bytes{area=\"heap\", language=\"java\", service=~\"$service\"}",
-          "legendFormat": "{{ service }}"
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "jvm_memory_used_bytes{area=\"heap\", job=~\"$service\"}",
+          "legendFormat": "{{ job }} used"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "jvm_memory_max_bytes{area=\"heap\", job=~\"$service\"}",
+          "legendFormat": "{{ job }} max"
         }
       ]
     },
     {
       "type": "timeseries",
       "title": "Active HTTP Threads per Service",
-      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 18, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "tomcat_threads_busy_threads{language=\"java\", service=~\"$service\"}",
-          "legendFormat": "{{ service }}"
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "tomcat_threads_busy_threads{job=~\"$service\"}",
+          "legendFormat": "{{ job }}"
         }
       ]
     },
     {
       "type": "timeseries",
       "title": "HikariCP Active DB Connections",
-      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 26, "w": 12, "h": 8 },
       "targets": [
         {
-          "expr": "hikaricp_connections_active{language=\"java\", service=~\"$service\"}",
-          "legendFormat": "{{ service }}"
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "hikaricp_connections_active{job=~\"$service\"}",
+          "legendFormat": "{{ job }}"
         }
       ]
     },
     {
       "type": "timeseries",
       "title": "GC Pause Time per Service",
-      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 26, "w": 12, "h": 8 },
       "fieldConfig": { "defaults": { "unit": "s" } },
       "targets": [
         {
-          "expr": "rate(jvm_gc_pause_seconds_sum{language=\"java\", service=~\"$service\"}[5m])",
-          "legendFormat": "{{ service }} [{{ cause }}]"
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "rate(jvm_gc_pause_seconds_sum{job=~\"$service\"}[5m])",
+          "legendFormat": "{{ job }} [{{ cause }}]"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU Usage per Service",
+      "gridPos": { "x": 0, "y": 34, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "process_cpu_usage{job=~\"$service\"}",
+          "legendFormat": "{{ job }}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Open File Descriptors",
+      "gridPos": { "x": 12, "y": 34, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "-- Default --" },
+          "expr": "process_open_fds{job=~\"$service\"}",
+          "legendFormat": "{{ job }}"
         }
       ]
     },
     {
       "type": "logs",
       "title": "Live Logs — Java Services",
-      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 10 },
+      "gridPos": { "x": 0, "y": 42, "w": 24, "h": 10 },
       "datasource": { "type": "loki", "uid": "loki-uid" },
       "options": {
         "showTime": true,
@@ -189,7 +279,8 @@
       },
       "targets": [
         {
-          "expr": "{language=\"java\", service=~\"$service\"} |= ``",
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{service=~\"$service\"} |= ``",
           "legendFormat": ""
         }
       ]
