@@ -57,15 +57,16 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         String clientIp = getClientIp(request);
         String path = request.getRequestURI();
         String method = request.getMethod();
-        
-        // Apply rate limiting based on endpoint
         Bucket bucket;
         String bucketKey;
         
         if (path.contains("/api/auth/login") && "POST".equals(method)) {
             bucketKey = clientIp + "_login";
             bucket = buckets.computeIfAbsent(bucketKey, k -> createLoginBucket());
-        } else if (path.contains("/api/auth/register") && "POST".equals(method)) {
+        }else if (path.startsWith("/actuator")) {
+            filterChain.doFilter(request, response);
+            return;
+        }else if (path.contains("/api/auth/register") && "POST".equals(method)) {
             bucketKey = clientIp + "_register";
             bucket = buckets.computeIfAbsent(bucketKey, k -> createRegisterBucket());
         } else {

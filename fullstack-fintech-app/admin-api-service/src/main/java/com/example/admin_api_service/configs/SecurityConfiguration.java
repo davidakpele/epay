@@ -126,6 +126,8 @@ public class SecurityConfiguration {
                     "/v3/api-docs", "/v3/api-docs/**", "/webjars/**",
                     "/docs", "/docs/**" 
                 ).permitAll()
+                
+                .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "SUPER_ADMIN")
                 .anyRequest().authenticated()
             )

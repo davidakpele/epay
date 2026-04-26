@@ -256,6 +256,8 @@ services:
       - SPRING_REDIS_PORT=6379
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
       - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always 
+      - MANAGEMENT_SECURITY_ENABLED=false 
     depends_on:
       - postgres
       - rabbitmq

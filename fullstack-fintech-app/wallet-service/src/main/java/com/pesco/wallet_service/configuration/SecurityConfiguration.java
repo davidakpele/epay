@@ -111,7 +111,7 @@ public class SecurityConfiguration {
                     "/swagger-ui.html", "/swagger-ui/**",
                     "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**"
                 ).permitAll()
-
+                .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/actuator/**", "/admin/**")
                 .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
                 .requestMatchers("/wallet/**")

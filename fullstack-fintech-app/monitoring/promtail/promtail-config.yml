@@ -23,11 +23,9 @@ scrape_configs:
               - wallet-service
               - deposit-service
               - withdraw-service
-              - revenue-service
               - escrow-service
               - notification-service
               - virtual-card-service
-              - admin-api-service
     relabel_configs:
       # Use the container name as the "service" label
       - source_labels: [ __meta_docker_container_name ]

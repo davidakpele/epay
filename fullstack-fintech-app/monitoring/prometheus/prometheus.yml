@@ -46,15 +46,6 @@ scrape_configs:
           service: withdraw-service
           language: java
 
-  # ── Revenue Service
-  - job_name: revenue-service
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: [ "revenue-service:8083" ]
-        labels:
-          service: revenue-service
-          language: java
-
   # ── Escrow Service
   - job_name: escrow-service
     metrics_path: /actuator/prometheus
@@ -81,16 +72,6 @@ scrape_configs:
         labels:
           service: virtual-card-service
           language: java
-
-  # ── Admin API Service
-  - job_name: admin-api-service
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: [ "admin-api-service:8109" ]
-        labels:
-          service: admin-api-service
-          language: java
-
   # ── Prometheus self-monitoring
   - job_name: prometheus
     static_configs:
