@@ -1,0 +1,198 @@
+{
+  "title": "Banking — Java Microservices Overview",
+  "uid": "banking-java-overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "tags": ["banking", "java", "microservices"],
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "label": "Service",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "-- Default --" },
+        "query": "label_values(up{language=\"java\"}, service)",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Services UP",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "count(up{language=\"java\"} == 1)",
+          "legendFormat": "UP"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Services DOWN",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "count(up{language=\"java\"} == 0) or vector(0)",
+          "legendFormat": "DOWN"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total RPS (all services)",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "options": { "colorMode": "value", "graphMode": "area" },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{language=\"java\"}[1m]))",
+          "legendFormat": "RPS"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Overall Error Rate",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.01 },
+              { "color": "red", "value": 0.05 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\",language=\"java\"}[5m])) / sum(rate(http_server_requests_seconds_count{language=\"java\"}[5m]))",
+          "legendFormat": "Error %"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Rate per Service",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{language=\"java\", service=~\"$service\"}[1m])) by (service)",
+          "legendFormat": "{{ service }}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "P99 Latency per Service",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{language=\"java\", service=~\"$service\"}[5m])) by (le, service))",
+          "legendFormat": "P99 {{ service }}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "JVM Heap Usage per Service",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area=\"heap\", language=\"java\", service=~\"$service\"}",
+          "legendFormat": "{{ service }}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Active HTTP Threads per Service",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "tomcat_threads_busy_threads{language=\"java\", service=~\"$service\"}",
+          "legendFormat": "{{ service }}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HikariCP Active DB Connections",
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "hikaricp_connections_active{language=\"java\", service=~\"$service\"}",
+          "legendFormat": "{{ service }}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "GC Pause Time per Service",
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        {
+          "expr": "rate(jvm_gc_pause_seconds_sum{language=\"java\", service=~\"$service\"}[5m])",
+          "legendFormat": "{{ service }} [{{ cause }}]"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Live Logs — Java Services",
+      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 10 },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true,
+        "enableLogDetails": true
+      },
+      "targets": [
+        {
+          "expr": "{language=\"java\", service=~\"$service\"} |= ``",
+          "legendFormat": ""
+        }
+      ]
+    }
+  ]
+}

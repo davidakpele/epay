@@ -1,0 +1,97 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: production
+    project: banking-microservices
+
+rule_files:
+  - /etc/prometheus/alert.rules.yml
+
+scrape_configs:
+
+  # ── Auth / User Service
+  - job_name: auth-user-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "auth-user-service:8187" ]
+        labels:
+          service: auth-user-service
+          language: java
+
+  # ── Wallet Service
+  - job_name: wallet-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "wallet-service:8035" ]
+        labels:
+          service: wallet-service
+          language: java
+
+  # ── Deposit Service
+  - job_name: deposit-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "deposit-service:8020" ]
+        labels:
+          service: deposit-service
+          language: java
+
+  # ── Withdraw Service
+  - job_name: withdraw-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "withdraw-service:8068" ]
+        labels:
+          service: withdraw-service
+          language: java
+
+  # ── Revenue Service
+  - job_name: revenue-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "revenue-service:8083" ]
+        labels:
+          service: revenue-service
+          language: java
+
+  # ── Escrow Service
+  - job_name: escrow-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "escrow-service:8755" ]
+        labels:
+          service: escrow-service
+          language: java
+
+  # ── Notification Service
+  - job_name: notification-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "notification-service:8079" ]
+        labels:
+          service: notification-service
+          language: java
+
+  # ── Virtual Card Service
+  - job_name: virtual-card-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "virtual-card-service:8037" ]
+        labels:
+          service: virtual-card-service
+          language: java
+
+  # ── Admin API Service
+  - job_name: admin-api-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "admin-api-service:8109" ]
+        labels:
+          service: admin-api-service
+          language: java
+
+  # ── Prometheus self-monitoring
+  - job_name: prometheus
+    static_configs:
+      - targets: [ "localhost:9090" ]
