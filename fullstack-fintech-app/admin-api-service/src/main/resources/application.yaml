@@ -140,7 +140,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, prometheus, loggers, env
+        include: health,info,metrics,prometheus,loggers,env
   endpoint:
     health:
       show-details: when-authorized
