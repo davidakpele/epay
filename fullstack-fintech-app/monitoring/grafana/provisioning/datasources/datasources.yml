@@ -4,22 +4,20 @@ datasources:
 
   - name: Prometheus
     type: prometheus
+    uid: prometheus-uid
     access: proxy
     url: http://prometheus:9090
     isDefault: true
-    editable: false
+    editable: true
     jsonData:
       timeInterval: 15s
-      exemplarTraceIdDestinations:
-        - name: traceID
-          datasourceUid: loki-uid
 
   - name: Loki
     type: loki
     uid: loki-uid
     access: proxy
     url: http://loki:3100
-    editable: false
+    editable: true
     jsonData:
       derivedFields:
         - name: TraceID
