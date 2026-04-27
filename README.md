@@ -314,7 +314,7 @@ Prometheus alert rules are pre-configured for:
 
 ### 📁 Monitoring Directory Structure
 
-```
+```markdown
 monitoring/
 ├── prometheus/
 │   ├── prometheus.yml       # Scrape configs for all Java services
@@ -332,7 +332,6 @@ monitoring/
     └── dashboards/
         └── banking-java-overview.json  # Pre-built dashboard
 ```
-
 ### 🚀 Accessing the Monitoring Stack
 
 ```bash
