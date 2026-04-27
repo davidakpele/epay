@@ -635,7 +635,3 @@ The API gateway routes requests to appropriate microservices and handles:
 For technical support or questions about this microservices architecture, please refer to the individual service documentation or check the service logs for specific issues.
 
 For **security-related inquiries**, please contact the security team directly with detailed information about any concerns or identified vulnerabilities.
-
----
-
-**⚠️ Security Notice**: This system implements multiple layers of security protection. All security features are enabled by default and should not be disabled in production environments without thorough security review.
