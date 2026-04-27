@@ -10,7 +10,7 @@ This project demonstrates a comprehensive Global Banking Payment System designed
 
 ### **🚨 Enhanced Security Framework**
 
-We've implemented a **comprehensive 5-layer security architecture** that provides defense-in-depth protection against modern cyber threats:
+I implemented a **comprehensive 5-layer security architecture** that provides defense-in-depth protection against modern cyber threats:
 
 #### **Layer 1: NGINX Reverse Proxy Security**
 - **WAF Protection**: Blocks SQL injection, XSS, path traversal, and command injection attacks
@@ -130,13 +130,6 @@ External Request → NGINX Security Layer → Spring Security Filters → Applic
             - Implemented OAuth 2.0 authentication for API security.
             - Added input validation, rate limiting, and encryption for data security.
 
-## **Project Details & Tools**
-1. AWS Infrastructure: We leveraged AWS EC2 (Ubuntu 20. T2.large) for development environments and EKS Cluster deployment.
-2. Automated Setup: Utilizing AWS CLI, kubectl, and eksctl, we streamlined EKS Cluster creation and configuration.
-3. Jenkins Integration: We integrated Jenkins with essential plugins (Docker, Kubernetes) for robust CI/CD workflows.
-4. Docker and Kubernetes Orchestration: We orchestrated Docker image builds, repository management, and Kubernetes deployments with seamless integration.
-5. ArgoCD Pipelines: Developing efficient ArgoCD pipelines with webhook triggers, GitOps workflows, and Kubernetes configurations, we leveraged automated sync, declarative deployments, and multi-environment management to optimize microservice deployments and ensure seamless CI/CD integration.
-
 ## **What are the challenges encounter from the starting of the project?**
 
 - `Challenge(1)` Providing real-time updates for wallet in via time, history, ledger, which requires efficient communication between the backend and the front-end.
@@ -185,33 +178,15 @@ External Request → NGINX Security Layer → Spring Security Filters → Applic
     This defense-in-depth approach ensures that even if one layer is bypassed, multiple other layers provide protection.
 
 ## 📋 Services Overview
-
-### Core Infrastructure Services
-| Service | Port | Database | Description |
-|---------|------|----------|-------------|
-| `config-service` | 8088 | ❌ | Centralized configuration management |
-| `service-registry` | 8761 | ❌ | Eureka service discovery and registration |
-
-### Spring Boot Services (Java)
 | Service | Port | Database | Redis | Hazelcast | Description |
 |---------|------|----------|-------|-------------|-------------|
 | `authentication-service` | 8187 | ✅ | ✅ |❌ | JWT-based auth, 2FA, session management |
 | `wallet-service` | 8035 | ✅ | ✅ | ✅ | Multi-currency wallet with gRPC & WebSocket |
-| `maintenance-service` | 8390 | ✅ | ✅ | ❌| System maintenance operations |
+| `resiliences-service` | 8531 | ✅ | ✅ | ❌| This is consist of `{beneficiary-app, bank-collection-app, Blacklist-app, Maintenance-service, History-service}`|
 | `escrow-service` | 8041 | ✅ | ✅ | ❌ | Escrow account management |
 | `deposit-service` | 8020 | ❌ | ❌ | ✅ | Deposit processing|
 | `withdraw-service` | 8068 | ❌ | ✅ | ❌ | Withdrawal processing|
-
-### .Net Services
-| Service | Port | Database | Description |
-|---------|------|----------|-------------|
-| `bank-collection-service` | 8040 | ✅ | Payment gateway integration (Paystack) |
-| `history-service` | 8390 | ✅ | Real-time transaction streaming |
-| `revenue-service` | 8083 | ✅ | Revenue tracking and analytics |
-| `blacklist-service` | 8013 | ✅ | Fraud detection and IP analysis |
-| `beneficiary-service` | 8041 | ✅ | Beneficiary management |
-| `maintenance-service` | 8390 | ✅ | System maintenance & fee processing, checking update from admin command center, check blacklisted wallet, block account, freeze account and the rest |
-| `escrow-service` | 8041 | ✅ | Escrow account management & instant fail transaction refund |
+| `revenue-service` | 8083 | ✅ | ✅ | ❌ | Revenue tracking and analytics |
 
 ### Message Queue Services
 | Service | Port | Database | Description |
@@ -248,10 +223,6 @@ External Request → NGINX Security Layer → Spring Security Filters → Applic
    5. Revenue Recording: Records deducted fees in revenue service as MAINTENANCE_FEE transactions
    6. Audit Logging: Creates comprehensive history records for all operations
    7. Send notification message to users email addresses.
-
-Here's the monitoring section to paste into your README:
-
----
 
 ```markdown
 ## 📊 Monitoring & Observability Stack
@@ -314,7 +285,7 @@ Prometheus alert rules are pre-configured for:
 
 ### 📁 Monitoring Directory Structure
 
-```
+```markdown
 monitoring/
 ├── prometheus/
 │   ├── prometheus.yml       # Scrape configs for all Java services
@@ -332,7 +303,6 @@ monitoring/
     └── dashboards/
         └── banking-java-overview.json  # Pre-built dashboard
 ```
-
 ### 🚀 Accessing the Monitoring Stack
 
 ```bash
@@ -482,146 +452,6 @@ For backend services (example):
 docker compose stop wallet-service
 docker compose up --build wallet-service
 ```
-
-## ⚡ Key Features
-
-### 🔐 **Enhanced Security Features**
-- **Multi-Layered Defense**: 5 independent security layers
-- **Real-Time Attack Blocking**: Pattern-based WAF protection
-- **Comprehensive Monitoring**: Detailed security event logging
-- **Compliance Ready**: PCI DSS and financial industry standards
-
-### 💰 Multi-Currency Support
-- Supports 10+ currencies: USD, EUR, NGN, GBP, JPY, AUD, and more
-- Real-time currency conversion
-- Multi-currency wallet management
-
-### 📱 Real-Time Capabilities
-- Live balance updates via WebSocket
-- Instant transaction notifications
-- Real-time fraud detection
-- Streaming transaction history
-- WebSocket-based communication
-
-### 🏦 Banking Integration
-- Payment gateway integration (Paystack)
-- Bank account verification and linking
-- Secure transaction processing
-
-## 🔄 Service Communication
-
-### gRPC Communication
-- Wallet service uses gRPC for high-performance internal communication
-- Bank collection service implements gRPC for high-volume transactions
-
-### WebSocket Endpoints
-- Real-time balance updates
-- Live transaction notifications
-- Streaming history updates
-
-### REST API
-- Standard HTTP operations for external clients
-- Comprehensive API documentation available per service
-
-## 🐳 Docker & DevOps
-
-### Docker Compose
-```bash
-# Start all services
-docker-compose up -d
-
-# Start specific services
-docker-compose up [service-name]
-
-# View logs
-docker-compose logs -f [service-name]
-```
-
-### Kubernetes Manifests
-Kubernetes deployment manifests are available in the `k8s-manifests/` directory for production deployment.
-
-## 📊 Monitoring & Logging
-
-- Centralized logging through service registry
-- **Security Event Logging**: Detailed attack attempt tracking
-- Real-time monitoring capabilities
-- Comprehensive audit trails
-- Transaction history streaming
-
-## **NGINX Security Configuration**
-
-### **🔒 Advanced Security Features**
-- **Bot Detection & Blocking**: Automated scanner identification and prevention
-- **Rate Limiting**: 5 different zones (auth, api, strict, global, transaction)
-- **Connection Limiting**: Prevents connection exhaustion attacks
-- **Security Headers**: Full CSP, HSTS, XSS protection, CORS policies
-- **IP Whitelisting**: Granular access control
-- **WAF Protection**: SQL injection, XSS, command injection blocking
-- **Suspicious User Agent Blocking**: Identification of malicious clients
-- **Request Method Validation**: HTTP method enforcement
-- **File Access Restrictions**: Sensitive file protection
-- **Real IP Forwarding**: Proper client IP tracking
-
-### **⚡ Performance Optimizations**
-- Connection pooling (keepalive 32)
-- Gzip compression for reduced bandwidth
-- Static & API caching layers
-- Load balancing (least_conn algorithm)
-- Sendfile optimization for static files
-- TCP optimizations (nopush, nodelay)
-- Buffer size tuning for optimal throughput
-
-### **🛡️ Reliability Features**
-- Circuit breaker pattern for service failures
-- Fallback error pages with user-friendly messages
-- Maintenance mode for controlled downtime
-- Comprehensive health checks
-- Service-specific fallback handling
-- Connection timeouts to prevent resource exhaustion
-
-### **📈 Monitoring & Observability**
-- JSON structured logging for easy parsing
-- Sensitive operation auditing
-- NGINX status endpoint for monitoring
-- Health endpoints for service discovery
-- Container health checks
-- Zipkin tracing support for distributed tracing
-
-### **🚪 API Gateway Capabilities**
-- 13 upstream services routing with load balancing
-- WebSocket support for real-time communication
-- Cache control headers for optimal performance
-- Request tracing (X-Request-ID) for debugging
-- Error handling per service with specific fallbacks
-
-### **🎯 Error Handling**
-- Custom error pages (400, 401, 403, 404, 429, 50x, maintenance)
-- Graceful degradation during partial failures
-- Service-specific fallback responses
-- Rate limit responses with retry-after headers
-
-### **🏗️ Infrastructure Features**
-- Docker-ready configuration for containerization
-- IPv6 support for modern networking
-- SSL/TLS ready (commented but prepared)
-- HTTP/2 support for improved performance
-- Worker process optimization for multi-core systems
-
-### **🏦 Banking-Specific Security**
-- Transaction-specific rate limiting
-- Sensitive endpoint auditing
-- Enhanced security for financial operations
-- Multi-level access control for different user roles
-- Compliance-ready headers for regulatory requirements
-
-## 🔒 **Security Compliance**
-
-- **Full Audit Trails**: Complete transaction history for regulatory compliance
-- **Real-Time Transaction Monitoring**: Live fraud detection and prevention
-- **Advanced Fraud Detection**: Machine learning-based anomaly detection
-- **Secure Session Management**: Encrypted session storage and management
-- **Data Protection**: End-to-end encryption for sensitive data
-
 ## 🎯 API Gateway
 
 The API gateway routes requests to appropriate microservices and handles:
@@ -636,7 +466,3 @@ The API gateway routes requests to appropriate microservices and handles:
 For technical support or questions about this microservices architecture, please refer to the individual service documentation or check the service logs for specific issues.
 
 For **security-related inquiries**, please contact the security team directly with detailed information about any concerns or identified vulnerabilities.
-
----
-
-**⚠️ Security Notice**: This system implements multiple layers of security protection. All security features are enabled by default and should not be disabled in production environments without thorough security review.
