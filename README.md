@@ -218,7 +218,6 @@ External Request → NGINX Security Layer → Spring Security Filters → Applic
 |---------|------|----------|-------------|
 | `notification-service` | 8079 | ❌ | Real-time notifications via RabbitMQ |
 
-
 ### 🔧 Maintenance Service Overview
 - The **Maintenance Service** (built in .net) handles automated system maintenance operations including:
 
@@ -249,6 +248,115 @@ External Request → NGINX Security Layer → Spring Security Filters → Applic
    5. Revenue Recording: Records deducted fees in revenue service as MAINTENANCE_FEE transactions
    6. Audit Logging: Creates comprehensive history records for all operations
    7. Send notification message to users email addresses.
+
+Here's the monitoring section to paste into your README:
+
+---
+
+```markdown
+## 📊 Monitoring & Observability Stack
+
+A full observability stack is integrated into the platform, providing real-time metrics, distributed tracing, and centralized log aggregation across all Java microservices.
+
+### 🔭 Stack Overview
+
+| Tool | Port | Purpose |
+|------|------|---------|
+| **Prometheus** | 9091 | Metrics collection & alerting |
+| **Grafana** | 3001 | Dashboards & visualization |
+| **Loki** | 3100 | Log aggregation backend |
+| **Promtail** | — | Log shipping agent |
+
+### 📡 Services Monitored
+
+All Java/Spring Boot services expose metrics via `/actuator/prometheus` and are scraped by Prometheus every 15 seconds:
+
+| Service | Port |
+|---------|------|
+| `auth-user-service` | 8187 |
+| `wallet-service` | 8035 |
+| `deposit-service` | 8020 |
+| `withdraw-service` | 8068 |
+| `escrow-service` | 8755 |
+| `notification-service` | 8079 |
+| `virtual-card-service` | 8037 |
+| `admin-api-service` | 8109 |
+
+> **Note:** `revenue-service` (Golang) and `resiliences-service` (.NET) are excluded from JVM monitoring.
+
+### 📈 Grafana Dashboard — Banking Java Microservices Overview
+
+The pre-provisioned dashboard (`Banking` folder) includes:
+
+- **Services UP / DOWN** — real-time health status of all services
+- **Service Health Table** — per-service UP/DOWN status at a glance
+- **Request Rate per Service** — requests per second broken down by service
+- **P99 Latency per Service** — 99th percentile response times
+- **JVM Heap Usage** — memory consumption per service
+- **CPU Usage** — process CPU utilization per service
+- **Active HTTP Threads** — Tomcat thread pool usage
+- **HikariCP DB Connections** — active database connection pool usage
+- **GC Pause Time** — garbage collection pressure per service
+- **Open File Descriptors** — OS-level resource usage
+
+### 🚨 Alerting Rules
+
+Prometheus alert rules are pre-configured for:
+
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| `ServiceDown` | Service unreachable for > 1 min | Critical |
+| `HighRequestLatencyP99` | P99 latency > 2s for 5 min | Warning |
+| `HighErrorRate` | 5xx error rate > 5% for 3 min | Critical |
+| `JvmMemoryHighUsage` | Heap usage > 85% for 5 min | Warning |
+| `JvmGcPressureHigh` | GC consuming > 10% of time | Warning |
+| `HikariConnectionPoolExhausted` | > 5 threads waiting for DB connection | Critical |
+
+### 📁 Monitoring Directory Structure
+
+```
+monitoring/
+├── prometheus/
+│   ├── prometheus.yml       # Scrape configs for all Java services
+│   └── alert.rules.yml      # Alerting rules
+├── loki/
+│   └── loki-config.yml      # Loki log storage config (14-day retention)
+├── promtail/
+│   └── promtail-config.yml  # Docker log scraping & Spring Boot log parsing
+└── grafana/
+    ├── provisioning/
+    │   ├── datasources/
+    │   │   └── datasources.yml   # Auto-provisions Prometheus & Loki
+    │   └── dashboards/
+    │       └── dashboards.yml    # Points Grafana to dashboard files
+    └── dashboards/
+        └── banking-java-overview.json  # Pre-built dashboard
+```
+
+### 🚀 Accessing the Monitoring Stack
+
+```bash
+# Start everything
+docker compose up -d
+
+# Grafana — dashboards & visualization
+http://localhost:3001  (admin / admin)
+
+# Prometheus — metrics & targets
+http://localhost:9091
+
+# Check all scrape targets are UP
+http://localhost:9091/targets
+```
+
+### ⚙️ How It Works
+
+1. Each Spring Boot service exposes `/actuator/prometheus` with JVM, HTTP, and DB metrics
+2. **Prometheus** scrapes all services every 15 seconds and evaluates alert rules
+3. **Promtail** collects Docker container logs from all Java services and ships them to **Loki**
+4. **Grafana** auto-provisions both datasources and the dashboard on startup — no manual setup required
+5. Logs are retained for **14 days**, metrics for **15 days**
+```
 
 ## 🔧 Prerequisites
 
