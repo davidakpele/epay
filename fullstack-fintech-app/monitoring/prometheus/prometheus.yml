@@ -63,8 +63,6 @@ scrape_configs:
         labels:
           service: notification-service
           language: java
-
-  # ── Virtual Card Service
   - job_name: virtual-card-service
     metrics_path: /actuator/prometheus
     static_configs:
@@ -72,7 +70,6 @@ scrape_configs:
         labels:
           service: virtual-card-service
           language: java
-  # ── Prometheus self-monitoring
   - job_name: prometheus
     static_configs:
       - targets: [ "localhost:9090" ]

@@ -253,8 +253,6 @@ All Java/Spring Boot services expose metrics via `/actuator/prometheus` and are 
 | `virtual-card-service` | 8037 |
 | `admin-api-service` | 8109 |
 
-> **Note:** `revenue-service` (Golang) and `resiliences-service` (.NET) are excluded from JVM monitoring.
-
 ### 📈 Grafana Dashboard — Banking Java Microservices Overview
 
 The pre-provisioned dashboard (`Banking` folder) includes:

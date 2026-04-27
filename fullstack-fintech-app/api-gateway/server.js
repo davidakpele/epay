@@ -12,8 +12,6 @@ const { HttpLogger } = require('zipkin-transport-http');
 const CLSContext = require('zipkin-context-cls');
 const zipkinMiddleware = require('zipkin-instrumentation-express').expressMiddleware;
 
-// ==================== Configuration ====================
-
 const serviceName = 'node-api-service';
 const zipkinBaseUrl = process.env.ZIPKIN_BASE_URL || 'http://localhost:9411'; 
 const ctxImpl = new CLSContext('zipkin');
@@ -30,7 +28,6 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000/v1';
 const BACKEND_WS_URL = process.env.BACKEND_WS_URL || 'ws://localhost:8000/v1';
 const RATE_LIMIT_PER_MINUTE = parseInt(process.env.RATE_LIMIT_PER_MINUTE || '100', 10);
 
-// ==================== Custom Zipkin Axios Wrapper ====================
 const upload = multer({ storage: multer.memoryStorage() });
 
 function createTracedAxiosClient(axiosInstance, tracer, remoteServiceName) {
@@ -38,8 +35,6 @@ function createTracedAxiosClient(axiosInstance, tracer, remoteServiceName) {
         return tracer.scoped(() => {
             const traceId = tracer.createChildId();
             tracer.setId(traceId);
-            
-            // Record RPC call
             tracer.recordServiceName(serviceName);
             tracer.recordRpc('http.request');
             tracer.recordBinary('http.method', config.method?.toUpperCase() || 'GET');
@@ -47,7 +42,6 @@ function createTracedAxiosClient(axiosInstance, tracer, remoteServiceName) {
             tracer.recordBinary('peer.service', remoteServiceName);
             tracer.recordAnnotation('cs'); 
             
-            // Add B3 headers for trace propagation
             if (!config.headers) config.headers = {};
             config.headers['X-B3-TraceId'] = traceId.traceId;
             config.headers['X-B3-SpanId'] = traceId.spanId;
@@ -76,13 +70,12 @@ function createTracedAxiosClient(axiosInstance, tracer, remoteServiceName) {
                     tracer.recordBinary('error', true);
                     tracer.recordBinary('error.message', error.message);
                     tracer.recordBinary('error.code', error.code || 'UNKNOWN');
-                    tracer.recordAnnotation('cr'); // Client receive (with error)
+                    tracer.recordAnnotation('cr'); 
                     throw error;
                 });
         });
     };
 
-    // Support both direct calls and method shortcuts
     tracedClient.get = (url, config = {}) => tracedClient({ ...config, method: 'get', url });
     tracedClient.post = (url, data, config = {}) => tracedClient({ ...config, method: 'post', url, data });
     tracedClient.put = (url, data, config = {}) => tracedClient({ ...config, method: 'put', url, data });
@@ -93,8 +86,6 @@ function createTracedAxiosClient(axiosInstance, tracer, remoteServiceName) {
 
     return tracedClient;
 }
-
-// ==================== Security Classes ====================
 
 class RateLimiter {
     constructor(maxRequestsPerMinute) {
@@ -554,8 +545,6 @@ class InFlightTracker {
     }
 }
 
-// ==================== Utility Functions ====================
-
 function getRealClientIp(req) {
     const xff = req.headers['x-forwarded-for'];
     if (xff) {
@@ -618,8 +607,6 @@ function notFoundResponse(res, forwardedTo) {
     });
 }
 
-// ==================== Initialize Components ====================
-
 const rateLimiter = new RateLimiter(RATE_LIMIT_PER_MINUTE);
 const securityScanner = new SecurityScanner();
 const wafRules = new WAFRules();
@@ -628,7 +615,6 @@ const deduplicator = new RequestDeduplicator();
 const nonceValidator = new NonceValidator();
 const inFlightTracker = new InFlightTracker();
 
-// Create base axios client
 const baseAxiosClient = axios.create({
     timeout: 30000,
     headers: {
@@ -637,24 +623,17 @@ const baseAxiosClient = axios.create({
     validateStatus: () => true,
 });
 
-// Wrap it with Zipkin tracing
 const axiosClient = createTracedAxiosClient(baseAxiosClient, tracer, 'backend-service');
-
-// ==================== Express App Setup ====================
 
 const app = express();
 const server = http.createServer(app);
 
-// Apply Zipkin middleware FIRST
 app.use(zipkinMiddleware({ tracer }));
 
-// Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.set('trust proxy', true);
-
-// ==================== Security Middleware with Zipkin Tracing ====================
 
 async function securityMiddleware(req, res, next) {
     tracer.scoped(() => {
@@ -673,8 +652,6 @@ async function securityMiddleware(req, res, next) {
         const headers = req.headers;
         const idempotencyKey = headers['x-idempotency-key'];
         const contentLength = parseInt(headers['content-length'] || '0', 10);
-
-        // WAF check
         const wafResult = wafRules.validateRequest(method, headers, contentLength);
         if (wafResult) {
             console.warn(`WAF blocked request from ${clientIp}: ${wafResult.error} - ${wafResult.reason}`);
@@ -685,7 +662,6 @@ async function securityMiddleware(req, res, next) {
             return blockedResponse(res, wafResult.error, wafResult.reason);
         }
 
-        // Nonce check
         const nonce = headers['x-request-nonce'];
         if (nonce) {
             const nonceResult = nonceValidator.validateNonce(nonce);
@@ -697,7 +673,6 @@ async function securityMiddleware(req, res, next) {
             tracer.recordBinary('security.nonce.valid', true);
         }
 
-        // Idempotency check
         if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && idempotencyKey) {
             const cached = deduplicator.checkDuplicate(idempotencyKey);
             if (cached) {
@@ -711,7 +686,6 @@ async function securityMiddleware(req, res, next) {
             tracer.recordBinary('idempotency.key', idempotencyKey);
         }
 
-        // In-flight duplicate check — mutations only, scoped per IP
         if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
             const requestHash = inFlightTracker.generateRequestHash(method, uri, req.body, clientIp);
 
@@ -725,13 +699,9 @@ async function securityMiddleware(req, res, next) {
             inFlightTracker.markInFlight(requestHash);
             req.requestHash = requestHash;
         }
-
-        // Security scan
         const scanResult = securityScanner.scanRequest(method, uri, headers, req.body);
         if (scanResult) {
             console.warn(`Request blocked from IP ${clientIp}: ${scanResult.error} - ${scanResult.reason}`);
-
-            // Clean up in-flight entry if we marked one
             if (req.requestHash) {
                 inFlightTracker.completeRequest(req.requestHash);
             }
@@ -761,7 +731,6 @@ async function securityMiddleware(req, res, next) {
     });
 }
 
-// Response interceptor
 app.use((req, res, next) => {
     const originalJson = res.json;
     res.json = function(data) {
@@ -783,7 +752,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// ==================== API Routes ====================
 app.post('/api/settings/upload-profile-image/:id', 
     securityMiddleware,
     upload.single('image'),
@@ -833,7 +801,6 @@ app.post('/api/settings/upload-profile-image/:id',
     }
 );
 
-// Serve uploaded profile images
 app.get('/api/uploads/images/:filename', async (req, res) => {
     try {
         const { filename } = req.params;
@@ -859,7 +826,6 @@ app.use('/api', securityMiddleware);
 app.get('/api/health', async (req, res) => {
     let backendReachable = false;
     try {
-        // Use a valid health endpoint instead of just the base URL
         const healthUrl = `${BACKEND_URL}/health`;
         await axiosClient.get(healthUrl);
         backendReachable = true;
@@ -884,7 +850,6 @@ app.get('/api/test', async (req, res) => {
     console.log(`Testing connection to backend: ${BACKEND_URL}`);
     
     try {
-        // Use a valid test endpoint
         const testUrl = `${BACKEND_URL}/health`;
         const response = await axiosClient.get(testUrl);
         console.log(`Backend is reachable. Status: ${response.status}`);
@@ -939,8 +904,6 @@ app.get('/api/security/metrics', (req, res) => {
         trace_id: req.header('X-B3-TraceId') || 'N/A',
     });
 });
-
-// ==================== WebSocket Proxy with Tracing ====================
 
 const wss = new WebSocket.Server({ noServer: true });
 
@@ -1047,7 +1010,6 @@ wss.on('connection', (clientSocket, request) => {
             
             console.log(`Client ${clientIp} closed: ${code} - ${reason}`);
             if (backendSocket.readyState === WebSocket.OPEN) {
-                // Normalize close code - reserved codes (1005, 1006, 1015) cannot be sent
                 const normalizedCode = (code === 1005 || code === 1006 || code === 1015) ? 1000 : code;
                 backendSocket.close(normalizedCode, reason);
             }
@@ -1107,7 +1069,6 @@ wss.on('connection', (clientSocket, request) => {
         
         console.log(`Backend closed to client ${clientIp}: ${code} - ${reason}`);
         if (clientSocket.readyState === WebSocket.OPEN) {
-            // Normalize close code - reserved codes (1005, 1006, 1015) cannot be sent
             const normalizedCode = (code === 1005 || code === 1006 || code === 1015) ? 1000 : code;
             clientSocket.close(normalizedCode, reason);
         }
@@ -1126,8 +1087,6 @@ wss.on('connection', (clientSocket, request) => {
         }
     });
 });
-
-// ==================== Proxy Handler (Fallback) ====================
 
 app.use('/api', async (req, res) => {
     const method = req.method;
@@ -1177,7 +1136,6 @@ app.use('/api', async (req, res) => {
         console.log(`Backend responded with status: ${response.status}`);
         
         if (response.status === 404) {
-            // If backend sent a structured error body, forward it directly
             if (response.data && typeof response.data === 'object') {
                 addSecurityHeaders(res);
                 return res.status(404).json(response.data);
@@ -1230,8 +1188,6 @@ app.use('/api', async (req, res) => {
     }
 });
 
-// ==================== Cleanup Intervals ====================
-
 setInterval(() => {
     rateLimiter.cleanup();
     deduplicator.cleanupExpired();
@@ -1239,12 +1195,9 @@ setInterval(() => {
     inFlightTracker.cleanupExpired();
 }, 60000);
 
-// ==================== Server Startup ====================
-
 (async () => {
     console.log('Testing backend connection on startup...');
     try {
-        // Use a valid health endpoint for startup check
         const healthUrl = `${BACKEND_URL}/health`;
         const response = await axiosClient.get(healthUrl);
         console.log(`Backend is reachable at ${BACKEND_URL} (Status: ${response.status})`);
