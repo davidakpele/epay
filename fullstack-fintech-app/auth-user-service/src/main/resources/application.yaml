@@ -150,12 +150,16 @@ jwt:
     expiration: 900000
   refresh-token:
     expiration: 604800000
+
+
 management:
   endpoints:
     web:
       exposure:
         include: health, info, metrics, prometheus, loggers, env
   endpoint:
+    prometheus:
+      enabled: true
     health:
       show-details: when-authorized
   metrics:
@@ -164,6 +168,11 @@ management:
   tracing:
     sampling:
       probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
+
+
 file:
   upload-dir: ${FILE_UPLOAD_DIR:/var/www/uploads/images}
   max-file-size: 50MB

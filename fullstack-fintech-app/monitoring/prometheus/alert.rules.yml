@@ -1,0 +1,107 @@
+groups:
+
+  - name: java-service-availability
+    rules:
+
+      - alert: ServiceDown
+        expr: up{language="java"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Java service {{ $labels.service }} is DOWN"
+          description: "Prometheus cannot scrape {{ $labels.service }}. It has been unreachable for more than 1 minute."
+
+      - alert: ActuatorHealthDegraded
+        expr: |
+          http_server_requests_seconds_count{
+            uri="/actuator/health",
+            status=~"5..",
+            language="java"
+          } > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Actuator health check returning 5xx on {{ $labels.service }}"
+          description: "Service {{ $labels.service }} actuator health endpoint is returning errors."
+
+  - name: java-service-performance
+    rules:
+
+      - alert: HighRequestLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_server_requests_seconds_bucket{language="java"}[5m])) by (le, service, uri)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High P99 latency on {{ $labels.service }}"
+          description: "P99 request latency on {{ $labels.service }} ({{ $labels.uri }}) is above 2s."
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status=~"5..",language="java"}[5m])) by (service)
+          /
+          sum(rate(http_server_requests_seconds_count{language="java"}[5m])) by (service)
+          > 0.05
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "More than 5% of requests on {{ $labels.service }} are returning 5xx errors."
+
+  - name: java-jvm
+    rules:
+
+      - alert: JvmMemoryHighUsage
+        expr: |
+          jvm_memory_used_bytes{area="heap",language="java"}
+          /
+          jvm_memory_max_bytes{area="heap",language="java"}
+          > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High JVM heap usage on {{ $labels.service }}"
+          description: "JVM heap usage on {{ $labels.service }} is above 85% for 5 minutes."
+
+      - alert: JvmGcPressureHigh
+        expr: |
+          rate(jvm_gc_pause_seconds_sum{language="java"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High GC pause time on {{ $labels.service }}"
+          description: "GC pause time on {{ $labels.service }} is consuming over 10% of time."
+
+      - alert: TooManyOpenFiles
+        expr: |
+          process_open_fds{language="java"}
+          /
+          process_max_fds{language="java"}
+          > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High open file descriptors on {{ $labels.service }}"
+          description: "{{ $labels.service }} is using more than 80% of allowed file descriptors."
+
+  - name: java-connection-pools
+    rules:
+
+      - alert: HikariConnectionPoolExhausted
+        expr: |
+          hikaricp_connections_pending{language="java"} > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "DB connection pool exhausted on {{ $labels.service }}"
+          description: "{{ $labels.service }} has {{ $value }} threads waiting for a DB connection."

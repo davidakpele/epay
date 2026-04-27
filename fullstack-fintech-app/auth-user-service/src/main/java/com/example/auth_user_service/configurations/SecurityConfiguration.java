@@ -151,6 +151,7 @@ public class SecurityConfiguration {
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/auth/**", "/error/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/user/username/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/user/{id}").permitAll()

@@ -144,6 +144,7 @@ public class SecurityConfiguration {
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers(
                     "/actuator/health",
                     "/health",
@@ -153,7 +154,7 @@ public class SecurityConfiguration {
                     "/swagger-resources/**",
                     "/webjars/**"
                 ).permitAll()
-                .requestMatchers("/actuator/**", "/admin/**")
+                .requestMatchers("/admin/**")
                 .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
                 .anyRequest().authenticated()
             )

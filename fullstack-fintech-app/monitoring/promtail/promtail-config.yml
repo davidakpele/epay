@@ -1,0 +1,70 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: warn
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+
+  # ── Collect logs from all banking Java service containers
+  - job_name: banking-java-services
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 10s
+        filters:
+          - name: name
+            values:
+              - auth-user-service
+              - wallet-service
+              - deposit-service
+              - withdraw-service
+              - escrow-service
+              - notification-service
+              - virtual-card-service
+    relabel_configs:
+      # Use the container name as the "service" label
+      - source_labels: [ __meta_docker_container_name ]
+        regex: /(.*)
+        target_label: service
+
+      # Keep the container ID for cross-referencing
+      - source_labels: [ __meta_docker_container_id ]
+        target_label: container_id
+
+      # Tag all as java
+      - target_label: language
+        replacement: java
+
+      # Tag environment
+      - target_label: environment
+        replacement: production
+
+    pipeline_stages:
+
+      # ── Parse Spring Boot / Java log format
+      # Example: 2025-04-26 12:34:56.789  INFO 1 --- [main] c.example.MyService : Started
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}[.,]\d+)\s+(?P<level>ERROR|WARN|INFO|DEBUG|TRACE)\s+(?P<pid>\d+)\s+---\s+\[(?P<thread>[^\]]+)\]\s+(?P<logger>\S+)\s+:\s+(?P<message>.*)$'
+
+      # Promote level to a label for fast filtering in Grafana
+      - labels:
+          level:
+
+      # Drop DEBUG logs to reduce Loki ingest volume
+      - drop:
+          expression: '.*'
+          if: 'level == "DEBUG"'
+
+      # Extract trace/span IDs if Zipkin/Micrometer Tracing is used
+      - regex:
+          expression: '.*\[(?P<trace_id>[0-9a-f]{16,32}),(?P<span_id>[0-9a-f]{16})\].*'
+          source: message
+
+      - labels:
+          trace_id:
+          span_id:

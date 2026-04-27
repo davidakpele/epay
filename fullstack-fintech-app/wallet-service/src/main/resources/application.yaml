@@ -120,11 +120,21 @@ logging:
 spring.sql.init.mode: never
   
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, loggers, env
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
   tracing:
-    enabled: false
     sampling:
       probability: 1.0
   zipkin:
     tracing:
       endpoint: http://zipkin:9411/api/v2/spans
-      enabled: false

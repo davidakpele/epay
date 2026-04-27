@@ -1,5 +1,7 @@
 services:
-  # Database
+  # ===========================
+  # Infrastructure
+  # ===========================
   postgres:
     image: postgres:15-alpine
     container_name: banking-postgres
@@ -40,7 +42,6 @@ services:
     networks:
       - banking-network
 
-  # Redis
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -88,7 +89,93 @@ services:
       - banking-network
 
   # ===========================
-  # NGINX Gateway Service
+  # Observability Stack
+  # ===========================
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: prometheus
+    ports:
+      - "9091:9090"       # Access at http://localhost:9091
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+      - "--log.level=warn"
+    depends_on:
+      - auth-user-service
+      - wallet-service
+      - deposit-service
+      - withdraw-service
+      - revenue-service
+      - escrow-service
+      - notification-service
+      - virtual-card-service
+      - admin-api-service
+    restart: unless-stopped
+    networks:
+      - banking-network
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    ports:
+      - "3001:3000"       # 3000 is taken by frontend — access at http://localhost:3001
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_DOMAIN: localhost
+      GF_SERVER_ROOT_URL: http://localhost:3001
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_LOG_LEVEL: warn
+      GF_FEATURE_TOGGLES_ENABLE: publicDashboards
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
+    networks:
+      - banking-network
+
+  loki:
+    image: grafana/loki:2.9.7
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - banking-network
+
+  promtail:
+    image: grafana/promtail:2.9.7
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - banking-network
+
+  # ===========================
+  # NGINX Gateway
   # ===========================
   nginx:
     image: nginx:alpine
@@ -123,7 +210,7 @@ services:
       - revenue-service
       - notification-service
       - escrow-service
-      - admin-api-service 
+      - admin-api-service
       - frontend
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
@@ -150,8 +237,10 @@ services:
         max-size: "10m"
         max-file: "3"
         labels: "service=nginx"
- 
+
+  # ===========================
   # Spring Boot Services
+  # =========================== 
   auth-user-service:
     build: ./auth-user-service
     container_name: auth-user-service
@@ -165,6 +254,10 @@ services:
       - FILE_UPLOAD_DIR=/var/www/uploads/images
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always 
+      - MANAGEMENT_SECURITY_ENABLED=false 
     depends_on:
       - postgres
       - rabbitmq
@@ -172,7 +265,7 @@ services:
       - wallet-service
       - redis
     networks:
-    - banking-network
+      - banking-network
 
   withdraw-service:
     build: ./withdraw-service
@@ -180,6 +273,9 @@ services:
     image: davidakpele/withdraw-service:latest
     ports:
       - "8068:8068"
+    environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
     depends_on:
       - wallet-service
       - resiliences-service
@@ -197,10 +293,11 @@ services:
     image: davidakpele/wallet-service:latest
     ports:
       - "8035:8035"
-      - "9090:9090"
     environment:
       - SPRING_REDIS_HOST=redis
-      - SPRING_REDIS_PORT=6379 
+      - SPRING_REDIS_PORT=6379
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
     depends_on:
       - postgres
       - resiliences-service
@@ -221,11 +318,14 @@ services:
     image: davidakpele/deposit-service:latest
     ports:
       - "8020:8020"
+    environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
     depends_on:
       - resiliences-service
       - wallet-service
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8035/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8020/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -254,15 +354,17 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/pesco_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8037/actuator/health"]  # Fixed port
+      test: ["CMD", "curl", "-f", "http://localhost:8037/actuator/health"]
       interval: 30s
       timeout: 10s
-      retries: 5  # Increased retries
-      start_period: 90s  # More time for Spring Boot startup
+      retries: 5
+      start_period: 90s
     networks:
       - banking-network
-  
+
   revenue-service:
     build: ./revenue-service
     container_name: revenue-service
@@ -275,14 +377,14 @@ services:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health || exit 1"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8083/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     networks:
       - banking-network
- 
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -303,13 +405,16 @@ services:
       - zipkin
     networks:
       - banking-network
-     
+
   escrow-service:
     build: ./escrow-service
     container_name: escrow-service
     image: davidakpele/escrow-service:latest
     ports:
       - "8755:8755"
+    environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
     depends_on:
       - postgres
       - notification-service
@@ -327,22 +432,24 @@ services:
       - "8079:8079"
     depends_on:
       rabbitmq:
-        condition: service_healthy 
+        condition: service_healthy
     environment:
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+      MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED: "true"
     networks:
       - banking-network
-  
+
   resiliences-service:
     restart: unless-stopped
     build: ./resiliences-service
-    container_name: resiliences-service  
+    container_name: resiliences-service
     image: davidakpele/resiliences-service:latest
     ports:
-      - "8531:8531"  
+      - "8531:8531"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8531
@@ -379,6 +486,8 @@ services:
       - FILE_UPLOAD_DIR=/var/www/uploads/images
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
     depends_on:
       - postgres
       - notification-service
@@ -392,7 +501,7 @@ services:
       - virtual-card-service
       - redis
     networks:
-    - banking-network
+      - banking-network
 
   frontend:
     build: ./frontend
@@ -402,11 +511,14 @@ services:
       - "3000:3000"
     networks:
       - banking-network
- 
+
 volumes:
   postgres_data:
   mysql_data:
   redis_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
   nginx_logs:
     driver: local
   nginx_cache:

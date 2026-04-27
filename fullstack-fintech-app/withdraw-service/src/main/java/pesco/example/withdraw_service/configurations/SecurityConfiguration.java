@@ -23,7 +23,6 @@ import io.jsonwebtoken.security.Keys;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -31,12 +30,19 @@ public class SecurityConfiguration {
     private final JwtProperties jwtProperties;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
+    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider, JwtProperties jwtProperties, CustomAccessDeniedHandler customAccessDeniedHandler) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.authenticationProvider = authenticationProvider;
+        this.jwtProperties = jwtProperties;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> {
-                    // auth.requestMatchers("/withdraw/**").permitAll();
+                    auth.requestMatchers("/actuator/**").permitAll();
                     auth.requestMatchers("/css/**", "/js/**", "/images/**").permitAll();
                     auth.requestMatchers("/access-denied").permitAll();
                     auth.anyRequest().authenticated();
