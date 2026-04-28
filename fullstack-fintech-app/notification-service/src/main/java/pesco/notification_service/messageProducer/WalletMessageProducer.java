@@ -154,8 +154,6 @@ public class WalletMessageProducer {
                 statement_of_account
             );
         } catch (AmqpException e) {
-            System.out.println("[ERROR] Failed to send account statement to RabbitMQ");
-            System.out.println("Error Message: " + e.getMessage());
             e.printStackTrace();
             throw e;
         }
