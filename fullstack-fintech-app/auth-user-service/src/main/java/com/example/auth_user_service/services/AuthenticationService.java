@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.Optional; 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -44,7 +47,7 @@ import com.example.auth_user_service.repositories.UsersRepository;
 import com.example.auth_user_service.repositories.VerificationTokenRepository;
 import com.example.auth_user_service.responses.AuthResponse;
 import com.example.auth_user_service.responses.VerificationTokenResult;
-
+import java.util.concurrent.TimeoutException; 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -89,13 +92,12 @@ public class AuthenticationService implements IAuthenticationService{
 
         boolean isEmail = "email".equals(request.getRegMode());
 
+        createWallet(user.getId());
+
         if (isEmail) {
             authorizeUserVerificationService.save(nextUserId, KeyWrapper.generateUniqueAuthorizeUserId());
-            walletServiceClient.createUserWallet(user.getId());
             activateUserRecord(user);
         } else {
-
-            CompletableFuture.runAsync(() -> walletServiceClient.createUserWallet(user.getId()));
             activateUserRecord(user);
             messagingService.invalidateOTP(identifier);
             ContactMethod method = "WHATSAPP".equals(request.getVerificationMethod())
