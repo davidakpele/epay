@@ -65,26 +65,14 @@ public class AuthenticationMessageProducer {
      * @param otp
      */
     public void sendRegistrationOtpMessage(String email, String otp) {
-        System.out.println("=== WalletMessageProducer: Starting to send registration OTP ===");
-        System.out.println("Email: " + email);
-        System.out.println("Message: " + otp);
-        
         RegistrationOtpMessage request = new RegistrationOtpMessage(email, otp);
-        
-        System.out.println("Created RegistrationOtpMessage object: " + request);
-        System.out.println("Exchange: " + RabbitMQConfig.AUTH_EXCHANGE);
-        System.out.println("Routing Key: " + RabbitMQConfig.ROUTING_KEY_REGISTRATION_OTP);
-        
         try {
             rabbitTemplate.convertAndSend(
                 RabbitMQConfig.AUTH_EXCHANGE, 
                 RabbitMQConfig.ROUTING_KEY_REGISTRATION_OTP, 
                 request
             );
-            System.out.println("=== Message sent to RabbitMQ successfully ===");
         } catch (AmqpException e) {
-            System.out.println("=== FAILED to send message to RabbitMQ ===");
-            System.out.println("Error: " + e.getMessage());
             throw e;
         }
     }
@@ -97,24 +85,14 @@ public class AuthenticationMessageProducer {
      * @param message
      */
     public void sendWelcomeNotification(String email, String username, String message) {
-        System.out.println("=== AuthenticationMessageProducer: Starting to send welcome message ===");
-        System.out.println("Email: " + email);
-        System.out.println("Username: " + username);
-        System.out.println("Message: " + message);
         WelcomeMessagePayload request = new WelcomeMessagePayload(email, username, message);
-        System.out.println("Created WelcomeMessagePayload object: " + request);
-        System.out.println("Exchange: " + RabbitMQConfig.AUTH_EXCHANGE);
-        System.out.println("Routing Key: " + RabbitMQConfig.ROUTING_KEY_WELCOME_MESSAGE);
         try {
             rabbitTemplate.convertAndSend(
                 RabbitMQConfig.AUTH_EXCHANGE, 
                 RabbitMQConfig.ROUTING_KEY_WELCOME_MESSAGE, 
                 request
             );
-            System.out.println("=== Welcome message sent to RabbitMQ successfully ===");
         } catch (AmqpException e) {
-            System.out.println("=== FAILED to send welcome message to RabbitMQ ===");
-            System.out.println("Error: " + e.getMessage());
             throw e;
         }
     }
