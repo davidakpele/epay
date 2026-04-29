@@ -101,9 +101,6 @@ External Request → NGINX Security Layer → Spring Security Filters → Applic
 ## 🔗 Branch Per Microservice Strategy
 - Each microservice was meticulously managed with its own branch, optimizing version control, collaboration, and maintenance.
 
-### 🛠️ Jenkinsfile Integration
-- Utilized Jenkins to integrate Jenkinsfile into each microservice branch, enabling tailored pipelines and enhancing our CI/CD workflows.
-
 ### 🔁 Automated Pipeline Triggering
 - Implemented multibranch generic webhook triggers for automated microservice CI pipeline activation, reducing manual intervention and accelerating feedback loops.
 
@@ -238,21 +235,6 @@ A full observability stack is integrated into the platform, providing real-time 
 | **Loki** | 3100 | Log aggregation backend |
 | **Promtail** | — | Log shipping agent |
 
-### 📡 Services Monitored
-
-All Java/Spring Boot services expose metrics via `/actuator/prometheus` and are scraped by Prometheus every 15 seconds:
-
-| Service | Port |
-|---------|------|
-| `auth-user-service` | 8187 |
-| `wallet-service` | 8035 |
-| `deposit-service` | 8020 |
-| `withdraw-service` | 8068 |
-| `escrow-service` | 8755 |
-| `notification-service` | 8079 |
-| `virtual-card-service` | 8037 |
-| `admin-api-service` | 8109 |
-
 ### 📈 Grafana Dashboard — Banking Java Microservices Overview
 
 The pre-provisioned dashboard (`Banking` folder) includes:
@@ -325,19 +307,6 @@ http://localhost:9091/targets
 4. **Grafana** auto-provisions both datasources and the dashboard on startup — no manual setup required
 5. Logs are retained for **14 days**, metrics for **15 days**
 ```
-
-## 🔧 Prerequisites
-
-- Java 21::knowledge
-- .Net 1.19+ ::knowledge
-- Docker & Docker Compose ::knowledge
-- Ngnix ::knowledge
-- Redis ::knowledge
-- RabbitMQ ::knowledge
-- Node ::knowledge
-- Typescript ::knowledge
-- Next-js ::knowledge
-- Hazelcast ::knowledge
 
 ## 🚀 How to Run This Project on Your System
 

@@ -7,9 +7,6 @@ import java.util.Map;
 import java.util.Optional; 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -47,7 +44,6 @@ import com.example.auth_user_service.repositories.UsersRepository;
 import com.example.auth_user_service.repositories.VerificationTokenRepository;
 import com.example.auth_user_service.responses.AuthResponse;
 import com.example.auth_user_service.responses.VerificationTokenResult;
-import java.util.concurrent.TimeoutException; 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -270,8 +266,12 @@ public class AuthenticationService implements IAuthenticationService{
 
     @Override
     public ResponseEntity<?> createWallet(Long id) {
-        CompletableFuture.runAsync(() -> walletServiceClient.createUserWallet(id));
-        return ResponseEntity.status(HttpStatus.CREATED).body("Wallet created.");
+        try {
+            Map<String, Object> result = walletServiceClient.createUserWallet(id).join(); // block and wait
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (Exception e) {
+            throw new RuntimeException("Wallet creation failed for userId: " + id, e);
+        }
     }
 
     @Override
@@ -361,7 +361,6 @@ public class AuthenticationService implements IAuthenticationService{
                         baseUrl + "/auth/security/configuring-two-factor-authentication-recovery-methods"))
             .exceptionally(ex -> {
                 System.err.println("[2FA] Failed to send OTP email to " + user.getEmail() + ": " + ex.getMessage());
-                ex.printStackTrace();
                 return null;
             });
 

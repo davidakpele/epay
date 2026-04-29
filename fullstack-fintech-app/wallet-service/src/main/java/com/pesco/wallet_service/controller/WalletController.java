@@ -24,8 +24,7 @@ import com.pesco.wallet_service.payloads.WalletRefundRequest;
 import com.pesco.wallet_service.repository.WalletSettingsRepository;
 import com.pesco.wallet_service.services.WalletCacheService;
 import com.pesco.wallet_service.services.WalletService;
-import net.devh.boot.grpc.client.inject.GrpcClient;
-import pesco.wallet_service.grpc.WalletServiceGrpc;
+import com.pesco.wallet_service.handler.WalletHandler;
 
 @RestController
 @RequestMapping("/wallet")
@@ -35,20 +34,17 @@ public class WalletController {
     private final PasswordEncoder passwordEncoder;
     private final WalletService walletService;
     private final WalletCacheService walletCacheService;
+    private final WalletHandler walletHandler;
 
-    @GrpcClient("wallet-service")
-    private WalletServiceGrpc.WalletServiceBlockingStub walletGrpcClient;
 
-    public WalletController(WalletSettingsRepository walletSettingsRepository,
-                            PasswordEncoder passwordEncoder,
-                            WalletService walletService,
-                            WalletCacheService walletCacheService) {
+    public WalletController(WalletSettingsRepository walletSettingsRepository, PasswordEncoder passwordEncoder, WalletService walletService, WalletCacheService walletCacheService, WalletHandler walletHandler) {
         this.walletSettingsRepository = walletSettingsRepository;
         this.passwordEncoder = passwordEncoder;
         this.walletService = walletService;
         this.walletCacheService = walletCacheService;
+        this.walletHandler = walletHandler;
     }
-
+    
     @GetMapping("/{walletId}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN') and @security.isOwner(#userId)")       
     public ResponseEntity<?> getWalletById(@PathVariable Long walletId) {
@@ -185,7 +181,6 @@ public class WalletController {
         return ResponseEntity.ok(response);
     }
 
-    // Already public via SecurityConfiguration — no @PreAuthorize needed
     @PostMapping("/internal/debit/maintenance")
     public ResponseEntity<?> debitMaintenanceFee(@RequestBody MaintenanceDebitRequest request) {
         try {
@@ -209,4 +204,17 @@ public class WalletController {
                     .body("Failed to process refund: " + ex.getMessage());
         }
     }
+
+    @PostMapping("/create-account/{userId}")
+    public ResponseEntity<?> createWalletAccount(@PathVariable Long userId) {
+        try {
+            walletHandler.createAccount(userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Wallet account created successfully");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to create wallet account: " + ex.getMessage());
+        }
+    }
+
+
 }

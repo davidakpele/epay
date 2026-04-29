@@ -112,6 +112,7 @@ public class SecurityConfiguration {
                     "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**"
                 ).permitAll()
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/actuator/**", "/admin/**")
                 .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
                 .requestMatchers("/wallet/**")

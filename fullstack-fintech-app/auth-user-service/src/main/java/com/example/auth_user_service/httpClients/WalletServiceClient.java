@@ -37,7 +37,6 @@ import io.grpc.StatusRuntimeException;
 public class WalletServiceClient implements IWalletServiceClient {
 
     private final WalletServiceGrpc.WalletServiceBlockingStub walletServiceStub;
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, CompletableFuture<BigDecimal>> pendingRequests = new ConcurrentHashMap<>();
 
     public WalletServiceClient(GrpcChannelFactory channelFactory) {

@@ -81,7 +81,6 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
             String token = request.getToken();
             String providedPin = request.getRequest().getTransferPin();
 
-            // Get user from token
             String extractedUserId = jwtprovider.getUserIdFromJWT(token);
 
             long userId = Long.parseLong(extractedUserId);
@@ -99,9 +98,7 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
                 walletSettingsRepository.save(settings);
             }
 
-            // Update user's transfer pin
-            boolean pinUpdated = userServiceClient.UpdateUserTranferPinInUserRecord(
-                    token, userId, true);
+            boolean pinUpdated = userServiceClient.UpdateUserTranferPinInUserRecord(token, userId, true);
 
             if (pinUpdated) {
                 CreateTransferPinResponse response = CreateTransferPinResponse.newBuilder()
@@ -293,7 +290,6 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
 
     @Override
     public void findUserWalletPin(FindUserWalletPinRequest request, StreamObserver<FindUserWalletPinResponse> responseObserver) {
-        // Implement logic to find user wallet pin
         Optional<Wallet> wallet = walletRepository.findById(request.getWalletId());
         if (wallet != null) {
         Optional<WalletSettings> walletSettings = walletSettingsRepository.findByWalletId(wallet.get().getId());
