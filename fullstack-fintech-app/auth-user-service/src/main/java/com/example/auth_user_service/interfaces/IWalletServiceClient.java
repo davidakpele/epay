@@ -10,14 +10,8 @@ import com.example.auth_user_service.wallet.grpc.WithdrawResponse;
 
 public interface IWalletServiceClient {
     CompletableFuture<Map<String, Object>> createUserWallet(Long userId);
-
     WalletSectionDTO getWalletSectionByUser(Long userId);
-
     WalletBalanceResponse getWalletByCurrency(GetWalletByCurrencyRequest request);
-
     WithdrawResponse walletDeduct(WalletDeductionRequest payloads);
-
-    void sendWebSocketMessage(Map<String, Object> payload);
-
     void onWebSocketMessage(String messageJson);
 }

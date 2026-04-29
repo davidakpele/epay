@@ -44,7 +44,6 @@ import com.example.auth_user_service.repositories.UsersRepository;
 import com.example.auth_user_service.repositories.VerificationTokenRepository;
 import com.example.auth_user_service.responses.AuthResponse;
 import com.example.auth_user_service.responses.VerificationTokenResult;
-
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -89,13 +88,12 @@ public class AuthenticationService implements IAuthenticationService{
 
         boolean isEmail = "email".equals(request.getRegMode());
 
+        createWallet(user.getId());
+
         if (isEmail) {
             authorizeUserVerificationService.save(nextUserId, KeyWrapper.generateUniqueAuthorizeUserId());
-            walletServiceClient.createUserWallet(user.getId());
             activateUserRecord(user);
         } else {
-
-            CompletableFuture.runAsync(() -> walletServiceClient.createUserWallet(user.getId()));
             activateUserRecord(user);
             messagingService.invalidateOTP(identifier);
             ContactMethod method = "WHATSAPP".equals(request.getVerificationMethod())
@@ -268,8 +266,12 @@ public class AuthenticationService implements IAuthenticationService{
 
     @Override
     public ResponseEntity<?> createWallet(Long id) {
-        CompletableFuture.runAsync(() -> walletServiceClient.createUserWallet(id));
-        return ResponseEntity.status(HttpStatus.CREATED).body("Wallet created.");
+        try {
+            Map<String, Object> result = walletServiceClient.createUserWallet(id).join(); // block and wait
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (Exception e) {
+            throw new RuntimeException("Wallet creation failed for userId: " + id, e);
+        }
     }
 
     @Override
@@ -359,7 +361,6 @@ public class AuthenticationService implements IAuthenticationService{
                         baseUrl + "/auth/security/configuring-two-factor-authentication-recovery-methods"))
             .exceptionally(ex -> {
                 System.err.println("[2FA] Failed to send OTP email to " + user.getEmail() + ": " + ex.getMessage());
-                ex.printStackTrace();
                 return null;
             });
 

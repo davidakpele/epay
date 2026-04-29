@@ -66,6 +66,7 @@ public class PDFService implements IPDFService{
 
     // Inner class for footer event handler
     private static class FooterEventHandler implements IEventHandler {
+        @SuppressWarnings("unused")
         private int transactionCount;
         // private int totalPages;
         private int currentPage = 0;

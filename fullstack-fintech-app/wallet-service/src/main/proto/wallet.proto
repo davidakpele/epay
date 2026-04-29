@@ -12,13 +12,14 @@ service WalletService {
     rpc GetWallet (GetWalletRequest) returns (WalletResponse);
     rpc UpdateBalance (UpdateBalanceRequest) returns (WalletResponse);
     rpc ListWallets (ListWalletsRequest) returns (ListWalletsResponse);
-    rpc CreateTransferPin (CreateTransferPinRequest) returns (CreateTransferPinResponse);;
+    rpc CreateTransferPin (CreateTransferPinRequest) returns (CreateTransferPinResponse);
     rpc GetWalletSection (Empty) returns (WalletSectionResponse);
     rpc GetWalletSectionByUser (GetWalletSectionRequest) returns (WalletSectionResponse);
     rpc GetWalletByCurrency (GetWalletByCurrencyRequest) returns (WalletBalanceResponse);
     rpc WithdrawIn(WalletDeductionRequest) returns (WithdrawResponse);
     rpc TranferOut(TransferToUserRequest) returns (TransferResponse);
     rpc FindUserWalletPin (FindUserWalletPinRequest) returns (FindUserWalletPinResponse);
+    rpc CreateWallet (CreateWalletRequest) returns (CreateWalletResponse); 
 }
 
 enum CurrencyType {
@@ -32,6 +33,16 @@ enum CurrencyType {
     CHF = 7;
     CNY = 8;
     INR = 9;
+}
+
+message CreateWalletRequest {
+    int64 user_id = 1;
+}
+
+message CreateWalletResponse {
+    string status = 1;  
+    string message = 2;
+    int64 wallet_id = 3;
 }
 
 message TransactionRequest {
