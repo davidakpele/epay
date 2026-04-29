@@ -12,7 +12,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import io.grpc.Status;
+
 import com.google.protobuf.Timestamp;
 import com.pesco.wallet_service.client.UserServiceClient;
 import com.pesco.wallet_service.enums.Currency;
@@ -24,6 +26,7 @@ import com.pesco.wallet_service.repository.WalletSettingsRepository;
 import com.pesco.wallet_service.util.AccountWrapper;
 import com.pesco.wallet_service.util.HazelcastWallet;
 import com.pesco.wallet_service.util.JwtTokenProvider;
+
 import pesco.wallet_service.grpc.GetWalletSectionRequest;
 import pesco.wallet_service.grpc.ListWalletsRequest;
 import pesco.wallet_service.grpc.ListWalletsResponse;
@@ -45,10 +48,14 @@ import pesco.wallet_service.grpc.WalletSectionResponse;
 import pesco.wallet_service.grpc.WalletServiceGrpc;
 import pesco.wallet_service.grpc.WithdrawResponse;
 import net.devh.boot.grpc.server.service.GrpcService;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import pesco.wallet_service.grpc.CreateWalletRequest;
+import pesco.wallet_service.grpc.CreateWalletResponse;
 
 @GrpcService
 public class WalletServiceImplementation extends WalletServiceGrpc.WalletServiceImplBase {
@@ -443,6 +450,53 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
     
         return builder.build();
     }
+
+   @Override
+@Transactional
+public void createWallet(CreateWalletRequest request,
+                         StreamObserver<CreateWalletResponse> responseObserver) {
+    try {
+        Long userId = request.getUserId();
+
+        Optional<Wallet> existing = walletRepository.findByUserId(userId);
+        if (existing.isPresent()) {
+            responseObserver.onError(Status.ALREADY_EXISTS
+                    .withDescription("Wallet already exists for userId: " + userId)
+                    .asRuntimeException());
+            return;
+        }
+
+        Wallet wallet = new Wallet();
+        wallet.setUserId(userId);
+        wallet.setCreatedOn(LocalDateTime.now());
+        wallet.setUpdatedOn(LocalDateTime.now());
+
+        List<CurrencyBalanceMapStruct> balances = Stream.of(Currency.values())
+                .map(currency -> new CurrencyBalanceMapStruct(
+                        currency.name(),
+                        currency.getSymbol(),
+                        BigDecimal.ZERO
+                ))
+                .collect(Collectors.toList());
+
+        wallet.setBalances(balances);
+        Wallet saved = walletRepository.save(wallet);
+
+        CreateWalletResponse response = CreateWalletResponse.newBuilder()
+                .setStatus("success")
+                .setMessage("Wallet created successfully")
+                .setWalletId(saved.getId())
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+
+    } catch (Exception e) {
+        responseObserver.onError(Status.INTERNAL
+                .withDescription("Error creating wallet: " + e.getMessage())
+                .asRuntimeException());
+    }
+}
     
     private Timestamp toTimestamp(LocalDateTime dateTime) {
         return Timestamp.newBuilder()
