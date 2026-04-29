@@ -267,7 +267,7 @@ public class AuthenticationService implements IAuthenticationService{
     @Override
     public ResponseEntity<?> createWallet(Long id) {
         try {
-            Map<String, Object> result = walletServiceClient.createUserWallet(id).join(); // block and wait
+            Map<String, Object> result = walletServiceClient.createUserWallet(id).join(); 
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (Exception e) {
             throw new RuntimeException("Wallet creation failed for userId: " + id, e);
