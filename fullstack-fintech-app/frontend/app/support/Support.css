@@ -8,10 +8,6 @@
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
 }
-/* ========================================
-   HERO SECTION
-   ======================================== */
-
 .support-hero {
   background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-main) 100%);
   padding: 15px 24px 100px;
