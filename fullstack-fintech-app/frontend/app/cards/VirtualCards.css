@@ -1,9 +1,4 @@
-/* ===========================
-   Virtual Cards — VirtualCards.css
-   ePay Green Brand Theme
-   =========================== */
 
-/* ── Scroll fix: ensure page is scrollable ── */
 .scrollable-content {
   overflow-y: auto !important;
   overflow-x: hidden;
