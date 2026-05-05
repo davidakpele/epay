@@ -798,7 +798,6 @@
   }
 }
 
-/* Below 700px — show 3 items */
 @media (max-width: 700px) {
   .feature-grid {
     grid-template-columns: repeat(4, 1fr);
