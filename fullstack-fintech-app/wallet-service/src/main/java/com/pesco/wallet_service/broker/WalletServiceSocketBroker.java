@@ -15,6 +15,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -22,6 +25,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,8 +49,10 @@ import com.pesco.wallet_service.payloads.SwapHistoryRequest;
 import com.pesco.wallet_service.repository.WalletRepository;
 import com.pesco.wallet_service.response.HistoryResponse;
 import com.pesco.wallet_service.services.WalletService;
+
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import pesco.wallet_service.grpc.WalletServiceGrpc;
+
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.collection.ISet;
 import com.hazelcast.map.IMap;
@@ -96,17 +102,22 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
         String userId_In_string = queryParams.get("userId");
         long userId = Long.parseLong(userId_In_string);
 
-        handleUserConnection(session, userId);
+        String token = queryParams.get("token");
+        if (token == null || token.isBlank() || token.equals("null")) {
+            sendErrorAndClose(session, "Unauthorized", "Missing or invalid token");
+            return;
+        }
+        handleUserConnection(session, userId, token);
     }
 
-    private void handleUserConnection(WebSocketSession session, Long userId) throws IOException {
+    private void handleUserConnection(WebSocketSession session, Long userId, String token) throws IOException {
         String sessionId = UUID.randomUUID().toString();
         String sessionKey = "user_session:" + userId + ":" + sessionId;
         String sessionsIndexKey = "user_sessions:" + userId;
         try {
             UserDTO user = userServiceClient.findById(userId);
 
-            historyClient.findByUserId(user.getId())
+            historyClient.findByUserId(user.getId(), token)
                 .thenAccept(historyResponseMap -> {
                     try {
                         HistorySection historySection = buildHistorySection(historyResponseMap);
@@ -328,16 +339,14 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
         }
     }
 
-    private void sendWalletUpdateResponse(WebSocketSession session, Long userId) throws InterruptedException, ExecutionException {
+    private void sendWalletUpdateResponse(WebSocketSession session, Long userId, String token) {
         try {
-            // Refresh all data from database like in handleUserConnection
             UserDTO user = userServiceClient.findById(userId);
             
-            // Get history synchronously
-            HistoryResponse historyResponse = historyClient.findByUserId(userId).get();
+            HistoryResponse historyResponse = historyClient.findByUserId(userId, token)
+                .get(10, TimeUnit.SECONDS);
             HistorySection historySection = buildHistorySection(historyResponse);
             
-            // Build complete session data with fresh information
             DataSection dataSection = new DataSection();
             dataSection.setSession_date(Instant.now().toString());
             dataSection.setSessionId(UUID.randomUUID().toString());
@@ -349,7 +358,6 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
             sessionData.setHistory(historySection);
             sessionData.setEncrypted_signature(sec46.data_encryption(userId));
 
-            // Send complete refresh to client
             Map<String, Object> response = new HashMap<>();
             response.put("type", "wallet_update_response");
             response.put("success", true);
@@ -357,16 +365,24 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
             response.put("data", sessionData);
             response.put("message", "Wallet updated successfully");
 
-            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));
-            
-        } catch (IOException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("type", "wallet_update_error");
-            errorResponse.put("success", false);
-            errorResponse.put("message", "Failed to refresh data: " + e.getMessage());
-            
+            synchronized (session) {
+                if (session.isOpen()) {
+                    session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));
+                }
+            }
+
+        } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
             try {
-                session.sendMessage(new TextMessage(objectMapper.writeValueAsString(errorResponse)));
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("type", "wallet_update_error");
+                errorResponse.put("success", false);
+                errorResponse.put("message", "Failed to refresh data: " + e.getMessage());
+
+                synchronized (session) {
+                    if (session.isOpen()) {
+                        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(errorResponse)));
+                    }
+                }
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -638,7 +654,7 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
                 
                 updateWallet(walletId, userId, Currency.valueOf(toCurrency.toUpperCase()), finalAmount);
                 
-                sendWalletUpdateResponse(session, userId);
+                sendWalletUpdateResponse(session, userId, token);
                 
                 Wallet new_wallet_request = walletRepository.findByUserId(userId)
                     .orElseThrow(() -> new RuntimeException("Wallet not found"));
@@ -694,8 +710,7 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
                 "timestamp", LocalDateTime.now().toString(),
                 "message", "Currency swap completed successfully"
             );
-            
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (Exception e) {
             return Map.of(
                 "status", "FAILED",
                 "message", "Swap failed: " + e.getMessage()

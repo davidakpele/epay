@@ -100,7 +100,6 @@ const SwapPage = () => {
   const reconnectTimer   = useRef<NodeJS.Timeout | null>(null);
   const wsRef            = useRef<WebSocket | null>(null);
 
-  // ── Toast ──────────────────────────────────────────────────────────────────
   const showToast = useCallback((msg: string, type: 'warning' | 'success' = 'warning') => {
     setToasts((prev) => {
       if (prev.length >= 5) return prev;
@@ -114,7 +113,6 @@ const SwapPage = () => {
     });
   }, []);
 
-  // ── Rate helpers ───────────────────────────────────────────────────────────
   const getExchangeRateWithMargin = (from: string, to: string) => {
     const raw = mockExchangeRates[from]?.[to];
     return raw ? raw * (1 - 0.005) : null;
@@ -145,7 +143,6 @@ const SwapPage = () => {
     }
   };
 
-  // ── Amount formatting ──────────────────────────────────────────────────────
   const formatNumberWithCommas = (value: string): string => {
     const clean = value.replace(/,/g, '');
     if (!clean) return '';
@@ -191,13 +188,11 @@ const SwapPage = () => {
     return w ? parseFloat(w.balance.replace(/,/g, '')) : 0;
   };
 
-  // ── WebSocket ──────────────────────────────────────────────────────────────
   const handleWebSocketMessage = useCallback((message: any) => {
     if (message.type === 'swap_response') {
       setIsProcessing(false);
       if (message.status === 'COMPLETED') {
 
-        // ✅ Read from refs — always current values
         setExchangeSnapshot({
           fromCurrency: fromCurrencyRef.current,
           toCurrency:   toCurrencyRef.current,
@@ -250,7 +245,7 @@ const SwapPage = () => {
     }
 
     try {
-      const ws = new WebSocket(`ws://localhost:8292/api/ws/wallet?userId=${userId}`);
+      const ws = new WebSocket(`ws://localhost:8292/api/ws/wallet?userId=${userId}&token=${getToken()}`);
 
       ws.onopen = () => {
         setWebsocket(ws);
