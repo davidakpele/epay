@@ -1,7 +1,3 @@
-/* =====================
-   BILLS PAGE - Updated to match design
-   ===================== */
-
 .bills-page {
   min-height: 100vh;
   background-color: #f0f2f5;
@@ -13,7 +9,6 @@
   margin: 0 auto;
 }
 
-/* ---- Hero Banner ---- */
 .page-header {
   background: linear-gradient(135deg, #1a6b0f 0%, #2e8b1a 40%, #4caf30 100%);
   border-radius: 20px;
@@ -27,7 +22,6 @@
   padding: 40px 48px;
 }
 
-/* Decorative wave/blob shapes */
 .page-header::before {
   content: '';
   position: absolute;
