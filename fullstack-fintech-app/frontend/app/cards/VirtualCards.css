@@ -1071,7 +1071,6 @@
 }
 .vc-eye-card-btn:hover { background: rgba(255,255,255,0.3); }
 
-/* Row 3: [JOHN A. DOE] ......... [Expiry / 08/26] */
 .vc-card-row3 {
   display: flex;
   align-items: flex-end;
@@ -1315,7 +1314,6 @@
 .vc-detail-row span:last-child { font-weight: 700; color: var(--text-primary); }
 .dark .vc-detail-row span:last-child { color: #f1f5f9; }
 
-/* Spinner */
 .btn-spinner-sm {
   width: 14px; height: 14px;
   border: 2px solid rgba(255,255,255,0.35);
