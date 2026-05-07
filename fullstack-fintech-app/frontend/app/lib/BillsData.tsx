@@ -14,42 +14,42 @@ export const services = [
     name: 'Airtime',
     category: 'airtime',
     color: 'green',
-    href: '/services/bills/airtime'       // ← add this
+    href: '/services/bills/airtime'       
   },
   {
     id: 2,
     name: 'Betting',
     category: 'betting',
     color: 'blue',
-    href: '/services/bills/betting'       // ← add this
+    href: '/services/bills/betting'       
   },
   {
     id: 3,
     name: 'Cable TV',
     category: 'tv',
     color: 'cyan',
-    href: '/services/bills/cabletv'      // ← add this
+    href: '/services/bills/cabletv'      
   },
   {
     id: 4,
     name: 'Data',
     category: 'data',
     color: 'black',
-    href: '/services/bills/data'          // ← add this
+    href: '/services/bills/data'          
   },
   {
     id: 5,
     name: 'Shopping',
     category: 'shopping',
     color: 'purple',
-    href: '/services/bills/shopping'          // ← add this
+    href: '/services/bills/shopping'          
   },
   {
     id: 6,
     name: 'Electricity',
     category: 'electricity',
     color: 'green',
-    href: '/services/bills/electricity'   // ← add this
+    href: '/services/bills/electricity'   
   }
 ];
 

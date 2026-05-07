@@ -122,27 +122,24 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
                     try {
                         HistorySection historySection = buildHistorySection(historyResponseMap);
 
-                        // Create DataSection and set fields
                         DataSection dataSection = new DataSection();
                         dataSection.setSession_date(Instant.now().toString());
                         dataSection.setSessionId(sessionId);
                         dataSection.setUserDetails(user);
 
-                        // Create UserSessionData and set fields
                         UserSessionData sessionData = new UserSessionData();
                         sessionData.setData(dataSection);
                         sessionData.setWallet(walletHandler.buildWalletSection(user));
                         sessionData.setHistory(historySection);
                         sessionData.setEncrypted_signature(sec46.data_encryption(userId));
 
-                        // Convert to JSON
                         String sessionJson = objectMapper.writeValueAsString(sessionData);
 
-                        // Save this session independently using Hazelcast
                         IMap<String, String> userSessionMap = hazelcastInstance.getMap("user-sessions");
                         userSessionMap.put(sessionKey, sessionJson);
                         ISet<String> userSessionsSet = hazelcastInstance.getSet(sessionsIndexKey);
                         userSessionsSet.add(sessionId);
+
                         sendMessage(session, Map.of(
                             "status", "success",
                             "type", "SESSION_INITIALIZED",
@@ -150,16 +147,38 @@ public class WalletServiceSocketBroker extends AbstractWebSocketHandler {
                         ));
 
                     } catch (IOException e) {
+                        // swallowed before — now handle it
+                        try {
+                            sendMessage(session, Map.of(
+                                "status", "error",
+                                "message", "Session build failed: " + e.getMessage()
+                            ));
+                        } catch (IOException ignored) {}
                     }
                 })
                 .exceptionally(ex -> {
                     try {
-                        Map<String, Object> errorPayload = Map.of(
-                            "status", "error",
-                            "message", "Failed to fetch history: " + ex.getMessage()
-                        );
-                        sendMessage(session, errorPayload);
+                        // History failed — still connect with empty history
+                        HistorySection emptyHistory = buildEmptyHistorySection();
+
+                        DataSection dataSection = new DataSection();
+                        dataSection.setSession_date(Instant.now().toString());
+                        dataSection.setSessionId(sessionId);
+                        dataSection.setUserDetails(user);
+
+                        UserSessionData sessionData = new UserSessionData();
+                        sessionData.setData(dataSection);
+                        sessionData.setWallet(walletHandler.buildWalletSection(user));
+                        sessionData.setHistory(emptyHistory);
+                        sessionData.setEncrypted_signature(sec46.data_encryption(userId));
+
+                        sendMessage(session, Map.of(
+                            "status", "success",
+                            "type", "SESSION_INITIALIZED",
+                            "data", sessionData
+                        ));
                     } catch (IOException ioEx) {
+                        ioEx.printStackTrace();
                     }
                     return null;
                 });
