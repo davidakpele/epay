@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("resiliences-service")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7c4acd198bfd0c1e0769d1ec358cd4fb51dbece9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+af1dbb799c03bdc40c1a3aad3ad6a6de3990cac9")]
 [assembly: System.Reflection.AssemblyProductAttribute("resiliences-service")]
 [assembly: System.Reflection.AssemblyTitleAttribute("resiliences-service")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
