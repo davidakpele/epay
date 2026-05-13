@@ -27,8 +27,6 @@ namespace resiliences_service.Configs
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // UTC DateTime converters for PostgreSQL
             var utcConverter = new ValueConverter<DateTime, DateTime>(
                 v => v.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v, DateTimeKind.Utc),
                 v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
