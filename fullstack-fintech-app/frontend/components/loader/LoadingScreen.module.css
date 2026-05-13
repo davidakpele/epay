@@ -11,8 +11,6 @@
   overflow: hidden;
   z-index: 9999;
 }
-
-/* Animated background circles */
 .bgCircle1,
 .bgCircle2,
 .bgCircle3 {
@@ -103,8 +101,6 @@
   clip-path: polygon(0 20%, 100% 0, 100% 80%, 0 100%);
   animation-delay: 0.5s;
 }
-
-/* Brand Name */
 .brandName {
   font-size: 4rem;
   font-weight: 200;

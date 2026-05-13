@@ -20,10 +20,12 @@ public class HistoryClient {
     public HistoryClient(@Qualifier("historyServiceWebClient") WebClient historyServiceWebClient) {
         this.historyServiceWebClient = historyServiceWebClient;
     }
-  
-    public CompletableFuture<HistoryResponse> findByUserId(Long userId) {
+
+    
+    public CompletableFuture<HistoryResponse> findByUserId(Long userId, String token) {
         return historyServiceWebClient.get()
             .uri("/history/user/{userId}", userId)
+            .header("Authorization", "Bearer " + token)
             .retrieve()
             .bodyToMono(HistoryDTO[].class)
             .map(historyArray -> {

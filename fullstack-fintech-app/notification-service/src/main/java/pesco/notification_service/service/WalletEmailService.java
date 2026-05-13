@@ -84,11 +84,7 @@ public class WalletEmailService {
         try {
             Symbols currencySymbols = Symbols.valueOf(currency.toUpperCase());
             String symbol = currencySymbols.getSymbol();
-          
-            // Create MimeMessageHelper
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
-            
-            // Prepare the HTML template context
             Context context = new Context();
             context.setVariable("recipientName", receiverFullName);
             context.setVariable("senderName", senderFullName);
@@ -105,12 +101,9 @@ public class WalletEmailService {
 
             String htmlContent = templateEngine.process("TransactionNotification", context);
 
-            // Set email attributes
             mimeMessageHelper.setTo(recipientEmail);
             mimeMessageHelper.setSubject("Credit Notification - " + symbol + KeyHelper.FormatBigDecimal(transferAmount) + " Received");
             mimeMessageHelper.setText(htmlContent, true);
-
-            // Send the email
             javaMailSender.send(mimeMessage);
             return CompletableFuture.completedFuture(null);
         } catch (MessagingException | MailException e) {
