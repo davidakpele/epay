@@ -2,6 +2,7 @@ package pesco.example.withdraw_service.aspect;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import pesco.example.withdraw_service.annotation.RateLimited;
 import pesco.example.withdraw_service.exceptions.RateLimitExceededException;
 import pesco.example.withdraw_service.serviceImp.RateLimitService;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -12,7 +13,8 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
@@ -22,6 +24,7 @@ import java.util.Optional;
 @Component
 public class RateLimitAspect {
 
+    private static final Logger log = LoggerFactory.getLogger(RateLimitAspect.class);
     private final RateLimitService rateLimitService;
     private final SpelExpressionParser parser = new SpelExpressionParser();
 
@@ -33,7 +36,6 @@ public class RateLimitAspect {
     public Object around(ProceedingJoinPoint joinPoint, RateLimited rateLimited) throws Throwable {
         String userId = extractUserIdentifier(joinPoint, rateLimited);
         String key = buildKey(rateLimited.keyPrefix(), userId);
-        
         Duration duration = Duration.ofMillis(
             rateLimited.timeUnit().toMillis(rateLimited.duration())
         );
@@ -84,8 +86,7 @@ public class RateLimitAspect {
             }
             
             try {
-                return parser.parseExpression(rateLimited.userIdentifier())
-                           .getValue(context, String.class);
+                return parser.parseExpression(rateLimited.userIdentifier()).getValue(context, String.class);
             } catch (Exception e) {
                 log.warn("Failed to evaluate SpEL expression: {}", rateLimited.userIdentifier());
             }
