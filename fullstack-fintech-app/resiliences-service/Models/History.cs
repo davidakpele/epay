@@ -8,7 +8,6 @@ namespace resiliences_service.Models
     [Table("Histories")]
     public class History
     {
-        // ── Core Identity ──────────────────────────────────────────────
         [Key]
         [Column(TypeName = "char(36)")]
         [MaxLength(36)]
@@ -59,7 +58,6 @@ namespace resiliences_service.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime UpdatedOn { get; set; } = DateTime.UtcNow;
 
-        // ── Financial Amounts (decimal — never double for money) ────────
         [Column(TypeName = "decimal(18,4)")]
         public decimal GrossAmount { get; set; }
 
@@ -81,14 +79,12 @@ namespace resiliences_service.Models
         [Column(TypeName = "decimal(18,4)")]
         public decimal RunningBalance { get; set; }
 
-        // ── Double-Entry Accounting ─────────────────────────────────────
         [Column(TypeName = "varchar(10)")]
         public DebitCredit? DebitCredit { get; set; }
 
         [Column(TypeName = "varchar(30)")]
         public LedgerEntryType? LedgerEntryType { get; set; }
 
-        // ── Counterparty & Routing ──────────────────────────────────────
         public ulong? CounterpartyWalletId { get; set; }
 
         public ulong? CounterpartyUserId { get; set; }
@@ -108,14 +104,12 @@ namespace resiliences_service.Models
         [MaxLength(100)]
         public string? ExternalReference { get; set; }
 
-        // ── Multi-Currency ──────────────────────────────────────────────
         [Column(TypeName = "varchar(10)")]
         public string? OriginalCurrency { get; set; }
 
         [Column(TypeName = "decimal(18,8)")]
         public decimal? ExchangeRate { get; set; }
 
-        // ── Reversal & Disputes ─────────────────────────────────────────
         [Column(TypeName = "char(36)")]
         [MaxLength(36)]
         public string? ParentHistoryId { get; set; }
@@ -132,7 +126,6 @@ namespace resiliences_service.Models
         [MaxLength(100)]
         public string? DisputeReference { get; set; }
 
-        // ── Idempotency & Retry ─────────────────────────────────────────
         [MaxLength(100)]
         public string? IdempotencyKey { get; set; }
 
@@ -143,7 +136,6 @@ namespace resiliences_service.Models
 
         public DateTime? ProcessedAt { get; set; }
 
-        // ── Channel & Device ────────────────────────────────────────────
         [Column(TypeName = "varchar(20)")]
         public TransactionChannel? Channel { get; set; }
 
@@ -156,7 +148,6 @@ namespace resiliences_service.Models
         [MaxLength(100)]
         public string? GeoLocation { get; set; }
 
-        // ── Compliance & Risk ───────────────────────────────────────────
         [Column(TypeName = "decimal(5,2)")]
         public decimal? RiskScore { get; set; }
 
@@ -171,7 +162,6 @@ namespace resiliences_service.Models
         [MaxLength(36)]
         public string? ReviewedBy { get; set; }
 
-        // ── Admin Audit ─────────────────────────────────────────────────
         [MaxLength(36)]
         public string? InitiatedBy { get; set; }
 
@@ -185,7 +175,6 @@ namespace resiliences_service.Models
 
         public bool ManualAdjustmentFlag { get; set; } = false;
 
-        // ── Metadata ────────────────────────────────────────────────────
         [Column(TypeName = "varchar(30)")]
         public TransactionCategory? Category { get; set; }
 

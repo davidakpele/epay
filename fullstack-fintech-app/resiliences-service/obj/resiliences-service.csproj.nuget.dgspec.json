@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\akpel\\Desktop\\Bank\\fullstack-fintech-app\\resiliences-service\\resiliences-service.csproj": {}
+    "C:\\Users\\akpel\\Desktop\\epay\\fullstack-fintech-app\\resiliences-service\\resiliences-service.csproj": {}
   },
   "projects": {
-    "C:\\Users\\akpel\\Desktop\\Bank\\fullstack-fintech-app\\resiliences-service\\resiliences-service.csproj": {
+    "C:\\Users\\akpel\\Desktop\\epay\\fullstack-fintech-app\\resiliences-service\\resiliences-service.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\akpel\\Desktop\\Bank\\fullstack-fintech-app\\resiliences-service\\resiliences-service.csproj",
+        "projectUniqueName": "C:\\Users\\akpel\\Desktop\\epay\\fullstack-fintech-app\\resiliences-service\\resiliences-service.csproj",
         "projectName": "resiliences-service",
-        "projectPath": "C:\\Users\\akpel\\Desktop\\Bank\\fullstack-fintech-app\\resiliences-service\\resiliences-service.csproj",
+        "projectPath": "C:\\Users\\akpel\\Desktop\\epay\\fullstack-fintech-app\\resiliences-service\\resiliences-service.csproj",
         "packagesPath": "C:\\Users\\akpel\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\akpel\\Desktop\\Bank\\fullstack-fintech-app\\resiliences-service\\obj\\",
+        "outputPath": "C:\\Users\\akpel\\Desktop\\epay\\fullstack-fintech-app\\resiliences-service\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

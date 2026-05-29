@@ -1,5 +1,7 @@
 package pesco.example.withdraw_service.controller;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import pesco.example.withdraw_service.annotation.RateLimited;
 import pesco.example.withdraw_service.components.IpExtractor;
 import pesco.example.withdraw_service.dtos.DeductWalletRequestDTO;
 import pesco.example.withdraw_service.dtos.TransferWalletRequestDTO;
@@ -37,7 +40,14 @@ public class WithdrawController {
         this.geoLocationService = geoLocationService;
     }
 
-    @RateLimit(limit = 20, duration = 300) 
+    @RateLimited(
+        keyPrefix = "in_house_transfer",
+        capacity = 5,
+        duration = 1,
+        timeUnit = TimeUnit.MINUTES,
+        userIdentifier = "#request.userId",
+        cost = 1
+    )
     @PostMapping("/user")
     public ResponseEntity<?> transferToUser(
             @Valid @RequestBody DeductWalletRequestDTO request, 
@@ -70,7 +80,13 @@ public class WithdrawController {
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'CUSTOMER-SERVICE')")
-    @RateLimit(limit = 10, duration = 300)
+    @RateLimited(
+        keyPrefix = "internal_transfer",
+        capacity = 10,
+        duration = 1,
+        timeUnit = TimeUnit.MINUTES,
+        userIdentifier = "#request.userId"
+    )
     @PostMapping("/bank")
     public ResponseEntity<?> withdrawToBank(@Valid @RequestBody TransferWalletRequestDTO request, @RequestHeader("Authorization") String authorizationHeader, Authentication authentication,   @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         String token = authorizationHeader.replace("Bearer ", "");
