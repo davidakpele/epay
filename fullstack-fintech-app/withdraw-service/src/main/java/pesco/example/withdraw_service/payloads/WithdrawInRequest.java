@@ -1,6 +1,8 @@
 package pesco.example.withdraw_service.payloads;
 
 import java.math.BigDecimal;
+
+import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
 import pesco.example.withdraw_service.enums.CurrencyStructType;
@@ -8,12 +10,25 @@ import pesco.example.withdraw_service.enums.CurrencyStructType;
 @Data
 @Builder
 public class WithdrawInRequest {
+    @NotBlank
+    @NotNull
     private String senderUser;
+    
+    @NotBlank
+    @NotNull
     private String recipientUser;
+     
+    @NotNull
+    @DecimalMin("0.01")
     private BigDecimal amount;
     private String description;
     private String region;
+    
+    @NotBlank
+    @Pattern(regexp = "^[A-Z]{3}$")
     private CurrencyStructType currencyType;
+
+    @NotBlank
     private String transferpin;
 
     public WithdrawInRequest() {

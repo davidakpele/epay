@@ -19,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import pesco.example.withdraw_service.bootstrap.UserTransactionsAgent;
 import pesco.example.withdraw_service.clients.BlackListServiceClient;
 import pesco.example.withdraw_service.clients.EscrowServiceClient;
@@ -88,6 +90,7 @@ public class WalletServiceImp implements WalletService {
     }
     
     @Override
+    @Transactional
     public ResponseEntity<?> processWithdraw(DeductWalletRequestDTO dto, String token) {
         String idempotencyKey = dto.getIdempotencyKey();
 
@@ -553,6 +556,7 @@ public class WalletServiceImp implements WalletService {
     
     @SuppressWarnings("unchecked")
     @Override
+    @Transactional
     public ResponseEntity<?> processTransfer(TransferWalletRequestDTO request, String token) {
         String idempotencyKey = request.getIdempotencyKey(); 
         Map<String, Object> jsonResponse = new HashMap<>();

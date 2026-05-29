@@ -72,6 +72,9 @@ public class RateLimitAspect {
         return result;
     }
 
+    private String buildKey(String prefix, String identifier) {
+        return String.format("rate_limit:%s:%s", prefix, identifier);
+    }
     private String extractUserIdentifier(ProceedingJoinPoint joinPoint, RateLimited rateLimited) {
         // Priority 1: SpEL expression from annotation
         if (!rateLimited.userIdentifier().isEmpty()) {
