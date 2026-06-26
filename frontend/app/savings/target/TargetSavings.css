@@ -222,4 +222,80 @@
   transition: border-color 0.15s, background 0.15s;
   color: var(--text-secondary, #64748b);
 }
-.savings-icon-option:hov
+.savings-icon-option:hover { border-color: #059669; }
+.savings-icon-option.selected { border-color: #059669; background: #d1fae5; color: #059669; }
+
+/* ── Form fields ──────────────────────────────────────────────── */
+.savings-form__row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.savings-form__label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary, #64748b); }
+.savings-form__input {
+  padding: 11px 14px;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 10px; font-size: 0.95rem;
+  outline: none; transition: border-color 0.18s;
+  background: var(--bg-input, #f8fafc);
+  color: var(--text-primary, #1e293b); width: 100%;
+}
+.savings-form__input:focus { border-color: #059669; }
+.savings-form__row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ── Submit button ────────────────────────────────────────────── */
+.savings-submit-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: #059669; color: #fff;
+  border: none; border-radius: 12px;
+  padding: 13px; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; width: 100%; margin-top: 6px;
+  transition: opacity 0.18s;
+}
+.savings-submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.savings-submit-btn.cancel {
+  background: var(--bg-input, #f3f4f6);
+  color: var(--text-primary, #374151);
+}
+
+/* ── Error banner ─────────────────────────────────────────────── */
+.savings-error {
+  display: flex; align-items: center; gap: 8px;
+  color: #dc2626; background: #fee2e2;
+  padding: 10px 14px; border-radius: 8px;
+  font-size: 0.82rem; margin-bottom: 14px;
+}
+
+/* ── Action modal (top-up / withdraw) ────────────────────────── */
+.savings-action-modal {
+  background: var(--card-bg, #fff);
+  border-radius: 20px; padding: 28px;
+  width: 100%; max-width: 380px;
+  animation: popIn 0.25s ease;
+}
+.savings-action-modal__sub {
+  font-size: 0.85rem; color: var(--text-secondary, #64748b);
+  margin-bottom: 20px; line-height: 1.5;
+}
+.savings-warning-box {
+  background: #fff7ed; border: 1px solid #fed7aa;
+  border-radius: 10px; padding: 12px 14px;
+  font-size: 0.82rem; color: #92400e; line-height: 1.5;
+  margin-bottom: 16px;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.savings-action-modal__btns { display: flex; gap: 10px; margin-top: 20px; }
+
+/* ── Spinner ──────────────────────────────────────────────────── */
+.savings-spinner {
+  width: 18px; height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .savings-page { padding: 16px 16px 80px; }
+  .savings-hero { padding: 22px 20px; }
+  .savings-hero__left h1 { font-size: 1.3rem; }
+  .savings-goals-grid { grid-template-columns: 1fr; }
+  .savings-form__row-2 { grid-template-columns: 1fr; }
+}
