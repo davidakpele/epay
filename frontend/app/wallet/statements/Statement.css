@@ -966,8 +966,8 @@ input[type="date"]:focus {
 }
 
 .ah-transaction-icon.credit {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
+  background: rgba(43, 15, 86, 0.1);
+  color: var(--bg-main);
 }
 
 .ah-transaction-icon.debit {
@@ -1008,7 +1008,7 @@ input[type="date"]:focus {
 }
 
 .ah-amount.credit {
-  color: #059669;
+  color: var(--bg-main);
 }
 
 .ah-amount.debit {
@@ -1035,12 +1035,12 @@ input[type="date"]:focus {
 }
 
 .status-completed {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
+  background: rgba(43, 15, 86, 0.1);
+  color: var(--bg-main);
 }
 
 .status-completed .status-dot {
-  background: #059669;
+  background: var(--bg-main);
 }
 
 .status-pending {
@@ -1548,7 +1548,7 @@ input[type="date"]:focus {
 }
 
 .ah-amount.credit {
-  color: #10b981 !important; 
+  color: var(--bg-main) !important; 
   font-weight: 700;
 }
 
@@ -1558,8 +1558,8 @@ input[type="date"]:focus {
 }
 
 .ah-transaction-icon.credit {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: rgba(43, 15, 86, 0.15);
+  color: var(--bg-main);
 }
 
 .ah-transaction-icon.debit {

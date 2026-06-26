@@ -356,28 +356,28 @@
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: #dcfce7;
-  border: 1px solid #bbf7d0;
+  background: #ede9fe;
+  border: 1px solid #ddd6fe;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: #16a34a;
+  color: var(--bg-main);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .verified-badge svg {
-  color: #16a34a;
+  color: var(--bg-main);
 }
 
 .deposit-drawer.dark .verified-badge {
-  background: rgba(34, 197, 94, 0.1);
-  border-color: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: rgba(43, 15, 86, 0.15);
+  border-color: rgba(43, 15, 86, 0.25);
+  color: #a78bfa;
 }
 
 .deposit-drawer.dark .verified-badge svg {
-  color: #22c55e;
+  color: #a78bfa;
 }
 
 /* No Results */
@@ -436,7 +436,7 @@
 }
 
 .bank-selection-footer svg {
-  color: #22c55e;
+  color: var(--bg-main);
 }
 
 .deposit-drawer.dark .bank-selection-footer {
@@ -489,7 +489,7 @@
 }
 
 .green-bg {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, var(--bg-main), #1a0a38);
 }
 
 .orange-bg {
@@ -976,7 +976,7 @@
 }
 
 .security-note svg {
-  color: #22c55e;
+  color: var(--bg-main);
 }
 
 .deposit-drawer.dark .security-note {

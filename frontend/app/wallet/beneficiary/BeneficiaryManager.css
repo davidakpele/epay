@@ -598,8 +598,8 @@
 }
 
 .history-transaction-type-icon.received {
-  background: #d1fae5;
-  color: #059669;
+  background: #ede9fe;
+  color: var(--bg-main);
 }
 
 .history-transaction-details {
@@ -631,8 +631,8 @@
 }
 
 .history-transaction-status.completed {
-  background: #d1fae5;
-  color: #059669;
+  background: #ede9fe;
+  color: var(--bg-main);
 }
 
 .history-transaction-status.pending {

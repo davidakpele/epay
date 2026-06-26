@@ -198,7 +198,7 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #e8f5ed;
+  background: #ede9fe;
   color: var(--bg-main);
   display: flex;
   align-items: center;
@@ -679,7 +679,7 @@
 .scb-article-badge {
   display: inline-block;
   padding: 4px 12px;
-  background: #e8f5ed;
+  background: #ede9fe;
   color: var(--bg-main);
   font-size: 11.5px;
   font-weight: 700;
@@ -715,7 +715,7 @@
   transition: background 0.2s, transform 0.15s;
 }
 .scb-article-chat-btn:hover {
-  background: #155826;
+  background: #1a0a38;
   transform: translateY(-1px);
 }
 
@@ -790,7 +790,7 @@
 .scb-faq-spinner {
   width: 40px;
   height: 40px;
-  border: 3.5px solid #e8f0eb;
+  border: 3.5px solid #ede9fe;
   border-top-color: var(--bg-main);
   border-radius: 50%;
   animation: scb-spin 0.75s linear infinite;
@@ -839,7 +839,7 @@
   align-items: flex-start;
   gap: 8px;
   padding: 10px 14px;
-  background: #e8f5ed;
+  background: #ede9fe;
   border-radius: 12px;
   color: var(--bg-main);
   font-size: 12.5px;

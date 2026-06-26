@@ -244,7 +244,7 @@
 }
 
 .green-bg {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, var(--bg-main), #1a0a38);
 }
 
 .orange-bg {

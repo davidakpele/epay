@@ -37,13 +37,13 @@
 
 /* ── Illustration Column ── */
 .swap-illustration-col {
-  background: linear-gradient(145deg, #f0faf2 0%, #e2f0e5 100%);
+  background: linear-gradient(145deg, #f5f0ff 0%, #ede9fe 100%);
   display: flex; align-items: center; justify-content: center;
-  padding: 40px 32px; border-right: 1px solid #e2ede5;
+  padding: 40px 32px; border-right: 1px solid #ddd6fe;
 }
 .dark .swap-illustration-col {
-  background: linear-gradient(145deg, #1a2e1f 0%, #1c3422 100%);
-  border-right-color: #2d4a35;
+  background: linear-gradient(145deg, #1a0a2e 0%, #2b0f56 100%);
+  border-right-color: #3b1f7a;
 }
 
 /* ── Form Column ── */
@@ -64,30 +64,30 @@
 .swap-wallet-item { flex: 1; text-align: center; }
 .swap-wallet-label { display: block; font-size: 11px; color: #888; margin-bottom: 3px; font-family: 'Segoe UI', sans-serif; }
 .swap-wallet-value { display: block; font-size: 15px; font-weight: 700; color: var(--bg-main); font-family: 'Segoe UI', sans-serif; }
-.dark .swap-wallet-value { color: #6fcf7a; }
+.dark .swap-wallet-value { color: #a78bfa; }
 .swap-wallet-divider { width: 1px; height: 36px; background: #e2e8f0; margin: 0 12px; flex-shrink: 0; }
 .dark .swap-wallet-divider { background: #2d3748; }
 
 /* ── Rate Card ── */
 .swap-rate-card {
-  background: #f0faf2; border: 1px solid #c8e6c9;
+  background: #f5f0ff; border: 1px solid #ddd6fe;
   border-radius: 12px; padding: 12px 16px;
   display: flex; flex-direction: column; gap: 6px;
 }
-.dark .swap-rate-card { background: #1a3a22; border-color: #2d5a34; }
+.dark .swap-rate-card { background: #1a0a2e; border-color: #3b1f7a; }
 .swap-rate-top { display: flex; justify-content: space-between; align-items: center; }
 .swap-rate-left { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--bg-main); }
 .swap-rate-right { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #888; }
 .dark .swap-rate-right { color: #aaa; }
 .swap-rate-value-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .swap-rate-main { font-size: 14px; font-weight: 700; color: var(--bg-main); font-family: 'Segoe UI', sans-serif; }
-.dark .swap-rate-main { color: #6fcf7a; }
+.dark .swap-rate-main { color: #a78bfa; }
 .swap-rate-market { font-size: 11px; color: #888; }
 .swap-rate-loading { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #888; }
 
 .rate-spinner {
   width: 14px; height: 14px;
-  border: 2px solid #ccc; border-top-color: var(--bg-main);
+  border: 2px solid #ddd6fe; border-top-color: var(--bg-main);
   border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;
 }
 
@@ -107,7 +107,7 @@
 }
 .swap-field-group:focus-within {
   border-color: var(--bg-main);
-  box-shadow: 0 0 0 3px rgba(46,125,50,0.08);
+  box-shadow: 0 0 0 3px rgba(43,15,86,0.08);
 }
 .dark .swap-field-group { background: #253340; border-color: #2d3748; }
 
@@ -118,9 +118,9 @@
   border-bottom: 1px solid #f0f4f8;
   background: #f8fafc; transition: background 0.15s;
 }
-.swap-currency-select:hover { background: #f0faf2; }
+.swap-currency-select:hover { background: #f5f0ff; }
 .dark .swap-currency-select { background: #2d3e50; border-bottom-color: #2d3748; }
-.dark .swap-currency-select:hover { background: #1a3a22; }
+.dark .swap-currency-select:hover { background: #1a0a2e; }
 .swap-flag { font-size: 20px; line-height: 1; flex-shrink: 0; }
 .swap-code { font-size: 14px; font-weight: 700; color: #222; font-family: 'Segoe UI', sans-serif; flex-shrink: 0; }
 .dark .swap-code { color: #e2e8f0; }
@@ -152,7 +152,7 @@
 .swap-amount-readonly { background: #f8fafc; }
 .dark .swap-amount-readonly { background: #2d3e50; }
 .swap-amount-readonly .swap-input { color: var(--bg-main); font-weight: 700; }
-.dark .swap-amount-readonly .swap-input { color: #6fcf7a; }
+.dark .swap-amount-readonly .swap-input { color: #a78bfa; }
 
 /* ── Toggle Button ── */
 .swap-toggle-row { display: flex; justify-content: center; }
@@ -161,11 +161,11 @@
   border: 2px solid var(--bg-main); background: #fff;
   color: var(--bg-main); display: flex; align-items: center;
   justify-content: center; cursor: pointer; transition: all 0.2s;
-  box-shadow: 0 2px 10px rgba(46,125,50,0.15); flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(43,15,86,0.15); flex-shrink: 0;
 }
 .swap-toggle-btn:hover {
   background: var(--bg-main); color: #fff;
-  transform: rotate(180deg); box-shadow: 0 4px 16px rgba(46,125,50,0.3);
+  transform: rotate(180deg); box-shadow: 0 4px 16px rgba(43,15,86,0.3);
 }
 .swap-toggle-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .dark .swap-toggle-btn { background: #1e293b; }
@@ -188,18 +188,18 @@
 .swap-summary-divider { height: 1px; background: #e2e8f0; margin: 2px 0; }
 .dark .swap-summary-divider { background: #2d3748; }
 .swap-summary-total { font-weight: 700; color: var(--bg-main); }
-.dark .swap-summary-total { color: #6fcf7a; }
+.dark .swap-summary-total { color: #a78bfa; }
 
 /* ── Swap Button ── */
 .swap-btn {
   width: 100%; padding: 15px;
-  background: var(--bg-main, #1b5e20); color: #fff;
+  background: var(--bg-main); color: #fff;
   border: none; border-radius: 14px; font-size: 16px;
   font-weight: 700; font-family: 'Segoe UI', sans-serif;
   cursor: pointer; transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 16px rgba(46,125,50,0.3); letter-spacing: 0.3px;
+  box-shadow: 0 4px 16px rgba(43,15,86,0.3); letter-spacing: 0.3px;
 }
-.swap-btn:hover { background: #155724; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(46,125,50,0.4); }
+.swap-btn:hover { background: #1a0a38; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(43,15,86,0.4); }
 .swap-btn:active { transform: translateY(0); }
 .swap-btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 
@@ -247,8 +247,8 @@
   font-family: 'Karla', sans-serif; transition: background 0.15s;
 }
 .dark .country-item { color: #e2e8f0; border-bottom-color: #2d3748; }
-.country-item:hover { background: #f0faf2; }
-.dark .country-item:hover { background: #1a2e1f; }
+.country-item:hover { background: #f5f0ff; }
+.dark .country-item:hover { background: #1a0a2e; }
 .radio-outer {
   width: 20px; height: 20px; border: 2px solid #ddd;
   border-radius: 50%; display: flex; align-items: center;
@@ -277,7 +277,7 @@
 .status-modal.dark { background: #1e293b; }
 .status-modal-content { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
 .status-icon-wrapper { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.success-icon { background: #e8f5e9; color: #2e7d32; }
+.success-icon { background: #ede9fe; color: var(--bg-main); }
 .fail-icon { background: #fdecea; color: #c62828; }
 .status-modal-title { font-size: 20px; font-weight: 700; color: #222; margin: 0; font-family: 'Segoe UI', sans-serif; }
 .dark .status-modal-title { color: #e2e8f0; }

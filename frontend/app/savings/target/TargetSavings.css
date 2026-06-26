@@ -8,7 +8,7 @@
 
 /* ── Hero ─────────────────────────────────────────────────────── */
 .savings-hero {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #2b0f56 0%, #1a0a38 100%);
   border-radius: 20px;
   padding: 28px 32px;
   color: #fff;
@@ -26,7 +26,7 @@
   align-items: center;
   gap: 8px;
   background: #fff;
-  color: #047857;
+  color: #2b0f56;
   border: none;
   border-radius: 12px;
   padding: 12px 22px;
@@ -60,7 +60,7 @@
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 4px;
 }
-.savings-stat-card__icon.green  { background: #d1fae5; color: #059669; }
+.savings-stat-card__icon.green  { background: #ede9fe; color: #2b0f56; }
 .savings-stat-card__icon.purple { background: #ede9fe; color: #7c3aed; }
 .savings-stat-card__icon.blue   { background: #dbeafe; color: #2563eb; }
 .savings-stat-card__icon.amber  { background: #fef3c7; color: #d97706; }
@@ -79,7 +79,7 @@
 .savings-refresh-btn {
   display: flex; align-items: center; gap: 4px;
   background: none; border: none; cursor: pointer;
-  color: #059669; font-size: 0.8rem;
+  color: #2b0f56; font-size: 0.8rem;
 }
 
 /* ── Goals grid ───────────────────────────────────────────────── */
@@ -108,7 +108,7 @@
   width: 48px; height: 48px;
   border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  background: #d1fae5; color: #059669; flex-shrink: 0;
+  background: #ede9fe; color: #2b0f56; flex-shrink: 0;
 }
 .savings-goal-card__name {
   font-weight: 700; font-size: 0.95rem;
@@ -123,8 +123,7 @@
   margin-top: 3px;
 }
 .savings-goal-card__status.active    { background: #dbeafe; color: #1d4ed8; }
-.savings-goal-card__status.completed { background: #d1fae5; color: #059669; }
-.savings-goal-card__status.withdrawn { background: #f3f4f6; color: #6b7280; }
+.savings-goal-card__status.completed { background: #d1fae5; color: #059669; }.savings-goal-card__status.withdrawn { background: #f3f4f6; color: #6b7280; }
 .savings-goal-card__status.cancelled { background: #fee2e2; color: #dc2626; }
 
 /* ── Progress bar ─────────────────────────────────────────────── */
@@ -139,7 +138,7 @@
 }
 .savings-progress__fill {
   height: 100%;
-  background: linear-gradient(90deg, #059669, #10b981);
+  background: linear-gradient(90deg, #2b0f56, #4a1f8a);
   border-radius: 4px;
   transition: width 0.5s ease;
 }
@@ -154,7 +153,7 @@
 .savings-card__amount-item { display: flex; flex-direction: column; gap: 2px; }
 .savings-card__amount-label { font-size: 0.72rem; color: var(--text-secondary, #64748b); }
 .savings-card__amount-value { font-size: 0.9rem; font-weight: 700; color: var(--text-primary, #1e293b); }
-.savings-card__amount-value.saved { color: #059669; }
+.savings-card__amount-value.saved { color: #2b0f56; }
 .savings-card__remaining {
   font-size: 0.77rem; color: var(--text-secondary, #64748b); margin-bottom: 14px;
   display: flex; align-items: center; gap: 4px;
@@ -171,7 +170,7 @@
 }
 .savings-action-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
 .savings-action-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.savings-action-btn--add      { background: #d1fae5; color: #059669; }
+.savings-action-btn--add      { background: #ede9fe; color: #2b0f56; }
 .savings-action-btn--withdraw { background: #fee2e2; color: #dc2626; }
 
 /* ── Empty state ──────────────────────────────────────────────── */
@@ -222,8 +221,8 @@
   transition: border-color 0.15s, background 0.15s;
   color: var(--text-secondary, #64748b);
 }
-.savings-icon-option:hover { border-color: #059669; }
-.savings-icon-option.selected { border-color: #059669; background: #d1fae5; color: #059669; }
+.savings-icon-option:hover { border-color: #2b0f56; }
+.savings-icon-option.selected { border-color: #2b0f56; background: #ede9fe; color: #2b0f56; }
 
 /* ── Form fields ──────────────────────────────────────────────── */
 .savings-form__row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
@@ -236,13 +235,13 @@
   background: var(--bg-input, #f8fafc);
   color: var(--text-primary, #1e293b); width: 100%;
 }
-.savings-form__input:focus { border-color: #059669; }
+.savings-form__input:focus { border-color: #2b0f56; }
 .savings-form__row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
 /* ── Submit button ────────────────────────────────────────────── */
 .savings-submit-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: #059669; color: #fff;
+  background: #2b0f56; color: #fff;
   border: none; border-radius: 12px;
   padding: 13px; font-size: 0.95rem; font-weight: 700;
   cursor: pointer; width: 100%; margin-top: 6px;

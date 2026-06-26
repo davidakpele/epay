@@ -601,7 +601,7 @@
 }
 
 .success-message svg {
-  color: #10b981;
+  color: var(--bg-main);
 }
 
 .success-message h3 {

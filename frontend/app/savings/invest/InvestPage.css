@@ -69,7 +69,7 @@
   margin-bottom: 4px;
 }
 .invest-stat-card__icon.purple { background: #ede9fe; color: var(--bg-main); }
-.invest-stat-card__icon.green  { background: #d1fae5; color: #059669; }
+.invest-stat-card__icon.green  { background: #ede9fe; color: #2b0f56; }
 .invest-stat-card__icon.amber  { background: #fef3c7; color: #d97706; }
 .invest-stat-card__icon.blue   { background: #dbeafe; color: #2563eb; }
 .invest-stat-card__label {
@@ -227,7 +227,7 @@
   font-size: 1rem;
   font-weight: 700;
 }
-.invest-preview__item-value.profit { color: #6ee7b7; }
+.invest-preview__item-value.profit { color: #a78bfa; }
 .invest-preview__item-value.total  { color: #fcd34d; font-size: 1.15rem; }
 
 /* ── Lock notice ──────────────────────────────────────────────── */
@@ -314,7 +314,7 @@
   flex-shrink: 0;
 }
 .invest-item__icon.active   { background: #ede9fe; color: var(--bg-main); }
-.invest-item__icon.paid-out { background: #d1fae5; color: #059669; }
+.invest-item__icon.paid-out { background: #ede9fe; color: #2b0f56; }
 .invest-item__icon.failed   { background: #fee2e2; color: #dc2626; }
 .invest-item__icon.matured  { background: #fef3c7; color: #d97706; }
 .invest-item__body { flex: 1; min-width: 0; }
@@ -330,7 +330,7 @@
 }
 .invest-item__right { text-align: right; flex-shrink: 0; }
 .invest-item__principal { font-weight: 700; font-size: 0.9rem; color: var(--text-primary, #1e293b); }
-.invest-item__profit { font-size: 0.78rem; color: #059669; margin-top: 2px; }
+.invest-item__profit { font-size: 0.78rem; color: #2b0f56; margin-top: 2px; }
 .invest-status-badge {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 2px 8px; border-radius: 20px;
@@ -338,7 +338,7 @@
   text-transform: uppercase; letter-spacing: 0.04em;
 }
 .invest-status-badge.active   { background: #ede9fe; color: var(--bg-main); }
-.invest-status-badge.paid-out { background: #d1fae5; color: #059669; }
+.invest-status-badge.paid-out { background: #ede9fe; color: #2b0f56; }
 .invest-status-badge.failed   { background: #fee2e2; color: #dc2626; }
 .invest-status-badge.matured  { background: #fef3c7; color: #d97706; }
 
@@ -371,7 +371,7 @@
 }
 .invest-success-card__icon-wrap {
   width: 64px; height: 64px; border-radius: 50%;
-  background: #d1fae5; color: #059669;
+  background: #ede9fe; color: #2b0f56;
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 16px;
 }
