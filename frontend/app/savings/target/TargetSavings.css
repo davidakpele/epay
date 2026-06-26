@@ -1,0 +1,225 @@
+/* ═══════════════════════════════════════════════════════════════
+   Target Savings Page
+════════════════════════════════════════════════════════════════ */
+.savings-page {
+  padding: 24px 24px 80px;
+  max-width: 1100px;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────── */
+.savings-hero {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border-radius: 20px;
+  padding: 28px 32px;
+  color: #fff;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.savings-hero__left h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; }
+.savings-hero__left p  { font-size: 0.88rem; opacity: 0.82; max-width: 460px; line-height: 1.55; }
+.savings-hero__action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: #047857;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 22px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.18s, transform 0.12s;
+}
+.savings-hero__action:hover { opacity: 0.92; transform: translateY(-1px); }
+
+/* ── Stats row ────────────────────────────────────────────────── */
+.savings-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.savings-stat-card {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.savings-stat-card__icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+}
+.savings-stat-card__icon.green  { background: #d1fae5; color: #059669; }
+.savings-stat-card__icon.purple { background: #ede9fe; color: #7c3aed; }
+.savings-stat-card__icon.blue   { background: #dbeafe; color: #2563eb; }
+.savings-stat-card__icon.amber  { background: #fef3c7; color: #d97706; }
+.savings-stat-card__label { font-size: 0.75rem; color: var(--text-secondary, #64748b); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.savings-stat-card__value { font-size: 1.25rem; font-weight: 800; color: var(--text-primary, #1e293b); }
+
+/* ── Section header ───────────────────────────────────────────── */
+.savings-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.savings-section-title {
+  font-size: 1rem; font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+.savings-refresh-btn {
+  display: flex; align-items: center; gap: 4px;
+  background: none; border: none; cursor: pointer;
+  color: #059669; font-size: 0.8rem;
+}
+
+/* ── Goals grid ───────────────────────────────────────────────── */
+.savings-goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 20px;
+}
+
+/* ── Goal card ────────────────────────────────────────────────── */
+.savings-goal-card {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 18px;
+  padding: 20px;
+  transition: box-shadow 0.18s, transform 0.12s;
+}
+.savings-goal-card:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+  transform: translateY(-2px);
+}
+.savings-goal-card__header {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+}
+.savings-goal-card__icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: #d1fae5; color: #059669; flex-shrink: 0;
+}
+.savings-goal-card__name {
+  font-weight: 700; font-size: 0.95rem;
+  color: var(--text-primary, #1e293b);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.savings-goal-card__status {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 0.7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  margin-top: 3px;
+}
+.savings-goal-card__status.active    { background: #dbeafe; color: #1d4ed8; }
+.savings-goal-card__status.completed { background: #d1fae5; color: #059669; }
+.savings-goal-card__status.withdrawn { background: #f3f4f6; color: #6b7280; }
+.savings-goal-card__status.cancelled { background: #fee2e2; color: #dc2626; }
+
+/* ── Progress bar ─────────────────────────────────────────────── */
+.savings-progress { margin-bottom: 14px; }
+.savings-progress__info {
+  display: flex; justify-content: space-between;
+  font-size: 0.78rem; color: var(--text-secondary, #64748b); margin-bottom: 7px;
+}
+.savings-progress__track {
+  height: 8px; background: var(--border-color, #e2e8f0);
+  border-radius: 4px; overflow: hidden;
+}
+.savings-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #059669, #10b981);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.savings-progress__fill.complete {
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+}
+
+/* ── Amounts ──────────────────────────────────────────────────── */
+.savings-card__amounts {
+  display: flex; justify-content: space-between; margin-bottom: 14px;
+}
+.savings-card__amount-item { display: flex; flex-direction: column; gap: 2px; }
+.savings-card__amount-label { font-size: 0.72rem; color: var(--text-secondary, #64748b); }
+.savings-card__amount-value { font-size: 0.9rem; font-weight: 700; color: var(--text-primary, #1e293b); }
+.savings-card__amount-value.saved { color: #059669; }
+.savings-card__remaining {
+  font-size: 0.77rem; color: var(--text-secondary, #64748b); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* ── Card actions ─────────────────────────────────────────────── */
+.savings-card__actions { display: flex; gap: 10px; }
+.savings-action-btn {
+  flex: 1; padding: 9px 12px;
+  border-radius: 10px; border: none;
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: opacity 0.18s, transform 0.1s;
+}
+.savings-action-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+.savings-action-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.savings-action-btn--add      { background: #d1fae5; color: #059669; }
+.savings-action-btn--withdraw { background: #fee2e2; color: #dc2626; }
+
+/* ── Empty state ──────────────────────────────────────────────── */
+.savings-empty {
+  text-align: center; padding: 56px 24px;
+  background: var(--card-bg, #fff);
+  border: 1px dashed var(--border-color, #e2e8f0);
+  border-radius: 18px;
+  color: var(--text-secondary, #64748b);
+}
+.savings-empty svg { opacity: 0.3; margin-bottom: 14px; }
+.savings-empty p { font-size: 0.88rem; }
+
+/* ── Create goal modal ────────────────────────────────────────── */
+.savings-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; padding: 16px;
+}
+.savings-modal {
+  background: var(--card-bg, #fff);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+  animation: popIn 0.25s ease;
+}
+@keyframes popIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+.savings-modal__header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.savings-modal__title { font-size: 1.1rem; font-weight: 700; color: var(--text-primary, #1e293b); }
+.savings-modal__close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-secondary, #64748b); display: flex; align-items: center;
+}
+
+/* ── Goal icon picker ─────────────────────────────────────────── */
+.savings-icon-picker { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.savings-icon-option {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; border: 2px solid transparent;
+  background: var(--bg-input, #f1f3f5);
+  transition: border-color 0.15s, background 0.15s;
+  color: var(--text-secondary, #64748b);
+}
+.savings-icon-option:hov

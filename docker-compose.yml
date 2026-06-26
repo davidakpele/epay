@@ -1,0 +1,546 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: banking-postgres
+    environment:
+      POSTGRES_DB: pesco_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - banking-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: banking-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: banking_db
+      MYSQL_USER: banking_user
+      MYSQL_PASSWORD: banking_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - banking-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h localhost ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: always
+    networks:
+      - banking-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - banking-network
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+    networks:
+      - banking-network
+
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: prometheus
+    ports:
+      - "9091:9090"    
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+      - "--log.level=warn"
+    depends_on:
+      - auth-user-service
+      - wallet-service
+      - deposit-service
+      - withdraw-service
+      - revenue-service
+      - escrow-service
+      - notification-service
+      - virtual-card-service
+      - admin-api-service
+    restart: unless-stopped
+    networks:
+      - banking-network
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_DOMAIN: localhost
+      GF_SERVER_ROOT_URL: http://localhost:3001
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_LOG_LEVEL: warn
+      GF_FEATURE_TOGGLES_ENABLE: publicDashboards
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
+    networks:
+      - banking-network
+
+  loki:
+    image: grafana/loki:2.9.7
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - banking-network
+
+  promtail:
+    image: grafana/promtail:2.9.7
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - banking-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-gateway
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:uid=101,gid=101,mode=1777
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - CHOWN
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./security-firewalls/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./security-firewalls/conf.d:/etc/nginx/conf.d:ro
+      - ./security-firewalls/html:/usr/share/nginx/html:ro
+      - nginx_logs:/var/log/nginx:rw
+      - nginx_cache:/var/cache/nginx:rw
+      - nginx_run:/var/run:rw
+    depends_on:
+      - auth-user-service
+      - wallet-service
+      - deposit-service
+      - withdraw-service
+      - revenue-service
+      - notification-service
+      - escrow-service
+      - admin-api-service
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    environment:
+      - TZ=UTC
+      - NGINX_ENTRYPOINT_QUIET_LOGS=1
+    networks:
+      - banking-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=nginx"
+
+  auth-user-service:
+    build: ./auth-user-service
+    container_name: auth-user-service
+    image: davidakpele/auth-user-service:latest
+    restart: unless-stopped
+    ports:
+      - "8187:8187"
+    volumes:
+      - ./uploads/auth:/var/www/uploads/images
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - FILE_UPLOAD_DIR=/var/www/uploads/images
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always 
+      - MANAGEMENT_SECURITY_ENABLED=false 
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      notification-service:
+        condition: service_started
+      wallet-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8187/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - banking-network
+
+  withdraw-service:
+    build: ./withdraw-service
+    container_name: withdraw-service
+    image: davidakpele/withdraw-service:latest
+    restart: unless-stopped
+    ports:
+      - "8068:8068"
+    environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+    depends_on:
+      wallet-service:
+        condition: service_started
+      resiliences-service:
+        condition: service_started
+      revenue-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      auth-user-service:
+        condition: service_started
+      escrow-service:
+        condition: service_started
+    networks:
+      - banking-network
+
+  wallet-service:
+    restart: unless-stopped
+    build: ./wallet-service
+    container_name: wallet-service
+    image: davidakpele/wallet-service:latest
+    ports:
+      - "8035:8035"
+    environment:
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+    depends_on:
+      - postgres
+      - resiliences-service
+      - notification-service
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8035/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - banking-network
+
+  deposit-service:
+    build: ./deposit-service
+    container_name: deposit-service
+    image: davidakpele/deposit-service:latest
+    restart: unless-stopped
+    ports:
+      - "8020:8020"
+    environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+    depends_on:
+      - resiliences-service
+      - wallet-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8020/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - banking-network
+
+  virtual-card-service:
+    build: ./virtual-card-service
+    container_name: virtual-card-service
+    image: davidakpele/virtual-card-service:latest
+    ports:
+      - "8037:8037"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      resiliences-service:
+        condition: service_started
+      wallet-service:
+        condition: service_started
+      auth-user-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/pesco_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8037/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - banking-network
+
+  revenue-service:
+    build: ./revenue-service
+    container_name: revenue-service
+    image: davidakpele/revenue-service:latest
+    ports:
+      - "8083:8083"
+    env_file:
+      - ./revenue-service/.env
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - banking-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    image: davidakpele/api-gateway:latest
+    ports:
+      - "8292:8292"
+    environment:
+      - PORT=8292
+      - BACKEND_URL=http://host.docker.internal:8000/v1
+      - BACKEND_WS_URL=ws://host.docker.internal:8000/v1/ws
+      - RATE_LIMIT_PER_MINUTE=100
+      - NODE_ENV=production
+      - ZIPKIN_BASE_URL=http://zipkin:9411
+    restart: unless-stopped
+    depends_on:
+      - zipkin
+    networks:
+      - banking-network
+
+  escrow-service:
+    build: ./escrow-service
+    container_name: escrow-service
+    image: davidakpele/escrow-service:latest
+    restart: unless-stopped
+    ports:
+      - "8755:8755"
+    environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+    depends_on:
+      - postgres
+      - notification-service
+      - wallet-service
+      - resiliences-service
+      - auth-user-service
+    networks:
+      - banking-network
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    image: davidakpele/notification-service:latest
+    restart: unless-stopped
+    ports:
+      - "8079:8079"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+      MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED: "true"
+    networks:
+      - banking-network
+
+  resiliences-service:
+    restart: unless-stopped
+    build: ./resiliences-service
+    container_name: resiliences-service
+    image: davidakpele/resiliences-service:latest
+    ports:
+      - "8531:8531"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8531
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=pesco_db;Username=postgres;Password=root
+      - Redis__ConnectionString=redis:6379,abortConnect=false
+      - ServiceUrls__UserService=http://auth-user-service:8187
+      - ServiceUrls__WalletService=http://wallet-service:8035
+      - ServiceUrls__RevenueService=http://revenue-service:8083
+      - ServiceUrls__NotificationService=http://notification-service:8079
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8531/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - banking-network
+
+  admin-api-service:
+    build: ./admin-api-service
+    container_name: admin-api-service
+    image: davidakpele/admin-api-service:latest
+    ports:
+      - "8109:8109"
+    volumes:
+      - ./uploads/auth:/var/www/uploads/images
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - FILE_UPLOAD_DIR=/var/www/uploads/images
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+    depends_on:
+      - postgres
+      - notification-service
+      - auth-user-service
+      - resiliences-service
+      - withdraw-service
+      - wallet-service
+      - deposit-service
+      - revenue-service
+      - escrow-service
+      - virtual-card-service
+      - redis
+    networks:
+      - banking-network
+
+  frontend:
+    build: ./frontend
+    container_name: banking-frontend
+    image: davidakpele/banking-frontend:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - banking-network
+
+volumes:
+  postgres_data:
+  mysql_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  nginx_logs:
+    driver: local
+  nginx_cache:
+    driver: local
+  nginx_run:
+    driver: local
+
+networks:
+  banking-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

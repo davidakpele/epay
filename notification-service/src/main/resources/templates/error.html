@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>ePay – Server Error</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Resets */
+    body, table, td, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; display: block; }
+    body { margin: 0 !important; padding: 0 !important; background-color: #edecea; }
+
+    /* Hover — must stay in <head> */
+    .cta-btn:hover  { background-color: #163a16 !important; }
+    .social-a:hover { background-color: #2d6a2d !important; transform: translateY(-2px); }
+    .footer-a:hover { color: #6b7280 !important; }
+
+    /* Animations — webmail / browser preview only */
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pop {
+      from { opacity: 0; transform: scale(0.6); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .brand-anim { animation: rise 0.5s 0.05s cubic-bezier(.22,1,.36,1) both; }
+    .card-anim  { animation: rise 0.55s 0.1s  cubic-bezier(.22,1,.36,1) both; }
+    .icon-anim  { animation: pop  0.5s 0.3s   cubic-bezier(.22,1,.36,1) both; }
+
+    /* Mobile */
+    @media only screen and (max-width: 560px) {
+      .email-wrap   { padding: 24px 12px !important; }
+      .card-banner  { padding: 28px 22px 18px !important; }
+      .card-body    { padding: 8px 22px 28px !important; }
+      .card-footer  { padding: 20px 22px 28px !important; }
+      .error-title  { font-size: 20px !important; }
+      .cta-btn      { font-size: 14px !important; padding: 14px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#edecea;font-family:'DM Sans',Arial,sans-serif;">
+
+<!-- ═══ Page wrapper ═══ -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color:#edecea;">
+  <tr>
+    <td align="center" class="email-wrap" style="padding:40px 16px;">
+
+      <!-- ══ Brand ══ -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+             class="brand-anim" style="margin-bottom:26px;">
+        <tr>
+          <!-- Logo box -->
+          <td style="padding-right:10px;vertical-align:middle;">
+            <table role="presentation" width="38" height="38" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" valign="middle"
+                    style="width:38px;height:38px;background-color:#166701;border-radius:9px;">
+                  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iNyIgaGVpZ2h0PSI3IiByeD0iMS41IiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHg9IjExIiB5PSIyIiB3aWR0aD0iNyIgaGVpZ2h0PSI3IiByeD0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC41Ii8+PHJlY3QgeD0iMiIgeT0iMTEiIHdpZHRoPSI3IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjUiLz48cmVjdCB4PSIxMSIgeT0iMTEiIHdpZHRoPSI3IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IndoaXRlIi8+PC9zdmc+"
+                       width="20" height="20" alt="ePay logo">
+                </td>
+              </tr>
+            </table>
+          </td>
+          <!-- Brand name -->
+          <td style="vertical-align:middle;">
+            <span style="font-family:'DM Serif Display',Georgia,serif;font-size:26px;color:#166701;letter-spacing:-0.3px;line-height:1;">ePay</span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- ══ Card ══ -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+             width="100%" style="max-width:520px;" class="card-anim">
+        <tr>
+          <td style="background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.04),0 12px 40px rgba(0,0,0,.08);">
+
+            <!-- ── Error banner ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="card-banner" align="center"
+                    style="padding:36px 40px 20px;text-align:center;">
+
+                  <!-- Red alert icon -->
+                  <div class="icon-anim"
+                       style="display:inline-block;margin-bottom:20px;">
+                    <table role="presentation" width="64" height="64" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" valign="middle"
+                            style="width:64px;height:64px;background-color:#e8635a;border-radius:50%;box-shadow:0 4px 18px rgba(232,99,90,.35);">
+                          <!--[if !mso]><!-->
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                               style="display:block;margin:0 auto;">
+                            <path d="M12 8v5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                            <circle cx="12" cy="16.5" r="1.2" fill="white"/>
+                          </svg>
+                          <!--<![endif]-->
+                          <!--[if mso]>
+                          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgiIGhlaWdodD0iMjgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgOHY1IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxNi41IiByPSIxLjIiIGZpbGw9IndoaXRlIi8+PC9zdmc+"
+                               width="28" height="28" alt="error">
+                          <![endif]-->
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <!-- Error code -->
+                  <p style="font-family:'DM Sans',Arial,sans-serif;font-size:22px;font-weight:700;color:#111827;letter-spacing:-0.3px;margin:0 0 10px;line-height:1.2;">
+                    500 <span style="color:#6b7280;font-weight:400;">| Server Error</span>
+                  </p>
+
+                  <!-- Error title -->
+                  <h1 class="error-title"
+                      style="font-family:'DM Serif Display',Georgia,serif;font-size:24px;color:#166701;margin:0;line-height:1.2;font-weight:400;">
+                    Oops! Something went wrong.
+                  </h1>
+
+                </td>
+              </tr>
+            </table>
+
+            <!-- ── Card body ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="card-body" style="padding:8px 40px 36px;">
+
+                  <!-- Intro -->
+                  <p style="font-size:14.5px;color:#6b7280;line-height:1.65;margin:0 0 22px;font-family:'DM Sans',Arial,sans-serif;">
+                    We encountered an error on our server and your request could not be completed at this time.
+                  </p>
+
+                  <!-- Dynamic message hint box -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                         style="background-color:#f3f4f6;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:22px;">
+                    <tr>
+                      <td style="padding:16px 22px;">
+                        <p style="font-size:14px;color:#374151;line-height:1.6;font-weight:500;margin:0;font-family:'DM Sans',Arial,sans-serif;"
+                           th:text="${message}">
+                          Please try refreshing the page or come back later.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Note -->
+                  <p style="font-size:13.5px;color:#6b7280;line-height:1.65;margin:0 0 26px;font-family:'DM Sans',Arial,sans-serif;">
+                    If you need immediate assistance, feel free to contact our support team.
+                  </p>
+
+                  <!-- CTA button -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                    <tr>
+                      <td align="center">
+                        <a href="#" class="cta-btn"
+                           style="display:block;background-color:#166701;color:#ffffff;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;font-weight:600;letter-spacing:0.2px;text-align:center;padding:15px 24px;border-radius:12px;text-decoration:none;box-shadow:0 4px 12px rgba(28,74,28,.25);transition:background-color .2s;">
+                          Contact Support
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                </td>
+              </tr>
+            </table>
+
+            <!-- ── Card footer ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="border-top:1px solid #f3f0ec;">
+              <tr>
+                <td class="card-footer" align="center" style="padding:22px 40px 32px;text-align:center;">
+
+                  <!-- Tagline -->
+                  <p style="font-family:'DM Serif Display',Georgia,serif;font-size:15px;color:#374151;font-weight:400;margin:0 0 18px;">
+                    Thank you for using ePay!
+                  </p>
+
+                  <!-- Social icons -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                         align="center" style="margin:0 auto 18px;">
+                    <tr>
+                      <!-- Facebook -->
+                      <td style="padding:0 5px;">
+                        <a href="#" class="social-a"
+                           style="display:inline-block;width:34px;height:34px;background-color:#166701;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                          <table role="presentation" width="34" height="34" cellpadding="0" cellspacing="0" border="0">
+                            <tr><td align="center" valign="middle"
+                                    style="width:34px;height:34px;background-color:#166701;border-radius:50%;">
+                              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTE4IDJoLTNhNSA1IDAgMCAwLTUgNXYzSDd2NGgzdjhoNHYtOGgzbDEtNGgtNFY3YTEgMSAwIDAgMSAxLTFoM3oiLz48L3N2Zz4="
+                                   width="16" height="16" alt="Facebook" style="display:block;margin:0 auto;">
+                            </td></tr>
+                          </table>
+                        </a>
+                      </td>
+                      <!-- Twitter -->
+                      <td style="padding:0 5px;">
+                        <a href="#" class="social-a"
+                           style="display:inline-block;width:34px;height:34px;background-color:#166701;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                          <table role="presentation" width="34" height="34" cellpadding="0" cellspacing="0" border="0">
+                            <tr><td align="center" valign="middle"
+                                    style="width:34px;height:34px;background-color:#166701;border-radius:50%;">
+                              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTIyIDRzLS43IDIuMS0yIDMuNGMxLjYgMTAtOS40IDE3LjMtMTggMTEuNiAyLjIuMSA0LjQtLjYgNi0yQzMgMTUuNS41IDkuNiAzIDVjMi4yIDIuNiA1LjYgNC4xIDkgNC0uOS00LjIgNC02LjYgNy0zLjggMS4xIDAgMy0xLjIgMy0xLjJ6Ii8+PC9zdmc+"
+                                   width="15" height="15" alt="Twitter" style="display:block;margin:0 auto;">
+                            </td></tr>
+                          </table>
+                        </a>
+                      </td>
+                      <!-- Instagram -->
+                      <td style="padding:0 5px;">
+                        <a href="#" class="social-a"
+                           style="display:inline-block;width:34px;height:34px;background-color:#166701;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                          <table role="presentation" width="34" height="34" cellpadding="0" cellspacing="0" border="0">
+                            <tr><td align="center" valign="middle"
+                                    style="width:34px;height:34px;background-color:#166701;border-radius:50%;">
+                              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiByeD0iNSIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjMiIGZpbGw9IiMxNjY3MDEiLz48Y2lyY2xlIGN4PSIxNy41IiBjeT0iNi41IiByPSIxIiBmaWxsPSIjMTY2NzAxIi8+PC9zdmc+"
+                                   width="15" height="15" alt="Instagram" style="display:block;margin:0 auto;">
+                            </td></tr>
+                          </table>
+                        </a>
+                      </td>
+                      <!-- Website -->
+                      <td style="padding:0 5px;">
+                        <a href="#" class="social-a"
+                           style="display:inline-block;width:34px;height:34px;background-color:#166701;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                          <table role="presentation" width="34" height="34" cellpadding="0" cellspacing="0" border="0">
+                            <tr><td align="center" valign="middle"
+                                    style="width:34px;height:34px;background-color:#166701;border-radius:50%;">
+                              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiLz48bGluZSB4MT0iMiIgeTE9IjEyIiB4Mj0iMjIiIHkyPSIxMiIvPjxwYXRoIGQ9Ik0xMiAyYTE1LjMgMTUuMyAwIDAgMSA0IDEwIDE1LjMgMTUuMyAwIDAgMS00IDEwIDE1LjMgMTUuMyAwIDAgMS00LTEwIDE1LjMgMTUuMyAwIDAgMSA0LTEweiIvPjwvc3ZnPg=="
+                                   width="15" height="15" alt="Website" style="display:block;margin:0 auto;">
+                            </td></tr>
+                          </table>
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Footer meta -->
+                  <p style="font-size:12px;color:#b0aaa3;line-height:1.7;margin:0;font-family:'DM Sans',Arial,sans-serif;">
+                    ePay &nbsp;·&nbsp;
+                    <a href="mailto:support@epay.com" class="footer-a"
+                       style="color:#9ca3af;text-decoration:none;transition:color .2s;">support@epay.com</a><br>
+                    +1 (234) 567-890
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+      </table>
+      <!-- /Card -->
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

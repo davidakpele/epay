@@ -1,0 +1,144 @@
+.wrap {
+  padding: 20px 22px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.createBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  background: var(--green-dark);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-family: var(--font-system);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.createBtn:hover {
+  background: #0f4d00;
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--bg);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.cardVisual {
+  width: 56px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #166701, #4db825);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.cardNetwork {
+  font-size: 0.52rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 700;
+}
+
+.cardDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardNumber {
+  font-family: var(--font-system);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.cardMeta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.cardMeta strong {
+  color: var(--text);
+}
+
+.cardActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.cardStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.statusActive {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.statusFrozen {
+  background: #e8f0ff;
+  color: #3b5bdb;
+}
+
+.cardActionBtn {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+  font-family: var(--font-system);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cardActionBtn:hover {
+  border-color: var(--green-dark);
+  color: var(--green-dark);
+}

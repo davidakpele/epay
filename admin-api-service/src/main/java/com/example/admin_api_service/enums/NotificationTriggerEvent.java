@@ -1,0 +1,17 @@
+package com.example.admin_api_service.enums;
+
+public enum NotificationTriggerEvent {
+    USER_REGISTERED,
+    USER_LOGIN,
+    PASSWORD_RESET,
+    PASSWORD_CHANGED,
+    ACCOUNT_LOCKED,
+    ACCOUNT_UNLOCKED,
+    PAYMENT_RECEIVED,
+    PAYMENT_FAILED,
+    TRANSACTION_COMPLETED,
+    KYC_APPROVED,
+    KYC_REJECTED,
+    TWO_FACTOR_ENABLED,
+    TWO_FACTOR_DISABLED
+}

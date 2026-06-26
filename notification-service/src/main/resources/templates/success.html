@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ePay – Success</title>
+</head>
+<body style="margin:0;padding:0;background-color:#EDECEA;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#EDECEA;padding:40px 16px;">
+    <tr>
+      <td align="center">
+
+        <!-- Brand -->
+        <table width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;margin-bottom:28px;">
+          <tr>
+            <td align="center">
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-right:10px;vertical-align:middle;">
+                    <div style="width:38px;height:38px;background-color:##166701;border-radius:9px;display:inline-block;text-align:center;line-height:38px;">
+                      <span style="color:#ffffff;font-size:18px;font-weight:bold;">e</span>
+                    </div>
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <span style="font-family:Georgia,'Times New Roman',serif;font-size:26px;color:##166701;font-weight:bold;letter-spacing:-0.3px;">ePay</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <!-- /Brand -->
+
+        <!-- Card -->
+        <table width="520" cellpadding="0" cellspacing="0" border="0"
+          style="max-width:520px;background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.08);">
+
+          <!-- ── Success Banner ── -->
+          <tr>
+            <td align="center" style="padding:36px 40px 28px;">
+
+              <!-- Check circle -->
+              <div style="width:64px;height:64px;background-color:#D1E8D1;border-radius:50%;display:inline-block;text-align:center;line-height:64px;margin-bottom:20px;">
+                <span style="color:##166701;font-size:28px;font-weight:bold;line-height:64px;">✓</span>
+              </div>
+              <br>
+              <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:28px;color:##166701;font-weight:normal;line-height:1.2;">
+                Success!
+              </h1>
+            </td>
+          </tr>
+
+          <!-- ── Card Body ── -->
+          <tr>
+            <td style="padding:4px 40px 36px 40px;">
+
+              <!-- Greeting -->
+              <p style="margin:0 0 6px 0;font-size:15px;color:#374151;font-weight:500;">
+                Thank You! <span th:text="${username}"></span>
+              </p>
+
+              <!-- Intro -->
+              <p style="margin:0 0 24px 0;font-size:14.5px;color:#6B7280;line-height:1.65;">
+                Your email has been successfully verified and your ePay account is now active!
+              </p>
+
+              <!-- Highlight Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                style="background-color:#F0F5F0;border:1px solid #C8DEC8;border-radius:14px;margin-bottom:24px;">
+                <tr>
+                  <td align="center" style="padding:22px 24px;">
+                    <p style="margin:0 0 10px 0;font-size:15px;font-weight:700;color:##166701;line-height:1.5;">
+                      <span th:text="${message}"></span>
+                    </p>
+                    <p style="margin:0;font-size:14px;color:#4B7A4B;line-height:1.65;" th:text="${message}">
+                      You can now log in and start using ePay for secure and fast transactions.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Note -->
+              <p style="margin:0;font-size:13.5px;color:#6B7280;line-height:1.65;">
+                If you have any questions or need assistance, please don't hesitate to contact our support team.
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- ── Footer ── -->
+          <tr>
+            <td align="center" style="padding:22px 40px 32px;border-top:1px solid #F3F0EC;">
+
+              <!-- Tagline -->
+              <p style="margin:0 0 18px 0;font-size:15px;color:#374151;font-weight:700;">
+                Thank you for using ePay!
+              </p>
+
+              <!-- Socials -->
+              <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 18px auto;">
+                <tr>
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block;width:34px;height:34px;background-color:##166701;border-radius:50%;text-align:center;line-height:34px;text-decoration:none;color:#ffffff;font-size:13px;font-weight:bold;">f</a>
+                  </td>
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block;width:34px;height:34px;background-color:##166701;border-radius:50%;text-align:center;line-height:34px;text-decoration:none;color:#ffffff;font-size:12px;font-weight:bold;">t</a>
+                  </td>
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block;width:34px;height:34px;background-color:##166701;border-radius:50%;text-align:center;line-height:34px;text-decoration:none;color:#ffffff;font-size:11px;font-weight:bold;">in</a>
+                  </td>
+                  <td style="padding:0 6px;">
+                    <a href="#" style="display:inline-block;width:34px;height:34px;background-color:##166701;border-radius:50%;text-align:center;line-height:34px;text-decoration:none;color:#ffffff;font-size:13px;font-weight:bold;">@</a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Footer meta -->
+              <p style="margin:0;font-size:12px;color:#B0AAA3;line-height:1.7;">
+                ePay &nbsp;&middot;&nbsp; <a href="mailto:support@epay.com" style="color:#9CA3AF;text-decoration:none;">support@epay.com</a><br>
+                +1 (234) 567-890
+              </p>
+
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Card -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

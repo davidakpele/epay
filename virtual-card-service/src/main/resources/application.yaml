@@ -1,0 +1,229 @@
+server:
+  port: 8037
+
+spring:
+  application:
+    name: virtual-card-service
+  web:
+    resources:
+      add-mappings: false
+  jackson:
+      deserialization:
+        fail-on-null-for-primitives: false    
+      default-property-inclusion: non_null
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    filter:
+      dispatcher-types: REQUEST,ERROR,ASYNC
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pesco_db
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: false 
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      connection-timeout: 20000
+      pool-name: HikariPool
+      max-lifetime: 1200000 
+      leak-detection-threshold: 60000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        connection:
+          provider_disables_autocommit: true
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 2MB
+      max-request-size: 2MB
+      file-size-threshold: 0
+      location: /tmp
+  sql:
+    init:
+      mode: never
+  # ==================== DISABLE AUTO-CONFIGURATIONS ====================
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration
+
+# ==================== SWAGGER/OPENAPI CONFIGURATION ====================
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+    version: openapi_3_0
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    filter: true
+    display-request-duration: true
+    doc-expansion: none
+    default-models-expand-depth: 3
+    default-model-expand-depth: 3
+    show-extensions: true
+    show-common-extensions: true
+    disable-swagger-default-url: true
+    use-root-path: false
+  packages-to-scan: pesco.example.virtual_card_service.controllers
+  paths-to-match: /api/**
+  show-actuator: false
+  writer-with-default-pretty-printer: true
+  override-with-generic-response: false
+  cache:
+    disabled: false
+  # Disable HATEOAS support in SpringDoc
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+  use-management-port: false
+  pre-loading-enabled: false
+
+# Application metadata for Swagger
+app:
+  name: Virtual Card Service
+  version: 1.0.0
+  description: REST API for managing virtual cards with comprehensive CRUD operations, security features, and spending controls
+  contact:
+    name: Virtual Card Team
+    email: support@virtualcard.com
+    url: https://virtualcard.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  servers:
+    - url: http://localhost:8037
+      description: Local Development Server
+    - url: http://localhost:8037
+      description: Development Environment
+    - url: https://api.virtualcard.com
+      description: Production Server
+
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:/var/www/uploads/images}
+  max-file-size: 50MB
+  allowed-file-types: image/jpeg,image/png,image/gif,image/webp
+
+jwt:
+  secret-key: 3hbXrhqhmvPD0bVq9Ce4hxTqALG701J7jRXyfKjqtzDPIlbdJ8YMIfZtHmPlC6Js9JVpELE2tj4KGP1VoCMA4Ya58WGF3Hs1
+  expiration-minutes: 30
+  refresh-expiration-days: 7
+  issuer: "Unified Dynamic Systems"
+  audience: "UD49-Stations-app"
+  clock-skew-seconds: 30
+  algorithm: "HS256"
+  token-prefix: "Bearer"
+  authorization-header: "Authorization"
+  enable-token-blacklist: true
+  blacklist-cleanup-interval-minutes: 60
+  max-blacklist-size: 10000
+  cookie-name: "jwt-token"
+  http-only-cookie: true
+  secure-cookie: true
+  same-site-cookie: "Strict"
+  cors-allowed-origins: "http://localhost:3000,http://localhost:8000"
+  enable-multi-factor-support: false
+  max-tokens-per-user: 5
+  log-token-issuance: false
+  enable-token-rotation: true
+  rotation-grace-period-minutes: 5
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+web:
+  resources:
+    static-locations: classpath:/static/
+
+notification-service:
+  base-url: http://notification-service:8079
+
+wallet-service:
+  base-url: http://wallet-service:8035
+
+authentication-service:
+  base-url: http://auth-user-service:8187
+
+history-service:
+  base-url: http://history-service:8390
+
+wallet-websocket:
+  url: ws://wallet-service:8035/ws/wallet
+
+grpc:
+  server:
+    port: 9090
+  client:
+    wallet-service:
+      address: static://localhost:9090
+      negotiationType: plaintext
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, loggers, env
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
+      enabled: false
+      
+logging:
+  level:
+    com.mouad.movieservice: DEBUG
+    org.springframework.web: DEBUG
+    com.example.demo: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    pesco.example.virtual_card_service: DEBUG
+    springdoc: INFO
+    org.springframework.boot.autoconfigure: WARN
+
+# ==================== PROFILE-SPECIFIC SWAGGER CONFIGURATION ====================
+---
+# Development Profile
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  show-actuator: false
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+

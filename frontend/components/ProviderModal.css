@@ -1,0 +1,229 @@
+.provider-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 0;
+}
+
+.provider-modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+  margin: 20px;
+}
+
+.provider-modal-content.dark {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.provider-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  border-bottom: 1px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  z-index: 10;
+}
+
+.provider-modal-content.dark .provider-modal-header {
+  border-bottom-color: #333;
+  background: #1a1a1a;
+}
+
+.back-button,
+.close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  color: #333;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.provider-modal-content.dark .back-button,
+.provider-modal-content.dark .close-button {
+  color: #fff;
+}
+
+.back-button:hover,
+.close-button:hover {
+  background-color: #f8f9fa;
+}
+
+.provider-modal-content.dark .back-button:hover,
+.provider-modal-content.dark .close-button:hover {
+  background-color: #2a2a2a;
+}
+
+.provider-modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+  flex: 1;
+  text-align: center;
+}
+
+.provider-modal-content.dark .provider-modal-title {
+  color: #fff;
+}
+
+.providers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 20px;
+  padding: 32px;
+}
+
+.provider-item {
+  aspect-ratio: 1;
+  background: #ffffff;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  cursor: pointer;
+  padding: 16px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.provider-modal-content.dark .provider-item {
+  background: #2a2a2a;
+  border-color: #3a3a3a;
+}
+
+.provider-item:hover {
+  border-color: var(--bg-main);
+  box-shadow: 0 4px 16px rgba(125, 19, 3, 0.333);
+  transform: translateY(-4px);
+}
+
+.provider-item:active {
+  transform: translateY(-2px);
+}
+
+.provider-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Tablet view */
+@media (max-width: 768px) {
+  .provider-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .provider-modal-content {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+    margin: 0;
+    animation: slideUpMobile 0.3s ease-out;
+  }
+
+  @keyframes slideUpMobile {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .providers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 16px;
+    padding: 24px 20px;
+  }
+
+  .provider-modal-header {
+    padding: 20px;
+  }
+
+  .provider-modal-title {
+    font-size: 18px;
+  }
+}
+
+/* Mobile view */
+@media (max-width: 480px) {
+  .provider-modal-content {
+    max-height: 85vh;
+  }
+
+  .providers-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 20px 16px;
+  }
+
+  .provider-item {
+    padding: 12px;
+  }
+
+  .provider-modal-header {
+    padding: 16px;
+  }
+
+  .provider-modal-title {
+    font-size: 16px;
+  }
+
+  .back-button,
+  .close-button {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 6px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 360px) {
+  .providers-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 16px 12px;
+  }
+
+  .provider-item {
+    padding: 10px;
+  }
+}

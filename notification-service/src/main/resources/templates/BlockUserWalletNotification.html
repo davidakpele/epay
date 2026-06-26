@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ePay – Important Account Notice</title>
+</head>
+<body style="margin:0;padding:0;background-color:#eef0f2;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eef0f2;padding:48px 16px;">
+    <tr>
+      <td align="center">
+
+        <!-- Brand -->
+        <table width="480" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;margin-bottom:28px;">
+          <tr>
+            <td align="center">
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-right:10px;vertical-align:middle;">
+                    <!-- Logo box -->
+                    <div style="width:44px;height:44px;background-color:##166701;border-radius:12px;display:inline-block;text-align:center;line-height:44px;">
+                      <img src="https://via.placeholder.com/22x22/ffffff/ffffff?text=+" width="22" height="22" alt="" style="display:none;">
+                      <!-- SVG fallback text -->
+                      <span style="color:#ffffff;font-size:18px;font-weight:bold;line-height:44px;">e</span>
+                    </div>
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <span style="font-size:26px;color:##166701;font-weight:bold;font-family:Georgia,serif;letter-spacing:-0.5px;">ePay</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Card -->
+        <table width="480" cellpadding="0" cellspacing="0" border="0"
+          style="max-width:480px;background-color:#ffffff;border-radius:20px;box-shadow:0 4px 32px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="padding:40px 36px 36px;">
+
+              <!-- Warning Icon -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding-bottom:20px;">
+                    <div style="width:72px;height:72px;background-color:#b91c1c;border-radius:50%;display:inline-block;text-align:center;line-height:72px;">
+                      <span style="color:#ffffff;font-size:34px;font-weight:bold;line-height:72px;">!</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Heading -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding-bottom:24px;">
+                    <h1 style="margin:0;font-family:Georgia,serif;font-size:26px;color:#8b1a1a;text-align:center;line-height:1.2;font-weight:normal;">
+                      Important Account Notice
+                    </h1>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Greeting -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-bottom:14px;">
+                    <p style="margin:0;font-size:14.5px;color:#374151;line-height:1.7;">
+                      Dear <span th:text="${firstName}">David</span>,
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Message -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-bottom:14px;">
+                    <p style="margin:0;font-size:14.5px;color:#374151;line-height:1.7;" th:text="${message}">
+                      Our system has identified your account as being on our restricted list.
+                      As a result, your account has been temporarily suspended, and you will
+                      not be able to perform any transactions at this time.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Policy line -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-bottom:14px;">
+                    <p style="margin:0;font-size:14.5px;color:#374151;line-height:1.7;">
+                      This action was taken in accordance with our platform's security
+                      policies and terms of service.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Next Steps heading -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-bottom:8px;padding-top:4px;">
+                    <p style="margin:0;font-size:15px;font-weight:bold;color:#8b1a1a;">Next Steps</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Next Steps body -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-bottom:24px;">
+                    <p style="margin:0;font-size:14.5px;color:#374151;line-height:1.7;">
+                      To resolve this issue and restore access to your account, please
+                      contact our Consumer Service team. They will guide you through the
+                      verification process and help resolve this matter.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Receipt Table -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                style="background-color:#fff5f5;border-radius:14px;border:1px solid #fecaca;margin-bottom:24px;">
+
+                <!-- Receipt Title -->
+                <tr>
+                  <td colspan="2" align="center"
+                    style="background-color:#fee2e2;padding:14px 16px;border-radius:14px 14px 0 0;border-bottom:1px solid #fecaca;">
+                    <span style="font-weight:700;font-size:13px;letter-spacing:0.04em;color:#b91c1c;text-transform:uppercase;">
+                      Account Status Update
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- Account Status -->
+                <tr>
+                  <td width="160" style="padding:13px 16px;font-size:13.5px;color:#6b7280;font-weight:500;border-bottom:1px solid #fecaca;border-right:1px solid #fecaca;">
+                    Account Status
+                  </td>
+                  <td style="padding:13px 16px;font-size:13px;color:#b91c1c;font-weight:700;letter-spacing:0.05em;border-bottom:1px solid #fecaca;">
+                    RESTRICTED
+                  </td>
+                </tr>
+
+                <!-- Account Holder -->
+                <tr>
+                  <td width="160" style="padding:13px 16px;font-size:13.5px;color:#6b7280;font-weight:500;border-bottom:1px solid #fecaca;border-right:1px solid #fecaca;">
+                    Account Holder
+                  </td>
+                  <td style="padding:13px 16px;font-size:13.5px;color:#374151;border-bottom:1px solid #fecaca;">
+                    <span th:text="${fullName}">David Alex</span>
+                  </td>
+                </tr>
+
+                <!-- Restriction Date -->
+                <tr>
+                  <td width="160" style="padding:13px 16px;font-size:13.5px;color:#6b7280;font-weight:500;border-bottom:1px solid #fecaca;border-right:1px solid #fecaca;">
+                    Restriction Date
+                  </td>
+                  <td style="padding:13px 16px;font-size:13.5px;color:#374151;border-bottom:1px solid #fecaca;">
+                    <span th:text="${currentDate}">Nov 17, 2025</span>
+                  </td>
+                </tr>
+
+                <!-- Reference No -->
+                <tr>
+                  <td width="160" style="padding:13px 16px;font-size:13.5px;color:#6b7280;font-weight:500;border-bottom:1px solid #fecaca;border-right:1px solid #fecaca;">
+                    Reference No
+                  </td>
+                  <td style="padding:13px 16px;font-size:13.5px;color:#374151;border-bottom:1px solid #fecaca;">
+                    <span th:text="${referenceId}">REF-20251117-001</span>
+                  </td>
+                </tr>
+
+                <!-- Restriction Type -->
+                <tr>
+                  <td width="160" style="padding:13px 16px;font-size:13.5px;color:#6b7280;font-weight:500;border-right:1px solid #fecaca;">
+                    Restriction Type
+                  </td>
+                  <td style="padding:13px 16px;font-size:13.5px;color:#374151;">
+                    Full Account
+                  </td>
+                </tr>
+
+              </table>
+
+              <!-- Closing text -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding-bottom:24px;">
+                    <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.65;">
+                      Thank you for your attention to this matter. Please contact our
+                      support team immediately to resolve your account status.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Button -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
+                <tr>
+                  <td align="center">
+                    <a href="mailto:support@epay.com"
+                      style="display:block;width:100%;background-color:##166701;color:#ffffff;font-size:15px;font-weight:600;text-align:center;padding:15px 0;border-radius:12px;text-decoration:none;letter-spacing:0.02em;box-sizing:border-box;">
+                      Contact Support
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+                <tr>
+                  <td style="border-top:1px solid #f3f4f6;font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+              </table>
+
+              <!-- Thank you -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding-bottom:20px;">
+                    <p style="margin:0;font-weight:600;font-size:14px;color:#1f2937;">Thank you for using ePay!</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Socials -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding-bottom:16px;">
+                    <table cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <!-- Facebook -->
+                        <td style="padding:0 7px;">
+                          <a href="#" style="display:inline-block;width:36px;height:36px;border-radius:50%;border:1.5px solid #d1fae5;text-align:center;line-height:36px;color:#2d7a4f;text-decoration:none;font-size:14px;font-weight:bold;">f</a>
+                        </td>
+                        <!-- Twitter -->
+                        <td style="padding:0 7px;">
+                          <a href="#" style="display:inline-block;width:36px;height:36px;border-radius:50%;border:1.5px solid #d1fae5;text-align:center;line-height:36px;color:#2d7a4f;text-decoration:none;font-size:13px;font-weight:bold;">t</a>
+                        </td>
+                        <!-- Instagram -->
+                        <td style="padding:0 7px;">
+                          <a href="#" style="display:inline-block;width:36px;height:36px;border-radius:50%;border:1.5px solid #d1fae5;text-align:center;line-height:36px;color:#2d7a4f;text-decoration:none;font-size:13px;font-weight:bold;">in</a>
+                        </td>
+                        <!-- Globe -->
+                        <td style="padding:0 7px;">
+                          <a href="#" style="display:inline-block;width:36px;height:36px;border-radius:50%;border:1.5px solid #d1fae5;text-align:center;line-height:36px;color:#2d7a4f;text-decoration:none;font-size:13px;font-weight:bold;">@</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Footer contact -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center">
+                    <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.8;">
+                      <span style="color:##166701;font-weight:700;">ePay</span> &nbsp;support@epay.com<br>
+                      +1 (234) 567-890
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+        <!-- /Card -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

@@ -1,0 +1,140 @@
+spring:
+  application:
+    name: wallet-service
+  mvc:
+    contentnegotiation:
+      favor-parameter: false
+      favor-path-extension: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.cassandra.autoconfigure.CassandraAutoConfiguration
+      - org.springframework.boot.cassandra.autoconfigure.CassandraDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+  datasource:
+    url: jdbc:postgresql://postgres:5432/pesco_db
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: false
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      connection-timeout: 20000
+      pool-name: HikariPool
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        connection:
+          provider_disables_autocommit: true
+  sql:
+    init:
+      mode: never
+  data:
+    redis:
+      host: redis
+      port: 6379
+  web:
+    resources:
+      add-mappings: false
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    filter:
+      dispatcher-types: REQUEST,ERROR,ASYNC
+
+server:
+  port: 8035
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
+    whitelabel:
+      enabled: false
+jwt:
+  secret-key: 3hbXrhqhmvPD0bVq9Ce4hxTqALG701J7jRXyfKjqtzDPIlbdJ8YMIfZtHmPlC6Js9JVpELE2tj4KGP1VoCMA4Ya58WGF3Hs1
+  expiration-minutes: 30
+  refresh-expiration-days: 7
+  issuer: "ePay"
+  audience: "Unified Dynamic Systems"
+  clock-skew-seconds: 30
+  algorithm: "HS256"
+  token-prefix: "Bearer"
+  authorization-header: "Authorization"
+  enable-token-blacklist: true
+  blacklist-cleanup-interval-minutes: 60
+  max-blacklist-size: 10000
+  cookie-name: "jwt-token"
+  http-only-cookie: true
+  secure-cookie: true
+  same-site-cookie: "Strict"
+  cors-allowed-origins: "http://localhost:3000,http://localhost:8000"
+  enable-multi-factor-support: false
+  max-tokens-per-user: 5
+  log-token-issuance: false
+  enable-token-rotation: true
+  rotation-grace-period-minutes: 5
+  access-token:
+    expiration: 900000
+  refresh-token:
+    expiration: 604800000
+
+authentication-service:
+  base-url: http://auth-user-service:8187
+
+history-service:
+  base-url: http://resiliences-service:8531
+
+notification-service:
+  base-url: http://notification-service:8079
+
+administrator-service:
+  base-url: http://administrator:8109
+
+grpc:
+  server:
+    port: 9090
+    security:
+      enabled: false
+
+logging:
+  level:
+    com.mouad.movieservice: DEBUG
+    org.springframework.web: DEBUG
+    com.example.demo: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, loggers, env
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans

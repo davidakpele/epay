@@ -1,0 +1,207 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Shared card ── */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 14px rgba(42,80,55,0.07);
+  padding: 18px 18px 16px;
+}
+
+.cardTitle {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1a2e1a;
+  margin: 0 0 14px;
+  letter-spacing: -0.2px;
+  font-family: var(--font-system);
+}
+
+/* ── Banking Pools rows ── */
+.poolRows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.poolRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f4f0;
+}
+.poolRow:last-child { border-bottom: none; }
+
+.poolLabel {
+  font-size: 0.78rem;
+  color: #7a9a7a;
+  font-weight: 500;
+}
+
+.poolValueGreen {
+  font-family: var(--font-system);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #166701;
+}
+
+.poolValueBlue {
+  font-family: var(--font-system);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #3a5a8a;
+}
+
+/* ── Net Liquidity highlight card ── */
+.netCard {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 14px rgba(42,80,55,0.07);
+  padding: 18px 18px 20px;
+  border-left: 4px solid #3a5a8a;
+}
+
+.netLabel {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #7a9a7a;
+  margin-bottom: 8px;
+  font-family: var(--font-system);
+}
+
+.netValue {
+  display: block;
+  font-family: var(--font-system);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a2e1a;
+  letter-spacing: -0.8px;
+  line-height: 1;
+}
+
+/* ── Recent Transactions ── */
+.txnHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.txnHeader .cardTitle { margin: 0; }
+
+.txnFilterWrap {
+  display: flex;
+  gap: 2px;
+  background: #f2f4f2;
+  border-radius: 7px;
+  padding: 2px;
+}
+
+.txnFilterBtn {
+  height: 26px;
+  padding: 0 9px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-family: var(--font-system);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #7a9a7a;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.txnFilterBtn:hover { color: #1a2e1a; }
+.txnFilterActive {
+  background: #166701;
+  color: #fff !important;
+}
+
+/* Mini table */
+.miniTableWrap { overflow-x: auto; }
+
+.miniTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 200px;
+}
+
+.miniTable thead th {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8aaa8a;
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid #f0f4f0;
+  background: #fafcfa;
+  white-space: nowrap;
+}
+
+.miniTable tbody tr {
+  transition: background 0.12s;
+}
+.miniTable tbody tr:hover { background: rgba(77,184,37,0.03); }
+.miniTable tbody tr:not(:last-child) td { border-bottom: 1px solid #f5f8f5; }
+
+.miniTable tbody td {
+  padding: 9px 8px;
+  font-size: 0.73rem;
+  vertical-align: middle;
+}
+
+.miniId {
+  font-family: var(--font-system);
+  font-size: 0.67rem !important;
+  color: #8aaa8a;
+  white-space: nowrap;
+}
+
+.miniType {
+  font-weight: 500;
+  color: #4a6a4a;
+  white-space: nowrap;
+}
+
+.miniAmt {
+  font-family: var(--font-system);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Footer row */
+.miniFooter td {
+  border-top: 2px solid #e8f0e8 !important;
+  padding: 10px 8px !important;
+  background: #f8fcf8 !important;
+}
+
+.miniFootLabel {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: #4a6a4a !important;
+}
+
+.miniFootNgn {
+  font-family: var(--font-system);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #166701;
+  display: block;
+}
+
+.miniFootUsd {
+  font-family: var(--font-system);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #3a5a8a;
+  display: block;
+}

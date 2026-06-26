@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>ePay – Verify Your Email Address</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Resets — must stay in <head> */
+    body, table, td, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; display: block; }
+    body { margin: 0 !important; padding: 0 !important; background-color: #f0f4f1; }
+
+    /* Hover states — only functional in <head> */
+    .btn-verify:hover { background-color: #145c2e !important; }
+    .social-icon:hover { background-color: #145c2e !important; transform: translateY(-2px); }
+    .ignore-link:hover { color: #374151 !important; border-bottom-color: #9ca3af !important; }
+
+    /* Animations — only for webmail / browser previews */
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.4); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+    .brand-anim   { animation: slideDown .6s cubic-bezier(.22,1,.36,1) both; }
+    .card-anim    { animation: rise .7s cubic-bezier(.22,1,.36,1) .1s both; }
+    .icon-anim    { animation: popIn .5s cubic-bezier(.34,1.56,.64,1) .35s both; }
+    .check-anim   {
+      stroke-dasharray: 40;
+      stroke-dashoffset: 40;
+      animation: drawCheck .4s ease-out .75s forwards;
+    }
+
+    /* Mobile */
+    @media only screen and (max-width: 520px) {
+      .email-wrapper { padding: 24px 12px !important; }
+      .card-td       { padding: 32px 20px 28px !important; }
+      .heading       { font-size: 22px !important; }
+      .btn-verify    { font-size: 14px !important; padding: 14px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f0f4f1;font-family:'DM Sans',Arial,sans-serif;">
+
+<!-- Page wrapper -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color:#f0f4f1;min-height:100vh;">
+  <tr>
+    <td align="center" class="email-wrapper" style="padding:48px 16px;">
+
+      <!-- ══ Brand ══ -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+             class="brand-anim" style="margin-bottom:28px;">
+        <tr>
+          <!-- Logo box -->
+          <td style="padding-right:10px;vertical-align:middle;">
+            <table role="presentation" width="44" height="44" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" valign="middle"
+                    style="width:44px;height:44px;background-color:#166701;border-radius:12px;box-shadow:0 4px 14px rgba(22,103,1,.35);">
+                  <!-- Card / payment icon -->
+                  <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSIzIiB5PSI1IiB3aWR0aD0iMTgiIGhlaWdodD0iMTQiIHJ4PSIyIi8+PHBhdGggZD0iTTMgMTBoMTgiLz48L3N2Zz4="
+                       width="22" height="22" alt="ePay" style="display:block;">
+                </td>
+              </tr>
+            </table>
+          </td>
+          <!-- Brand name -->
+          <td style="vertical-align:middle;">
+            <span style="font-family:'DM Serif Display',Georgia,serif;font-size:28px;color:#166701;letter-spacing:-0.5px;line-height:1;">ePay</span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- ══ Card ══ -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+             width="100%" style="max-width:480px;" class="card-anim">
+        <tr>
+          <td class="card-td"
+              style="background-color:#ffffff;border-radius:20px;padding:40px 36px 36px;box-shadow:0 4px 32px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);">
+
+            <!-- ── Check icon ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td align="center" style="padding-bottom:22px;">
+                  <div class="icon-anim"
+                       style="display:inline-block;width:72px;height:72px;background-color:#e8f5ee;border-radius:50%;box-shadow:0 0 0 8px rgba(232,245,238,0.55);">
+                    <table role="presentation" width="72" height="72" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" valign="middle"
+                            style="width:72px;height:72px;background-color:#e8f5ee;border-radius:50%;">
+                          <!-- Animated checkmark for webmail; static fallback img for Outlook -->
+                          <!--[if !mso]><!-->
+                          <svg viewBox="0 0 24 24" width="30" height="30"
+                               fill="none" stroke="#2d7a4f" stroke-width="2.8"
+                               stroke-linecap="round" stroke-linejoin="round"
+                               style="display:block;margin:0 auto;">
+                            <polyline class="check-anim" points="20 6 9 17 4 12"/>
+                          </svg>
+                          <!--<![endif]-->
+                          <!--[if mso]>
+                          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmQ3YTRmIiBzdHJva2Utd2lkdGg9IjIuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSIyMCA2IDkgMTcgNCAxMiIvPjwvc3ZnPg=="
+                               width="30" height="30" alt="verified">
+                          <![endif]-->
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- ── Heading ── -->
+            <h1 class="heading"
+                style="font-family:'DM Serif Display',Georgia,serif;font-size:26px;color:#166701;text-align:center;margin:0 0 22px;line-height:1.2;font-weight:400;">
+              Verify Your Email Address
+            </h1>
+
+            <!-- ── Greeting ── -->
+            <p style="font-size:14.5px;color:#374151;line-height:1.7;margin:0 0 12px;font-family:'DM Sans',Arial,sans-serif;">
+              Hi <span th:text="${username}">David</span>,
+            </p>
+
+            <!-- ── Body copy ── -->
+            <p style="font-size:14.5px;color:#374151;line-height:1.7;margin:0 0 12px;font-family:'DM Sans',Arial,sans-serif;"
+               th:text="${content}">
+              Thank you for signing up with ePay! We're excited to have you on board.
+            </p>
+
+            <p style="font-size:14.5px;color:#374151;line-height:1.7;margin:0 0 28px;font-family:'DM Sans',Arial,sans-serif;">
+              To complete your registration, please click the button below to verify your email address.
+            </p>
+
+            <!-- ── CTA button ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="margin-bottom:24px;">
+              <tr>
+                <td align="center">
+                  <a th:href="${link}" href="#" class="btn-verify"
+                     style="display:block;background-color:#166701;color:#ffffff;font-family:'DM Sans',Arial,sans-serif;font-size:15px;font-weight:600;text-align:center;padding:16px 24px;border-radius:12px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(22,103,1,.3);transition:background-color .2s;">
+                    Verify Email Now
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- ── Ignore note ── -->
+            <p style="font-size:14px;color:#6b7280;line-height:1.65;margin:0 0 28px;font-family:'DM Sans',Arial,sans-serif;">
+              If you did not sign up with ePay, please
+              <a href="#" class="ignore-link"
+                 style="color:#9ca3af;text-decoration:none;border-bottom:1px solid #e5e7eb;transition:color .2s,border-color .2s;">
+                ignore this email
+              </a>.
+              This link will expire in <strong style="color:#374151;">24 hours</strong>.
+            </p>
+
+            <!-- ── Divider ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="margin-bottom:24px;">
+              <tr>
+                <td style="height:1px;background-color:#f3f4f6;font-size:0;line-height:0;">&nbsp;</td>
+              </tr>
+            </table>
+
+            <!-- ── Support note ── -->
+            <p style="font-size:14px;color:#6b7280;line-height:1.65;margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;">
+              If you have any questions or need assistance, please don't hesitate to contact our support team.
+            </p>
+
+            <!-- ── Thank you ── -->
+            <p style="text-align:center;font-weight:700;font-size:15px;color:#166701;margin:0 0 22px;font-family:'DM Sans',Arial,sans-serif;">
+              Thank you for using ePay!
+            </p>
+
+            <!-- ── Socials ── -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                   align="center" style="margin:0 auto 18px;">
+              <tr>
+                <!-- Facebook -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-icon"
+                     style="display:inline-block;width:36px;height:36px;background-color:#2d7a4f;border-radius:50%;text-align:center;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle" style="background-color:#2d7a4f;border-radius:50%;width:36px;height:36px;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTE4IDJoLTNhNSA1IDAgMCAwLTUgNXYzSDd2NGgzdjhoNHYtOGgzbDEtNGgtNFY3YTEgMSAwIDAgMSAxLTFoM3oiLz48L3N2Zz4="
+                             width="15" height="15" alt="Facebook" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+                <!-- Twitter / X -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-icon"
+                     style="display:inline-block;width:36px;height:36px;background-color:#2d7a4f;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle" style="background-color:#2d7a4f;border-radius:50%;width:36px;height:36px;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTIyIDRzLS43IDIuMS0yIDMuNGMxLjYgMTAtOS40IDE3LjMtMTggMTEuNiAyLjIuMSA0LjQtLjYgNi0yQzMgMTUuNS41IDkuNiAzIDVjMi4yIDIuNiA1LjYgNC4xIDkgNC0uOS00LjIgNC02LjYgNy0zLjggMS4xIDAgMy0xLjIgMy0xLjJ6Ii8+PC9zdmc+"
+                             width="15" height="15" alt="Twitter" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+                <!-- Instagram -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-icon"
+                     style="display:inline-block;width:36px;height:36px;background-color:#2d7a4f;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle" style="background-color:#2d7a4f;border-radius:50%;width:36px;height:36px;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiByeD0iNSIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjQiIGZpbGw9IiMyZDdhNGYiLz48Y2lyY2xlIGN4PSIxNy41IiBjeT0iNi41IiByPSIxIiBmaWxsPSIjMmQ3YTRmIi8+PC9zdmc+"
+                             width="15" height="15" alt="Instagram" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+                <!-- Website -->
+                <td style="padding:0 6px;">
+                  <a href="#" class="social-icon"
+                     style="display:inline-block;width:36px;height:36px;background-color:#2d7a4f;border-radius:50%;text-decoration:none;transition:background-color .2s,transform .2s;vertical-align:middle;">
+                    <table role="presentation" width="36" height="36" cellpadding="0" cellspacing="0" border="0">
+                      <tr><td align="center" valign="middle" style="background-color:#2d7a4f;border-radius:50%;width:36px;height:36px;">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiLz48bGluZSB4MT0iMiIgeTE9IjEyIiB4Mj0iMjIiIHkyPSIxMiIvPjxwYXRoIGQ9Ik0xMiAyYTE1LjMgMTUuMyAwIDAgMSA0IDEwIDE1LjMgMTUuMyAwIDAgMS00IDEwIDE1LjMgMTUuMyAwIDAgMS00LTEwIDE1LjMgMTUuMyAwIDAgMSA0LTEweiIvPjwvc3ZnPg=="
+                             width="15" height="15" alt="Website" style="display:block;margin:0 auto;">
+                      </td></tr>
+                    </table>
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- ── Footer contact ── -->
+            <p style="text-align:center;font-size:12px;color:#9ca3af;line-height:1.8;margin:0;font-family:'DM Sans',Arial,sans-serif;">
+              <strong style="color:#166701;font-weight:700;">ePay</strong>&nbsp;&nbsp;support@epay.com<br>
+              +1 (234) 567-890
+            </p>
+
+          </td>
+        </tr>
+      </table>
+      <!-- /Card -->
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

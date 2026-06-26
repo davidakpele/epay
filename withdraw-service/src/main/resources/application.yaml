@@ -1,0 +1,85 @@
+server:
+  port: 8068
+
+spring:
+  application:
+    name: withdraw-service
+
+  redis:
+    host: redis
+    port: 6379
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 8
+        min-idle: 2
+
+jwt:
+  secret-key: 3hbXrhqhmvPD0bVq9Ce4hxTqALG701J7jRXyfKjqtzDPIlbdJ8YMIfZtHmPlC6Js9JVpELE2tj4KGP1VoCMA4Ya58WGF3Hs1
+flutterwave:
+  public-key: FLWPUBK_TEST-9f86808391a0bef01975c332a2782e5a-X
+  secret-key: FLWSECK_TEST-1eee27f63b4dc12394dbf5c7badaa39e-X
+  url: https://api.flutterwave.com/v3
+
+paystack:
+  api:
+    url: https://api.paystack.co
+    key: sk_test_aaa8ff310f15a0ad5f23950a584f8942cbdf02aa
+
+revenue-service:
+  base-url: http://revenue-service:8083
+  
+blacklist-service:
+  base-url: http://resiliences-service:8531
+  
+history-service:
+  base-url: http://resiliences-service:8531
+
+wallet-service:
+  base-url: http://wallet-service:8035
+
+wallet-websocket:
+  url: ws://wallet-service:8035/ws/wallet
+
+auth-service:
+  base-url: http://auth-user-service:8187
+
+banklist-service:
+  base-url: http://resiliences-service:8531
+
+notification-service:
+  base-url: http://notification-service:8079
+
+escrow-service:
+  base-url: http://escrow-service:8755
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    
+grpc: 
+  client:
+    wallet-service:
+      address: static://wallet-service:9090  
+      negotiationType: plaintext
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, loggers, env
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
