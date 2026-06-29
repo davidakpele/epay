@@ -43,6 +43,7 @@ const Settings = () => {
   const [pinMode, setPinMode] = useState('create');
   const [pin, setPin] = useState(['', '', '', '']);
   const [confirmPin, setConfirmPin] = useState(['', '', '', '']);
+  const [showUpdatePinForm, setShowUpdatePinForm] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [profileImage, setProfileImage] = useState('/assets/images/user-profile.jpg');
   const [hasCustomImage, setHasCustomImage] = useState(false);
@@ -640,6 +641,7 @@ const Settings = () => {
     if (response?.status === "success") {
       setPin(['', '', '', '']);
       setConfirmPin(['', '', '', '']);
+      setShowUpdatePinForm(false);
       checkPinStatus();
       showToast('PIN Created Successfully!','success');
     }
@@ -1174,175 +1176,306 @@ const Settings = () => {
 
                 {/* PIN Tab */}
                 {activeTab === 'pin' && (
-                  <>
-                  {/* Withdrawal PIN Setup */}
-                    <div className="settings-card">
-                      <div className="settings-card-header">
-                        <Key size={20} />
-                        <h3>{userHasPin ? 'Update Withdrawal PIN' : 'Set Withdrawal PIN'}</h3>
-                      </div>
-                     {userHasPin ?(
+                  <div className="settings-card">
+
+                    {/* ── PIN not yet set → Create PIN form ─────────────────── */}
+                    {!userHasPin && (
                       <>
-                      <p className="settings-card-desc">
-                          Update your 4-digit transfer PIN for secure transactions
-                        </p>
-                      <div className="settings-pin-setup">
-                        <label className="settings-pin-label">Enter New 4-Digit PIN</label>
-                        <div className="settings-pin-inputs">
-                          {pin.map((digit, index) => (
-                            <input 
-                              key={`pin-${index}`}
-                              type="text" 
-                              inputMode="numeric"
-                              maxLength={1}
-                              value={digit}
-                              className="settings-pin-input"
-                              onChange={(e) => handlePinInput(index, e.target.value, false)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Backspace' && !digit && index > 0) {
-                                  const inputs = document.querySelectorAll('.settings-pin-inputs input');
-                                  (inputs[index - 1] as HTMLInputElement).focus();
-                                }
-                              }
-                            }
-                              onInput={(e) => {
-                                if (e.currentTarget.value && index < 3) {
-                                  const inputs = document.querySelectorAll('.settings-pin-inputs input');
-                                  (inputs[index + 1] as HTMLInputElement).focus();
-                                }
-                              }}
-                            />
-                          ))}
-                        </div> 
-                        <label className="settings-pin-label">Confirm New 4-Digit PIN</label>
-                        <div className="settings-pin-inputs">
-                          {confirmPin.map((digit, index) => (
-                            <input 
-                              key={`confirm-${index}`}
-                              type="text" 
-                              inputMode="numeric"
-                              maxLength={1}
-                              value={digit}
-                              className="settings-pin-input"
-                              onChange={(e) => handlePinInput(index, e.target.value, true)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Backspace' && !digit && index > 0) {
-                                  const inputs = document.querySelectorAll('.settings-pin-inputs input');
-                                  const allInputs = Array.from(inputs);
-                                  (allInputs[index + 3] as HTMLInputElement).focus();
-                                }
-                              }
-                            }
-                              onInput={(e) => {
-                                if (e.currentTarget.value && index < 3) {
-                                  const inputs = document.querySelectorAll('.settings-pin-inputs input');
-                                  const allInputs = Array.from(inputs);
-                                  (allInputs[index + 5] as HTMLInputElement).focus();
-                                }
-                              }}
-                            />
-                          ))}
+                        {/* Header */}
+                        <div className="settings-card-header">
+                          <Key size={20} />
+                          <h3>Set Withdrawal PIN</h3>
                         </div>
-                        {/* Status Indicator */}
-                        <div className={`pin-status-indicator ${userHasPin ? 'pin-set' : 'pin-not-set'} `}>
-                          <i className={`fas ${userHasPin ? 'fa-check-circle' : 'fa-exclamation-circle'} `} style={{marginRight:"3px", color:"var(--bg-main)"}}></i>
-                          <span style={{color:"#565252"}}>
-                            {userHasPin ? 'Transfer PIN is already set' : 'Transfer PIN not set'}
-                          </span>
+
+                        {/* Illustration / intro */}
+                        <div style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'center',
+                          padding: '24px 0 8px', gap: '12px', textAlign: 'center'
+                        }}>
+                          <div style={{
+                            width: 72, height: 72,
+                            background: 'linear-gradient(135deg, #f5f0ff, #ede9fe)',
+                            borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: '2px solid #ddd6fe'
+                          }}>
+                            <i className="fas fa-lock" style={{ fontSize: 28, color: '#2b0f56' }} />
+                          </div>
+                          <p className="settings-card-desc" style={{ maxWidth: 380, margin: 0 }}>
+                            Protect your wallet with a 4-digit PIN. This PIN will be required for
+                            every withdrawal and transfer.
+                          </p>
+                          <div style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            background: '#fef9c3', border: '1px solid #fde047',
+                            borderRadius: 8, padding: '6px 12px', fontSize: 12, color: '#713f12'
+                          }}>
+                            <i className="fas fa-exclamation-circle" />
+                            Transfer PIN not set — transactions are currently unprotected
+                          </div>
                         </div>
-                        <button 
-                          className="settings-btn-primary" 
-                          style={{marginTop: '16px'}}
-                          onClick={handleSetPin}
-                        >
-                          {userHasPin ? 'Update PIN' : 'Set PIN'}
-                        </button>
-                      </div>
+
+                        {/* Form */}
+                        <div className="settings-pin-setup" style={{ marginTop: 20 }}>
+                          <label className="settings-pin-label">Enter 4-Digit PIN</label>
+                          <div className="settings-pin-inputs">
+                            {pin.map((digit, index) => (
+                              <input
+                                key={`pin-${index}`}
+                                type="password"
+                                inputMode="numeric"
+                                maxLength={1}
+                                value={digit}
+                                className="settings-pin-input"
+                                onChange={(e) => handlePinInput(index, e.target.value, false)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Backspace' && !digit && index > 0) {
+                                    const inputs = document.querySelectorAll('.pin-create .settings-pin-inputs input');
+                                    (inputs[index - 1] as HTMLInputElement)?.focus();
+                                  }
+                                }}
+                                onInput={(e) => {
+                                  if (e.currentTarget.value && index < 3) {
+                                    const inputs = document.querySelectorAll('.pin-create .settings-pin-inputs input');
+                                    (inputs[index + 1] as HTMLInputElement)?.focus();
+                                  }
+                                }}
+                              />
+                            ))}
+                          </div>
+
+                          <label className="settings-pin-label" style={{ marginTop: 16 }}>Confirm 4-Digit PIN</label>
+                          <div className="settings-pin-inputs">
+                            {confirmPin.map((digit, index) => (
+                              <input
+                                key={`confirm-${index}`}
+                                type="password"
+                                inputMode="numeric"
+                                maxLength={1}
+                                value={digit}
+                                className="settings-pin-input"
+                                onChange={(e) => handlePinInput(index, e.target.value, true)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Backspace' && !digit && index > 0) {
+                                    const inputs = document.querySelectorAll('.pin-create .settings-pin-inputs input');
+                                    const all = Array.from(inputs);
+                                    (all[index + 3] as HTMLInputElement)?.focus();
+                                  }
+                                }}
+                                onInput={(e) => {
+                                  if (e.currentTarget.value && index < 3) {
+                                    const inputs = document.querySelectorAll('.pin-create .settings-pin-inputs input');
+                                    const all = Array.from(inputs);
+                                    (all[index + 5] as HTMLInputElement)?.focus();
+                                  }
+                                }}
+                              />
+                            ))}
+                          </div>
+
+                          <button
+                            className="settings-btn-primary"
+                            style={{ marginTop: 20, width: '100%', maxWidth: 240 }}
+                            onClick={handleSetPin}
+                          >
+                            <i className="fas fa-shield-alt" style={{ marginRight: 8 }} />
+                            Create Transfer PIN
+                          </button>
+                        </div>
                       </>
-                     ):(
+                    )}
+
+                    {/* ── PIN already set → Status card + optional update form ─ */}
+                    {userHasPin && (
                       <>
-                      <p className="settings-card-desc">
-                         {userHasPin 
-                          ? 'Update your 4-digit transfer PIN for secure transactions' 
-                          : 'Set up a 4-digit PIN to authorize withdrawals and sensitive transactions'
-                        }</p>
-                      
-                      <div className="settings-pin-setup">
-                        <label className="settings-pin-label">Enter 4-Digit PIN</label>
-                        <div className="settings-pin-inputs">
-                          {pin.map((digit, index) => (
-                            <input 
-                              key={`pin-${index}`}
-                              type="text" 
-                              inputMode="numeric"
-                              maxLength={1}
-                              value={digit}
-                              className="settings-pin-input"
-                              onChange={(e) => handlePinInput(index, e.target.value, false)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Backspace' && !digit && index > 0) {
-                                  const inputs = document.querySelectorAll('.settings-pin-inputs input');
-                                  (inputs[index - 1] as HTMLInputElement).focus();
-                                }
-                              }}
-                              onInput={(e) => {
-                                if (e.currentTarget.value && index < 3) {
-                                  const inputs = document.querySelectorAll('.settings-pin-inputs input');
-                                  (inputs[index + 1] as HTMLInputElement).focus();
-                                }
-                              }}
-                            />
-                          ))}
+                        {/* Header */}
+                        <div className="settings-card-header">
+                          <Key size={20} />
+                          <h3>Withdrawal PIN</h3>
                         </div>
-                        
-                        <label className="settings-pin-label">Confirm 4-Digit PIN</label>
-                        <div className="settings-pin-inputs">
-                          {confirmPin.map((digit, index) => (
-                            <input 
-                              key={`confirm-${index}`}
-                              type="text" 
-                              inputMode="numeric"
-                              maxLength={1}
-                              value={digit}
-                              className="settings-pin-input"
-                              onChange={(e) => handlePinInput(index, e.target.value, true)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Backspace' && !digit && index > 0) {
-                                  const inputs = document.querySelectorAll('.settings-pin-inputs input');
-                                  const allInputs = Array.from(inputs);
-                                  (allInputs[index + 3] as HTMLInputElement).focus();
-                                }
-                              }}
-                              onInput={(e) => {
-                                if (e.currentTarget.value && index < 3) {
-                                  const inputs = document.querySelectorAll('.settings-pin-inputs input');
-                                  const allInputs = Array.from(inputs);
-                                  (allInputs[index + 5] as HTMLInputElement).focus();
-                                }
-                              }}
-                            />
-                          ))}
+
+                        {/* Status banner */}
+                        <div style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          flexWrap: 'wrap', gap: 16,
+                          background: 'linear-gradient(135deg, #f5f0ff, #ede9fe)',
+                          border: '1px solid #ddd6fe', borderRadius: 16,
+                          padding: '20px 24px', margin: '12px 0 24px'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                            <div style={{
+                              width: 52, height: 52,
+                              background: '#2b0f56', borderRadius: '50%',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              flexShrink: 0
+                            }}>
+                              <i className="fas fa-check" style={{ color: '#fff', fontSize: 20 }} />
+                            </div>
+                            <div>
+                              <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: '#1f2937' }}>
+                                Transfer PIN is Active
+                              </p>
+                              <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6b7280' }}>
+                                Your wallet is protected. PIN is required for all transfers and withdrawals.
+                              </p>
+                            </div>
+                          </div>
+                          {/* Dots representing a masked PIN */}
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            {[0,1,2,3].map(i => (
+                              <div key={i} style={{
+                                width: 14, height: 14, borderRadius: '50%',
+                                background: '#2b0f56', opacity: 0.85
+                              }} />
+                            ))}
+                          </div>
                         </div>
-                        {/* Status Indicator */}
-                        <div className={`pin-status-indicator ${userHasPin ? 'pin-set' : 'pin-not-set'} `}>
-                          <i className={`fas ${userHasPin ? 'fa-check-circle' : 'fa-exclamation-circle'} `} style={{marginRight:"3px", color:"#df1717"}}></i>
-                          <span style={{color:"#565252"}}>
-                            {userHasPin ? 'Transfer PIN is already set' : 'Transfer PIN not set'}
-                          </span>
-                        </div>
-                        <button 
-                          className="settings-btn-primary" 
-                          style={{marginTop: '16px'}}
-                          onClick={handleSetPin}
-                        >
-                          {userHasPin ? 'Update PIN' : 'Set PIN'}
-                        </button>
-                      </div>
+
+                        {/* "Want to update?" prompt — shown when form is hidden */}
+                        {!showUpdatePinForm && (
+                          <div style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center',
+                            gap: 12, padding: '8px 0 16px', textAlign: 'center'
+                          }}>
+                            <p style={{ margin: 0, fontSize: 14, color: '#6b7280' }}>
+                              Want to change your transfer PIN?
+                            </p>
+                            <button
+                              className="settings-btn-outline"
+                              style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                              onClick={() => {
+                                setPin(['', '', '', '']);
+                                setConfirmPin(['', '', '', '']);
+                                setShowUpdatePinForm(true);
+                              }}
+                            >
+                              <i className="fas fa-pen" />
+                              Update Transfer PIN
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Update PIN form — only shown after clicking "Update Transfer PIN" */}
+                        {showUpdatePinForm && (
+                          <div style={{
+                            background: '#fafafa', border: '1px dashed #d1d5db',
+                            borderRadius: 14, padding: '24px 20px', marginTop: 4
+                          }}>
+                            <div style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              marginBottom: 20
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <i className="fas fa-edit" style={{ color: '#2b0f56', fontSize: 16 }} />
+                                <span style={{ fontWeight: 700, fontSize: 15, color: '#1f2937' }}>
+                                  Update Transfer PIN
+                                </span>
+                              </div>
+                              <button
+                                style={{
+                                  background: 'none', border: 'none', cursor: 'pointer',
+                                  color: '#9ca3af', fontSize: 18, lineHeight: 1, padding: 4
+                                }}
+                                onClick={() => {
+                                  setPin(['', '', '', '']);
+                                  setConfirmPin(['', '', '', '']);
+                                  setShowUpdatePinForm(false);
+                                }}
+                                title="Cancel"
+                              >
+                                ×
+                              </button>
+                            </div>
+
+                            <div className="settings-pin-setup pin-update">
+                              <label className="settings-pin-label">Enter New 4-Digit PIN</label>
+                              <div className="settings-pin-inputs">
+                                {pin.map((digit, index) => (
+                                  <input
+                                    key={`pin-upd-${index}`}
+                                    type="password"
+                                    inputMode="numeric"
+                                    maxLength={1}
+                                    value={digit}
+                                    className="settings-pin-input"
+                                    onChange={(e) => handlePinInput(index, e.target.value, false)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Backspace' && !digit && index > 0) {
+                                        const inputs = document.querySelectorAll('.pin-update .settings-pin-inputs input');
+                                        (inputs[index - 1] as HTMLInputElement)?.focus();
+                                      }
+                                    }}
+                                    onInput={(e) => {
+                                      if (e.currentTarget.value && index < 3) {
+                                        const inputs = document.querySelectorAll('.pin-update .settings-pin-inputs input');
+                                        (inputs[index + 1] as HTMLInputElement)?.focus();
+                                      }
+                                    }}
+                                  />
+                                ))}
+                              </div>
+
+                              <label className="settings-pin-label" style={{ marginTop: 16 }}>
+                                Confirm New 4-Digit PIN
+                              </label>
+                              <div className="settings-pin-inputs">
+                                {confirmPin.map((digit, index) => (
+                                  <input
+                                    key={`confirm-upd-${index}`}
+                                    type="password"
+                                    inputMode="numeric"
+                                    maxLength={1}
+                                    value={digit}
+                                    className="settings-pin-input"
+                                    onChange={(e) => handlePinInput(index, e.target.value, true)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Backspace' && !digit && index > 0) {
+                                        const inputs = document.querySelectorAll('.pin-update .settings-pin-inputs input');
+                                        const all = Array.from(inputs);
+                                        (all[index + 3] as HTMLInputElement)?.focus();
+                                      }
+                                    }}
+                                    onInput={(e) => {
+                                      if (e.currentTarget.value && index < 3) {
+                                        const inputs = document.querySelectorAll('.pin-update .settings-pin-inputs input');
+                                        const all = Array.from(inputs);
+                                        (all[index + 5] as HTMLInputElement)?.focus();
+                                      }
+                                    }}
+                                  />
+                                ))}
+                              </div>
+
+                              <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+                                <button
+                                  className="settings-btn-primary"
+                                  style={{ flex: 1 }}
+                                  onClick={async () => {
+                                    await handleSetPin();
+                                    setShowUpdatePinForm(false);
+                                  }}
+                                >
+                                  <i className="fas fa-shield-alt" style={{ marginRight: 8 }} />
+                                  Save New PIN
+                                </button>
+                                <button
+                                  className="settings-btn-outline"
+                                  onClick={() => {
+                                    setPin(['', '', '', '']);
+                                    setConfirmPin(['', '', '', '']);
+                                    setShowUpdatePinForm(false);
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </>
-                     )}
-                      
-                    </div>
-                  </>
+                    )}
+
+                  </div>
                 )}
 
                 {/* Danger Zone */}
