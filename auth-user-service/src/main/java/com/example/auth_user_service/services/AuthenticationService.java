@@ -195,10 +195,9 @@ public class AuthenticationService implements IAuthenticationService{
             final String device    = extractDevice(httpRequest);
             final String fullName  = rec.getFirstName() + " " + rec.getLastName();
             CompletableFuture.runAsync(() ->
-                notificationServiceClient.sendAccountSecurityAlert(
+                notificationServiceClient.sendLoginAlertNotification(
                     user.getEmail(), fullName, user.getUsername(),
-                    "LOGIN_ALERT", loginTime,
-                    ipAddr, device,
+                    loginTime, ipAddr, device,
                     notificationProperties.getPhone(),
                     notificationProperties.getEmail()
                 )
@@ -408,7 +407,7 @@ public class AuthenticationService implements IAuthenticationService{
         CompletableFuture.runAsync(() ->
                 notificationServiceClient.sendOptEmail(
                         user.getEmail(), otp,
-                        baseUrl + "/auth/security/password",           // use pre-resolved URL
+                        baseUrl + "/auth/security/password",
                         baseUrl + "/auth/security/configuring-two-factor-authentication",
                         baseUrl + "/auth/security/configuring-two-factor-authentication-recovery-methods"))
             .exceptionally(ex -> {

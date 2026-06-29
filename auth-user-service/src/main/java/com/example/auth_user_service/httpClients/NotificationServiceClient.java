@@ -259,6 +259,48 @@ public class NotificationServiceClient implements INotificationServiceClient {
     }
 
     @Override
+    public void sendLoginAlertNotification(
+            String email, String fullName, String username,
+            String loginTime, String ipAddress, String deviceInfo,
+            String supportPhone, String supportEmail) {
+        try {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("email",        email);
+            requestBody.put("fullName",     fullName);
+            requestBody.put("username",     username);
+            requestBody.put("loginTime",    loginTime);
+            requestBody.put("ipAddress",    ipAddress  != null ? ipAddress  : "");
+            requestBody.put("deviceInfo",   deviceInfo != null ? deviceInfo : "Unknown device");
+            requestBody.put("supportPhone", supportPhone);
+            requestBody.put("supportEmail", supportEmail);
+
+            log.info("[REQUEST] POST /send/login-alert | email: " + email);
+
+            notificationServiceWebClient.post()
+                    .uri("/send/login-alert")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .flatMap(errorMessage -> {
+                                        log.warning("[RESPONSE ERROR] POST /send/login-alert | status: "
+                                                + clientResponse.statusCode() + " | body: " + errorMessage);
+                                        if (clientResponse.statusCode().is4xxClientError()) {
+                                            String details = extraction.extractDetailsFromError(errorMessage);
+                                            return Mono.error(new UserClientNotFoundException("Login alert failed", details));
+                                        }
+                                        return Mono.error(new RuntimeException("Server error while sending login alert"));
+                                    }))
+                    .toBodilessEntity()
+                    .doOnSuccess(response -> log.info("[RESPONSE] POST /send/login-alert | status: "
+                            + response.getStatusCode()))
+                    .block();
+        } catch (Exception ex) {
+            log.severe("[EXCEPTION] POST /send/login-alert | error: " + ex.getMessage());
+        }
+    }
+
+    @Override
     public void sendAccountSecurityAlert(
             String email, String fullName, String username,
             String eventType, String eventTime,

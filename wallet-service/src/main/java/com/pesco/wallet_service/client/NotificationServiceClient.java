@@ -81,4 +81,59 @@ public class NotificationServiceClient {
         );
         return currencySymbols.getOrDefault(currencyCode, "$");
     }
+
+    /**
+     * Sends a wallet-PIN set/update alert to the notification service.
+     *
+     * @param email        recipient email
+     * @param fullName     user's full name
+     * @param username     user's login handle
+     * @param action       "CREATED" or "UPDATED"
+     * @param actionTime   formatted timestamp
+     * @param ipAddress    originating IP (may be empty)
+     * @param deviceInfo   device description (may be empty)
+     * @param supportPhone support phone number
+     * @param supportEmail support email address
+     */
+    public boolean sendWalletPinAlert(
+            String email, String fullName, String username,
+            String action, String actionTime,
+            String ipAddress, String deviceInfo,
+            String supportPhone, String supportEmail) {
+        try {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("email",        email);
+            requestBody.put("fullName",     fullName);
+            requestBody.put("username",     username);
+            requestBody.put("action",       action);
+            requestBody.put("actionTime",   actionTime);
+            requestBody.put("ipAddress",    ipAddress  != null ? ipAddress  : "");
+            requestBody.put("deviceInfo",   deviceInfo != null ? deviceInfo : "");
+            requestBody.put("supportPhone", supportPhone);
+            requestBody.put("supportEmail", supportEmail);
+
+            Boolean success = Boolean.TRUE.equals(
+                notificationServiceWebClient.post()
+                    .uri("/send/wallet-pin-alert")
+                    .bodyValue(requestBody)
+                    .exchangeToMono(response -> {
+                        if (response.statusCode().is2xxSuccessful()) {
+                            System.out.println("[WalletPinAlert] Sent successfully. Status: " + response.statusCode());
+                            return Mono.just(true);
+                        } else {
+                            System.err.println("[WalletPinAlert] Failed. Status: " + response.statusCode());
+                            response.bodyToMono(String.class)
+                                    .doOnNext(body -> System.err.println("[WalletPinAlert] Response: " + body))
+                                    .subscribe();
+                            return Mono.just(false);
+                        }
+                    })
+                    .block());
+
+            return Boolean.TRUE.equals(success);
+        } catch (Exception ex) {
+            System.err.println("[WalletPinAlert] Exception: " + ex.getMessage());
+            return false;
+        }
+    }
 }

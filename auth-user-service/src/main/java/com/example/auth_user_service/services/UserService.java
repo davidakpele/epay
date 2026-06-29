@@ -112,8 +112,6 @@ public class UserService implements IUserService {
                 )
             ).exceptionally(ex -> { System.err.println("[PasswordReset] " + ex.getMessage()); return null; });
         });
-        // ─────────────────────────────────────────────────────────────────────
-
         return ResponseEntity.ok("Password reset successful");
     }
 
@@ -142,7 +140,6 @@ public class UserService implements IUserService {
             System.out.println("Nothing found");
         }
 
-        // ── Security notification ─────────────────────────────────────────────
         final String eventTime = formatNow();
         userRecordRepository.findByUserId(id).ifPresent(rec -> {
             final String fullName = rec.getFirstName() + " " + rec.getLastName();
@@ -154,7 +151,6 @@ public class UserService implements IUserService {
                 )
             ).exceptionally(ex -> { System.err.println("[DeactivateAccount] " + ex.getMessage()); return null; });
         });
-        // ─────────────────────────────────────────────────────────────────────
 
         return ResponseEntity.ok("Account deactivated successfully");
     }
@@ -167,7 +163,6 @@ public class UserService implements IUserService {
             String token = UUID.randomUUID().toString();
 
             passwordResetTokenService.createUserUserSession(user.get().getId(), token);
-            // Send email
             String url = keysWrapper.getUrl() + "/auth/reset-password?token=" + token;
             String content = "We received a request to reset the password for your account associated with this email address. If you did not request this change, please ignore this email."
                     + "To reset your password, please click on the link below:";
@@ -250,7 +245,6 @@ public class UserService implements IUserService {
     public void deleteUserAccount(String id) {
         Long userId = Long.valueOf(id);
 
-        
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("USER_NOT_FOUND", "User not found", HttpStatus.NOT_FOUND));
 
@@ -271,7 +265,6 @@ public class UserService implements IUserService {
         record.setLockedAt(lock ? LocalDateTime.now() : null);
         userRecordRepository.save(record);
 
-        // ── Security notification ─────────────────────────────────────────────
         final String eventTime = formatNow();
         final String eventType = lock ? "ACCOUNT_LOCKED" : "ACCOUNT_UNLOCKED";
         final String fullName  = record.getFirstName() + " " + record.getLastName();

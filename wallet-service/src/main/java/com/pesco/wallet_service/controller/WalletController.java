@@ -49,6 +49,7 @@ public class WalletController {
     private final WalletHandler walletHandler;
     private final NotificationServiceClient notificationServiceClient;
     private final NotificationProperties notificationProperties;
+    private final UserServiceClient userServiceClient;
 
     private static final DateTimeFormatter EVT_FMT =
             DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
@@ -64,7 +65,8 @@ public class WalletController {
             WalletCacheService walletCacheService,
             WalletHandler walletHandler,
             NotificationServiceClient notificationServiceClient,
-            NotificationProperties notificationProperties) {
+            NotificationProperties notificationProperties,
+            UserServiceClient userServiceClient) {
         this.walletSettingsRepository = walletSettingsRepository;
         this.walletRepository         = walletRepository;
         this.passwordEncoder          = passwordEncoder;
@@ -73,6 +75,7 @@ public class WalletController {
         this.walletHandler            = walletHandler;
         this.notificationServiceClient = notificationServiceClient;
         this.notificationProperties   = notificationProperties;
+        this.userServiceClient        = userServiceClient;
     }
 
     @GetMapping("/{walletId}")
@@ -108,8 +111,9 @@ public class WalletController {
 
     @PostMapping("/create/pin")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<?> userSetTransferPin(@RequestBody CreateTransferPinRequest request) {
-        String providedPin     = request.getTransferPin();
+    public ResponseEntity<?> userSetTransferPin(@RequestBody CreateTransferPinRequest request,
+                                                Authentication authentication) {
+        String providedPin = request.getTransferPin();
 
         Map<String, Object> response = new HashMap<>();
 
@@ -128,6 +132,8 @@ public class WalletController {
         }
 
         Optional<WalletSettings> settingsOpt = walletSettingsRepository.findByWalletId(request.getWalletId());
+        final boolean isUpdate = settingsOpt.isPresent() && settingsOpt.get().isIsSecure();
+
         WalletSettings settings;
         if (settingsOpt.isPresent()) {
             settings = settingsOpt.get();
@@ -145,6 +151,36 @@ public class WalletController {
         settings.setPassword(passwordEncoder.encode(providedPin));
         settings.setIsSecure(true);
         walletSettingsRepository.save(settings);
+
+        // ── Wallet PIN alert notification ─────────────────────────────────────
+        final String actionTime = formatNow();
+        final String action     = isUpdate ? "UPDATED" : "CREATED";
+        final String username   = authentication != null ? authentication.getName()
+                                                         : (request.getUsername() != null ? request.getUsername() : "");
+        CompletableFuture.runAsync(() -> {
+            try {
+                com.pesco.wallet_service.dtos.UserDTO userDto =
+                        userServiceClient.findByUsername(username, "");
+                if (userDto != null) {
+                    String email    = userDto.getEmail();
+                    String fullName = username;
+                    if (userDto.getRecords() != null && !userDto.getRecords().isEmpty()) {
+                        var rec = userDto.getRecords().get(0);
+                        fullName = rec.getFirstName() + " " + rec.getLastName();
+                    }
+                    notificationServiceClient.sendWalletPinAlert(
+                        email, fullName, username,
+                        action, actionTime,
+                        "", "",
+                        notificationProperties.getPhone(),
+                        notificationProperties.getEmail()
+                    );
+                }
+            } catch (Exception ex) {
+                System.err.println("[WalletPinAlert] Failed to send: " + ex.getMessage());
+            }
+        });
+        // ─────────────────────────────────────────────────────────────────────
 
         response.put("status",  "success");
         response.put("message", "Withdrawal/transfer pin successfully set.");
