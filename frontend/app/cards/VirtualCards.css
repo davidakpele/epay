@@ -13,9 +13,9 @@
 }
 
 :root {
-  --brand: #1a7a3c;
-  --brand-dark: #145c2e;
-  --brand-light: #e8f5ed;
+  --brand: var(--bg-main);
+  --brand-dark: #1a0a38;
+  --brand-light: #ede9fe;
   --card-radius:8px;
   --shadow-sm: 0 1px 4px rgba(0,0,0,0.06), 0 2px 12px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
@@ -307,11 +307,11 @@
 
 .status-pending-bg { background: #fef3c7; }
 .status-review-bg  { background: #dbeafe; }
-.status-active-bg  { background: #dcfce7; }
+.status-active-bg  { background: #ede9fe; }
 
 .dark .status-pending-bg { background: #2d2000; }
 .dark .status-review-bg  { background: #0c1f3a; }
-.dark .status-active-bg  { background: #0d2818; }
+.dark .status-active-bg  { background: #1a0a2e; }
 
 .vc-status-count {
   font-size: 28px;
@@ -321,7 +321,7 @@
 
 .status-pending-bg .vc-status-count { color: #d97706; }
 .status-review-bg  .vc-status-count { color: #1d4ed8; }
-.status-active-bg  .vc-status-count { color: #15803d; }
+.status-active-bg  .vc-status-count { color: var(--bg-main); }
 
 .dark .vc-status-count { color: #f1f5f9; }
 
@@ -332,7 +332,7 @@
 
 .status-pending-bg .vc-status-label { color: #d97706; }
 .status-review-bg  .vc-status-label { color: #1d4ed8; }
-.status-active-bg  .vc-status-label { color: #15803d; }
+.status-active-bg  .vc-status-label { color: var(--bg-main); }
 
 .dark .vc-status-label { color: #94a3b8; }
 
@@ -345,7 +345,7 @@
 
 .dot-pending { background: #f59e0b; }
 .dot-review  { background: #3b82f6; }
-.dot-active  { background: #22c55e; }
+.dot-active  { background: var(--bg-main); }
 
 /* ── Middle Row ── */
 .vc-mid-row {
@@ -465,7 +465,7 @@
 
 .dark .vc-dropdown-item { color: #e2e8f0; }
 .vc-dropdown-item:hover { background: var(--brand-light); color: var(--brand); }
-.dark .vc-dropdown-item:hover { background: #163424; color: #4ade80; }
+.dark .vc-dropdown-item:hover { background: #1a0a2e; color: #a78bfa; }
 .vc-currency-drop { font-size: 13px; }
 
 /* Card Details */
@@ -523,9 +523,9 @@
 }
 
 .dark .vc-network-selected {
-  background: #163424 !important;
-  color: #4ade80 !important;
-  border-color: #22c55e !important;
+  background: #1a0a2e !important;
+  color: #a78bfa !important;
+  border-color: var(--bg-main) !important;
 }
 
 /* Visa & MC logos */
@@ -725,7 +725,7 @@
 }
 
 .vc-history-meta-approved {
-  color: var(--brand);
+  color: var(--bg-main);
   font-weight: 600;
 }
 
@@ -783,11 +783,11 @@
   flex-shrink: 0;
 }
 
-.status-active  { background: #dcfce7; color: #15803d; }
+.status-active  { background: #ede9fe; color: var(--bg-main); }
 .status-pending { background: #fef3c7; color: #d97706; }
 .status-review  { background: #dbeafe; color: #1d4ed8; }
 
-.dark .status-active  { background: #14532d; color: #86efac; }
+.dark .status-active  { background: #1a0a2e; color: #a78bfa; }
 .dark .status-pending { background: #451a03; color: #fcd34d; }
 .dark .status-review  { background: #1e3a5f; color: #93c5fd; }
 
@@ -884,7 +884,7 @@
 }
 
 .dark .vc-tab { color: #64748b; }
-.dark .vc-tab-active { background: #1e293b !important; color: #4ade80 !important; }
+.dark .vc-tab-active { background: #1e293b !important; color: #a78bfa !important; }
 
 .vc-view-all {
   margin-left: auto;
@@ -954,7 +954,7 @@
   pointer-events: none;
 }
 
-.card-gradient-green  { background: linear-gradient(135deg, #1a5928 0%, #2e7d32 55%, #388e3c 100%); }
+.card-gradient-green  { background: linear-gradient(135deg, var(--bg-main) 0%, #1a0a38 55%, #3b1f7a 100%); }
 .card-gradient-blue   { background: linear-gradient(135deg, #0d3b6e 0%, #1565c0 55%, #1976d2 100%); }
 .card-gradient-purple { background: linear-gradient(135deg, #3b0764 0%, #6b21a8 55%, #7c3aed 100%); }
 .card-gradient-dark   { background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #334155 100%); }
@@ -1025,7 +1025,7 @@
   flex-shrink: 0;
 }
 
-.vc-card .status-active  { background: rgba(255,255,255,0.2); color: #bbf7d0; }
+.vc-card .status-active  { background: rgba(255,255,255,0.2); color: #ddd6fe; }
 .vc-card .status-pending { background: rgba(255,255,255,0.15); color: #fde68a; }
 .vc-card .status-review  { background: rgba(255,255,255,0.15); color: #bfdbfe; }
 

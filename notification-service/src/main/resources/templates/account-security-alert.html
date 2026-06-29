@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>ePay – Account Security Alert</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    body, table, td, p, a { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+    table, td { mso-table-lspace:0pt; mso-table-rspace:0pt; }
+    img { border:0; display:block; }
+    body { margin:0!important; padding:0!important; background-color:#f0eef8; }
+    @media only screen and (max-width:560px){
+      .email-wrap { padding:20px 10px!important; }
+      .card-body  { padding:6px 20px 24px!important; }
+      .page-title { font-size:20px!important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f0eef8;font-family:'DM Sans',Arial,sans-serif;">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f0eef8;">
+  <tr>
+    <td align="center" class="email-wrap" style="padding:40px 16px;">
+
+      <!-- Brand -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:26px;">
+        <tr>
+          <td style="padding-right:10px;vertical-align:middle;">
+            <table role="presentation" width="38" height="38" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" valign="middle" style="width:38px;height:38px;background-color:#2b0f56;border-radius:9px;">
+                  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iNyIgaGVpZ2h0PSI3IiByeD0iMS41IiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHg9IjExIiB5PSIyIiB3aWR0aD0iNyIgaGVpZ2h0PSI3IiByeD0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC41Ii8+PHJlY3QgeD0iMiIgeT0iMTEiIHdpZHRoPSI3IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjUiLz48cmVjdCB4PSIxMSIgeT0iMTEiIHdpZHRoPSI3IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IndoaXRlIi8+PC9zdmc+"
+                       width="20" height="20" alt="ePay">
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="font-family:'DM Serif Display',Georgia,serif;font-size:26px;color:#2b0f56;letter-spacing:-0.3px;line-height:1;">ePay</span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Card -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;">
+        <tr>
+          <td style="background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.04),0 12px 40px rgba(0,0,0,.08);">
+
+            <!-- Card header -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="background-color:#2b0f56;padding:28px 36px 24px;text-align:left;">
+                  <p style="margin:0 0 6px;font-family:'DM Sans',Arial,sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:0.08em;text-transform:uppercase;">Security Alert</p>
+                  <h1 class="page-title"
+                      th:text="${
+                        eventType == 'PASSWORD_RESET'      ? 'Password Reset Successful'           :
+                        eventType == 'UPDATE_PASSWORD'     ? 'Password Updated'                    :
+                        eventType == 'DEACTIVATE_ACCOUNT'  ? 'Account Deactivated'                 :
+                        eventType == 'ACCOUNT_LOCKED'      ? 'Account Locked'                      :
+                        eventType == 'ACCOUNT_UNLOCKED'    ? 'Account Unlocked'                    :
+                        eventType == 'ACCOUNT_BLOCKED'     ? 'Account Blocked'                     :
+                        eventType == 'ACCOUNT_UNBLOCKED'   ? 'Account Unblocked'                   :
+                        eventType == 'TWO_FACTOR_ENABLED'  ? 'Two-Factor Authentication Enabled'   :
+                        eventType == 'TWO_FACTOR_DISABLED' ? 'Two-Factor Authentication Disabled'  :
+                                                             'Account Security Alert'
+                      }"
+                      style="margin:0;font-family:'DM Serif Display',Georgia,serif;font-size:24px;color:#ffffff;font-weight:400;line-height:1.25;">
+                    Account Security Alert
+                  </h1>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Card body -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="card-body" style="padding:6px 36px 32px;">
+
+                  <p style="font-size:15px;color:#374151;font-weight:500;margin:20px 0 14px;font-family:'DM Sans',Arial,sans-serif;">
+                    Dear <span th:text="${fullName}">User</span>,
+                  </p>
+
+                  <!-- Dynamic body message -->
+                  <p style="font-size:14.5px;color:#374151;line-height:1.65;margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;"
+                     th:text="${
+                       eventType == 'PASSWORD_RESET'      ? 'Your ePay account password was reset successfully.' :
+                       eventType == 'UPDATE_PASSWORD'     ? 'Your ePay account password has been updated. If this was you, no further action is needed.' :
+                       eventType == 'DEACTIVATE_ACCOUNT'  ? 'Your ePay account has been deactivated. If you did not request this, please contact us immediately.' :
+                       eventType == 'ACCOUNT_LOCKED'      ? 'Your ePay account has been temporarily locked due to suspicious activity or repeated failed attempts.' :
+                       eventType == 'ACCOUNT_UNLOCKED'    ? 'Your ePay account has been successfully unlocked and is now active.' :
+                       eventType == 'ACCOUNT_BLOCKED'     ? 'Your ePay account has been blocked. Please contact customer support for more details.' :
+                       eventType == 'ACCOUNT_UNBLOCKED'   ? 'Your ePay account has been unblocked. You can now log in and use all services.' :
+                       eventType == 'TWO_FACTOR_ENABLED'  ? 'Two-Factor Authentication (2FA) has been enabled on your ePay account. Your account is now more secure.' :
+                       eventType == 'TWO_FACTOR_DISABLED' ? 'Two-Factor Authentication (2FA) has been disabled on your ePay account.' :
+                                                            'A security-related change was made to your ePay account.'
+                     }">
+                    A security event occurred on your account.
+                  </p>
+
+                  <!-- Detail table -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                         style="background-color:#f5f0ff;border-radius:12px;margin-bottom:20px;border:1px solid #ddd6fe;">
+                    <tr>
+                      <td style="padding:14px 16px;border-bottom:1px solid #ede9fe;">
+                        <p style="margin:0;font-size:11.5px;color:#6b7280;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;font-family:'DM Sans',Arial,sans-serif;">Date &amp; Time</p>
+                        <p style="margin:4px 0 0;font-size:14px;color:#1f2937;font-weight:600;font-family:'DM Sans',Arial,sans-serif;" th:text="${eventTime}">—</p>
+                      </td>
+                    </tr>
+                    <tr th:if="${deviceInfo != null and !deviceInfo.isEmpty()}">
+                      <td style="padding:14px 16px;border-bottom:1px solid #ede9fe;">
+                        <p style="margin:0;font-size:11.5px;color:#6b7280;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;font-family:'DM Sans',Arial,sans-serif;">Device</p>
+                        <p style="margin:4px 0 0;font-size:14px;color:#1f2937;font-weight:600;font-family:'DM Sans',Arial,sans-serif;" th:text="${deviceInfo}">—</p>
+                      </td>
+                    </tr>
+                    <tr th:if="${ipAddress != null and !ipAddress.isEmpty()}">
+                      <td style="padding:14px 16px;">
+                        <p style="margin:0;font-size:11.5px;color:#6b7280;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;font-family:'DM Sans',Arial,sans-serif;">IP Address</p>
+                        <p style="margin:4px 0 0;font-size:14px;color:#1f2937;font-weight:600;font-family:monospace;" th:text="${ipAddress}">—</p>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Warning box (only for destructive/suspicious events) -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                         th:if="${eventType == 'DEACTIVATE_ACCOUNT' or eventType == 'ACCOUNT_LOCKED' or eventType == 'ACCOUNT_BLOCKED' or eventType == 'TWO_FACTOR_DISABLED' or eventType == 'UPDATE_PASSWORD' or eventType == 'PASSWORD_RESET'}"
+                         style="background-color:#fef3c7;border-radius:10px;margin-bottom:20px;border-left:4px solid #f59e0b;">
+                    <tr>
+                      <td style="padding:14px 16px;">
+                        <p style="margin:0;font-size:13.5px;color:#78350f;line-height:1.6;font-family:'DM Sans',Arial,sans-serif;">
+                          <strong>If you didn't perform this action</strong>, your account may be compromised.
+                          Contact ePay immediately on
+                          <strong th:text="${supportPhone}">070034335489</strong> or email
+                          <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}"
+                             style="color:#2b0f56;text-decoration:none;font-weight:600;">info@epay.com</a>.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Security reminder -->
+                  <p style="font-size:13.5px;color:#6b7280;line-height:1.65;margin:0 0 16px;font-family:'DM Sans',Arial,sans-serif;">
+                    Please keep your login details secure at all times and do not disclose them by phone,
+                    email or on suspicious websites. Neither ePay nor its staff will request your
+                    Password or Token at any point in time.
+                  </p>
+
+                  <!-- Token warning -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                         style="background-color:#2b0f56;border-radius:10px;margin-bottom:20px;">
+                    <tr>
+                      <td style="padding:14px 18px;text-align:center;">
+                        <p style="margin:0;font-size:12px;color:#ffffff;font-weight:700;letter-spacing:0.05em;line-height:1.5;font-family:'DM Sans',Arial,sans-serif;text-transform:uppercase;">
+                          YOUR TOKEN IS A KEY TO YOUR ACCOUNT.<br>DON'T SHARE YOUR TOKEN OR TOKEN CODE WITH ANYONE.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Why notice -->
+                  <p style="font-size:13px;color:#9ca3af;line-height:1.65;margin:0;font-family:'DM Sans',Arial,sans-serif;font-style:italic;">
+                    <strong style="color:#6b7280;">Why are we sending this?</strong>
+                    We take security very seriously and want to keep you aware of all important actions in your ePay profile.
+                  </p>
+
+                  <!-- Divider -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:22px 0;">
+                    <tr><td style="height:1px;background-color:#f0edea;font-size:0;line-height:0;">&nbsp;</td></tr>
+                  </table>
+
+                  <p style="font-size:14px;color:#374151;margin:0;font-family:'DM Sans',Arial,sans-serif;">
+                    Best regards,<br>
+                    <strong style="color:#2b0f56;">The ePay Security Team</strong>
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!-- Card footer -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="border-top:1px solid #f3f0ec;">
+              <tr>
+                <td align="center" style="padding:20px 36px 28px;text-align:center;">
+                  <p style="font-family:'DM Serif Display',Georgia,serif;font-size:14px;color:#2b0f56;margin:0 0 14px;font-weight:400;">
+                    Thank you for banking with ePay!
+                  </p>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;">
+                    <tr>
+                      <td style="padding:0 5px;">
+                        <a href="#" style="display:inline-block;width:32px;height:32px;background-color:#2b0f56;border-radius:50%;text-decoration:none;">
+                          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTE4IDJoLTNhNSA1IDAgMCAwLTUgNXYzSDd2NGgzdjhoNHYtOGgzbDEtNGgtNFY3YTEgMSAwIDAgMSAxLTFoM3oiLz48L3N2Zz4=" width="14" height="14" alt="fb" style="display:block;margin:9px auto 0;">
+                        </a>
+                      </td>
+                      <td style="padding:0 5px;">
+                        <a href="#" style="display:inline-block;width:32px;height:32px;background-color:#2b0f56;border-radius:50%;text-decoration:none;">
+                          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTIyIDRzLS43IDIuMS0yIDMuNGMxLjYgMTAtOS40IDE3LjMtMTggMTEuNiAyLjIuMSA0LjQtLjYgNi0yQzMgMTUuNS41IDkuNiAzIDVjMi4yIDIuNiA1LjYgNC4xIDkgNC0uOS00LjIgNC02LjYgNy0zLjggMS4xIDAgMy0xLjIgMy0xLjJ6Ii8+PC9zdmc+" width="13" height="13" alt="tw" style="display:block;margin:9px auto 0;">
+                        </a>
+                      </td>
+                      <td style="padding:0 5px;">
+                        <a href="#" style="display:inline-block;width:32px;height:32px;background-color:#2b0f56;border-radius:50%;text-decoration:none;">
+                          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiByeD0iNSIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjMiIGZpbGw9IiMyYjBmNTYiLz48Y2lyY2xlIGN4PSIxNy41IiBjeT0iNi41IiByPSIxIiBmaWxsPSIjMmIwZjU2Ii8+PC9zdmc+" width="13" height="13" alt="ig" style="display:block;margin:9px auto 0;">
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                  <p style="font-size:12px;color:#b0aaa3;line-height:1.7;margin:0;font-family:'DM Sans',Arial,sans-serif;">
+                    ePay &nbsp;·&nbsp;
+                    <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}" style="color:#9ca3af;text-decoration:none;">support@epay.com</a>
+                    &nbsp;·&nbsp; <span th:text="${supportPhone}">070034335489</span>
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+</table>
+</body>
+</html>

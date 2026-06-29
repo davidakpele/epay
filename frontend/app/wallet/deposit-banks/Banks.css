@@ -704,9 +704,9 @@
 .page-header {
   margin-bottom: 32px;
   padding: 40px 48px;
-  background: linear-gradient(135deg, #1a6b0f 0%, #2e8b1a 40%, #4caf30 100%);
+  background: linear-gradient(135deg, var(--bg-main) 0%, #1a0a38 40%, #3b1f7a 100%);
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(46, 139, 26, 0.35);
+  box-shadow: 0 8px 32px rgba(43, 15, 86, 0.35);
   position: relative;
   overflow: hidden;
   display: flex;

@@ -19,16 +19,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import pesco.notification_service.messageProducer.AuthenticationMessageProducer;
 import pesco.notification_service.messageProducer.WalletMessageProducer;
+import pesco.notification_service.payloads.AccountSecurityNotification;
 import pesco.notification_service.payloads.AccountVerificationRequest;
 import pesco.notification_service.payloads.BlockUserWallet;
 import pesco.notification_service.payloads.CreditWalletNotification;
 import pesco.notification_service.payloads.DebitWalletNotification;
 import pesco.notification_service.payloads.DepositWalletNotification;
+import pesco.notification_service.payloads.LoginAlertNotification;
 import pesco.notification_service.payloads.MaintenanceDeductionNotification;
 import pesco.notification_service.payloads.PasswordResetRequest;
 import pesco.notification_service.payloads.RegistrationOtpMessage;
 import pesco.notification_service.payloads.SwapCurrencyPayload;
 import pesco.notification_service.payloads.UserOTPMessage;
+import pesco.notification_service.payloads.WalletPinNotification;
 import pesco.notification_service.payloads.WelcomeMessagePayload;
 
 
@@ -368,4 +371,63 @@ public class MessageController {
         }
     }
 
+    // ── Login Alert ────────────────────────────────────────────────────────────
+
+    @PostMapping("/send/login-alert")
+    public ResponseEntity<Map<String, Object>> sendLoginAlert(
+            HttpServletRequest httpRequest,
+            @RequestBody LoginAlertNotification request) {
+        try {
+            authenticationMessageProducer.sendLoginAlert(request);
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Login alert sent successfully!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", "Failed to send login alert: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
+
+    // ── Wallet PIN Alert ───────────────────────────────────────────────────────
+
+    @PostMapping("/send/wallet-pin-alert")
+    public ResponseEntity<Map<String, Object>> sendWalletPinAlert(
+            HttpServletRequest httpRequest,
+            @RequestBody WalletPinNotification request) {
+        try {
+            walletMessageProducer.sendWalletPinAlert(request);
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Wallet PIN alert sent successfully!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", "Failed to send wallet PIN alert: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
+
+    // ── Account Security Alert (password, 2FA, lock, block, deactivate) ───────
+
+    @PostMapping("/send/account-security-alert")
+    public ResponseEntity<Map<String, Object>> sendAccountSecurityAlert(
+            HttpServletRequest httpRequest,
+            @RequestBody AccountSecurityNotification request) {
+        try {
+            authenticationMessageProducer.sendAccountSecurityAlert(request);
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Account security alert sent successfully!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", "Failed to send account security alert: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
 }

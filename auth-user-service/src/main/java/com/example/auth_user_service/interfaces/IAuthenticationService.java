@@ -2,6 +2,7 @@ package com.example.auth_user_service.interfaces;
 
 import org.springframework.http.ResponseEntity;
 import java.util.Optional;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.example.auth_user_service.models.Users;
 import com.example.auth_user_service.payloads.UserSignInRequest;
@@ -11,7 +12,7 @@ import com.example.auth_user_service.responses.VerificationTokenResult;
 public interface IAuthenticationService {
     ResponseEntity<?> createAccount(UserSignUpRequest request);
 
-    ResponseEntity<?> login(UserSignInRequest request, HttpServletResponse response);
+    ResponseEntity<?> login(UserSignInRequest request, HttpServletResponse response, HttpServletRequest httpRequest);
 
     Optional<Users> findByEmail(String email);
 

@@ -257,4 +257,92 @@ public class NotificationServiceClient implements INotificationServiceClient {
             return null;
         }
     }
+
+    @Override
+    public void sendAccountSecurityAlert(
+            String email, String fullName, String username,
+            String eventType, String eventTime,
+            String ipAddress, String deviceInfo,
+            String supportPhone, String supportEmail) {
+        try {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("email",        email);
+            requestBody.put("fullName",     fullName);
+            requestBody.put("username",     username);
+            requestBody.put("eventType",    eventType);
+            requestBody.put("eventTime",    eventTime);
+            requestBody.put("ipAddress",    ipAddress  != null ? ipAddress  : "");
+            requestBody.put("deviceInfo",   deviceInfo != null ? deviceInfo : "");
+            requestBody.put("supportPhone", supportPhone);
+            requestBody.put("supportEmail", supportEmail);
+
+            log.info("[REQUEST] POST /send/account-security-alert | eventType: " + eventType + " | email: " + email);
+
+            notificationServiceWebClient.post()
+                    .uri("/send/account-security-alert")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .flatMap(errorMessage -> {
+                                        log.warning("[RESPONSE ERROR] POST /send/account-security-alert | status: "
+                                                + clientResponse.statusCode() + " | body: " + errorMessage);
+                                        if (clientResponse.statusCode().is4xxClientError()) {
+                                            String details = extraction.extractDetailsFromError(errorMessage);
+                                            return Mono.error(new UserClientNotFoundException("Account security alert failed", details));
+                                        }
+                                        return Mono.error(new RuntimeException("Server error while sending account security alert"));
+                                    }))
+                    .toBodilessEntity()
+                    .doOnSuccess(response -> log.info("[RESPONSE] POST /send/account-security-alert | status: "
+                            + response.getStatusCode()))
+                    .block();
+        } catch (Exception ex) {
+            log.severe("[EXCEPTION] POST /send/account-security-alert | error: " + ex.getMessage());
+        }
+    }
+
+    @Override
+    public void sendWalletPinAlert(
+            String email, String fullName, String username,
+            String action, String actionTime,
+            String ipAddress, String deviceInfo,
+            String supportPhone, String supportEmail) {
+        try {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("email",        email);
+            requestBody.put("fullName",     fullName);
+            requestBody.put("username",     username);
+            requestBody.put("action",       action);
+            requestBody.put("actionTime",   actionTime);
+            requestBody.put("ipAddress",    ipAddress  != null ? ipAddress  : "");
+            requestBody.put("deviceInfo",   deviceInfo != null ? deviceInfo : "");
+            requestBody.put("supportPhone", supportPhone);
+            requestBody.put("supportEmail", supportEmail);
+
+            log.info("[REQUEST] POST /send/wallet-pin-alert | action: " + action + " | email: " + email);
+
+            notificationServiceWebClient.post()
+                    .uri("/send/wallet-pin-alert")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .flatMap(errorMessage -> {
+                                        log.warning("[RESPONSE ERROR] POST /send/wallet-pin-alert | status: "
+                                                + clientResponse.statusCode() + " | body: " + errorMessage);
+                                        if (clientResponse.statusCode().is4xxClientError()) {
+                                            String details = extraction.extractDetailsFromError(errorMessage);
+                                            return Mono.error(new UserClientNotFoundException("Wallet PIN alert failed", details));
+                                        }
+                                        return Mono.error(new RuntimeException("Server error while sending wallet PIN alert"));
+                                    }))
+                    .toBodilessEntity()
+                    .doOnSuccess(response -> log.info("[RESPONSE] POST /send/wallet-pin-alert | status: "
+                            + response.getStatusCode()))
+                    .block();
+        } catch (Exception ex) {
+            log.severe("[EXCEPTION] POST /send/wallet-pin-alert | error: " + ex.getMessage());
+        }
+    }
 }

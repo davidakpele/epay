@@ -100,6 +100,11 @@ history-service:
 notification-service:
   base-url: http://notification-service:8079
 
+notification:
+  support:
+    phone: "070034335489"
+    email: "support@epay.com"
+
 administrator-service:
   base-url: http://administrator:8109
 

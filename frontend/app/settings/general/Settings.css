@@ -896,7 +896,7 @@
 }
 
 .pin-status-indicator .pin-set{
-  color: #16a34a;
+  color: var(--bg-main);
 }
 .pin-status-indicator .pin-not-set{
   color: var(--bg-main);

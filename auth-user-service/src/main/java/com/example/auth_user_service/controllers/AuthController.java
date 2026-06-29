@@ -35,6 +35,7 @@ import com.example.auth_user_service.payloads.UserSignInRequest;
 import com.example.auth_user_service.payloads.UserSignUpRequest;
 import com.example.auth_user_service.responses.AuthResponse;
 import com.example.auth_user_service.responses.VerificationTokenResult;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 
@@ -189,14 +190,15 @@ public class AuthController {
     
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserSignInRequest request,
-            HttpServletResponse response) {
+            HttpServletResponse response,
+            HttpServletRequest httpRequest) {
         if (request.getUsername() == null || request.getUsername().isEmpty()) {
             return Error.createResponse("Username is require.*", HttpStatus.BAD_REQUEST, "Username can not be empty");
         }
         if (request.getPassword() == null || request.getPassword().isEmpty()) {
             return Error.createResponse("Password is require*", HttpStatus.BAD_REQUEST, "Password can not be empty");
         }
-        return authenticationService.login(request, response);
+        return authenticationService.login(request, response, httpRequest);
     }
 
     @GetMapping("/verifyRegistration")

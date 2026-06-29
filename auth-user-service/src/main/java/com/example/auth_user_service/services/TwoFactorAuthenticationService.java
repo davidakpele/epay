@@ -1,5 +1,7 @@
 package com.example.auth_user_service.services;
 
+import com.example.auth_user_service.components.NotificationProperties;
+import com.example.auth_user_service.httpClients.NotificationServiceClient;
 import com.example.auth_user_service.interfaces.IJwtService;
 import com.example.auth_user_service.interfaces.ITwoFactorAuthenticationService;
 import com.example.auth_user_service.models.TwoFactorAuthentication;
@@ -8,12 +10,17 @@ import com.example.auth_user_service.models.Users;
 import com.example.auth_user_service.payloads.OTPRequest;
 import com.example.auth_user_service.exceptions.Error;
 import com.example.auth_user_service.repositories.TwoFactorOTPRepository;
+import com.example.auth_user_service.repositories.UserRecordRepository;
 import com.example.auth_user_service.repositories.UsersRepository;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -22,17 +29,34 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TwoFactorAuthenticationService implements ITwoFactorAuthenticationService{
+public class TwoFactorAuthenticationService implements ITwoFactorAuthenticationService {
     private final TwoFactorOTPRepository twoFactorOTPRepository;
     private static final int EXPIRATION_MINUTES = 1;
     private final UsersRepository userRepository;
     private final IJwtService jwtService;
+    private final UserRecordRepository userRecordRepository;
+    private final NotificationServiceClient notificationServiceClient;
+    private final NotificationProperties notificationProperties;
+
+    private static final DateTimeFormatter EVT_FMT =
+            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
+
+    private String formatNow() {
+        return ZonedDateTime.now(ZoneId.systemDefault()).format(EVT_FMT);
+    }
 
     public TwoFactorAuthenticationService(TwoFactorOTPRepository twoFactorOTPRepository,
-            UsersRepository userRepository, IJwtService jwtService) {
-        this.twoFactorOTPRepository = twoFactorOTPRepository;
-        this.userRepository = userRepository;
-        this.jwtService = jwtService;
+            UsersRepository userRepository,
+            IJwtService jwtService,
+            UserRecordRepository userRecordRepository,
+            NotificationServiceClient notificationServiceClient,
+            NotificationProperties notificationProperties) {
+        this.twoFactorOTPRepository   = twoFactorOTPRepository;
+        this.userRepository           = userRepository;
+        this.jwtService               = jwtService;
+        this.userRecordRepository     = userRecordRepository;
+        this.notificationServiceClient = notificationServiceClient;
+        this.notificationProperties   = notificationProperties;
     }
 
     @Override
@@ -177,6 +201,22 @@ public class TwoFactorAuthenticationService implements ITwoFactorAuthenticationS
         Users user = optionalUser.get();
         user.setTwoFactorAuth(enable2fa);
         userRepository.save(user);
+
+        // ── Security notification ─────────────────────────────────────────────
+        final String eventTime = formatNow();
+        final String eventType = Boolean.TRUE.equals(enable2fa) ? "TWO_FACTOR_ENABLED" : "TWO_FACTOR_DISABLED";
+        userRecordRepository.findByUserId(user.getId()).ifPresent(rec -> {
+            final String fullName = rec.getFirstName() + " " + rec.getLastName();
+            CompletableFuture.runAsync(() ->
+                notificationServiceClient.sendAccountSecurityAlert(
+                    user.getEmail(), fullName, user.getUsername(),
+                    eventType, eventTime, "", "",
+                    notificationProperties.getPhone(), notificationProperties.getEmail()
+                )
+            ).exceptionally(ex -> { System.err.println("[2FAToggle] " + ex.getMessage()); return null; });
+        });
+        // ─────────────────────────────────────────────────────────────────────
+
         return ResponseEntity.ok().body("Two-Factor Authentication updated successfully");
     }
 

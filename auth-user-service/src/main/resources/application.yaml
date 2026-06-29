@@ -221,6 +221,11 @@ server:
 notification-service:
   base-url: http://notification-service:8079
 
+notification:
+  support:
+    phone: "070034335489"
+    email: "support@epay.com"
+
 wallet-service:
   base-url: http://wallet-service:8035
 

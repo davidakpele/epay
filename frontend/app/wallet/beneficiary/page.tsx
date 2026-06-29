@@ -287,14 +287,14 @@ const BeneficiaryManager = () => {
                             {/* Error Message */}
                             {error && (
                                 <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mb-6 flex items-center gap-3">
-                                    <i className="fas fa-exclamation-circle text-[#166701] text-xl"></i>
+                                    <i className="fas fa-exclamation-circle text-[#2b0f56] text-xl"></i>
                                     <div className="flex-1">
                                         <h4 className="font-bold text-red-900">Error</h4>
                                         <p className="text-sm text-red-700">{error}</p>
                                     </div>
                                     <button 
                                         onClick={() => setError(null)}
-                                        className="text-[#166701] hover:text-[#0d4401]"
+                                        className="text-[#2b0f56] hover:text-[#1a0a38]"
                                     >
                                         <i className="fas fa-times"></i>
                                     </button>
@@ -302,7 +302,7 @@ const BeneficiaryManager = () => {
                             )}
 
                             {/* Header Banner */}
-                            <div className="bg-gradient-to-br from-[#166701] via-[#145f01] to-[#125501] rounded-2xl sm:rounded-[1rem] p-6 sm:p-8 lg:p-10 mb-6 shadow-xl">
+                            <div className="bg-gradient-to-br from-[#2b0f56] via-[#220c44] to-[#1a0a38] rounded-2xl sm:rounded-[1rem] p-6 sm:p-8 lg:p-10 mb-6 shadow-xl">
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-3">
@@ -313,7 +313,7 @@ const BeneficiaryManager = () => {
                                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Saved Beneficiaries</h1>
                                             </div>
                                         </div>
-                                        <p className="text-green-100 text-xs sm:text-sm max-w-xl">Manage your trusted contacts and send money instantly to your favorite recipients.</p>
+                                        <p className="text-purple-100 text-xs sm:text-sm max-w-xl">Manage your trusted contacts and send money instantly to your favorite recipients.</p>
                                     </div>
                                     
                                     <div className="flex flex-wrap gap-4">
@@ -339,7 +339,7 @@ const BeneficiaryManager = () => {
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             placeholder="Search contacts..." 
-                                            className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#166701] focus:bg-white outline-none transition-all text-sm sm:text-base text-gray-900 placeholder:text-gray-400"
+                                            className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#2b0f56] focus:bg-white outline-none transition-all text-sm sm:text-base text-gray-900 placeholder:text-gray-400"
                                         />
                                         {searchQuery && (
                                             <button 
@@ -354,14 +354,14 @@ const BeneficiaryManager = () => {
                                     <div className="flex gap-2 bg-gray-100 rounded-xl p-1.5">
                                         <button 
                                             onClick={() => setViewMode('grid')}
-                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'grid' ? 'bg-white text-[#166701] shadow-sm' : 'text-gray-600'}`}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'grid' ? 'bg-white text-[#2b0f56] shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <i className="fas fa-th mr-2"></i>
                                             <span className="hidden sm:inline">Grid</span>
                                         </button>
                                         <button 
                                             onClick={() => setViewMode('list')}
-                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'list' ? 'bg-white text-[#166701] shadow-sm' : 'text-gray-600'}`}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'list' ? 'bg-white text-[#2b0f56] shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <i className="fas fa-list mr-2"></i>
                                             <span className="hidden sm:inline">List</span>
@@ -383,14 +383,14 @@ const BeneficiaryManager = () => {
                                             onClick={() => setActiveFilter(tab.key)} 
                                             className={`flex-1 min-w-[140px] px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-center gap-2 sm:gap-3 font-bold text-xs sm:text-sm transition-all border-b-4 ${
                                                 activeFilter === tab.key 
-                                                    ? 'text-[#166701] bg-green-50/50 border-[#166701]' 
+                                                    ? 'text-[#2b0f56] bg-purple-50/50 border-[#2b0f56]' 
                                                     : 'text-gray-500 border-transparent hover:bg-gray-50'
                                             }`}
                                         >
                                             <i className={`fas fa-${tab.icon} text-sm sm:text-base`}></i>
                                             <span>{tab.label}</span>
                                             <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                                                activeFilter === tab.key ? 'bg-[#166701] text-white' : 'bg-gray-200 text-gray-600'
+                                                activeFilter === tab.key ? 'bg-[#2b0f56] text-white' : 'bg-gray-200 text-gray-600'
                                             }`}>
                                                 {getCategoryCount(tab.key)}
                                             </span>
@@ -429,7 +429,7 @@ const BeneficiaryManager = () => {
                             {isLoadingBeneficiaries && (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="text-center">
-                                        <div className="w-16 h-16 border-4 border-[#166701] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                        <div className="w-16 h-16 border-4 border-[#2b0f56] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                                         <p className="text-gray-600">Loading beneficiaries...</p>
                                     </div>
                                 </div>
@@ -440,26 +440,26 @@ const BeneficiaryManager = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8 pb-15">
                                     {filteredBeneficiaries.map((b) => (
                                         <div key={b.id} className={`bg-white rounded-2xl sm:rounded-3xl border-2 transition-all hover:shadow-xl hover:-translate-y-1 group ${
-                                            b.isEpay ? 'border-green-200 hover:border-[#166701]' : 'border-gray-100 hover:border-gray-300'
+                                            b.isEpay ? 'border-purple-200 hover:border-[#2b0f56]' : 'border-gray-100 hover:border-gray-300'
                                         }`}>
                                             <div className="p-5 sm:p-6">
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center font-bold text-xl ${
                                                         b.isEpay 
-                                                            ? 'bg-gradient-to-br from-[#166701] to-[#0d4401] text-white shadow-lg shadow-green-500/30' 
+                                                            ? 'bg-gradient-to-br from-[#2b0f56] to-[#1a0a38] text-white shadow-lg shadow-purple-500/30' 
                                                             : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700'
                                                     }`}>
                                                         {b.initial}
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         {b.isEpay && (
-                                                            <span className="text-[9px] sm:text-[10px] bg-[#166701] text-white px-2 py-1 rounded-full font-extrabold uppercase tracking-wider">
+                                                            <span className="text-[9px] sm:text-[10px] bg-[#2b0f56] text-white px-2 py-1 rounded-full font-extrabold uppercase tracking-wider">
                                                                 ePay
                                                             </span>
                                                         )}
                                                         <button 
                                                             onClick={() => handleDeleteClick(b.id)}
-                                                            className="w-8 h-8 rounded-lg hover:bg-green-50 flex items-center justify-center text-gray-400 hover:text-[#166701] transition"
+                                                            className="w-8 h-8 rounded-lg hover:bg-purple-50 flex items-center justify-center text-gray-400 hover:text-[#2b0f56] transition"
                                                         >
                                                             <i className="fas fa-trash"></i>
                                                         </button>
@@ -476,13 +476,13 @@ const BeneficiaryManager = () => {
                                                     </div>
                                                     <div className="flex justify-between items-center text-xs mt-1">
                                                         <span className="text-gray-500">Currency</span>
-                                                        <span className="font-bold text-[#166701]">{b.currency}</span>
+                                                        <span className="font-bold text-[#2b0f56]">{b.currency}</span>
                                                     </div>
                                                 </div>
 
                                                 <button 
                                                     onClick={() => openHistoryModal(b)}
-                                                    className="w-full py-3 text-xs sm:text-sm font-bold bg-[#166701] text-white rounded-xl hover:bg-[#0d4401] transition flex items-center justify-center gap-2 shadow-lg shadow-green-600/30"
+                                                    className="w-full py-3 text-xs sm:text-sm font-bold bg-[#2b0f56] text-white rounded-xl hover:bg-[#1a0a38] transition flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30"
                                                 >
                                                     <i className="fas fa-eye text-xs"></i>
                                                     View Details

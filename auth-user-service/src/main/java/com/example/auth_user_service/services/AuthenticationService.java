@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.Optional; 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.auth_user_service.components.KeyWrapper;
+import com.example.auth_user_service.components.NotificationProperties;
 import com.example.auth_user_service.enums.AttemptType;
 import com.example.auth_user_service.enums.ContactMethod;
 import com.example.auth_user_service.enums.Role;
@@ -44,6 +48,7 @@ import com.example.auth_user_service.repositories.UsersRepository;
 import com.example.auth_user_service.repositories.VerificationTokenRepository;
 import com.example.auth_user_service.responses.AuthResponse;
 import com.example.auth_user_service.responses.VerificationTokenResult;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -67,6 +72,37 @@ public class AuthenticationService implements IAuthenticationService{
     private final IUserAttemptService userAttemptService;
     private final IMessagingService messagingService;
     private final VerificationTokenRepository verificationTokenRepository;
+    private final NotificationProperties notificationProperties;
+
+    private static final DateTimeFormatter LOGIN_TIME_FMT =
+            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
+
+    private String formatNow() {
+        return ZonedDateTime.now(ZoneId.systemDefault()).format(LOGIN_TIME_FMT);
+    }
+
+    /** Extracts the real client IP, checking X-Forwarded-For first. */
+    private String extractClientIp(HttpServletRequest req) {
+        if (req == null) return "";
+        String xff = req.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            return xff.split(",")[0].trim();
+        }
+        String xri = req.getHeader("X-Real-IP");
+        if (xri != null && !xri.isBlank()) return xri.trim();
+        return req.getRemoteAddr();
+    }
+
+    /** Extracts a short device description from the User-Agent header. */
+    private String extractDevice(HttpServletRequest req) {
+        if (req == null) return "Unknown device";
+        String ua = req.getHeader("User-Agent");
+        if (ua == null || ua.isBlank()) return "Unknown device";
+        ua = ua.toLowerCase();
+        if (ua.contains("mobile") || ua.contains("android") || ua.contains("iphone")) return "Mobile Browser";
+        if (ua.contains("tablet") || ua.contains("ipad")) return "Tablet Browser";
+        return "Desktop Browser";
+    }
 
     @Override
     @Transactional
@@ -108,7 +144,7 @@ public class AuthenticationService implements IAuthenticationService{
     }
 
     @Override
-    public ResponseEntity<?> login(UserSignInRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> login(UserSignInRequest request, HttpServletResponse response, HttpServletRequest httpRequest) {
         Map<String, Object> authResponse = new LinkedHashMap<>();
         Users user = userRepository.findByUsername(request.getUsername()).orElse(null);
         if (user == null) {
@@ -152,6 +188,22 @@ public class AuthenticationService implements IAuthenticationService{
 
             UserRecord rec = userRecordRepository.findByUserId(user.getId())
                     .orElseThrow(() -> new RuntimeException("User record not found"));
+
+            // ── Login alert notification ──────────────────────────────────────
+            final String loginTime = formatNow();
+            final String ipAddr    = extractClientIp(httpRequest);
+            final String device    = extractDevice(httpRequest);
+            final String fullName  = rec.getFirstName() + " " + rec.getLastName();
+            CompletableFuture.runAsync(() ->
+                notificationServiceClient.sendAccountSecurityAlert(
+                    user.getEmail(), fullName, user.getUsername(),
+                    "LOGIN_ALERT", loginTime,
+                    ipAddr, device,
+                    notificationProperties.getPhone(),
+                    notificationProperties.getEmail()
+                )
+            ).exceptionally(ex -> { System.err.println("[LoginAlert] " + ex.getMessage()); return null; });
+            // ─────────────────────────────────────────────────────────────────
 
             authResponse.put("jwt", jwtToken);
             authResponse.put("email", user.getEmail());

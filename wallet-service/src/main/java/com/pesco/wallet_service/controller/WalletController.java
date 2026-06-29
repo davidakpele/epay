@@ -1,8 +1,12 @@
 package com.pesco.wallet_service.controller;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +19,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.pesco.wallet_service.client.NotificationServiceClient;
+import com.pesco.wallet_service.client.UserServiceClient;
 import com.pesco.wallet_service.models.Wallet;
 import com.pesco.wallet_service.models.WalletSettings;
 import com.pesco.wallet_service.payloads.CreateTransferPinRequest;
@@ -29,6 +35,7 @@ import com.pesco.wallet_service.repository.WalletSettingsRepository;
 import com.pesco.wallet_service.services.WalletCacheService;
 import com.pesco.wallet_service.services.WalletService;
 import com.pesco.wallet_service.handler.WalletHandler;
+import com.pesco.wallet_service.util.NotificationProperties;
 
 @RestController
 @RequestMapping("/wallet")
@@ -40,19 +47,32 @@ public class WalletController {
     private final WalletService walletService;
     private final WalletCacheService walletCacheService;
     private final WalletHandler walletHandler;
+    private final NotificationServiceClient notificationServiceClient;
+    private final NotificationProperties notificationProperties;
+
+    private static final DateTimeFormatter EVT_FMT =
+            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
+
+    private String formatNow() {
+        return ZonedDateTime.now(ZoneId.systemDefault()).format(EVT_FMT);
+    }
 
     public WalletController(WalletSettingsRepository walletSettingsRepository,
             WalletRepository walletRepository,
             PasswordEncoder passwordEncoder,
             WalletService walletService,
             WalletCacheService walletCacheService,
-            WalletHandler walletHandler) {
+            WalletHandler walletHandler,
+            NotificationServiceClient notificationServiceClient,
+            NotificationProperties notificationProperties) {
         this.walletSettingsRepository = walletSettingsRepository;
-        this.walletRepository = walletRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.walletService = walletService;
-        this.walletCacheService = walletCacheService;
-        this.walletHandler = walletHandler;
+        this.walletRepository         = walletRepository;
+        this.passwordEncoder          = passwordEncoder;
+        this.walletService            = walletService;
+        this.walletCacheService       = walletCacheService;
+        this.walletHandler            = walletHandler;
+        this.notificationServiceClient = notificationServiceClient;
+        this.notificationProperties   = notificationProperties;
     }
 
     @GetMapping("/{walletId}")

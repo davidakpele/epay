@@ -10,9 +10,9 @@
 }
 
 .page-header {
-  background: linear-gradient(135deg, #1a6b0f 0%, #2e8b1a 40%, #4caf30 100%);
+  background: linear-gradient(135deg, var(--bg-main) 0%, #1a0a38 40%, #3b1f7a 100%);
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(46, 139, 26, 0.35);
+  box-shadow: 0 8px 32px rgba(43, 15, 86, 0.35);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -146,10 +146,10 @@
 }
 
 .filter-button.active {
-  background: #1e6f0e;
+  background: var(--bg-main);
   color: #ffffff;
-  border-color: #1e6f0e;
-  box-shadow: 0 4px 14px rgba(30, 111, 14, 0.35);
+  border-color: var(--bg-main);
+  box-shadow: 0 4px 14px rgba(43, 15, 86, 0.35);
 }
 
 /* ---- Services Grid ---- */
@@ -264,7 +264,7 @@
 }
 
 /* ---- Card Colors ---- */
-.service-card.green  { background: linear-gradient(155deg, #1b5e0f, #2e8b1a); }
+.service-card.green  { background: linear-gradient(155deg, var(--bg-main), #1a0a38); }
 .service-card.blue   { background: linear-gradient(155deg, #0d2b7a, #1a47b8); }
 .service-card.cyan   { background: linear-gradient(155deg, #0097b5, #26bce8); }
 .service-card.black  { background: linear-gradient(155deg, #1a1a1a, #333); }

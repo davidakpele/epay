@@ -5,6 +5,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import pesco.notification_service.configurations.RabbitMQConfig;
 import pesco.notification_service.payloads.AccountVerificationRequest;
+import pesco.notification_service.payloads.LoginAlertNotification;
 import pesco.notification_service.payloads.PasswordResetRequest;
 import pesco.notification_service.payloads.RegistrationOtpMessage;
 import pesco.notification_service.payloads.UserOTPMessage;
@@ -91,6 +92,40 @@ public class AuthenticationMessageProducer {
                 RabbitMQConfig.AUTH_EXCHANGE, 
                 RabbitMQConfig.ROUTING_KEY_WELCOME_MESSAGE, 
                 request
+            );
+        } catch (AmqpException e) {
+            throw e;
+        }
+    }
+
+    /**
+     * Sends a login security alert email to the user after successful login.
+     * Contains: login time, IP address, device info, support contacts.
+     */
+    public void sendLoginAlert(LoginAlertNotification payload) {
+        try {
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.AUTH_EXCHANGE,
+                RabbitMQConfig.ROUTING_KEY_LOGIN_ALERT,
+                payload
+            );
+        } catch (AmqpException e) {
+            throw e;
+        }
+    }
+
+    /**
+     * Sends a security-event notification email (password reset, update password,
+     * deactivate account, lock, block, 2FA toggle).
+     *
+     * @param payload {@link pesco.notification_service.payloads.AccountSecurityNotification}
+     */
+    public void sendAccountSecurityAlert(pesco.notification_service.payloads.AccountSecurityNotification payload) {
+        try {
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.AUTH_EXCHANGE,
+                RabbitMQConfig.ROUTING_KEY_ACCOUNT_SECURITY,
+                payload
             );
         } catch (AmqpException e) {
             throw e;

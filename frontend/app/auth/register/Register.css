@@ -193,7 +193,7 @@
 }
 
 .password-constraints .valid {
-    color: #427e00;
+    color: var(--bg-main);
 }
 
 .password-constraints .invalid {
@@ -301,7 +301,7 @@
 }
 
 .toastr--success .toast-icon {
-    background-color: #427e00;
+    background-color: var(--bg-main);
     color: white;
     padding: 15px;
     display: flex;
@@ -368,7 +368,7 @@
 
 .phone-helper {
     font-size: 11px;
-    color: #427e00;
+    color: var(--bg-main);
     margin-top: 6px;
     display: flex;
     align-items: center;

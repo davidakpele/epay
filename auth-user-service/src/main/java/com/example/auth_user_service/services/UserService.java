@@ -1,6 +1,7 @@
 package com.example.auth_user_service.services;
 
 import com.example.auth_user_service.components.KeyWrapper;
+import com.example.auth_user_service.components.NotificationProperties;
 import com.example.auth_user_service.dtos.PageResponse;
 import com.example.auth_user_service.dtos.UserDTO;
 import com.example.auth_user_service.httpClients.NotificationServiceClient;
@@ -11,6 +12,9 @@ import com.example.auth_user_service.repositories.UserRecordRepository;
 import com.example.auth_user_service.repositories.UsersRepository;
 import com.example.auth_user_service.responses.UserStatisticsResponse;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,22 +36,37 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
-public class UserService implements IUserService{
+public class UserService implements IUserService {
 
-   private final NotificationServiceClient notificationServiceClient;
+    private final NotificationServiceClient notificationServiceClient;
     private final UsersRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final PasswordResetTokenService passwordResetTokenService;;
+    private final PasswordResetTokenService passwordResetTokenService;
     private final KeyWrapper keysWrapper;
     private final UserRecordRepository userRecordRepository;
+    private final NotificationProperties notificationProperties;
 
-    public UserService(NotificationServiceClient notificationServiceClient, UsersRepository userRepository, PasswordEncoder passwordEncoder, PasswordResetTokenService passwordResetTokenService, KeyWrapper keysWrapper, UserRecordRepository userRecordRepository) {
+    private static final DateTimeFormatter EVT_FMT =
+            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
+
+    private String formatNow() {
+        return ZonedDateTime.now(ZoneId.systemDefault()).format(EVT_FMT);
+    }
+
+    public UserService(NotificationServiceClient notificationServiceClient,
+                       UsersRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       PasswordResetTokenService passwordResetTokenService,
+                       KeyWrapper keysWrapper,
+                       UserRecordRepository userRecordRepository,
+                       NotificationProperties notificationProperties) {
         this.notificationServiceClient = notificationServiceClient;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.userRepository            = userRepository;
+        this.passwordEncoder           = passwordEncoder;
         this.passwordResetTokenService = passwordResetTokenService;
-        this.keysWrapper = keysWrapper;
-        this.userRecordRepository = userRecordRepository;
+        this.keysWrapper               = keysWrapper;
+        this.userRecordRepository      = userRecordRepository;
+        this.notificationProperties    = notificationProperties;
     }
     
     @Override
@@ -80,6 +99,21 @@ public class UserService implements IUserService{
 
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
+
+        // ── Security notification ─────────────────────────────────────────────
+        final String eventTime = formatNow();
+        userRecordRepository.findByUserId(userId).ifPresent(rec -> {
+            final String fullName = rec.getFirstName() + " " + rec.getLastName();
+            CompletableFuture.runAsync(() ->
+                notificationServiceClient.sendAccountSecurityAlert(
+                    user.getEmail(), fullName, user.getUsername(),
+                    "PASSWORD_RESET", eventTime, "", "",
+                    notificationProperties.getPhone(), notificationProperties.getEmail()
+                )
+            ).exceptionally(ex -> { System.err.println("[PasswordReset] " + ex.getMessage()); return null; });
+        });
+        // ─────────────────────────────────────────────────────────────────────
+
         return ResponseEntity.ok("Password reset successful");
     }
 
@@ -104,9 +138,23 @@ public class UserService implements IUserService{
             record.setLocked(true);
             record.setBlocked(true);
             userRecordRepository.save(record);
-        }else{
+        } else {
             System.out.println("Nothing found");
         }
+
+        // ── Security notification ─────────────────────────────────────────────
+        final String eventTime = formatNow();
+        userRecordRepository.findByUserId(id).ifPresent(rec -> {
+            final String fullName = rec.getFirstName() + " " + rec.getLastName();
+            CompletableFuture.runAsync(() ->
+                notificationServiceClient.sendAccountSecurityAlert(
+                    user.getEmail(), fullName, user.getUsername(),
+                    "DEACTIVATE_ACCOUNT", eventTime, "", "",
+                    notificationProperties.getPhone(), notificationProperties.getEmail()
+                )
+            ).exceptionally(ex -> { System.err.println("[DeactivateAccount] " + ex.getMessage()); return null; });
+        });
+        // ─────────────────────────────────────────────────────────────────────
 
         return ResponseEntity.ok("Account deactivated successfully");
     }
@@ -221,8 +269,20 @@ public class UserService implements IUserService{
 
         record.setLocked(lock);
         record.setLockedAt(lock ? LocalDateTime.now() : null);
-
         userRecordRepository.save(record);
+
+        // ── Security notification ─────────────────────────────────────────────
+        final String eventTime = formatNow();
+        final String eventType = lock ? "ACCOUNT_LOCKED" : "ACCOUNT_UNLOCKED";
+        final String fullName  = record.getFirstName() + " " + record.getLastName();
+        CompletableFuture.runAsync(() ->
+            notificationServiceClient.sendAccountSecurityAlert(
+                user.getEmail(), fullName, user.getUsername(),
+                eventType, eventTime, "", "",
+                notificationProperties.getPhone(), notificationProperties.getEmail()
+            )
+        ).exceptionally(ex -> { System.err.println("[LockAccount] " + ex.getMessage()); return null; });
+        // ─────────────────────────────────────────────────────────────────────
     }
 
     @Override
@@ -238,8 +298,18 @@ public class UserService implements IUserService{
         record.setBlocked(block);
         record.setBlockedReason(block ? "Admin block" : null);
         record.setBlockedUntil(block ? LocalDateTime.now().plusDays(7).toString() : null);
-
         userRecordRepository.save(record);
+
+        final String eventTime = formatNow();
+        final String eventType = block ? "ACCOUNT_BLOCKED" : "ACCOUNT_UNBLOCKED";
+        final String fullName  = record.getFirstName() + " " + record.getLastName();
+        CompletableFuture.runAsync(() ->
+            notificationServiceClient.sendAccountSecurityAlert(
+                user.getEmail(), fullName, user.getUsername(),
+                eventType, eventTime, "", "",
+                notificationProperties.getPhone(), notificationProperties.getEmail()
+            )
+        ).exceptionally(ex -> { System.err.println("[BlockAccount] " + ex.getMessage()); return null; });
     }
 
     @Override

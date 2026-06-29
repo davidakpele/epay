@@ -580,7 +580,7 @@ public class WalletEmailService {
     private String capitalize(String name) {
         if (name == null || name.trim().isEmpty()) {
             return "";
-        }
+        } 
 
         name = name.trim().toLowerCase();
         return Character.toUpperCase(name.charAt(0)) + name.substring(1);
@@ -589,9 +589,46 @@ public class WalletEmailService {
     public static synchronized String generateBlockId() {
         String date = LocalDate.now().format(DATE_FORMAT);
         String sequence = String.format("%03d", counter.getAndIncrement());
-
         return "BLK-" + date + "-" + sequence;
     }
 
+    // ── Wallet PIN Alert ───────────────────────────────────────────────────────
 
+    @RabbitListener(queues = RabbitMQConfig.WALLET_PIN_ALERT_QUEUE)
+    public void receiveWalletPinAlert(pesco.notification_service.payloads.WalletPinNotification payload) {
+        if (payload != null) {
+            sendWalletPinAlertEmail(payload);
+        } else {
+            System.out.println("Failed to deserialize wallet PIN alert request.");
+        }
+    }
+
+    @Async
+    public CompletableFuture<Void> sendWalletPinAlertEmail(pesco.notification_service.payloads.WalletPinNotification payload) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+            Context context = new Context();
+            context.setVariable("fullName",     payload.getFullName());
+            context.setVariable("username",     payload.getUsername());
+            context.setVariable("action",       payload.getAction());
+            context.setVariable("actionTime",   payload.getActionTime());
+            context.setVariable("ipAddress",    payload.getIpAddress());
+            context.setVariable("deviceInfo",   payload.getDeviceInfo());
+            context.setVariable("supportPhone", payload.getSupportPhone());
+            context.setVariable("supportEmail", payload.getSupportEmail());
+
+            String htmlContent = templateEngine.process("wallet-pin-alert", context);
+            helper.setTo(payload.getEmail());
+            boolean isCreate = "CREATED".equalsIgnoreCase(payload.getAction());
+            helper.setSubject(isCreate
+                ? "Wallet PIN Created — ePay Security Alert"
+                : "Wallet PIN Updated — ePay Security Alert");
+            helper.setText(htmlContent, true);
+            javaMailSender.send(mimeMessage);
+            return CompletableFuture.completedFuture(null);
+        } catch (jakarta.mail.MessagingException | org.springframework.mail.MailException e) {
+            throw new org.springframework.mail.MailSendException("Failed to send PIN alert email: " + e.getMessage(), e);
+        }
+    }
 }

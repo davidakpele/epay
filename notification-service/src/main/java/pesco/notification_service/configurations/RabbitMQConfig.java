@@ -1,6 +1,9 @@
 package pesco.notification_service.configurations;
 
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -33,6 +36,13 @@ public class RabbitMQConfig {
     public static final String ACCOUNT_STATEMENT_QUEUE = "account.statement"; 
     public static final String BLOCK_USER_WALLET_QUEUE = "block.user.wallet";
 
+    // Security / Alert Queues
+    public static final String LOGIN_ALERT_QUEUE      = "auth.login.alert";
+    public static final String WALLET_PIN_ALERT_QUEUE = "wallet.pin.alert";
+
+    // Account-security event queues (password, 2FA, lock/block, deactivate)
+    public static final String ACCOUNT_SECURITY_QUEUE = "auth.account.security";
+
     // Routing keys
     public static final String ROUTING_KEY_ACCOUNT_VERIFICATION = "auth.account";
     public static final String ROUTING_KEY_ACCOUNT_USER_OTP = "auth.user";
@@ -47,6 +57,9 @@ public class RabbitMQConfig {
     public static final String ROUTING_KEY_BLOCK_USER_WALLET = "wallet.block-user";
     public static final String ROUTING_KEY_REGISTRATION_OTP = "auth.registration";
     public static final String ROUTING_KEY_WELCOME_MESSAGE = "auth.welcome";
+    public static final String ROUTING_KEY_LOGIN_ALERT      = "auth.login.alert";
+    public static final String ROUTING_KEY_WALLET_PIN_ALERT = "wallet.pin.alert";
+    public static final String ROUTING_KEY_ACCOUNT_SECURITY = "auth.account.security";
 
     // Declare the exchanges
     @Bean
@@ -123,7 +136,22 @@ public class RabbitMQConfig {
     @Bean
     public Queue blockUserWalletQueue() {
         return new Queue(BLOCK_USER_WALLET_QUEUE);
-    }   
+    }
+
+    @Bean
+    public Queue loginAlertQueue() {
+        return new Queue(LOGIN_ALERT_QUEUE);
+    }
+
+    @Bean
+    public Queue walletPinAlertQueue() {
+        return new Queue(WALLET_PIN_ALERT_QUEUE);
+    }
+
+    @Bean
+    public Queue accountSecurityQueue() {
+        return new Queue(ACCOUNT_SECURITY_QUEUE);
+    }
 
     // Bindings for Auth Exchange
     @Bean
@@ -180,6 +208,21 @@ public class RabbitMQConfig {
     @Bean
     public Binding blockUserWalletBinding(Queue blockUserWalletQueue, TopicExchange walletExchange) {
         return BindingBuilder.bind(blockUserWalletQueue).to(walletExchange).with(ROUTING_KEY_BLOCK_USER_WALLET);
+    }
+
+    @Bean
+    public Binding loginAlertBinding(Queue loginAlertQueue, TopicExchange authExchange) {
+        return BindingBuilder.bind(loginAlertQueue).to(authExchange).with(ROUTING_KEY_LOGIN_ALERT);
+    }
+
+    @Bean
+    public Binding walletPinAlertBinding(Queue walletPinAlertQueue, TopicExchange walletExchange) {
+        return BindingBuilder.bind(walletPinAlertQueue).to(walletExchange).with(ROUTING_KEY_WALLET_PIN_ALERT);
+    }
+
+    @Bean
+    public Binding accountSecurityBinding(Queue accountSecurityQueue, TopicExchange authExchange) {
+        return BindingBuilder.bind(accountSecurityQueue).to(authExchange).with(ROUTING_KEY_ACCOUNT_SECURITY);
     }
 
     // Bindings for Account Exchange

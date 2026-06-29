@@ -61,7 +61,7 @@
   font-weight: 600;
 }
 .currency-option:hover{
-  background-color: var(--bg-input-shadow);
+  background-color: var(--bg-main);
   border-radius: 7px;
   width:fit-content;
   padding: 8px;

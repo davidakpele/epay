@@ -11,7 +11,9 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import jakarta.mail.internet.MimeMessage;
 import pesco.notification_service.configurations.RabbitMQConfig;
+import pesco.notification_service.payloads.AccountSecurityNotification;
 import pesco.notification_service.payloads.AccountVerificationRequest;
+import pesco.notification_service.payloads.LoginAlertNotification;
 import pesco.notification_service.payloads.PasswordResetRequest;
 import pesco.notification_service.payloads.RegistrationOtpMessage;
 import pesco.notification_service.payloads.UserOTPMessage;
@@ -248,18 +250,14 @@ public class AuthenticationEmailService {
     public CompletableFuture<Void> sendWelcomeNotification(String email, String username, String message) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         try {   
-            // Create MimeMessageHelper
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
-            // Prepare the HTML template
             Context context = new Context();
             context.setVariable("username", username);
             context.setVariable("message", message);
             String htmlContent = templateEngine.process("success", context);
-            // Set email attributes
             mimeMessageHelper.setTo(email);
             mimeMessageHelper.setSubject("Welcome to Our Service!");
             mimeMessageHelper.setText(htmlContent, true);
-            // Send the email
             javaMailSender.send(mimeMessage);
             return CompletableFuture.completedFuture(null);
         } catch (MessagingException | MailException e) {
@@ -268,5 +266,94 @@ public class AuthenticationEmailService {
 
     }
 
+    // ── Login Alert ────────────────────────────────────────────────────────────
 
+    @RabbitListener(queues = RabbitMQConfig.LOGIN_ALERT_QUEUE)
+    public void receiveLoginAlert(LoginAlertNotification payload) {
+        if (payload != null) {
+            sendLoginAlertEmail(payload);
+        } else {
+            System.out.println("Failed to deserialize login alert request.");
+        }
+    }
+
+    @SuppressWarnings("null")
+    @Async
+    public CompletableFuture<Void> sendLoginAlertEmail(LoginAlertNotification payload) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+            Context context = new Context();
+            context.setVariable("fullName",     payload.getFullName());
+            context.setVariable("username",     payload.getUsername());
+            context.setVariable("loginTime",    payload.getLoginTime());
+            context.setVariable("ipAddress",    payload.getIpAddress());
+            context.setVariable("deviceInfo",   payload.getDeviceInfo());
+            context.setVariable("supportPhone", payload.getSupportPhone());
+            context.setVariable("supportEmail", payload.getSupportEmail());
+
+            String htmlContent = templateEngine.process("login-alert", context);
+            helper.setTo(payload.getEmail());
+            helper.setSubject("Online Banking Login — ePay Security Alert");
+            helper.setText(htmlContent, true);
+            javaMailSender.send(mimeMessage);
+            return CompletableFuture.completedFuture(null);
+        } catch (MessagingException | MailException e) {
+            throw new MailSendException("Failed to send login alert email: " + e.getMessage(), e);
+        }
+    }
+
+    // ── Account Security Events ────────────────────────────────────────────────
+
+    @RabbitListener(queues = RabbitMQConfig.ACCOUNT_SECURITY_QUEUE)
+    public void receiveAccountSecurityAlert(AccountSecurityNotification payload) {
+        if (payload != null) {
+            sendAccountSecurityEmail(payload);
+        } else {
+            System.out.println("Failed to deserialize account security notification.");
+        }
+    }
+
+    @SuppressWarnings("null")
+    @Async
+    public CompletableFuture<Void> sendAccountSecurityEmail(AccountSecurityNotification payload) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+            Context context = new Context();
+            context.setVariable("fullName",     payload.getFullName());
+            context.setVariable("username",     payload.getUsername());
+            context.setVariable("eventType",    payload.getEventType());
+            context.setVariable("eventTime",    payload.getEventTime());
+            context.setVariable("ipAddress",    payload.getIpAddress());
+            context.setVariable("deviceInfo",   payload.getDeviceInfo());
+            context.setVariable("supportPhone", payload.getSupportPhone());
+            context.setVariable("supportEmail", payload.getSupportEmail());
+
+            String htmlContent = templateEngine.process("account-security-alert", context);
+            helper.setTo(payload.getEmail());
+            helper.setSubject(resolveSecurityEmailSubject(payload.getEventType()));
+            helper.setText(htmlContent, true);
+            javaMailSender.send(mimeMessage);
+            return CompletableFuture.completedFuture(null);
+        } catch (MessagingException | MailException e) {
+            throw new MailSendException("Failed to send account security email: " + e.getMessage(), e);
+        }
+    }
+
+    private String resolveSecurityEmailSubject(String eventType) {
+        if (eventType == null) return "ePay — Account Security Alert";
+        return switch (eventType.toUpperCase()) {
+            case "PASSWORD_RESET"      -> "ePay — Password Reset Successful";
+            case "UPDATE_PASSWORD"     -> "ePay — Password Updated";
+            case "DEACTIVATE_ACCOUNT"  -> "ePay — Account Deactivated";
+            case "ACCOUNT_LOCKED"      -> "ePay — Account Locked";
+            case "ACCOUNT_UNLOCKED"    -> "ePay — Account Unlocked";
+            case "ACCOUNT_BLOCKED"     -> "ePay — Account Blocked";
+            case "ACCOUNT_UNBLOCKED"   -> "ePay — Account Unblocked";
+            case "TWO_FACTOR_ENABLED"  -> "ePay — Two-Factor Authentication Enabled";
+            case "TWO_FACTOR_DISABLED" -> "ePay — Two-Factor Authentication Disabled";
+            default                    -> "ePay — Account Security Alert";
+        };
+    }
 }

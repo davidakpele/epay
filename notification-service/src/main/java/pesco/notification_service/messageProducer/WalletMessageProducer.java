@@ -16,6 +16,7 @@ import pesco.notification_service.payloads.MaintenanceDeductionNotification;
 import pesco.notification_service.payloads.RegistrationOtpMessage;
 import pesco.notification_service.payloads.StatementPayload;
 import pesco.notification_service.payloads.SwapCurrencyPayload;
+import pesco.notification_service.payloads.WalletPinNotification;
 
 @Service
 public class WalletMessageProducer {
@@ -210,6 +211,21 @@ public class WalletMessageProducer {
         RegistrationOtpMessage request = new RegistrationOtpMessage(email, message);
         try {
             rabbitTemplate.convertAndSend(RabbitMQConfig.WALLET_EXCHANGE, RabbitMQConfig.ROUTING_KEY_REGISTRATION_OTP, request);
+        } catch (AmqpException e) {
+            throw e;
+        }
+    }
+
+    /**
+     * Sends a wallet PIN set/update security alert email to the user.
+     */
+    public void sendWalletPinAlert(WalletPinNotification payload) {
+        try {
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.WALLET_EXCHANGE,
+                RabbitMQConfig.ROUTING_KEY_WALLET_PIN_ALERT,
+                payload
+            );
         } catch (AmqpException e) {
             throw e;
         }

@@ -25,9 +25,9 @@
   font-weight: 600;
   transition: color 0.2s;
 }
-.referral-bc-link:hover { color: #1a7a3c; }
+.referral-bc-link:hover { color: var(--bg-main); }
 .referral-bc-sep { color: #d1d5db; }
-.referral-bc-current { color: #1a7a3c; font-weight: 700; }
+.referral-bc-current { color: var(--bg-main); font-weight: 700; }
 
 /* ── Page header ── */
 .referral-header {
@@ -70,8 +70,8 @@
   white-space: nowrap;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
-.referral-link-btn svg { color: #1a7a3c; opacity: 0.7; }
-.referral-link-btn span { color: #1a7a3c; font-weight: 900; font-size: 14px; letter-spacing: 0.5px; }
+.referral-link-btn svg { color: var(--bg-main); opacity: 0.7; }
+.referral-link-btn span { color: var(--bg-main); font-weight: 900; font-size: 14px; letter-spacing: 0.5px; }
 
 .dark .referral-link-btn {
   background: #1d2636;
@@ -119,7 +119,7 @@
   flex-shrink: 0;
 }
 .rsi-blue  { background: #eff6ff; }
-.rsi-green { background: #f0fdf4; }
+.rsi-green { background: #ede9fe; }
 .rsi-amber { background: #fffbeb; }
 
 .referral-stat-info { flex: 1; }
@@ -140,7 +140,7 @@
   line-height: 1;
   margin: 0;
 }
-.referral-stat-value.green { color: #1a7a3c; }
+.referral-stat-value.green { color: var(--bg-main); }
 .dark .referral-stat-value { color: #f0f4f8; }
 
 /* ── Table card ── */
@@ -208,8 +208,8 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .refer-search-input:focus {
-  border-color: #1a7a3c;
-  box-shadow: 0 0 0 3px rgba(26,122,60,0.1);
+  border-color: var(--bg-main);
+  box-shadow: 0 0 0 3px rgba(43,15,86,0.1);
   background: #fff;
 }
 .refer-search-input::placeholder { color: #9ca3af; }
@@ -238,9 +238,9 @@
 }
 .refer-filter-btn:hover,
 .refer-filter-btn.active {
-  border-color: #1a7a3c;
-  color: #1a7a3c;
-  background: #e8f5ed;
+  border-color: var(--bg-main);
+  color: var(--bg-main);
+  background: #ede9fe;
 }
 .dark .refer-filter-btn {
   background: #161d27;
@@ -284,8 +284,8 @@
   user-select: none;
   transition: color 0.15s;
 }
-.refer-th-sort:hover { color: #1a7a3c !important; }
-.refer-th-sort.active { color: #1a7a3c !important; }
+.refer-th-sort:hover { color: var(--bg-main) !important; }
+.refer-th-sort.active { color: var(--bg-main) !important; }
 .refer-sort-icon {
   margin-left: 4px;
   opacity: 0.5;
@@ -312,15 +312,15 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #e8f5ed;
-  color: #1a7a3c;
+  background: #ede9fe;
+  color: var(--bg-main);
   font-size: 13px;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 2px solid rgba(26,122,60,0.12);
+  border: 2px solid rgba(43,15,86,0.12);
 }
 .refer-username { font-weight: 700; color: #0d1117; }
 .dark .refer-username { color: #f0f4f8; }
@@ -328,14 +328,14 @@
 .refer-cell-muted { color: #6b7280; font-size: 13px; }
 .dark .refer-cell-muted { color: #8fa0b4; }
 
-.refer-cell-green { font-weight: 700; color: #1a7a3c; font-size: 14px; }
+.refer-cell-green { font-weight: 700; color: var(--bg-main); font-size: 14px; }
 
 .refer-status-badge {
   display: inline-flex;
   align-items: center;
   padding: 4px 14px;
   border-radius: 20px;
-  background: #1a7a3c;
+  background: var(--bg-main);
   color: #fff;
   font-size: 11.5px;
   font-weight: 700;
@@ -388,13 +388,13 @@
   padding: 0 7px;
 }
 .refer-pg-btn:hover:not(:disabled) {
-  border-color: #1a7a3c;
-  color: #1a7a3c;
-  background: #e8f5ed;
+  border-color: var(--bg-main);
+  color: var(--bg-main);
+  background: #ede9fe;
 }
 .refer-pg-btn.active {
-  background: #1a7a3c;
-  border-color: #1a7a3c;
+  background: var(--bg-main);
+  border-color: var(--bg-main);
   color: #fff;
 }
 .refer-pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -463,9 +463,9 @@
   transition: all 0.15s;
 }
 .refer-modal-close:hover {
-  background: #e8f5ed;
-  color: #1a7a3c;
-  border-color: #1a7a3c;
+  background: #ede9fe;
+  color: var(--bg-main);
+  border-color: var(--bg-main);
 }
 .dark .refer-modal-close {
   background: #161d27;
@@ -490,9 +490,9 @@
   transition: all 0.15s;
 }
 .refer-filter-opt:hover {
-  border-color: #1a7a3c;
-  background: #e8f5ed;
-  color: #1a7a3c;
+  border-color: var(--bg-main);
+  background: #ede9fe;
+  color: var(--bg-main);
 }
 .dark .refer-filter-opt { background: #161d27; border-color: #252f3f; color: #e2e8f0; }
 
@@ -515,8 +515,8 @@
   text-align: center;
   transition: all 0.14s;
 }
-.refer-month-btn:hover { border-color: #1a7a3c; color: #1a7a3c; background: #e8f5ed; }
-.refer-month-btn.active { background: #1a7a3c; border-color: #1a7a3c; color: #fff; }
+.refer-month-btn:hover { border-color: var(--bg-main); color: var(--bg-main); background: #ede9fe; }
+.refer-month-btn.active { background: var(--bg-main); border-color: var(--bg-main); color: #fff; }
 .dark .refer-month-btn { background: #161d27; border-color: #252f3f; color: #8fa0b4; }
 
 /* Year form */
@@ -541,11 +541,11 @@
   outline: none;
   transition: border-color 0.2s;
 }
-.refer-year-field input:focus { border-color: #1a7a3c; box-shadow: 0 0 0 3px rgba(26,122,60,0.1); }
+.refer-year-field input:focus { border-color: var(--bg-main); box-shadow: 0 0 0 3px rgba(43,15,86,0.1); }
 .dark .refer-year-field input { background: #161d27; border-color: #252f3f; color: #f0f4f8; }
 
 .refer-apply-btn {
-  background: #1a7a3c;
+  background: var(--bg-main);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -557,7 +557,7 @@
   transition: background 0.2s, transform 0.15s;
   width: 100%;
 }
-.refer-apply-btn:hover { background: #145c2e; transform: translateY(-1px); }
+.refer-apply-btn:hover { background: #1a0a38; transform: translateY(-1px); }
 
 /* Details modal */
 .refer-details-view { display: flex; flex-direction: column; gap: 16px; }
@@ -598,7 +598,7 @@
   font-weight: 900;
   color: #0d1117;
 }
-.rds-val.green { color: #1a7a3c; }
+.rds-val.green { color: var(--bg-main); }
 .dark .rds-val { color: #f0f4f8; }
 
 .refer-tx-list {
@@ -627,7 +627,7 @@
 .refer-tx-right { text-align: right; }
 .refer-tx-amount { font-size: 14px; font-weight: 800; color: #0d1117; margin: 0 0 2px; }
 .dark .refer-tx-amount { color: #f0f4f8; }
-.refer-tx-comm { font-size: 11px; font-weight: 700; color: #1a7a3c; margin: 0; }
+.refer-tx-comm { font-size: 11px; font-weight: 700; color: var(--bg-main); margin: 0; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
