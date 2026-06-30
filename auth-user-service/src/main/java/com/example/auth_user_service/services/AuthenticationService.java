@@ -176,6 +176,12 @@ public class AuthenticationService implements IAuthenticationService{
                             "Sorry, this account is currently blocked. Please contact customer service.",
                             HttpStatus.UNAUTHORIZED);
                 }
+                if (com.example.auth_user_service.enums.UserStatus.SUSPENDED
+                        .equals(record.getStatus())) {
+                    return buildAuthError(authResponse,
+                            "Sorry, this account is currently suspended. Please contact customer service to reactivate.",
+                            HttpStatus.UNAUTHORIZED);
+                }
             }
 
             if (user.isTwoFactorAuth()) {

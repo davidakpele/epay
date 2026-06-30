@@ -53,13 +53,18 @@ public class UserRecord {
     private String photo;
     private boolean isProfileComplete;
 
+    // KYC documents
+    private String passportDoc;
+    private String utilityBillDoc;
+
     public UserRecord() {}
 
     public UserRecord(Long id, Users user, String firstName, String lastName, String telephone, String gender, String country,
                       String city, String state, String nextOfKing, String dateofBirth, String address, boolean isTransferPinSet,
                       boolean locked, LocalDateTime lockedAt, boolean isBlocked, Long blockedDuration, String blockedUntil,
                       String blockedReason, UserStatus status, String referralCode, String totalReferers, String referralLink,
-                      String referralUsername, String photo, boolean isProfileComplete) {
+                      String referralUsername, String photo, boolean isProfileComplete,
+                      String passportDoc, String utilityBillDoc) {
         this.id = id;
         this.user = user;
         this.firstName = firstName;
@@ -86,6 +91,8 @@ public class UserRecord {
         this.referralUsername = referralUsername;
         this.photo = photo;
         this.isProfileComplete = isProfileComplete;
+        this.passportDoc = passportDoc;
+        this.utilityBillDoc = utilityBillDoc;
     }
 
     public Long getId() { return id; }
@@ -167,6 +174,12 @@ public class UserRecord {
     public boolean getIsProfileComplete() { return isProfileComplete; }
     public void setProfileComplete(boolean profileComplete) { this.isProfileComplete = profileComplete; }
 
+    public String getPassportDoc() { return passportDoc; }
+    public void setPassportDoc(String passportDoc) { this.passportDoc = passportDoc; }
+
+    public String getUtilityBillDoc() { return utilityBillDoc; }
+    public void setUtilityBillDoc(String utilityBillDoc) { this.utilityBillDoc = utilityBillDoc; }
+
     @PrePersist
     @PreUpdate
     protected void beforeSaveOrUpdate() {
@@ -203,4 +216,3 @@ public class UserRecord {
         return sanitized.trim();
     }
 }
-

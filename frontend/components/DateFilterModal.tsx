@@ -219,7 +219,7 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
         .dfm-quick-btn {
           flex: 1;
           padding: 11px 0;
-          background: #1e6b36;
+          background: #47257a;
           border: none;
           border-radius: 8px;
           color: #fff;
@@ -257,27 +257,27 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
           transform: translateY(-50%);
           width: 16px; 
           height: 16px;
-          color: #4ade80;
+          color: #2b0f56;
           pointer-events: none;
         }
         .dfm-date-input {
-          width: 100%;
-          background: #1e293b;
-          border: 1.5px solid #334155;
-          border-radius: 8px;
-          padding: 11px 12px 11px 38px;
-          color: #94a3b8;
-          font-size: 14px;
-          outline: none;
-          transition: border-color 0.2s;
-          box-sizing: border-box;
+            width: 100%;
+            background: #2b0f56;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 11px 12px 11px 38px;
+            color: #94a3b8;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
         }
         .dfm-date-input:focus {
-          border-color: #4ade80;
+          border-color: #2b0f56;
           color: #fff;
         }
         .dfm-date-sep {
-          color: #4ade80;
+          color: #2b0f56;
           font-weight: 700;
           font-size: 16px;
           text-align: center;
@@ -298,16 +298,16 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
           background: #1e293b;
           border-radius: 4px;
           padding: 2px 6px;
-          color: #4ade80;
+          color: #2b0f56;
           font-size: 12px;
         }
 
         /* Calendar */
         .dfm-calendar {
-          background: #1e293b;
-          border-radius: 12px;
-          padding: 16px;
-          margin-bottom: 20px;
+            background: #8abaff2e;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
         }
         .dfm-cal-nav {
           display: flex;
@@ -389,7 +389,7 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
           left: 50%;
           transform: translateX(-50%);
           width: 4px; height: 4px;
-          background: #4ade80;
+          background: #2b0f56;
           border-radius: 50%;
         }
         .dfm-day-cell.dfm-empty { cursor: default; }
@@ -400,34 +400,34 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
           gap: 12px;
         }
         .dfm-clear-btn {
-            height:40px;
-          flex: 1;
-          padding: 4px;
-          background: #1e293b;
-          border: 1.5px solid #334155;
-          border-radius: 10px;
-          color: #94a3b8;
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: border-color 0.2s, color 0.2s, background 0.2s;
+            height: 40px;
+            flex: 1;
+            padding: 4px;
+            background: #fff;
+            border: 1.5px solid #334155;
+            border-radius: 10px;
+            color: #2b0f56;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
         }
-        .dfm-clear-btn:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.05); }
+    
         .dfm-apply-btn {
-          flex: 1;
-          height:40px;
-          padding: 4px;
-          background: #16a34a;
-          border: none;
-          border-radius: 10px;
-          color: #fff;
-          font-size: 15px;
-          font-weight: 400;
-          cursor: pointer;
-          transition: background 0.15s, transform 0.1s;
-          box-shadow: 0 4px 14px rgba(22,163,74,0.3);
+            flex: 1;
+            height: 40px;
+            padding: 4px;
+            background: #6836c9b0;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
         }
-        .dfm-apply-btn:hover { background: #15803d; transform: translateY(-1px); }
+        .dfm-apply-btn:hover { background: #2b0f56; transform: translateY(-1px); }
         .dfm-apply-btn:active { transform: translateY(0); }
 
         @media (max-width: 640px) {
@@ -439,7 +439,6 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
       `}</style>
 
       <div className="dfm-overlay" onClick={onClose} />
-
       <div className="dfm-modal" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="dfm-header">
@@ -477,7 +476,7 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
           </span>
           <div style={{
             background: '#1e293b', borderRadius: '4px', padding: '2px 8px',
-            color: '#4ade80', fontSize: '12px', marginLeft: '4px', cursor: 'pointer'
+            color: '#2b0f56', fontSize: '12px', marginLeft: '4px', cursor: 'pointer'
           }}>›</div>
         </div>
 

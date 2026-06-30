@@ -136,9 +136,7 @@ public class UserService implements IUserService {
             record.setLocked(true);
             record.setBlocked(true);
             userRecordRepository.save(record);
-        } else {
-            System.out.println("Nothing found");
-        }
+        } 
 
         final String eventTime = formatNow();
         userRecordRepository.findByUserId(id).ifPresent(rec -> {
@@ -171,7 +169,7 @@ public class UserService implements IUserService {
             sendResetPasswordMessage.join();
         
             response.put("message",
-                    "Message has been sent to the very email address provided. Please follow the instructions to reset your password.");
+                    "Message has beeyn sent to the very email address provided. Please follow the instructions to reset your password.");
             response.put("token", token);
             response.put("status", HttpStatus.OK);
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -378,4 +376,81 @@ public class UserService implements IUserService {
         };
     }
 
+    // ── Task 1: Send password-reset link to authenticated user's own email ──
+
+    @Override
+    public ResponseEntity<?> sendPasswordResetLinkToSelf(Long userId, Authentication authentication) {
+        Users user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "error", "message", "User not found."));
+        }
+
+        // Security: only the authenticated user can request their own reset link
+        if (!user.getUsername().equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("status", "error", "message", "Unauthorized."));
+        }
+
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("status", "error", "message", "No email address associated with this account."));
+        }
+
+        // Delegate to the existing forget-password flow
+        return forgetPassword(user.getEmail());
+    }
+
+    // ── Task 2: Self-suspension ─────────────────────────────────────────────
+
+    @Override
+    @Transactional
+    public ResponseEntity<?> suspendAccount(Long userId, Authentication authentication) {
+        Users user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "error", "message", "User not found."));
+        }
+
+        if (!user.getUsername().equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("status", "error", "message", "Unauthorized."));
+        }
+
+        // Disable login
+        user.setEnabled(false);
+        userRepository.save(user);
+
+        // Lock and set status to SUSPENDED
+        userRecordRepository.findByUserId(userId).ifPresent(record -> {
+            record.setLocked(true);
+            record.setLockedAt(LocalDateTime.now());
+            record.setBlocked(true);
+            record.setBlockedReason("Self-suspension requested by user.");
+            record.setStatus(com.example.auth_user_service.enums.UserStatus.SUSPENDED);
+            userRecordRepository.save(record);
+        });
+
+        // Send security alert email
+        final String eventTime = formatNow();
+        userRecordRepository.findByUserId(userId).ifPresent(rec -> {
+            final String fullName = rec.getFirstName() + " " + rec.getLastName();
+            CompletableFuture.runAsync(() ->
+                notificationServiceClient.sendAccountSecurityAlert(
+                    user.getEmail(), fullName, user.getUsername(),
+                    "ACCOUNT_SUSPENDED", eventTime, "", "",
+                    notificationProperties.getPhone(), notificationProperties.getEmail()
+                )
+            ).exceptionally(ex -> {
+                System.err.println("[SuspendAccount] notification failed: " + ex.getMessage());
+                return null;
+            });
+        });
+
+        return ResponseEntity.ok(Map.of(
+            "status",  "success",
+            "message", "Your account has been suspended. You will receive a confirmation email. "
+                     + "Contact support to reactivate your account."
+        ));
+    }
 }

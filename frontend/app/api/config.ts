@@ -44,6 +44,10 @@ export const API_URLS = {
     UPLOAD_PROFILE_IMAGE: (id: string | number) => `${SERVICE_URLS.USER}/settings/upload-profile-image/${id}`,
     REMOVE_PROFILE_IMAGE: (id: string | number) => `${SERVICE_URLS.USER}/settings/remove-profile-image/${id}`,
     DELETE_ACCOUNT: (id: string | number) => `${SERVICE_URLS.USER}/settings/delete-account/${id}`,
+    UPLOAD_KYC_DOC: (id: string | number, docType: string) => `${SERVICE_URLS.USER}/user/${id}/kyc/upload?docType=${docType}`,
+    GET_KYC_DOC:    (id: string | number, docType: string) => `${SERVICE_URLS.USER}/user/${id}/kyc/document?docType=${docType}`,
+    SEND_RESET_LINK: (id: string | number) => `${SERVICE_URLS.USER}/user/${id}/send-reset-link`,
+    SUSPEND_ACCOUNT: (id: string | number) => `${SERVICE_URLS.USER}/user/${id}/suspend`,
   },
 
   ACCOUNTSETTING:{

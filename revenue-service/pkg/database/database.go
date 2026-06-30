@@ -16,7 +16,6 @@ func ConnectDB(dsn string) *gorm.DB {
         log.Fatal("Failed to connect to database:", err)
     }
 
-    // Auto migrate models
     err = db.AutoMigrate(
         &models.Revenue{},
         &models.CurrencyBalance{},

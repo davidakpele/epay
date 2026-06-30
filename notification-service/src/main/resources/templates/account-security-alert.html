@@ -62,6 +62,7 @@
                         eventType == 'ACCOUNT_UNLOCKED'    ? 'Account Unlocked'                    :
                         eventType == 'ACCOUNT_BLOCKED'     ? 'Account Blocked'                     :
                         eventType == 'ACCOUNT_UNBLOCKED'   ? 'Account Unblocked'                   :
+                        eventType == 'ACCOUNT_SUSPENDED'   ? 'Account Suspended'                   :
                         eventType == 'TWO_FACTOR_ENABLED'  ? 'Two-Factor Authentication Enabled'   :
                         eventType == 'TWO_FACTOR_DISABLED' ? 'Two-Factor Authentication Disabled'  :
                                                              'Account Security Alert'
@@ -92,6 +93,7 @@
                        eventType == 'ACCOUNT_UNLOCKED'    ? 'Your ePay account has been successfully unlocked and is now active.' :
                        eventType == 'ACCOUNT_BLOCKED'     ? 'Your ePay account has been blocked. Please contact customer support for more details.' :
                        eventType == 'ACCOUNT_UNBLOCKED'   ? 'Your ePay account has been unblocked. You can now log in and use all services.' :
+                       eventType == 'ACCOUNT_SUSPENDED'   ? 'Your ePay account has been suspended at your request. All transfers, withdrawals, and logins are now disabled. Please contact support to reactivate your account.' :
                        eventType == 'TWO_FACTOR_ENABLED'  ? 'Two-Factor Authentication (2FA) has been enabled on your ePay account. Your account is now more secure.' :
                        eventType == 'TWO_FACTOR_DISABLED' ? 'Two-Factor Authentication (2FA) has been disabled on your ePay account.' :
                                                             'A security-related change was made to your ePay account.'
@@ -124,7 +126,7 @@
 
                   <!-- Warning box (only for destructive/suspicious events) -->
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-                         th:if="${eventType == 'DEACTIVATE_ACCOUNT' or eventType == 'ACCOUNT_LOCKED' or eventType == 'ACCOUNT_BLOCKED' or eventType == 'TWO_FACTOR_DISABLED' or eventType == 'UPDATE_PASSWORD' or eventType == 'PASSWORD_RESET'}"
+                         th:if="${eventType == 'DEACTIVATE_ACCOUNT' or eventType == 'ACCOUNT_LOCKED' or eventType == 'ACCOUNT_BLOCKED' or eventType == 'ACCOUNT_SUSPENDED' or eventType == 'TWO_FACTOR_DISABLED' or eventType == 'UPDATE_PASSWORD' or eventType == 'PASSWORD_RESET'}"
                          style="background-color:#fef3c7;border-radius:10px;margin-bottom:20px;border-left:4px solid #f59e0b;">
                     <tr>
                       <td style="padding:14px 16px;">

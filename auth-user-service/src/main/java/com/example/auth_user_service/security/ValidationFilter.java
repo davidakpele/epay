@@ -14,20 +14,16 @@ import java.util.regex.Pattern;
 
 @Component
 public class ValidationFilter extends OncePerRequestFilter {
-
-    // SQL Injection patterns
     private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile(
             "('|--|;|\\b(UNION|SELECT|INSERT|UPDATE|DELETE|DROP|EXEC)\\b|/\\*|\\*/|@@|#)",
             Pattern.CASE_INSENSITIVE
     );
 
-    // XSS patterns
     private static final Pattern XSS_PATTERN = Pattern.compile(
             "(<script|javascript:|onerror=|onload=|onclick=|onmouseover=|alert\\(|document\\.cookie|<iframe|<img|<svg|eval\\()",
             Pattern.CASE_INSENSITIVE
     );
 
-    // Path traversal patterns
     private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile(
             "(\\.\\./|\\.\\.\\\\)",
             Pattern.CASE_INSENSITIVE
@@ -38,8 +34,17 @@ public class ValidationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+
+        String contentType = request.getContentType();
+        boolean isMultipart = contentType != null &&
+                contentType.toLowerCase().startsWith("multipart/");
+        if (isMultipart) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request, 0);
-        String path = wrappedRequest.getRequestURI();
 
         if (path.contains("/auth/") || path.contains("/user/")) {
             String queryString = wrappedRequest.getQueryString();
@@ -48,7 +53,6 @@ public class ValidationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // Only check path traversal on the URL path, NOT SQL/XSS keywords
             if (PATH_TRAVERSAL_PATTERN.matcher(path).find()) {
                 sendErrorResponse(response, "Invalid input detected in URL path");
                 return;
@@ -73,13 +77,10 @@ public class ValidationFilter extends OncePerRequestFilter {
             return false;
         }
 
-        // SQL injection
         if (SQL_INJECTION_PATTERN.matcher(input).find()) return true;
 
-        // XSS
         if (XSS_PATTERN.matcher(input).find()) return true;
 
-        // Path traversal
         return PATH_TRAVERSAL_PATTERN.matcher(input).find();
     }
 

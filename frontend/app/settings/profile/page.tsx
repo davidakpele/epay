@@ -22,7 +22,7 @@ import LoadingScreen from '@/components/loader/Loadingscreen';
 import { useRouter } from 'next/navigation';
 import { Toast } from '@/app/types/auth';
 import { KYCDocument, LoginHistory, MetaMapErrors, UserData, UserSettings } from '@/app/types/utils';
-import { userService, getUserId, updateHasSeenMetaMap, updateCompleteProfileDetails, updateNotificationContainer, capitalizeFirstLetter, getUserEmail, getUserFirstName, getUserLastName, getHasSeenMetaMap } from '@/app/api/index';
+import { userService, getUserId, updateHasSeenMetaMap, updateCompleteProfileDetails, updateNotificationContainer, capitalizeFirstLetter, getUserEmail, getUserFirstName, getUserLastName, getHasSeenMetaMap, getToken } from '@/app/api/index';
 import KYCSuccessModal from '@/components/KYCSuccessModal';
 import { City, Country, State } from 'country-state-city';
 import SupportChatBot from '@/components/SupportChatBot';
@@ -31,6 +31,8 @@ const UserProfile = () => {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [resetLinkLoading, setResetLinkLoading] = useState(false);
+  const [resetLinkSent, setResetLinkSent] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [showMetaMapModal, setShowMetaMapModal] = useState(false);
   const [metaMapStep, setMetaMapStep] = useState(1);
@@ -54,7 +56,15 @@ const UserProfile = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isEditUserProfileDetails, setIsEditUserProfileDetails] = useState(false);
   const [isShowSuspendAccountModal, setShowSuspendAccountModal] = useState(false);
+  const [suspendLoading, setSuspendLoading] = useState(false);
   const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
+  const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
+  const passportRef    = React.useRef<HTMLInputElement | null>(null);
+  const utilityBillRef = React.useRef<HTMLInputElement | null>(null);
+  const docUploadRefs: Record<string, React.RefObject<HTMLInputElement | null>> = {
+    passport:     passportRef,
+    utility_bill: utilityBillRef,
+  };
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileImage, setProfileImage] = useState('/assets/images/user-profile.jpg');
@@ -336,7 +346,23 @@ const UserProfile = () => {
   };
 
   const handleResetPassword = () => {
+    setResetLinkSent(false);
     setShowResetPasswordModal(true);
+  };
+
+  const handleSendResetLink = async () => {
+    const userId = getUserId();
+    if (!userId) return;
+    setResetLinkLoading(true);
+    try {
+      const response = await userService.sendResetPasswordLink(userId);
+      setResetLinkSent(true);
+      showToast('Password reset link sent to your email!', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to send reset link. Please try again.');
+    } finally {
+      setResetLinkLoading(false);
+    }
   };
 
   const handleEnable2FA = () => {
@@ -345,6 +371,29 @@ const UserProfile = () => {
 
   const handleSuspendAccount = () => {
     setShowSuspendAccountModal(true);
+  };
+
+  const handleConfirmSuspend = async () => {
+    const userId = getUserId();
+    if (!userId) return;
+    setSuspendLoading(true);
+    try {
+      const response = await userService.suspendAccount(userId);
+      if (response?.status === 'success') {
+        showToast('Your account has been suspended. A confirmation email has been sent.', 'success');
+        setShowSuspendAccountModal(false);
+        // Force logout after a short delay so user sees the toast
+        setTimeout(() => {
+          router.push('/auth/logout');
+        }, 2500);
+      } else {
+        showToast(response?.message || 'Failed to suspend account. Please try again.');
+      }
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to suspend account. Please try again.');
+    } finally {
+      setSuspendLoading(false);
+    }
   };
 
   const handleViewDocument = (docId: string) => {
@@ -574,6 +623,80 @@ const UserProfile = () => {
   const handleMetaMapContinue = () => {
     setShowMetaMapExit(false);
   };
+
+  // ── KYC document handlers ────────────────────────────────────────────────
+
+  const handleUploadKycDocument = async (docType: string, file: File) => {
+    const userId = getUserId();
+    if (!userId || !file) return;
+
+    setUploadingDocId(docType);
+    try {
+      const token = getToken();
+      // Use the same base URL the rest of the app uses
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8292/api'}/user/${userId}/kyc/upload?docType=${docType}`;
+
+      // Send the file as raw binary with its real MIME type.
+      // The controller accepts both multipart/form-data and octet-stream.
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': file.type || 'application/octet-stream',
+        },
+        body: file,
+      });
+
+      const response = await res.json();
+
+      if (response?.status === 'success') {
+        showToast(
+          docType === 'passport'
+            ? 'Passport uploaded successfully!'
+            : 'Utility bill uploaded successfully!',
+          'success'
+        );
+        await fetchUserProfile();
+      } else {
+        showToast(response?.message || 'Upload failed. Please try again.');
+      }
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to upload document.');
+    } finally {
+      setUploadingDocId(null);
+    }
+  };
+
+  const handleViewKycDocument = (docType: string) => {
+    const userId = getUserId();
+    const token  = getToken();
+    if (!userId) return;
+    setLoadingDocId(docType);
+
+    // Build the authenticated URL — the backend streams the file inline.
+    // We can't open a bearer-auth URL directly in a new tab, so we fetch
+    // the blob and create a temporary object URL.
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8292/api'}/user/${userId}/kyc/document?docType=${docType}`;
+
+    fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load document');
+        return res.blob();
+      })
+      .then(blob => {
+        const objUrl = URL.createObjectURL(blob);
+        const newTab = window.open(objUrl, '_blank');
+        if (!newTab) {
+          showToast('Unable to open document. Please allow popups for this site.');
+        }
+        // Release the object URL after a short delay
+        setTimeout(() => URL.revokeObjectURL(objUrl), 60_000);
+      })
+      .catch(() => showToast('Failed to load document. Please try again.'))
+      .finally(() => setLoadingDocId(null));
+  };
+
+  // ────────────────────────────────────────────────────────────────────────
 
   if (isPageLoading || !userData) {
     return <LoadingScreen />;
@@ -827,47 +950,65 @@ const UserProfile = () => {
                       </>
                     ):(
                       <>
-                       <div className="user-profile-info-grid">
-                          <div className="user-profile-info-item">
-                            <label>FULL NAME</label>
-                            <p>{capitalizeFirstLetter(userData.fullName)}</p>
-                          </div>
-                          <div className="user-profile-info-item">
-                            <label>EMAIL ADDRESS</label>
-                            <p>{userData.email}</p>
-                          </div>
-                          <div className="user-profile-info-item">
-                            <label>PHONE NUMBER</label>
-                            <p>{userData.phone}</p>
-                          </div>
-                          <div className="user-profile-info-item">
-                            <label>USERNAME</label>
-                            <p>{userData.username}</p>
-                          </div>
-                          <div className="user-profile-info-item">
-                            <label>DATE OF BIRTH</label>
-                            <p>{userData.dateOfBirth}</p>
-                          </div>
-                          <div className="user-profile-info-item">
-                            <label>GENDER</label>
-                            <p>{capitalizeFirstLetter(userData.gender)}</p>
-                          </div>
-                          <div className="user-profile-info-item">
-                            <label>ADDRESS</label>
-                            <p>{capitalizeFirstLetter(userData.address)}</p>
-                          </div>
-                          <div className="user-profile-info-item">
-                            <label>COUNTRY</label>
-                            <p>{capitalizeFirstLetter(userData.country)}</p>
-                          </div>
-                          <div className="user-profile-info-item">
-                            <label>CITY/STATE</label>
-                            <p>{capitalizeFirstLetter(userData.city)}</p>
-                          </div>
-                          <div className="user-profile-info-item">
-                            <label>REFERRAL NAME</label>
-                            <p>{userData.referralName}</p>
-                          </div>
+                        {/* ── Redesigned Personal Information cards ── */}
+                        <div className="pi-grid">
+                          {[
+                            { icon: 'fa-user', label: 'Full Name',      value: capitalizeFirstLetter(userData.fullName),       col: 1 },
+                            { icon: 'fa-envelope', label: 'Email Address', value: userData.email,                              col: 1 },
+                            { icon: 'fa-phone', label: 'Phone Number',  value: userData.phone || '—',                         col: 1 },
+                            { icon: 'fa-at', label: 'Username',         value: userData.username,                              col: 1 },
+                            { icon: 'fa-birthday-cake', label: 'Date of Birth', value: userData.dateOfBirth || '—',           col: 1 },
+                            { icon: 'fa-venus-mars', label: 'Gender',   value: capitalizeFirstLetter(userData.gender) || '—', col: 1 },
+                            { icon: 'fa-map-marker-alt', label: 'Address', value: capitalizeFirstLetter(userData.address) || '—', col: 2 },
+                            { icon: 'fa-globe', label: 'Country',       value: capitalizeFirstLetter(userData.country) || '—', col: 1 },
+                            { icon: 'fa-city', label: 'City / State',   value: capitalizeFirstLetter(userData.city) || '—',   col: 1 },
+                            { icon: 'fa-link', label: 'Referral Name',  value: userData.referralName || '—',                  col: 1 },
+                          ].map((item, i) => (
+                            <div
+                              key={i}
+                              className={`pi-card${item.col === 2 ? ' pi-card--wide' : ''}`}
+                            >
+                              <div className="pi-card-icon">
+                                <i className={`fas ${item.icon}`} />
+                              </div>
+                              <div className="pi-card-body">
+                                <span className="pi-card-label">{item.label}</span>
+                                <span className="pi-card-value">{item.value}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* ── Profile completion bar ── */}
+                        <div className="pi-completion-bar-wrap">
+                          {(() => {
+                            const pct = (() => {
+                              const fields = [
+                                userData.fullName, userData.email, userData.phone,
+                                userData.username, userData.dateOfBirth, userData.gender,
+                                userData.country, userData.city
+                              ];
+                              const filled = fields.filter(f => f && f !== '—' && f.trim() !== '').length;
+                              return Math.round((filled / fields.length) * 100);
+                            })();
+                            return (
+                              <>
+                                <div className="pi-completion-header">
+                                  <span className="pi-completion-label">Profile Completeness</span>
+                                  <span className="pi-completion-pct" style={{ color: pct === 100 ? '#2b0f56' : '#c1aa01ff' }}>{pct}%</span>
+                                </div>
+                                <div className="pi-completion-track">
+                                  <div className="pi-completion-fill" style={{ width: `${pct}%`, background: pct === 100 ? '#2b0f56' : '#c1aa01ff' }} />
+                                </div>
+                                {pct < 100 && (
+                                  <p className="pi-completion-hint">
+                                    <i className="fas fa-info-circle" style={{ marginRight: 5, color: '#2b0f56' }} />
+                                    Click <strong>Edit Profile</strong> to complete your information and unlock full account features.
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </>
                     )}
@@ -876,33 +1017,195 @@ const UserProfile = () => {
                   <div className="user-profile-info-section">
                     <div className="user-profile-section-header">
                       <FileText size={20} />
-                      <h2>KYC & Verification Documents</h2>
+                      <h2>KYC &amp; Identity Verification</h2>
                     </div>
-                    <div className="user-profile-documents-list">
-                      {kycDocuments.map((doc) => (
-                        <div key={doc.id} className="user-profile-document-item">
-                          <div className="user-profile-document-icon">
-                            <FileText size={20} />
-                          </div>
-                          <div className="user-profile-document-info">
-                            <h3>{doc.type}</h3>
-                            <p>Verified on {doc.verifiedOn}</p>
-                          </div>
-                           {loadingDocId === doc.id ? (
-                            <>
-                              <div className={`setting-notif-loader-container"}`}>
-                                <div className="settings-notif-spinner"></div>
+
+                    {(() => {
+                      const fields = [
+                        userData.fullName, userData.email, userData.phone,
+                        userData.username, userData.dateOfBirth, userData.gender,
+                        userData.country, userData.city
+                      ];
+                      const filled = fields.filter(f => f && f !== '—' && f.trim() !== '').length;
+                      const pct    = Math.round((filled / fields.length) * 100);
+                      const isDone = pct === 100;
+
+                      return (
+                        <>
+                          {/* Tier banner */}
+                          <div className={`kyc-tier-banner ${isDone ? 'kyc-tier-banner--done' : 'kyc-tier-banner--pending'}`}>
+                            <div className="kyc-tier-left">
+                              <div className={`kyc-tier-icon ${isDone ? 'kyc-tier-icon--done' : 'kyc-tier-icon--pending'}`}>
+                                <i className={`fas ${isDone ? 'fa-crown' : 'fa-user'}`} />
                               </div>
-                            </>
-                           ) : (
+                              <div>
+                                <p className="kyc-tier-name">{isDone ? 'Tier 2 — Verified' : 'Tier 1 — Limited'}</p>
+                                <p className="kyc-tier-sub">
+                                  {isDone
+                                    ? 'Full access: transfers, deposits & withdrawals enabled'
+                                    : 'Complete KYC to unlock transfers, deposits & withdrawals'}
+                                </p>
+                              </div>
+                            </div>
+                            <span className={`kyc-tier-badge ${isDone ? 'kyc-tier-badge--done' : 'kyc-tier-badge--pending'}`}>
+                              {isDone ? 'Verified' : 'Pending'}
+                            </span>
+                          </div>
+
+                          {/* Progress bar */}
+                          <div style={{ margin: '20px 0 8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                              <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>KYC Completion</span>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: isDone ? '#2b0f56' : '#c1aa01ff' }}>{pct}%</span>
+                            </div>
+                            <div style={{ height: 8, background: '#e5e7eb', borderRadius: 999, overflow: 'hidden' }}>
+                              <div style={{
+                                height: '100%', borderRadius: 999,
+                                background: isDone
+                                  ? 'linear-gradient(90deg, #2b0f56, #2b0f56)'
+                                  : 'linear-gradient(90deg, #d97706, #d97706)',
+                                width: `${pct}%`, transition: 'width 0.6s ease'
+                              }} />
+                            </div>
+                          </div>
+
+                          {/* Steps checklist */}
+                          <div className="kyc-checklist">
+                            {[
+                              { label: 'Personal details (name, email)',  done: !!(userData.fullName && userData.email) },
+                              { label: 'Phone number',                    done: !!userData.phone },
+                              { label: 'Date of birth & gender',          done: !!(userData.dateOfBirth && userData.gender) },
+                              { label: 'Country & city',                  done: !!(userData.country && userData.city) },
+                            ].map((step, i) => (
+                              <div key={i} className={`kyc-checklist-item ${step.done ? 'kyc-checklist-item--done' : ''}`}>
+                                <div className={`kyc-check-circle ${step.done ? 'kyc-check-circle--done' : ''}`}>
+                                  <i className={`fas ${step.done ? 'fa-check' : 'fa-circle'}`}
+                                     style={{ fontSize: step.done ? 10 : 6 }} />
+                                </div>
+                                <span>{step.label}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* CTA / done note */}
+                          {!isDone ? (
+                            <button
+                              className="kyc-cta-btn"
+                              onClick={() => {
+                                if (!getHasSeenMetaMap()) {
+                                  setShowMetaMapModal(true);
+                                } else {
+                                  handleEditProfile();
+                                }
+                              }}
+                            >
+                              <i className="fas fa-id-card" style={{ marginRight: 8 }} />
+                              Complete KYC Verification
+                            </button>
+                          ) : (
                             <>
-                              <button className="user-profile-btn-view" onClick={() => handleViewDocument(doc.id)} disabled={loadingDocId === doc.id}>View</button>
+                              <div className="kyc-done-note">
+                                <i className="fas fa-check-circle" style={{ color: "#fff", marginRight: 8 }} />
+                                Your identity has been verified. You now have full Tier 2 access.
+                              </div>
+                              {/* Interactive KYC document cards — always shown (not just when done) */}
                             </>
-                            )}
-                          
-                        </div>
-                      ))}
-                    </div>
+                          )}
+
+                          {/* ── KYC document upload/view cards (always visible) ── */}
+                          {(() => {
+                            const rec = userProfile?.records?.[0] || {};
+                            const docs = [
+                              {
+                                docType:   'passport',
+                                label:     'Government Issued Passport',
+                                icon:      'fa-id-card',
+                                uploaded:  !!rec.passportDoc,
+                                fileUrl:   rec.passportDoc,
+                              },
+                              {
+                                docType:   'utility_bill',
+                                label:     'Proof of Address (Utility Bill)',
+                                icon:      'fa-file-alt',
+                                uploaded:  !!rec.utilityBillDoc,
+                                fileUrl:   rec.utilityBillDoc,
+                              },
+                            ];
+
+                            return (
+                              <div className="kyc-doc-list">
+                                {docs.map((doc) => (
+                                  <div key={doc.docType} className={`kyc-doc-card ${doc.uploaded ? 'kyc-doc-card--uploaded' : ''}`}>
+                                    {/* Hidden file input */}
+                                    <input
+                                      type="file"
+                                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                                      style={{ display: 'none' }}
+                                      ref={docUploadRefs[doc.docType]}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleUploadKycDocument(doc.docType, file);
+                                        e.target.value = '';
+                                      }}
+                                    />
+
+                                    {/* Icon */}
+                                    <div className={`kyc-doc-icon ${doc.uploaded ? 'kyc-doc-icon--uploaded' : ''}`}>
+                                      <i className={`fas ${doc.icon}`} />
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="kyc-doc-info">
+                                      <p className="kyc-doc-label">{doc.label}</p>
+                                      <p className="kyc-doc-status">
+                                        {doc.uploaded
+                                          ? <><i className="fas fa-check-circle" style={{ color: '#0a9a08d9', marginRight: 4 }} />Uploaded</>
+                                          : <><i className="fas fa-exclamation-circle" style={{ color: '#d97706', marginRight: 4 }} />Not uploaded</>
+                                        }
+                                      </p>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="kyc-doc-actions">
+                                      {/* Upload / Replace button */}
+                                      <button
+                                        className="kyc-doc-btn kyc-doc-btn--upload"
+                                        disabled={uploadingDocId === doc.docType}
+                                        onClick={() => docUploadRefs[doc.docType].current?.click()}
+                                        title={doc.uploaded ? 'Replace document' : 'Upload document'}
+                                      >
+                                        {uploadingDocId === doc.docType ? (
+                                          <><div className="kyc-doc-spinner" />&nbsp;Uploading…</>
+                                        ) : (
+                                          <><i className="fas fa-upload" style={{ marginRight: 5 }} />
+                                            {doc.uploaded ? 'Replace' : 'Upload'}</>
+                                        )}
+                                      </button>
+
+                                      {/* View button — only when a doc exists */}
+                                      {doc.uploaded && (
+                                        <button
+                                          className="kyc-doc-btn kyc-doc-btn--view"
+                                          disabled={loadingDocId === doc.docType}
+                                          onClick={() => handleViewKycDocument(doc.docType)}
+                                          title="View document"
+                                        >
+                                          {loadingDocId === doc.docType ? (
+                                            <div className="kyc-doc-spinner" />
+                                          ) : (
+                                            <><i className="fas fa-eye" style={{ marginRight: 5 }} />View</>
+                                          )}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -975,25 +1278,70 @@ const UserProfile = () => {
 
               {showResetPasswordModal && (
                 <>
-                  <div className="user-profile-modal-overlay" onClick={() => setShowResetPasswordModal(false)} />
+                  <div className="user-profile-modal-overlay" onClick={() => { if (!resetLinkLoading) { setShowResetPasswordModal(false); setResetLinkSent(false); }}} />
                   <div className="user-profile-modal">
                     <div className="user-profile-modal-content">
-                      <div className="user-profile-modal-icon primary">
-                        <Key size={48} />
-                      </div>
-                      <h3>Reset User Password</h3>
-                      <p>A password reset link will be sent to the user's email address.</p>
-                      <div className="user-profile-modal-actions">
-                        <button className="user-profile-btn-secondary" onClick={() => setShowResetPasswordModal(false)}>
-                          Cancel
-                        </button>
-                        <button className="user-profile-btn-primary" onClick={() => {
-                          console.log('Password reset sent');
-                          setShowResetPasswordModal(false);
-                        }}>
-                          Send Reset Link
-                        </button>
-                      </div>
+
+                      {resetLinkSent ? (
+                        /* ── Success state ── */
+                        <>
+                          <div className="user-profile-modal-icon" style={{ background: '#dcfce7' }}>
+                            <i className="fas fa-check-circle" style={{ fontSize: 48, color: '#16a34a' }} />
+                          </div>
+                          <h3>Reset Link Sent!</h3>
+                          <p>
+                            A password reset link has been sent to{' '}
+                            <strong>{userData?.email || 'your email address'}</strong>.
+                            <br /><br />
+                            Check your inbox and follow the instructions to reset your password.
+                            The link expires in <strong>10 minutes</strong>.
+                          </p>
+                          <div className="user-profile-modal-actions" style={{ gridTemplateColumns: '1fr' }}>
+                            <button
+                              className="user-profile-btn-primary"
+                              onClick={() => { setShowResetPasswordModal(false); setResetLinkSent(false); }}
+                            >
+                              Done
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        /* ── Confirm state ── */
+                        <>
+                          <div className="user-profile-modal-icon primary">
+                            <Key size={48} />
+                          </div>
+                          <h3>Reset Your Password</h3>
+                          <p>
+                            We'll send a password reset link to{' '}
+                            <strong>{userData?.email || 'your registered email address'}</strong>.
+                            <br /><br />
+                            Click the link in the email to set a new password.
+                          </p>
+                          <div className="user-profile-modal-actions">
+                            <button
+                              className="user-profile-btn-secondary"
+                              onClick={() => setShowResetPasswordModal(false)}
+                              disabled={resetLinkLoading}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              className="user-profile-btn-primary"
+                              onClick={handleSendResetLink}
+                              disabled={resetLinkLoading}
+                              style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}
+                            >
+                              {resetLinkLoading ? (
+                                <><div className="kyc-doc-spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} /> Sending…</>
+                              ) : (
+                                <><i className="fas fa-paper-plane" />Send Reset Link</>
+                              )}
+                            </button>
+                          </div>
+                        </>
+                      )}
+
                     </div>
                   </div>
                 </>
@@ -1001,24 +1349,65 @@ const UserProfile = () => {
 
               {isShowSuspendAccountModal && (
                 <>
-                  <div className="user-profile-modal-overlay" onClick={() => setShowSuspendAccountModal(false)} />
+                  <div className="user-profile-modal-overlay" onClick={() => { if (!suspendLoading) setShowSuspendAccountModal(false); }} />
                   <div className="user-profile-modal">
                     <div className="user-profile-modal-content">
+
                       <div className="user-profile-modal-icon warning">
                         <AlertCircle size={48} />
                       </div>
-                      <h3>Request Account Suspension</h3>
-                      <p>Are you sure you want to request suspend your account? This action requires admin approval.</p>
+
+                      <h3>Suspend Your Account?</h3>
+
+                      <p style={{ textAlign: 'center', color: '#6b7280', fontSize: 14, lineHeight: 1.6 }}>
+                        This will <strong style={{ color: '#dc2626' }}>immediately disable</strong> your ability to:
+                      </p>
+
+                      {/* What gets locked */}
+                      <div style={{
+                        background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 12,
+                        padding: '12px 16px', width: '100%', marginTop: 4
+                      }}>
+                        {[
+                          { icon: 'fa-sign-in-alt',  text: 'Log in to your account' },
+                          { icon: 'fa-paper-plane',  text: 'Transfer money to others' },
+                          { icon: 'fa-arrow-up',     text: 'Withdraw from your wallet' },
+                        ].map((item, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: i < 2 ? 8 : 0 }}>
+                            <i className={`fas ${item.icon}`} style={{ color: '#ea580c', fontSize: 13, width: 16 }} />
+                            <span style={{ fontSize: 13, color: '#374151' }}>{item.text}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <p style={{ textAlign: 'center', color: '#6b7280', fontSize: 13, lineHeight: 1.5, marginTop: 8 }}>
+                        A confirmation email will be sent to{' '}
+                        <strong style={{ color: '#111827' }}>{userData?.email}</strong>.
+                        Contact support to reactivate your account.
+                      </p>
+
                       <div className="user-profile-modal-actions">
-                        <button className="user-profile-btn-secondary" onClick={() => setShowSuspendAccountModal(false)}>
+                        <button
+                          className="user-profile-btn-secondary"
+                          onClick={() => setShowSuspendAccountModal(false)}
+                          disabled={suspendLoading}
+                        >
                           Cancel
                         </button>
-                        <button className="user-profile-btn-danger" onClick={() => {
-                          setShowSuspendAccountModal(false);
-                        }}>
-                          Request Suspension
+                        <button
+                          className="user-profile-btn-danger"
+                          onClick={handleConfirmSuspend}
+                          disabled={suspendLoading}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}
+                        >
+                          {suspendLoading ? (
+                            <><div className="kyc-doc-spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} /> Suspending…</>
+                          ) : (
+                            <><i className="fas fa-ban" />Yes, Suspend Account</>
+                          )}
                         </button>
                       </div>
+
                     </div>
                   </div>
                 </>

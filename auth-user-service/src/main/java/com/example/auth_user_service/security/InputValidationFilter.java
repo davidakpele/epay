@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 @Component
 public class InputValidationFilter extends OncePerRequestFilter {
 
-    // Compiled patterns for better performance
     private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile(
         "(\\.\\./|\\.\\\\|%2e%2e%2f|%2e%2e/|%2e%2e%5c|\\.\\.\\/|/\\.\\./|\\\\\\.\\.\\\\)", 
         Pattern.CASE_INSENSITIVE
@@ -37,30 +36,34 @@ public class InputValidationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        
+
+        // Skip URL scanning for multipart requests — the boundary value in
+        // Content-Type can contain characters that false-positive our patterns.
+        String contentType = request.getContentType();
+        if (contentType != null && contentType.toLowerCase().startsWith("multipart/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String uri = request.getRequestURI();
         String queryString = request.getQueryString();
         String fullUrl = uri + (queryString != null ? "?" + queryString : "");
         
-        // Check for path traversal
         if (PATH_TRAVERSAL_PATTERN.matcher(fullUrl).find()) {
             blockRequest(response, "Path traversal attempt detected");
             return;
         }
         
-        // Check for SQL injection
         if (SQL_INJECTION_PATTERN.matcher(fullUrl).find()) {
             blockRequest(response, "SQL injection attempt detected");
             return;
         }
         
-        // Check for XSS
         if (XSS_PATTERN.matcher(fullUrl).find()) {
             blockRequest(response, "XSS attempt detected");
             return;
         }
-        
-        // Block suspicious characters
+    
         if (fullUrl.contains("'") || fullUrl.contains("\"") || 
             fullUrl.contains(";") || fullUrl.contains("--") ||
             fullUrl.contains("/*") || fullUrl.contains("*/")) {

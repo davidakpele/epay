@@ -323,4 +323,155 @@ public class UserRecordService implements IUserRecordService{
         }
     }
 
+    // ── KYC Document Upload / Retrieve ──────────────────────────────────────
+
+    private static final java.util.Set<String> ALLOWED_DOC_TYPES =
+            java.util.Set.of("passport", "utility_bill");
+    private static final java.util.Set<String> ALLOWED_DOC_MIME =
+            java.util.Set.of(
+                    "image/jpeg", "image/png", "image/webp",
+                    "application/pdf",
+                    // Accept raw binary uploads (sent when browser can't determine MIME)
+                    "application/octet-stream"
+            );
+
+    @Override
+    public ResponseEntity<?> uploadKycDocument(Long userId, String docType, MultipartFile file) {
+        if (!ALLOWED_DOC_TYPES.contains(docType)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("status", "error", "message",
+                            "Invalid document type. Use 'passport' or 'utility_bill'."));
+        }
+
+        Optional<UserRecord> recordOpt = userRecordRepository.findByUserId(userId);
+        if (recordOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "error", "message", "User record not found."));
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_DOC_MIME.contains(contentType)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("status", "error", "message",
+                            "Unsupported file type. Upload JPEG, PNG, WebP, or PDF."));
+        }
+
+        try {
+            Path uploadDir = Paths.get(fileStorageConfig.getUploadDir(), "kyc", String.valueOf(userId))
+                    .toAbsolutePath().normalize();
+            Files.createDirectories(uploadDir);
+
+            // Delete any existing file for this doc type
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(uploadDir, docType + ".*")) {
+                for (Path existing : stream) Files.deleteIfExists(existing);
+            }
+
+            // Read bytes once (needed for magic-byte detection)
+            byte[] fileBytes = file.getBytes();
+
+            // Derive extension: prefer original filename, fall back to magic bytes
+            String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
+            if (ext == null || ext.isBlank()) {
+                // Detect by magic bytes
+                if (fileBytes.length >= 4 &&
+                    fileBytes[0] == 0x25 && fileBytes[1] == 0x50 &&
+                    fileBytes[2] == 0x44 && fileBytes[3] == 0x46) {
+                    ext = "pdf"; // %PDF
+                } else if (fileBytes.length >= 3 &&
+                    (fileBytes[0] & 0xFF) == 0xFF && (fileBytes[1] & 0xFF) == 0xD8) {
+                    ext = "jpg"; // JPEG
+                } else if (fileBytes.length >= 8 &&
+                    (fileBytes[1] == 'P') && (fileBytes[2] == 'N') && (fileBytes[3] == 'G')) {
+                    ext = "png"; // PNG
+                } else {
+                    ext = "bin";
+                }
+            }
+
+            String fileName = docType + "." + ext;
+            Path filePath = uploadDir.resolve(fileName);
+            Files.write(filePath, fileBytes);
+
+            String storedPath = "/uploads/images/kyc/" + userId + "/" + fileName;
+
+            UserRecord record = recordOpt.get();
+            if ("passport".equals(docType)) {
+                record.setPassportDoc(storedPath);
+            } else {
+                record.setUtilityBillDoc(storedPath);
+            }
+            userRecordRepository.save(record);
+
+            return ResponseEntity.ok(Map.of(
+                    "status",   "success",
+                    "message",  "KYC document uploaded successfully.",
+                    "docType",  docType,
+                    "fileUrl",  storedPath
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "error", "message", "Error saving document: " + e.getMessage()));
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> getKycDocument(Long userId, String docType) {
+        if (!ALLOWED_DOC_TYPES.contains(docType)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("status", "error", "message",
+                            "Invalid document type. Use 'passport' or 'utility_bill'."));
+        }
+
+        Optional<UserRecord> recordOpt = userRecordRepository.findByUserId(userId);
+        if (recordOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "error", "message", "User record not found."));
+        }
+
+        UserRecord record = recordOpt.get();
+        String path = "passport".equals(docType) ? record.getPassportDoc() : record.getUtilityBillDoc();
+
+        if (path == null || path.isBlank()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "error", "message", "No document found for type: " + docType));
+        }
+
+        // Serve the file as a byte stream
+        try {
+            Path uploadDir = Paths.get(fileStorageConfig.getUploadDir()).toAbsolutePath().normalize();
+            // path stored as /uploads/images/kyc/... — strip the /uploads/images/ prefix
+            String relativePath = path.replaceFirst("^/uploads/images/", "");
+            Path filePath = uploadDir.resolve(relativePath).normalize();
+
+            if (!filePath.startsWith(uploadDir)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("status", "error", "message", "Access denied."));
+            }
+
+            if (!Files.exists(filePath)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("status", "error", "message", "Document file not found on server."));
+            }
+
+            byte[] data  = Files.readAllBytes(filePath);
+            String mime  = Files.probeContentType(filePath);
+            if (mime == null) {
+                // Fallback by extension
+                String fname = filePath.getFileName().toString().toLowerCase();
+                if (fname.endsWith(".pdf"))  mime = "application/pdf";
+                else if (fname.endsWith(".png"))  mime = "image/png";
+                else if (fname.endsWith(".webp")) mime = "image/webp";
+                else mime = "image/jpeg";
+            }
+
+            return ResponseEntity.ok()
+                    .header("Content-Type", mime)
+                    .header("Content-Disposition", "inline; filename=\"" + filePath.getFileName() + "\"")
+                    .body(data);
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "error", "message", "Error reading document."));
+        }
+    }
 }

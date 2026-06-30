@@ -93,7 +93,7 @@
 .user-profile-status-badge.active {
   background: #dcfce7;
   color: #16a34a;
-  border: 1px solid #bbf7d0;
+  border: 1px solid var(--bg-main);
 }
 
 .user-profile-status-badge.suspended {
@@ -1556,4 +1556,477 @@ input.error {
   color: #6b7280;
   font-size: 11.5px;
   margin-top: 4px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PERSONAL INFORMATION — Interactive Cards  (Task 2)
+   ══════════════════════════════════════════════════════════════ */
+
+.pi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+/* Wide card spans full width (e.g. Address) */
+.pi-card--wide {
+  grid-column: 1 / -1;
+}
+
+.pi-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+  cursor: default;
+}
+
+.pi-card:hover {
+  border-color: #ddd6fe;
+  box-shadow: 0 4px 16px rgba(43,15,86,0.08);
+  transform: translateY(-1px);
+}
+
+.pi-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f5f0ff, #ede9fe);
+  border: 1px solid #ddd6fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #2b0f56;
+  font-size: 14px;
+}
+
+.pi-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pi-card-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.pi-card-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Profile completion bar beneath the cards */
+.pi-completion-bar-wrap {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 4px;
+}
+
+.pi-completion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pi-completion-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.pi-completion-pct {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pi-completion-track {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pi-completion-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.pi-completion-hint {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* Responsive personal info cards */
+@media (max-width: 640px) {
+  .pi-grid {
+    grid-template-columns: 1fr;
+  }
+  .pi-card--wide {
+    grid-column: unset;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   KYC & IDENTITY VERIFICATION SECTION  (Task 1 profile part)
+   ══════════════════════════════════════════════════════════════ */
+
+/* Tier banner */
+.kyc-tier-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1px solid;
+}
+
+.kyc-tier-banner--done {
+  background: linear-gradient(135deg, var(--bg-main), var(--bg-main));
+  border-color: var(--bg-main);
+}
+
+.kyc-tier-banner--pending {
+  background: linear-gradient(135deg, #f5f0ff, #ede9fe);
+  border-color: #ddd6fe;
+}
+
+.kyc-tier-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kyc-tier-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.kyc-tier-icon--done {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #78350f;
+  box-shadow: 0 4px 12px rgba(251,191,36,0.35);
+}
+
+.kyc-tier-icon--pending {
+  background: #2b0f56;
+  color: #fff;
+}
+
+.kyc-tier-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.kyc-tier-sub {
+    color: #fff;
+    margin: 4px 0 0;
+    font-size: 12.5px;
+}
+.kyc-tier-badge {
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kyc-tier-badge--done {
+  background: #fff;
+  color: var(--bg-main);
+  border: 1px solid #fff;
+}
+
+.kyc-tier-badge--pending {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fde047;
+}
+
+/* Checklist */
+.kyc-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 18px 0 20px;
+}
+
+.kyc-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.kyc-checklist-item--done {
+  color: #374151;
+}
+
+.kyc-check-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #d1d5db;
+  transition: all 0.2s;
+}
+
+.kyc-check-circle--done {
+  background: #2b0f56;
+  border-color: #2b0f56;
+  color: #fff;
+}
+
+/* CTA button */
+.kyc-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
+  padding: 13px 24px;
+  background: linear-gradient(135deg, #2b0f56, #4a1a8c);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(43,15,86,0.28);
+  margin-top: 4px;
+}
+
+.kyc-cta-btn:hover {
+  opacity: 0.92;
+  box-shadow: 0 6px 20px rgba(43,15,86,0.35);
+}
+
+/* Done note */
+.kyc-done-note {
+  border: 1px solid var(--bg-main);
+  color: #fff;
+  background: #2b0f56;
+  border-radius: 10px;
+  align-items: center;
+  margin-top: 4px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  display: flex;
+}
+/* Responsive KYC section */
+@media (max-width: 640px) {
+  .kyc-tier-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .kyc-cta-btn {
+    max-width: 100%;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   KYC DOCUMENT UPLOAD / VIEW CARDS
+   ══════════════════════════════════════════════════════════════ */
+
+.kyc-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.kyc-doc-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f8fafc;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 14px;
+  padding: 16px 18px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.kyc-doc-card:hover {
+  border-color: #c4b5fd;
+  box-shadow: 0 2px 10px rgba(43,15,86,0.07);
+}
+
+.kyc-doc-card--uploaded {
+  background: #f5f3ff;
+  border-style: solid;
+  border-color: #ddd6fe;
+}
+
+/* Doc type icon */
+.kyc-doc-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.kyc-doc-icon--uploaded {
+  background: linear-gradient(135deg, #f5f0ff, #ede9fe);
+  border-color: #ddd6fe;
+  color: #2b0f56;
+}
+
+/* Info text */
+.kyc-doc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.kyc-doc-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kyc-doc-status {
+  font-size: 12.5px;
+  color: #6b7280;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Action buttons container */
+.kyc-doc-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Shared button base */
+.kyc-doc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.18s, box-shadow 0.18s;
+  white-space: nowrap;
+}
+
+.kyc-doc-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Upload / Replace */
+.kyc-doc-btn--upload {
+  background: #2b0f56;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(43,15,86,0.22);
+}
+
+.kyc-doc-btn--upload:hover:not(:disabled) {
+  opacity: 0.88;
+  box-shadow: 0 4px 14px rgba(43,15,86,0.3);
+}
+
+/* View */
+.kyc-doc-btn--view {
+  background: #fff;
+  color: #2b0f56;
+  border: 1.5px solid #ddd6fe;
+}
+
+.kyc-doc-btn--view:hover:not(:disabled) {
+  background: #f5f0ff;
+  border-color: #c4b5fd;
+}
+
+/* Mini spinner inside buttons */
+.kyc-doc-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: kycDocSpin 0.7s linear infinite;
+  display: inline-block;
+}
+
+.kyc-doc-btn--view .kyc-doc-spinner {
+  border-color: rgba(43,15,86,0.25);
+  border-top-color: #2b0f56;
+}
+
+@keyframes kycDocSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive: stack on very small screens */
+@media (max-width: 480px) {
+  .kyc-doc-card {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px;
+  }
+  .kyc-doc-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .kyc-doc-label {
+    font-size: 13px;
+  }
 }

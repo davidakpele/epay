@@ -908,3 +908,13 @@
     flex-shrink: 0;
   }
 }
+
+/* ── Tier Upgrade Modal animations ─────────────────────────────────────── */
+@keyframes tierBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes tierModalIn {
+  from { opacity: 0; transform: translate(-50%, -42%) scale(0.94); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}

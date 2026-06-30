@@ -351,6 +351,7 @@ public class AuthenticationEmailService {
             case "ACCOUNT_UNLOCKED"    -> "ePay — Account Unlocked";
             case "ACCOUNT_BLOCKED"     -> "ePay — Account Blocked";
             case "ACCOUNT_UNBLOCKED"   -> "ePay — Account Unblocked";
+            case "ACCOUNT_SUSPENDED"   -> "ePay — Account Suspended";
             case "TWO_FACTOR_ENABLED"  -> "ePay — Two-Factor Authentication Enabled";
             case "TWO_FACTOR_DISABLED" -> "ePay — Two-Factor Authentication Disabled";
             default                    -> "ePay — Account Security Alert";

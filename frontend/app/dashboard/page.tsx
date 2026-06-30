@@ -19,9 +19,8 @@ import MobileNav from '@/components/MobileNav';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import { getFiat, getToken, getUserId, setActiveWallet, setFiat, setWalletContainer, walletService, historyService, userService, capitalizeFirstLetter, getUserDetails, configService, getUserFullName } from '../api';
+import { getFiat, getToken, getUserId, setActiveWallet, setFiat, setWalletContainer, walletService, historyService, userService, capitalizeFirstLetter, getUserDetails, configService, getUserFullName, calculateProfileCompletion, getHasSeenMetaMap, updateHasSeenMetaMap } from '../api';
 import { eventEmitter } from '../utils/eventEmitter';
-import KycCheckProgress from '@/components/Kyc/page';
 import { UserSettings } from '../types/utils';
 import { Toast } from '../types/auth';
 import WelcomeModal from '@/components/WelcomeModal';
@@ -49,6 +48,7 @@ const Dashboard = () => {
   const [isScrolling, setIsScrolling] = useState(false);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [showTierUpgradeModal, setShowTierUpgradeModal] = useState(false);
   const scrollTimer = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -373,6 +373,14 @@ const Dashboard = () => {
     }
     await fetchUserSettings();
 
+    // ── Tier upgrade modal: show once when KYC is incomplete ─────────────
+    const profileProgress = calculateProfileCompletion();
+    const hasSeenTierModal = getHasSeenMetaMap();
+    if (profileProgress < 100 && !hasSeenTierModal) {
+      setTimeout(() => setShowTierUpgradeModal(true), 1800);
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     } catch (error) {
       console.error('Error fetching user profile:', error);
       showToast("Failed to load profile data");
@@ -542,7 +550,6 @@ const Dashboard = () => {
             </div>
           </section>
 
-          <KycCheckProgress />
           <div className="service-container">
             <div className="service-top-bar">
               <span className="service-title">Quick Services</span>
@@ -638,6 +645,138 @@ const Dashboard = () => {
         theme={theme}
         onWithdrawReloadSuccess={handleTransactionSuccess}/> 
       </Suspense>
+
+      {/* ── Tier 1 → Tier 2 KYC Upgrade Modal ── */}
+      {showTierUpgradeModal && (
+        <>
+          <div
+            style={{
+              position: 'fixed', inset: 0,
+              background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)',
+              zIndex: 99998, animation: 'tierBackdropIn 0.25s ease'
+            }}
+            onClick={() => { setShowTierUpgradeModal(false); updateHasSeenMetaMap(true); }}
+          />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%',
+            transform: 'translate(-50%,-50%)',
+            background: '#fff', borderRadius: 24, width: '92%', maxWidth: 440,
+            zIndex: 99999, boxShadow: '0 24px 80px rgba(43,15,86,0.22)',
+            overflow: 'hidden', animation: 'tierModalIn 0.3s cubic-bezier(.22,1,.36,1)'
+          }}>
+            {/* Purple gradient header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #2b0f56, #4a1a8c)',
+              padding: '32px 28px 24px', textAlign: 'center', position: 'relative'
+            }}>
+              {/* Close button */}
+              <button
+                onClick={() => { setShowTierUpgradeModal(false); updateHasSeenMetaMap(true); }}
+                style={{
+                  position: 'absolute', top: 14, right: 16,
+                  background: 'rgba(255,255,255,0.15)', border: 'none',
+                  borderRadius: '50%', width: 30, height: 30, cursor: 'pointer',
+                  color: '#fff', fontSize: 18, lineHeight: 1, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center'
+                }}
+              >×</button>
+
+              {/* Tier badges */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 18 }}>
+                <div style={{
+                  background: 'rgba(255,255,255,0.15)', borderRadius: 12,
+                  padding: '8px 18px', color: '#fff', fontSize: 13, fontWeight: 700
+                }}>
+                  <i className="fas fa-user" style={{ marginRight: 6, fontSize: 11 }} />
+                  Tier 1
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 18 }}>→</div>
+                <div style={{
+                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                  borderRadius: 12, padding: '8px 18px',
+                  color: '#78350f', fontSize: 13, fontWeight: 700,
+                  boxShadow: '0 4px 12px rgba(251,191,36,0.4)'
+                }}>
+                  <i className="fas fa-crown" style={{ marginRight: 6, fontSize: 11 }} />
+                  Tier 2
+                </div>
+              </div>
+              <h2 style={{ margin: 0, color: '#fff', fontSize: 22, fontWeight: 700, lineHeight: 1.3 }}>
+                Upgrade to Tier 2
+              </h2>
+              <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>
+                Unlock transfers, deposits & withdrawals
+              </p>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '24px 28px 28px' }}>
+              {/* Feature list */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+                {[
+                  { icon: 'fa-paper-plane', text: 'Send & receive money instantly', color: '#2b0f56' },
+                  { icon: 'fa-arrow-down', text: 'Deposit funds from any bank', color: '#059669' },
+                  { icon: 'fa-arrow-up', text: 'Withdraw to your bank account', color: '#d97706' },
+                  { icon: 'fa-shield-alt', text: 'Higher transaction limits', color: '#7c3aed' },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                      background: `${item.color}18`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      <i className={`fas ${item.icon}`} style={{ color: item.color, fontSize: 14 }} />
+                    </div>
+                    <span style={{ fontSize: 14, color: '#374151', fontWeight: 500 }}>{item.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* KYC requirement note */}
+              <div style={{
+                background: '#f5f0ff', border: '1px solid #ddd6fe', borderRadius: 12,
+                padding: '12px 16px', marginBottom: 22, display: 'flex', gap: 10, alignItems: 'flex-start'
+              }}>
+                <i className="fas fa-info-circle" style={{ color: '#2b0f56', marginTop: 2, flexShrink: 0 }} />
+                <p style={{ margin: 0, fontSize: 13, color: '#4b5563', lineHeight: 1.6 }}>
+                  To upgrade to Tier 2, complete your <strong style={{ color: '#2b0f56' }}>KYC verification</strong> by
+                  filling in your personal details on the profile page.
+                </p>
+              </div>
+
+              {/* CTA buttons */}
+              <button
+                onClick={() => {
+                  setShowTierUpgradeModal(false);
+                  updateHasSeenMetaMap(true);
+                  router.push('/settings/profile');
+                }}
+                style={{
+                  width: '100%', padding: '14px', background: '#2b0f56',
+                  color: '#fff', border: 'none', borderRadius: 12, fontSize: 15,
+                  fontWeight: 700, cursor: 'pointer', marginBottom: 10,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  transition: 'background 0.2s'
+                }}
+              >
+                <i className="fas fa-id-card" />
+                Complete KYC & Upgrade
+              </button>
+              <button
+                onClick={() => { setShowTierUpgradeModal(false); updateHasSeenMetaMap(true); }}
+                style={{
+                  width: '100%', padding: '12px', background: 'transparent',
+                  color: '#9ca3af', border: '1px solid #e5e7eb', borderRadius: 12,
+                  fontSize: 14, fontWeight: 500, cursor: 'pointer'
+                }}
+              >
+                Remind me later
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
         {!isChatOpen && (
           <button
             className="chat-fab"

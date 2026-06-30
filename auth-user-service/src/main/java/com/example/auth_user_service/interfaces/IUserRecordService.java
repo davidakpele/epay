@@ -42,4 +42,20 @@ public interface IUserRecordService {
 
     ResponseEntity<?> removeProfileImage(Long id);
 
+    /**
+     * Upload a KYC document for a user.
+     *
+     * @param userId   the user's ID
+     * @param docType  "passport" or "utility_bill"
+     * @param file     the uploaded file
+     */
+    ResponseEntity<?> uploadKycDocument(Long userId, String docType, MultipartFile file);
+
+    /**
+     * Fetch the stored path/URL of a KYC document.
+     *
+     * @param userId  the user's ID
+     * @param docType "passport" or "utility_bill"
+     */
+    ResponseEntity<?> getKycDocument(Long userId, String docType);
 }

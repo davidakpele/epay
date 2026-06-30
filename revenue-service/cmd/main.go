@@ -11,40 +11,24 @@ import (
 )
 
 func main() {
-    // Load configuration
     cfg := config.LoadConfig()
-
-    // Set gin mode from config
     gin.SetMode(cfg.GinMode)
-
-    // Build DSN from configuration
     dsn := buildDSN(cfg)
     
     db := database.ConnectDB(dsn)
-
-    // Initialize repositories
     revenueRepo := repository.NewRevenueRepository(db)
     balanceRepo := repository.NewCurrencyBalanceRepository(db)
     transactionRepo := repository.NewTransactionRepository(db)
-
-    // Initialize services
     revenueService := service.NewRevenueService(revenueRepo, balanceRepo, transactionRepo)
-
-    // Initialize handlers
     revenueHandler := handlers.NewRevenueHandler(revenueService)
-
-    // Setup router
     router := gin.Default()
-
-    // Revenue routes
     revenueRoutes := router.Group("/api/revenue")
     {
         revenueRoutes.GET("", revenueHandler.GetRevenue)
         revenueRoutes.PUT("/password", revenueHandler.UpdateRevenuePassword)
         revenueRoutes.POST("/transactions", revenueHandler.ProcessTransaction)
     }
-    
-    // Start server
+
     log.Printf("Server starting on port %s", cfg.Port)
     if err := router.Run(":" + cfg.Port); err != nil {
         log.Fatal("Failed to start server:", err)

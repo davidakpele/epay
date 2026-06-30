@@ -42,7 +42,23 @@ export const userService = {
 
     deleteAccount: (userId) =>{ 
         return makeAuthenticatedRequest(API_URLS.USER.DELETE_ACCOUNT(userId), 'DELETE');
-    }
+    },
+
+    uploadKycDocument: (id, docType, formData) => {
+        return makeAuthenticatedRequest(API_URLS.USER.UPLOAD_KYC_DOC(id, docType), 'POST', formData);
+    },
+
+    getKycDocumentUrl: (id, docType) => {
+        return API_URLS.USER.GET_KYC_DOC(id, docType);
+    },
+
+    sendResetPasswordLink: (id) => {
+        return makeAuthenticatedRequest(API_URLS.USER.SEND_RESET_LINK(id), 'POST');
+    },
+
+    suspendAccount: (id) => {
+        return makeAuthenticatedRequest(API_URLS.USER.SUSPEND_ACCOUNT(id), 'POST');
+    },
     
 };
 

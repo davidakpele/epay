@@ -36,13 +36,11 @@ public class BotDetectionFilter extends OncePerRequestFilter {
         
         String userAgent = request.getHeader("User-Agent");
         
-        // Block empty or missing user agent
         if (userAgent == null || userAgent.trim().isEmpty()) {
             blockBot(response, "Missing User-Agent");
             return;
         }
         
-        // Check against known bot signatures
         String lowerUserAgent = userAgent.toLowerCase();
         for (String blockedAgent : BLOCKED_USER_AGENTS) {
             if (lowerUserAgent.contains(blockedAgent.toLowerCase())) {
@@ -50,11 +48,9 @@ public class BotDetectionFilter extends OncePerRequestFilter {
                 return;
             }
         }
-        
-        // Allow legitimate search engine bots on specific paths only
+    
         if (isSearchEngineBot(lowerUserAgent)) {
             String path = request.getRequestURI();
-            // Only allow bots on public paths
             if (!path.startsWith("/public") && !path.equals("/") && 
                 !path.startsWith("/robots.txt") && !path.startsWith("/sitemap")) {
                 blockBot(response, "Search engine bot on restricted path");
