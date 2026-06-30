@@ -315,6 +315,7 @@ const ForgotPassword = () => {
             </>
         )}
 
+{/* this section need to be move to  */}
         {isNextStep && (
             <>
             <div className="form-header-text">
@@ -377,6 +378,8 @@ const ForgotPassword = () => {
                 </form>
             </>
         )}
+to
+
          {isModalOpen && (
           <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>

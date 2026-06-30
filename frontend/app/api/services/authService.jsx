@@ -48,8 +48,7 @@ export const authService = {
     },
     
     forgotPassword: (payload) => {
-        console.log('Forgot password payload:', payload);
-        // return makePublicRequest(API_URLS.AUTH.VERIFYOTP, 'POST', payload);
+        return makePublicRequest(API_URLS.AUTH.VERIFYOTP, 'POST', payload);
     },
 
     forgotUsername: (payload) => {

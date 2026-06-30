@@ -7,7 +7,7 @@ import {
   History, Headphones, CreditCard, Wallet, Receipt, 
   FileText, UserPlus, LayoutDashboard, 
   Smartphone, Repeat, Send, Landmark, UserStarIcon,
-  ChevronRight
+  ChevronRight, TrendingUp, PiggyBank
 } from 'lucide-react';
 import './Header.css';
 import Link from 'next/link';
@@ -263,6 +263,16 @@ const Header = ({ theme, toggleTheme }: HeaderProps) => {
       items: [
         { id: 'cards', label: 'Cards', icon: <CreditCard size={20} />, href: '/cards' },
         { id: 'bills', label: 'Bills', icon: <Receipt size={20} />, href: '/bills' },
+        {
+          id: 'savings',
+          label: 'Invest & Save',
+          icon: <TrendingUp size={20} />,
+          href: '/savings',
+          submenu: [
+            { label: 'Investments', href: '/savings/invest' },
+            { label: 'Target Savings', href: '/savings/target' },
+          ]
+        },
         { id: 'refer', label: 'Refer and Earn', icon: <UserPlus size={20} />, href: '/refer' },
       ]
     },

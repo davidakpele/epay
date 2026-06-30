@@ -155,7 +155,7 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
           width: 450px;
           height:auto;
           max-width: 95vw;
-          background: #0f172a;
+          background: #2b0f56;
           border-radius: 16px;
           padding: 28px 32px 28px 32px;
           z-index: 9999;
@@ -191,13 +191,13 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
           margin: 0;
         }
         .dfm-close-btn {
-          background: #1e293b;
+          background: #fff;
           border: none;
           border-radius: 8px;
           width: 36px; height: 36px;
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
-          color: #94a3b8;
+          color: #2b0f56;
           transition: background 0.15s, color 0.15s;
         }
         .dfm-close-btn:hover { background: #334155; color: #fff; }
@@ -228,7 +228,7 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
           cursor: pointer;
           transition: background 0.15s, transform 0.1s;
         }
-        .dfm-quick-btn:hover { background: #166534; transform: translateY(-1px); }
+        .dfm-quick-btn:hover { background: #2b0f56; transform: translateY(-1px); }
         .dfm-quick-btn:active { transform: translateY(0); }
 
         /* Custom Range */
@@ -316,7 +316,7 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
           margin-bottom: 4px;
         }
         .dfm-cal-nav-btn {
-          background: #0f172a;
+          background: #fff;
           border: none;
           border-radius: 6px;
           width: 30px; height: 30px;
@@ -475,7 +475,7 @@ const DateFilterModal: React.FC<DateFilterModalProps> = ({
             {formatDisplay(endDate)}
           </span>
           <div style={{
-            background: '#1e293b', borderRadius: '4px', padding: '2px 8px',
+            background: '#f3f4f6', borderRadius: '4px', padding: '2px 8px',
             color: '#2b0f56', fontSize: '12px', marginLeft: '4px', cursor: 'pointer'
           }}>›</div>
         </div>

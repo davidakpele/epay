@@ -214,7 +214,6 @@ public class WalletServiceImp implements WalletService {
                         "Recipient wallet is being created. Please retry in a moment.");
             }
 
-            // ── 9. Balance check + deduction — narrow synchronized block ──────────
             final BigDecimal feeAmount;
             final BigDecimal newSenderBalance;
             final BigDecimal recipientPreviousBalance = resolveBalance(recipientWalletAccount, currencyCode);
@@ -245,7 +244,6 @@ public class WalletServiceImp implements WalletService {
 
             newSenderBalance = new BigDecimal(withdrawResponse.getNewBalance());
 
-            // ── 10. Escrow — sequential (create then update, dependent) ───────────
             CreateEscrowRequest escrowRequest = buildEscrowRequest(dto, recipientUser);
             ResponseEntity<?>   escrowResponse = escrowServiceClient.create(escrowRequest);
 
@@ -261,7 +259,6 @@ public class WalletServiceImp implements WalletService {
             String ledgerId = (String) ((Map<String, Object>) escrowBody.get("ledger")).get("id");
             escrowServiceClient.updateLedgerStatus(ledgerId, "SUCCESS");
 
-            // ── 11. Shared values ─────────────────────────────────────────────────
             UserRecordDTO recipientRecord  = recipientUser.getRecords().get(0);
             String senderFullName          = buildFullName(senderRecord.getFirstName(),    senderRecord.getLastName());
             String recipientFullName       = buildFullName(recipientRecord.getFirstName(), recipientRecord.getLastName());
@@ -330,7 +327,6 @@ public class WalletServiceImp implements WalletService {
                 historyServiceClient.createUserCreditHistory(recipientHistory, token);
             });
 
-            // ── 13. Fire-and-forget: revenue + alerts (do NOT block response) ─────
             BigDecimal recipientNewBalanceSnap = recipientNewBalanceFuture.get(); 
 
             CompletableFuture.runAsync(() -> revenueServiceClient.creditPlatformRevenue(feeAmount, currencyCode));
@@ -343,10 +339,8 @@ public class WalletServiceImp implements WalletService {
                     dto.getAmount(), currencyCode, recipientNewBalanceSnap,
                     transactionId, recipientPreviousBalance));
 
-            // ── 14. Await both history writes before responding ───────────────────
             CompletableFuture.allOf(senderHistoryFuture, recipientHistoryFuture).join();
 
-            // ── 15. Build + cache response ────────────────────────────────────────
             Map<String, Object> jsonResponse = new LinkedHashMap<>();
             jsonResponse.put("status",     withdrawResponse.getStatus());
             jsonResponse.put("message",    withdrawResponse.getMessage());

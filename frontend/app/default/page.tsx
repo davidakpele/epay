@@ -1021,6 +1021,8 @@ export default function Default() {
               </form>
             )}
 
+            {/* Place that OTP REGISTER PASSWORD FORM HERE */}
+
             {/* ── RESET PASSWORD Form ── */}
             {!showRegister && !showForgetUsernameForm && !showOTPForm && showResetPasswordForm && (
               <div className={styles.ResetPasswordCard}>

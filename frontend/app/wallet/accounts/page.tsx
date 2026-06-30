@@ -80,7 +80,6 @@ const Wallet = () => {
       setTransactionsLoading(true);
       setTransactionsError('');
       
-      // Get userId from auth
       const userId = getUserId();
       if (!userId) {
         setTransactionsError('Please login to view transaction history');
@@ -88,10 +87,8 @@ const Wallet = () => {
         return;
       }
       
-      // Fetch real data from API
       const response = await historyService.getHistory(userId);
       
-      // Transform API response to Transaction format
       const transformedTransactions = transformApiResponseToTransactions(response);
       setTransactions(transformedTransactions);
       
@@ -115,7 +112,6 @@ const Wallet = () => {
         type,
         currency: item.currencyType || 'NGN',
 
-        // ✅ FIX: use netAmount (or grossAmount as fallback) instead of item.amount
         amount: Number(item.netAmount ?? item.grossAmount ?? item.amount) || 0.0,
         fiatAmount: Math.abs(Number(item.netAmount ?? item.grossAmount ?? item.amount) || 0),
 
@@ -125,7 +121,6 @@ const Wallet = () => {
         transactionId: item.transactionId || undefined,
         sessionId: item.sessionId || undefined,
 
-        // ✅ FIX: referenceNo → referenceId
         referenceNo: item.referenceId || item.referenceNo || undefined,
 
         terminalId: item.terminalId || undefined,
@@ -140,7 +135,6 @@ const Wallet = () => {
   };
 
   useEffect(() => {
-  // Handle page loading
   const loadingTimer = setTimeout(() => {
     setIsPageLoading(false);
   }, 2000);
@@ -214,13 +208,9 @@ const Wallet = () => {
   const handleDeleteTransaction = async (transactionId: string) => {
     try {
       setDeleteLoading(transactionId);
-      // Call your API to delete the transaction
       await historyService.deleteTransaction(transactionId);
-      
-      // Refresh the transaction list
+ 
       await fetchTransactionHistory();
-      
-      // Show success message (optional)
       console.log('Transaction deleted successfully');
     } catch (error) {
       console.error('Error deleting transaction:', error);
@@ -283,18 +273,14 @@ const Wallet = () => {
   const mapTransactionType = (apiType: string | undefined, description: string = ''): TransactionType => {
     const type = String(apiType || '').toLowerCase();
     const desc = description.toLowerCase();
-
-    // Deposit
     if (type.includes('deposit') || desc.includes('deposit') || type === 'deposit') {
       return 'deposit';
     }
 
-    // Credited
     if (type.includes('credited') || type.includes('credit') || desc.includes('received') || type === 'credited') {
       return 'credited';
     }
 
-    // Withdrawal
     if (
       type.includes('withdraw') || type.includes('debit') || type.includes('debited') ||
       desc.includes('withdraw') || desc.includes('withdrawal') || desc.includes('sent') ||
@@ -303,17 +289,14 @@ const Wallet = () => {
       return 'withdrawal';
     }
 
-    // Swap
     if (type.includes('swap') || desc.includes('swap') || desc.includes('exchange') || desc.includes('conversion')) {
       return 'swap';
     }
 
-    // Transfer
     if (type.includes('transfer') || desc.includes('transfer')) {
       return 'transfer';
     }
 
-    // Default fallback
     return 'transfer';
   };
 
@@ -337,7 +320,6 @@ const Wallet = () => {
   const getFilteredTransactions = (): Transaction[] => {
     let filtered = transactions;
 
-    // Filter by transaction type (tab)
     if (activeTab !== 'All') {
       filtered = filtered.filter((transaction: Transaction) => {
         switch (activeTab) {
@@ -355,7 +337,6 @@ const Wallet = () => {
       });
     }
 
-    // Filter by date range
     if (dateFilter.startDate || dateFilter.endDate) {
       filtered = filtered.filter((transaction: Transaction) => {
         if (!transaction.date) return false;

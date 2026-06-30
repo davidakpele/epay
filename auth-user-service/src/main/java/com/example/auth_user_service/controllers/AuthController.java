@@ -31,6 +31,7 @@ import com.example.auth_user_service.interfaces.IUserTracerService;
 import com.example.auth_user_service.models.Users;
 import com.example.auth_user_service.payloads.ChangePasswordRequest;
 import com.example.auth_user_service.payloads.OTPRequest;
+import com.example.auth_user_service.payloads.ResetPasswordRequest;
 import com.example.auth_user_service.payloads.UserSignInRequest;
 import com.example.auth_user_service.payloads.UserSignUpRequest;
 import com.example.auth_user_service.responses.AuthResponse;
@@ -313,6 +314,26 @@ public class AuthController {
                     "Provide the OTP code sent to your email address");
         } else {
             return twoFactorAuthenticationServiceImplementation.verifyUserTwoFactorOtp(reqOtpPayload);
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> requestForgetPasswordOTP(@RequestBody ResetPasswordRequest request) {
+        if (request.getMethod().contains("EMAIL")) {
+            if (request.getIdentifier() == null || request.getIdentifier().isEmpty()) {
+                return Error.createResponse("Email address require*.", HttpStatus.BAD_REQUEST,
+                    "Provide the email address you used to sign-up in this platform.");
+            }
+            return twoFactorAuthenticationServiceImplementation.requestOTPFORForgetPassword(request);
+        }else if(request.getMethod().contains("PHONE")){
+            if (request.getIdentifier() == null || request.getIdentifier().isEmpty()) {
+                return Error.createResponse("Phone number require*.", HttpStatus.BAD_REQUEST,
+                    "Provide the phone number you used to sign-up in this platform.");
+            }
+            return twoFactorAuthenticationServiceImplementation.requestOTPFORForgetPassword(request);
+        }else {
+            return Error.createResponse("Invalid request format*.", HttpStatus.BAD_REQUEST,
+                    "System can not accept the format which you are sending request.");
         }
     }
 
