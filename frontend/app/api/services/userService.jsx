@@ -19,7 +19,6 @@ export const userService = {
         return makeAuthenticatedRequest(API_URLS.USER.UPDATE_PASSWORD, 'PUT', userData);
     },
     
-
     sendAccountStatement:(id, email, statement) => {
         return makeAuthenticatedRequest(API_URLS.USER.SENDACCOUNTSTATEMENT(id, email), 'POST', statement);
     },

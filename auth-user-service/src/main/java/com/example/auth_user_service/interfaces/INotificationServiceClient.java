@@ -51,4 +51,22 @@ public interface INotificationServiceClient {
             String action, String actionTime,
             String ipAddress, String deviceInfo,
             String supportPhone, String supportEmail);
+
+    /**
+     * Sends a 4-digit OTP email to the user as part of the forgot-password flow.
+     *
+     * @param email    recipient's email address
+     * @param username recipient's username (used in greeting)
+     * @param otp      the 4-digit OTP to embed in the email
+     */
+    void sendForgotPasswordOtp(String email, String username, String otp);
+
+    /**
+     * Sends the user's username back to their registered email address.
+     *
+     * @param email    recipient's registered email
+     * @param username the username to remind them of
+     * @param fullName the user's full name for the greeting
+     */
+    void sendForgotUsernameEmail(String email, String username, String fullName);
 }

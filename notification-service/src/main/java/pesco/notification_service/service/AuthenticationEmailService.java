@@ -13,6 +13,8 @@ import jakarta.mail.internet.MimeMessage;
 import pesco.notification_service.configurations.RabbitMQConfig;
 import pesco.notification_service.payloads.AccountSecurityNotification;
 import pesco.notification_service.payloads.AccountVerificationRequest;
+import pesco.notification_service.payloads.ForgotPasswordOtpPayload;
+import pesco.notification_service.payloads.ForgotUsernamePayload;
 import pesco.notification_service.payloads.LoginAlertNotification;
 import pesco.notification_service.payloads.PasswordResetRequest;
 import pesco.notification_service.payloads.RegistrationOtpMessage;
@@ -356,5 +358,69 @@ public class AuthenticationEmailService {
             case "TWO_FACTOR_DISABLED" -> "ePay — Two-Factor Authentication Disabled";
             default                    -> "ePay — Account Security Alert";
         };
+    }
+
+    // ── Forgot Password OTP ────────────────────────────────────────────────────
+
+    @RabbitListener(queues = RabbitMQConfig.FORGOT_PASSWORD_OTP_QUEUE)
+    public void receiveForgotPasswordOtp(ForgotPasswordOtpPayload payload) {
+        if (payload != null) {
+            sendForgotPasswordOtpEmail(payload);
+        } else {
+            System.out.println("Failed to deserialize forgot-password OTP request.");
+        }
+    }
+
+    @SuppressWarnings("null")
+    @Async
+    public CompletableFuture<Void> sendForgotPasswordOtpEmail(ForgotPasswordOtpPayload payload) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+            Context context = new Context();
+            context.setVariable("username", payload.getUsername());
+            context.setVariable("otp",      payload.getOtp());
+
+            String htmlContent = templateEngine.process("forgot-password-otp", context);
+            helper.setTo(payload.getEmail());
+            helper.setSubject("ePay — Your Password Reset Code");
+            helper.setText(htmlContent, true);
+            javaMailSender.send(mimeMessage);
+            return CompletableFuture.completedFuture(null);
+        } catch (MessagingException | MailException e) {
+            throw new MailSendException("Failed to send forgot-password OTP email: " + e.getMessage(), e);
+        }
+    }
+
+    // ── Forgot Username ────────────────────────────────────────────────────────
+
+    @RabbitListener(queues = RabbitMQConfig.FORGOT_USERNAME_QUEUE)
+    public void receiveForgotUsername(ForgotUsernamePayload payload) {
+        if (payload != null) {
+            sendForgotUsernameEmail(payload);
+        } else {
+            System.out.println("Failed to deserialize forgot-username request.");
+        }
+    }
+
+    @SuppressWarnings("null")
+    @Async
+    public CompletableFuture<Void> sendForgotUsernameEmail(ForgotUsernamePayload payload) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+            Context context = new Context();
+            context.setVariable("fullName", payload.getFullName());
+            context.setVariable("username", payload.getUsername());
+
+            String htmlContent = templateEngine.process("forgot-username", context);
+            helper.setTo(payload.getEmail());
+            helper.setSubject("ePay — Your Username");
+            helper.setText(htmlContent, true);
+            javaMailSender.send(mimeMessage);
+            return CompletableFuture.completedFuture(null);
+        } catch (MessagingException | MailException e) {
+            throw new MailSendException("Failed to send forgot-username email: " + e.getMessage(), e);
+        }
     }
 }

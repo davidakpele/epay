@@ -40,15 +40,12 @@ export interface Investment {
 }
 
 export const investmentService = {
-  /** Fetch all available investment plans and their rates. */
   getPlans: () =>
     makeAuthenticatedRequest(API_URLS.INVESTMENT.PLANS, 'GET'),
 
-  /** Preview profit/payout for a given principal and duration before investing. */
   calculate: (data: { principal: number; duration: string; currencyCode: string }) =>
     makeAuthenticatedRequest(API_URLS.INVESTMENT.CALCULATE, 'POST', data),
 
-  /** Create a new investment — deducts principal from wallet immediately. */
   create: (data: {
     userId: number | string;
     walletId: number | string;
@@ -57,11 +54,9 @@ export const investmentService = {
     duration: string;
   }) => makeAuthenticatedRequest(API_URLS.INVESTMENT.CREATE, 'POST', data),
 
-  /** Retrieve all investments for a user. */
   getByUserId: (userId: number | string) =>
     makeAuthenticatedRequest(API_URLS.INVESTMENT.BY_USER(userId), 'GET'),
 
-  /** Retrieve a single investment by ID. */
   getById: (id: number | string, userId: number | string) =>
     makeAuthenticatedRequest(API_URLS.INVESTMENT.BY_ID(id, userId), 'GET'),
 };

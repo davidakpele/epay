@@ -2,8 +2,6 @@ import xhrClient from './xhrClient';
 import { defaultHeaders } from './config';
 import { StorageData, UserData, UserNotification, UserWallet } from '../types/dto';
 
-// --- Auth Helpers ---
-
 export const getAuthToken = (): string | null => {
   return localStorage.getItem('authToken');
 };
@@ -97,7 +95,6 @@ export const removeAuthToken = () => {
   window.location.replace('/');
 };
 
-// --- Getters ---
 
 const getFromStorage = <K extends keyof UserData>(key: K): UserData[K] | null => {
   try {
@@ -131,8 +128,6 @@ export const getWallet = (currency: string): UserWallet | null => {
   const wallets = getWalletList();
   return wallets?.find((w) => w.currency_code === currency) || null;
 };
-
-// --- Setters / Updaters ---
 
 const updateStorage = (updater: (user: UserData) => void) => {
   let existingData: StorageData = {};  
@@ -238,7 +233,6 @@ export const clearAllNotifications = () => {
   updateStorage((user) => { user.notifications = []; });
 };
 
-// --- Utilities ---
 
 export const uuidv4 = (): string => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -352,7 +346,6 @@ export const calculateProfileCompletion = (): number => {
   return Math.min(100, Math.max(0, percentage));
 };
 
-// Update user profile image in storage
 export const updateProfileImageInStorage = (imageUrl: string) => {
   let existingData: any = {};
   try {
@@ -397,7 +390,6 @@ export const updateHasSeenMetaMap = (status: boolean) => {
   document.cookie = `data=${encodeURIComponent(updatedData)}; path=/; secure; samesite=None`;
   window.dispatchEvent(new Event('hasSeenMetaMap'));
 }
-
 
 export const getHasSeenMetaMap = (): boolean => {
   try {

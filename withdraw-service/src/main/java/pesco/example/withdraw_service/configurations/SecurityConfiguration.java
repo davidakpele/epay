@@ -29,12 +29,18 @@ public class SecurityConfiguration {
     private final AuthenticationProvider authenticationProvider;
     private final JwtProperties jwtProperties;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final RateLimitingFilter rateLimitingFilter;
 
-    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider, JwtProperties jwtProperties, CustomAccessDeniedHandler customAccessDeniedHandler) {
-        this.jwtAuthFilter = jwtAuthFilter;
+    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter,
+                                  AuthenticationProvider authenticationProvider,
+                                  JwtProperties jwtProperties,
+                                  CustomAccessDeniedHandler customAccessDeniedHandler,
+                                  RateLimitingFilter rateLimitingFilter) {
+        this.jwtAuthFilter          = jwtAuthFilter;
         this.authenticationProvider = authenticationProvider;
-        this.jwtProperties = jwtProperties;
+        this.jwtProperties          = jwtProperties;
         this.customAccessDeniedHandler = customAccessDeniedHandler;
+        this.rateLimitingFilter     = rateLimitingFilter;
     }
 
     @Bean
@@ -52,11 +58,11 @@ public class SecurityConfiguration {
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
                                 .decoder(jwtDecoder())));
         http.authenticationProvider(authenticationProvider);
-        http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-       http.exceptionHandling(handling -> handling
+        http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtAuthFilter,      UsernamePasswordAuthenticationFilter.class);
+        http.exceptionHandling(handling -> handling
             .authenticationEntryPoint(customAccessDeniedHandler)
         );
-
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }

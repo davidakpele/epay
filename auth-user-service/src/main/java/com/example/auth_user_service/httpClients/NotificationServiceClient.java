@@ -387,4 +387,72 @@ public class NotificationServiceClient implements INotificationServiceClient {
             log.severe("[EXCEPTION] POST /send/wallet-pin-alert | error: " + ex.getMessage());
         }
     }
+
+    @Override
+    public void sendForgotPasswordOtp(String email, String username, String otp) {
+        try {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("email",    email);
+            requestBody.put("username", username);
+            requestBody.put("otp",      otp);
+
+            log.info("[REQUEST] POST /send/forgot-password-otp | email: " + email);
+
+            notificationServiceWebClient.post()
+                    .uri("/send/forgot-password-otp")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .flatMap(errorMessage -> {
+                                        log.warning("[RESPONSE ERROR] POST /send/forgot-password-otp | status: "
+                                                + clientResponse.statusCode() + " | body: " + errorMessage);
+                                        if (clientResponse.statusCode().is4xxClientError()) {
+                                            String details = extraction.extractDetailsFromError(errorMessage);
+                                            return Mono.error(new UserClientNotFoundException("Forgot-password OTP failed", details));
+                                        }
+                                        return Mono.error(new RuntimeException("Server error while sending forgot-password OTP"));
+                                    }))
+                    .toBodilessEntity()
+                    .doOnSuccess(response -> log.info("[RESPONSE] POST /send/forgot-password-otp | status: "
+                            + response.getStatusCode()))
+                    .block();
+        } catch (Exception ex) {
+            log.severe("[EXCEPTION] POST /send/forgot-password-otp | error: " + ex.getMessage());
+        }
+    }
+
+    @Override
+    public void sendForgotUsernameEmail(String email, String username, String fullName) {
+        try {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("email",    email);
+            requestBody.put("username", username);
+            requestBody.put("fullName", fullName);
+
+            log.info("[REQUEST] POST /send/forgot-username | email: " + email);
+
+            notificationServiceWebClient.post()
+                    .uri("/send/forgot-username")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .flatMap(errorMessage -> {
+                                        log.warning("[RESPONSE ERROR] POST /send/forgot-username | status: "
+                                                + clientResponse.statusCode() + " | body: " + errorMessage);
+                                        if (clientResponse.statusCode().is4xxClientError()) {
+                                            String details = extraction.extractDetailsFromError(errorMessage);
+                                            return Mono.error(new UserClientNotFoundException("Forgot-username email failed", details));
+                                        }
+                                        return Mono.error(new RuntimeException("Server error while sending forgot-username email"));
+                                    }))
+                    .toBodilessEntity()
+                    .doOnSuccess(response -> log.info("[RESPONSE] POST /send/forgot-username | status: "
+                            + response.getStatusCode()))
+                    .block();
+        } catch (Exception ex) {
+            log.severe("[EXCEPTION] POST /send/forgot-username | error: " + ex.getMessage());
+        }
+    }
 }

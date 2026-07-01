@@ -1357,3 +1357,86 @@
   color: #d43f12;
   text-decoration: underline;
 }
+
+/* ── CONFIRM RESET PASSWORD – PIN inputs ── */
+.confirmResetPinInputs {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 6px 0 2px;
+}
+
+.confirmResetPinInput {
+  width: 52px;
+  height: 52px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s;
+  font-family: 'Courier New', monospace;
+}
+
+.confirmResetPinInput:focus {
+  border-color: var(--green-main);
+  box-shadow: 0 0 0 3px rgba(43, 15, 86, 0.12);
+}
+
+.confirmResetPinInput:disabled {
+  background: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* ── Password strength constraints ── */
+.passwordConstraints {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+
+.passwordConstraints span {
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Karla', sans-serif;
+}
+
+.passwordConstraints span i {
+  font-size: 10px;
+}
+
+.passwordConstraints :global(.valid) {
+  color: #427e00;
+}
+
+.passwordConstraints :global(.invalid) {
+  color: #b2b3b5;
+}
+
+/* ── Spinner for btnSubmit ── */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinnerSmall {
+  width: 12px;
+  height: 12px;
+}

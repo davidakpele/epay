@@ -1,53 +1,42 @@
 package com.pesco.wallet_service.util;
 
+import com.pesco.wallet_service.models.CurrencyBalanceMapStruct;
+import com.pesco.wallet_service.models.SupportedCurrency;
+import com.pesco.wallet_service.models.Wallet;
+import com.pesco.wallet_service.services.CurrencyConfigService;
+import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-
-import com.pesco.wallet_service.enums.Currency;
-import com.pesco.wallet_service.models.CurrencyBalanceMapStruct;
-import com.pesco.wallet_service.models.Wallet;
-
+/**
+ * Wallet initialisation helper.
+ * Previously iterated over the {@code Currency} enum; now fetches enabled
+ * currencies dynamically from {@link CurrencyConfigService}.
+ */
 @Component
 public class AccountWrapper {
-    // Helper methods
+
+    private final CurrencyConfigService currencyConfigService;
+
+    public AccountWrapper(CurrencyConfigService currencyConfigService) {
+        this.currencyConfigService = currencyConfigService;
+    }
+
+    /**
+     * Initialises all currently-enabled currency balance rows on a new wallet.
+     * Each entry starts at zero.
+     */
     public void initializeAllCurrencyWallets(Wallet wallet) {
+        List<SupportedCurrency> enabled = currencyConfigService.getEnabledCurrencies();
         List<CurrencyBalanceMapStruct> balances = new ArrayList<>();
-        for (Currency currency : Currency.values()) {
+        for (SupportedCurrency currency : enabled) {
             balances.add(new CurrencyBalanceMapStruct(
-                    currency.name(),
-                    getCurrencySymbol(currency),
+                    currency.getCode(),
+                    currency.getSymbol(),
                     BigDecimal.ZERO));
         }
         wallet.setBalances(balances);
-    }
-
-    private String getCurrencySymbol(Currency currency) {
-        switch (currency) {
-            case USD:
-                return "$";
-            case EUR:
-                return "€";
-            case NGN:
-                return "₦";
-            case GBP:
-                return "£";
-            case JPY:
-                return "¥";
-            case AUD:
-                return "A$";
-            case CAD:
-                return "C$";
-            case CHF:
-                return "CHF";
-            case CNY:
-                return "¥";
-            case INR:
-                return "₹";
-            default:
-                throw new IllegalArgumentException("Unknown currency type: " + currency);
-        }
     }
 }

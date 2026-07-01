@@ -10,8 +10,6 @@ export const withdrawService = {
     transferToUser: (data) => {
         return makeAuthenticatedRequest(API_URLS.TRANSFER.PLATFORMWITHDRAWS, 'POST', data);
     },
-
-    
 };
 export default withdrawService;
     

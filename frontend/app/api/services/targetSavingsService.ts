@@ -20,7 +20,6 @@ export interface TargetSavings {
 }
 
 export const targetSavingsService = {
-  /** Create a new savings goal (no initial deposit). */
   create: (data: {
     userId: number | string;
     walletId: number | string;
@@ -32,28 +31,23 @@ export const targetSavingsService = {
     goalIcon?: string;
   }) => makeAuthenticatedRequest(API_URLS.SAVINGS.CREATE, 'POST', data),
 
-  /** Deposit funds from main wallet into a savings goal. */
   topUp: (id: number | string, data: {
     userId: number | string;
     walletId: number | string;
     amount: number;
   }) => makeAuthenticatedRequest(API_URLS.SAVINGS.TOPUP(id), 'POST', data),
 
-  /** Withdraw all saved funds back to the main wallet. */
   withdraw: (id: number | string, data: {
     userId: number | string;
     walletId: number | string;
   }) => makeAuthenticatedRequest(API_URLS.SAVINGS.WITHDRAW(id), 'POST', data),
 
-  /** Retrieve all savings goals for a user. */
   getByUserId: (userId: number | string) =>
     makeAuthenticatedRequest(API_URLS.SAVINGS.BY_USER(userId), 'GET'),
 
-  /** Retrieve a single savings goal by ID. */
   getById: (id: number | string, userId: number | string) =>
     makeAuthenticatedRequest(API_URLS.SAVINGS.BY_ID(id, userId), 'GET'),
 
-  /** Cancel a savings goal (only if no funds remain). */
   cancel: (id: number | string, userId: number | string) =>
     makeAuthenticatedRequest(`${API_URLS.SAVINGS.CANCEL(id)}?userId=${userId}`, 'DELETE'),
 };

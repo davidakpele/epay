@@ -43,6 +43,11 @@ public class RabbitMQConfig {
     // Account-security event queues (password, 2FA, lock/block, deactivate)
     public static final String ACCOUNT_SECURITY_QUEUE = "auth.account.security";
 
+    // Forgot-password OTP (4-digit code sent to user)
+    public static final String FORGOT_PASSWORD_OTP_QUEUE = "auth.forgot.password.otp";
+    // Forgot-username (sends the username back to the user's email)
+    public static final String FORGOT_USERNAME_QUEUE = "auth.forgot.username";
+
     // Routing keys
     public static final String ROUTING_KEY_ACCOUNT_VERIFICATION = "auth.account";
     public static final String ROUTING_KEY_ACCOUNT_USER_OTP = "auth.user";
@@ -60,6 +65,8 @@ public class RabbitMQConfig {
     public static final String ROUTING_KEY_LOGIN_ALERT      = "auth.login.alert";
     public static final String ROUTING_KEY_WALLET_PIN_ALERT = "wallet.pin.alert";
     public static final String ROUTING_KEY_ACCOUNT_SECURITY = "auth.account.security";
+    public static final String ROUTING_KEY_FORGOT_PASSWORD_OTP = "auth.forgot.password.otp";
+    public static final String ROUTING_KEY_FORGOT_USERNAME     = "auth.forgot.username";
 
     // Declare the exchanges
     @Bean
@@ -153,6 +160,16 @@ public class RabbitMQConfig {
         return new Queue(ACCOUNT_SECURITY_QUEUE);
     }
 
+    @Bean
+    public Queue forgotPasswordOtpQueue() {
+        return new Queue(FORGOT_PASSWORD_OTP_QUEUE);
+    }
+
+    @Bean
+    public Queue forgotUsernameQueue() {
+        return new Queue(FORGOT_USERNAME_QUEUE);
+    }
+
     // Bindings for Auth Exchange
     @Bean
     public Binding accountVerificationBinding(Queue accountVerificationQueue, TopicExchange authExchange) {
@@ -223,6 +240,16 @@ public class RabbitMQConfig {
     @Bean
     public Binding accountSecurityBinding(Queue accountSecurityQueue, TopicExchange authExchange) {
         return BindingBuilder.bind(accountSecurityQueue).to(authExchange).with(ROUTING_KEY_ACCOUNT_SECURITY);
+    }
+
+    @Bean
+    public Binding forgotPasswordOtpBinding(Queue forgotPasswordOtpQueue, TopicExchange authExchange) {
+        return BindingBuilder.bind(forgotPasswordOtpQueue).to(authExchange).with(ROUTING_KEY_FORGOT_PASSWORD_OTP);
+    }
+
+    @Bean
+    public Binding forgotUsernameBinding(Queue forgotUsernameQueue, TopicExchange authExchange) {
+        return BindingBuilder.bind(forgotUsernameQueue).to(authExchange).with(ROUTING_KEY_FORGOT_USERNAME);
     }
 
     // Bindings for Account Exchange

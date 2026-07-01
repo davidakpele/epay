@@ -6,7 +6,6 @@ import org.springframework.security.core.Authentication;
 import com.example.auth_user_service.models.TwoFactorAuthentication;
 import com.example.auth_user_service.models.Users;
 import com.example.auth_user_service.payloads.OTPRequest;
-import com.example.auth_user_service.payloads.ResetPasswordRequest;
 
 
 public interface ITwoFactorAuthenticationService {
@@ -26,6 +25,4 @@ public interface ITwoFactorAuthenticationService {
     ResponseEntity<?> verifyUserTwoFactorOtp(OTPRequest reqOtpPayload);
 
     ResponseEntity<?> enableTwoFactorKey(Boolean enable2fa, Authentication authentication);
-
-    ResponseEntity<?> requestOTPFORForgetPassword(ResetPasswordRequest request);
 }

@@ -51,4 +51,8 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
 
     @Query("SELECT w FROM Wallet w JOIN FETCH w.balances WHERE w.userId = :userId")
     Optional<Wallet> findByUserIdFresh(@Param("userId") Long userId);
+
+    /** Returns true if any wallet_balances row references the given currency code. */
+    @Query(value = "SELECT COUNT(*) > 0 FROM wallet_balances WHERE currency_code = :code", nativeQuery = true)
+    boolean existsByCurrencyCode(@Param("code") String code);
 }

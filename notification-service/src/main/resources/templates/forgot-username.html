@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>ePay – Your Username</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body, table, td, p, a, li { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+    table, td { mso-table-lspace:0pt; mso-table-rspace:0pt; }
+    img { border:0; display:block; }
+    body { margin:0!important; padding:0!important; background-color:#f0eef8; }
+    @keyframes rise {
+      from { opacity:0; transform:translateY(24px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .card-anim { animation: rise 0.55s 0.1s cubic-bezier(.22,1,.36,1) both; }
+    @media only screen and (max-width:560px) {
+      .email-wrap  { padding:20px 10px!important; }
+      .card-body   { padding:6px 20px 24px!important; }
+      .username-td { font-size:20px!important; padding:14px 20px!important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f0eef8;font-family:'DM Sans',Arial,sans-serif;">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f0eef8;">
+  <tr>
+    <td align="center" class="email-wrap" style="padding:40px 16px;">
+
+      <!-- Brand -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:26px;">
+        <tr>
+          <td style="padding-right:10px;vertical-align:middle;">
+            <table role="presentation" width="38" height="38" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" valign="middle" style="width:38px;height:38px;background-color:#2b0f56;border-radius:9px;">
+                  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iNyIgaGVpZ2h0PSI3IiByeD0iMS41IiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHg9IjExIiB5PSIyIiB3aWR0aD0iNyIgaGVpZ2h0PSI3IiByeD0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC41Ii8+PHJlY3QgeD0iMiIgeT0iMTEiIHdpZHRoPSI3IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjUiLz48cmVjdCB4PSIxMSIgeT0iMTEiIHdpZHRoPSI3IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IndoaXRlIi8+PC9zdmc+"
+                       width="20" height="20" alt="ePay">
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="font-family:'DM Serif Display',Georgia,serif;font-size:26px;color:#2b0f56;letter-spacing:-0.3px;line-height:1;">ePay</span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Card -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+             style="max-width:520px;" class="card-anim">
+        <tr>
+          <td style="background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.04),0 12px 40px rgba(0,0,0,.08);">
+
+            <!-- Header bar -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="background-color:#2b0f56;padding:28px 36px 24px;text-align:left;">
+                  <p style="margin:0 0 6px;font-family:'DM Sans',Arial,sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:0.08em;text-transform:uppercase;">Account Recovery</p>
+                  <h1 style="margin:0;font-family:'DM Serif Display',Georgia,serif;font-size:24px;color:#ffffff;font-weight:400;line-height:1.25;">
+                    Your ePay Username
+                  </h1>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Body -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="card-body" style="padding:6px 36px 32px;">
+
+                  <p style="font-size:15px;color:#374151;font-weight:500;margin:20px 0 14px;font-family:'DM Sans',Arial,sans-serif;">
+                    Dear <span th:text="${fullName}">User</span>,
+                  </p>
+
+                  <p style="font-size:14.5px;color:#6b7280;line-height:1.65;margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;">
+                    You recently requested to retrieve your ePay username. Here it is:
+                  </p>
+
+                  <!-- Username display box -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                         style="margin-bottom:24px;">
+                    <tr>
+                      <td class="username-td" align="center"
+                          style="background-color:#f5f0ff;border:2px solid #ddd6fe;border-radius:14px;padding:18px 24px;font-family:'Courier New',monospace;font-size:24px;font-weight:700;color:#2b0f56;letter-spacing:0.04em;"
+                          th:text="${username}">your_username</td>
+                    </tr>
+                  </table>
+
+                  <p style="font-size:14px;color:#6b7280;line-height:1.65;margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;">
+                    You can now use this username to
+                    <a href="#" style="color:#2b0f56;text-decoration:none;font-weight:600;">sign in to your account</a>.
+                  </p>
+
+                  <!-- Didn't request warning -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                         style="background-color:#fef3c7;border-radius:10px;margin-bottom:20px;border-left:4px solid #f59e0b;">
+                    <tr>
+                      <td style="padding:14px 16px;">
+                        <p style="margin:0;font-size:13.5px;color:#78350f;line-height:1.6;font-family:'DM Sans',Arial,sans-serif;">
+                          <strong>If you didn't make this request</strong>, please ignore this email.
+                          Your account details have not been changed.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="font-size:14px;color:#374151;margin:0;font-family:'DM Sans',Arial,sans-serif;">
+                    Best regards,<br>
+                    <strong style="color:#2b0f56;">The ePay Support Team</strong>
+                  </p>
+
+                </td>
+              </tr>
+            </table>
+
+            <!-- Footer -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="border-top:1px solid #f3f0ec;">
+              <tr>
+                <td align="center" style="padding:20px 36px 28px;text-align:center;">
+                  <p style="font-family:'DM Serif Display',Georgia,serif;font-size:14px;color:#2b0f56;margin:0 0 12px;font-weight:400;">
+                    Thank you for banking with ePay!
+                  </p>
+                  <p style="font-size:12px;color:#b0aaa3;line-height:1.7;margin:0;font-family:'DM Sans',Arial,sans-serif;">
+                    ePay &nbsp;·&nbsp;
+                    <a href="mailto:support@epay.com" style="color:#9ca3af;text-decoration:none;">support@epay.com</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+</table>
+</body>
+</html>

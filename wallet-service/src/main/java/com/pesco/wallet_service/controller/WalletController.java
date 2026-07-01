@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.pesco.wallet_service.security.WalletRateLimited;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -111,6 +112,14 @@ public class WalletController {
 
     @PostMapping("/create/pin")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    @WalletRateLimited(
+        keyPrefix      = "pin_setup",
+        capacity       = 5,
+        duration       = 10,
+        timeUnit       = java.util.concurrent.TimeUnit.MINUTES,
+        userIdentifier = "#authentication.name",
+        coolDownSeconds = 30
+    )
     public ResponseEntity<?> userSetTransferPin(@RequestBody CreateTransferPinRequest request,
                                                 Authentication authentication) {
         String providedPin = request.getTransferPin();
@@ -190,6 +199,13 @@ public class WalletController {
 
     @PostMapping("/verify/pin")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    @WalletRateLimited(
+        keyPrefix      = "pin_verify",
+        capacity       = 10,
+        duration       = 5,
+        timeUnit       = java.util.concurrent.TimeUnit.MINUTES,
+        userIdentifier = "#authentication.name"
+    )
     public ResponseEntity<?> verifyPin(@RequestBody CreateTransferPinRequest request,
                                        Authentication authentication) {
         String providedPin     = request.getTransferPin();

@@ -1,8 +1,6 @@
 package com.pesco.wallet_service.services;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Service;
 import com.pesco.wallet_service.client.UserServiceClient;
 import com.pesco.wallet_service.dtos.WalletBalanceDTO;
 import com.pesco.wallet_service.dtos.WalletSection;
-import com.pesco.wallet_service.enums.Currency;
 import com.pesco.wallet_service.models.CurrencyBalanceMapStruct;
 import com.pesco.wallet_service.models.Wallet;
 import com.pesco.wallet_service.models.WalletSettings;
@@ -29,7 +26,6 @@ import com.pesco.wallet_service.payloads.SavingsDebitRequest;
 import com.pesco.wallet_service.payloads.SavingsCreditRequest;
 import com.pesco.wallet_service.repository.WalletRepository;
 import com.pesco.wallet_service.repository.WalletSettingsRepository;
-import com.pesco.wallet_service.util.AccountWrapper;
 import com.pesco.wallet_service.util.HazelcastWallet;
 import com.pesco.wallet_service.util.JwtTokenProvider;
 
@@ -44,19 +40,22 @@ public class WalletService {
     private final WalletSettingsRepository walletSettingsRepository;
     private final HazelcastWallet redisWallet;
     private final JwtTokenProvider jwtprovider;
+    private final CurrencyConfigService currencyConfigService;
     
     public WalletService(WalletRepository walletRepository,
             PasswordEncoder passwordEncoder,
             UserServiceClient userServiceClient,
-            AccountWrapper accountWrapper,
             WalletSettingsRepository walletSettingsRepository, 
-            HazelcastWallet redisWallet, JwtTokenProvider jwtprovider) {
-        this.walletRepository = walletRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.userServiceClient = userServiceClient;
+            HazelcastWallet redisWallet,
+            JwtTokenProvider jwtprovider,
+            CurrencyConfigService currencyConfigService) {
+        this.walletRepository      = walletRepository;
+        this.passwordEncoder       = passwordEncoder;
+        this.userServiceClient     = userServiceClient;
         this.walletSettingsRepository = walletSettingsRepository;
-        this.redisWallet = redisWallet;
-        this.jwtprovider = jwtprovider;
+        this.redisWallet           = redisWallet;
+        this.jwtprovider           = jwtprovider;
+        this.currencyConfigService = currencyConfigService;
     }
 
 
@@ -102,13 +101,11 @@ public class WalletService {
         Map<String, Object> response = new LinkedHashMap<>();
         String currency = type.toUpperCase();
 
-        if (!Arrays.stream(Currency.values())
-                .anyMatch(ct -> ct.name().equalsIgnoreCase(currency))) {
-            Map<String, Object> error = new HashMap<>();
+        if (!currencyConfigService.isSupported(currency)) {
+            Map<String, Object> error = new LinkedHashMap<>();
             error.put("status", "error");
-            error.put("message", "Invalid Currency provided.*");
-            error.put("details",
-                    "Please provide Currency type. Any of this list (USD, EUR, NGN, GBP, JPY, AUD, CAD, CHF, CNY, INR)");
+            error.put("message", "Invalid or unsupported currency: " + currency);
+            error.put("details", "Use GET /admin/currencies/enabled to see the list of supported currencies.");
             return ResponseEntity.badRequest().body(error);
         }
 
@@ -190,7 +187,7 @@ public class WalletService {
             CompletableFuture.runAsync(() ->
                 redisWallet.updateHazelcastWalletBalance(
                     userId,
-                    Currency.valueOf(currencyCode),
+                    currencyCode,
                     amount
                 )
             ).exceptionally(ex -> null);
@@ -215,19 +212,7 @@ public class WalletService {
     }
 
     private String getCurrencySymbol(String currencyCode) {
-        return switch (currencyCode.toUpperCase()) {
-            case "USD" -> "$";
-            case "NGN" -> "₦";
-            case "EUR" -> "€";
-            case "GBP" -> "£";
-            case "JPY" -> "¥";
-            case "AUD" -> "A$";
-            case "CAD" -> "C$";
-            case "CHF" -> "CHF";
-            case "CNY" -> "¥";
-            case "INR" -> "₹";
-            default -> "?";
-        };
+        return currencyConfigService.getSymbol(currencyCode);
     }
 
 
@@ -282,7 +267,7 @@ public class WalletService {
             CompletableFuture.runAsync(() ->
                 redisWallet.updateHazelcastWalletBalance(
                     wallet.getUserId(),
-                    Currency.valueOf(currencyCode),
+                    currencyCode,
                     request.getAmount().negate()
                 )
             ).exceptionally(ex -> null);
@@ -342,7 +327,7 @@ public class WalletService {
             CompletableFuture.runAsync(() ->
                 redisWallet.updateHazelcastWalletBalance(
                     wallet.getUserId(),
-                    Currency.valueOf(currencyCode),
+                    currencyCode,
                     request.getAmount()
                 )
             ).exceptionally(ex -> null);
@@ -403,7 +388,7 @@ public class WalletService {
             walletRepository.save(wallet);
             CompletableFuture.runAsync(() ->
                 redisWallet.updateHazelcastWalletBalance(
-                    wallet.getUserId(), Currency.valueOf(currencyCode), request.getAmount().negate())
+                    wallet.getUserId(), currencyCode, request.getAmount().negate())
             ).exceptionally(ex -> null);
             response.put("status", "success");
             response.put("message", "Investment principal deducted successfully.");
@@ -450,7 +435,7 @@ public class WalletService {
             walletRepository.save(wallet);
             CompletableFuture.runAsync(() ->
                 redisWallet.updateHazelcastWalletBalance(
-                    wallet.getUserId(), Currency.valueOf(currencyCode), request.getAmount())
+                    wallet.getUserId(), currencyCode, request.getAmount())
             ).exceptionally(ex -> null);
             response.put("status", "success");
             response.put("message", "Investment payout credited successfully.");
@@ -500,7 +485,7 @@ public class WalletService {
             walletRepository.save(wallet);
             CompletableFuture.runAsync(() ->
                 redisWallet.updateHazelcastWalletBalance(
-                    wallet.getUserId(), Currency.valueOf(currencyCode), request.getAmount().negate())
+                    wallet.getUserId(), currencyCode, request.getAmount().negate())
             ).exceptionally(ex -> null);
             response.put("status", "success");
             response.put("message", "Savings deposit deducted from wallet successfully.");
@@ -547,7 +532,7 @@ public class WalletService {
             walletRepository.save(wallet);
             CompletableFuture.runAsync(() ->
                 redisWallet.updateHazelcastWalletBalance(
-                    wallet.getUserId(), Currency.valueOf(currencyCode), request.getAmount())
+                    wallet.getUserId(), currencyCode, request.getAmount())
             ).exceptionally(ex -> null);
             response.put("status", "success");
             response.put("message", "Savings withdrawal credited to wallet successfully.");

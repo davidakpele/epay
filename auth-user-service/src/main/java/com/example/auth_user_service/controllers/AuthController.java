@@ -30,6 +30,9 @@ import com.example.auth_user_service.interfaces.IUserService;
 import com.example.auth_user_service.interfaces.IUserTracerService;
 import com.example.auth_user_service.models.Users;
 import com.example.auth_user_service.payloads.ChangePasswordRequest;
+import com.example.auth_user_service.payloads.ConfirmResetPasswordRequest;
+import com.example.auth_user_service.payloads.ForgotPasswordRequest;
+import com.example.auth_user_service.payloads.ForgotUsernameRequest;
 import com.example.auth_user_service.payloads.OTPRequest;
 import com.example.auth_user_service.payloads.ResetPasswordRequest;
 import com.example.auth_user_service.payloads.UserSignInRequest;
@@ -249,53 +252,12 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/forget-password")
-    public ResponseEntity<?> forgetPassword(@RequestBody UserSignUpRequest request) {
-        if (request.getEmail().isEmpty()) {
-            return Error.createResponse("Email address is require*", HttpStatus.BAD_REQUEST,
-                    "Provide your email address.");
-        } else if (request.getEmail() == null) {
-            return Error.createResponse("Your need to provide email address", HttpStatus.BAD_REQUEST,
-                    "Invalid request sent.");
-        }
-        return userServiceImplementation.forgetPassword(request.getEmail());
-    }
-
-    @GetMapping("/reset-password")
-    public ResponseEntity<?> showResetPasswordPage(@RequestParam("token") String token) {
-        if (token == null || token.isEmpty()) {
-            return Error.createResponse("Valid token parameter is require.", HttpStatus.BAD_REQUEST,
-                    "Provide token parameter to validate this endpoint.");
-        } else {
-            return passwordResetTokenServiceImplementation.findByToken(token);
-        }
-    }
-
-    @PostMapping("/create-new-password")
-    public ResponseEntity<?> createNewPassword(@RequestBody ChangePasswordRequest request) {
-        if (request.getPassword().isEmpty()) {
-            return Error.createResponse("Password is require*", HttpStatus.BAD_REQUEST,
-                    "Password can not be empty");
-        }
-        if (request.getConfirmPassword().isEmpty()) {
-            return Error.createResponse("Confirm Password is require*", HttpStatus.BAD_REQUEST,
-                    "Confirm Password can not be empty");
-        }
-
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return Error.createResponse("Passwords do not match*", HttpStatus.BAD_REQUEST,
-                    "Password and Confirm Password must be the same");
-        }
-
-        boolean isUpdated = passwordResetTokenServiceImplementation.updatePassword(request);
-
-        if (isUpdated) {
-            return new ResponseEntity<>("Password successfully updated.", HttpStatus.CREATED);
-        } else {
-            return Error.createResponse("Invalid or expired token", HttpStatus.BAD_REQUEST,
-                    "The token is invalid or has expired");
-        }
-    }
+    // NOTE: The old link-based /forget-password, GET /reset-password, and
+    // /create-new-password endpoints have been removed and replaced by the
+    // OTP-based flow:
+    //   POST /auth/forgot-password   (step 1 — sends 4-digit OTP)
+    //   POST /auth/reset-password    (step 2 — verifies OTP + updates password)
+    //   POST /auth/forgot-username   (sends username to registered email)
 
     @GetMapping("/verify-otp-token")
     public ResponseEntity<?> verifyOtpToken(@RequestParam("token") String token) {
@@ -317,25 +279,10 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/verify-otp")
-    public ResponseEntity<?> requestForgetPasswordOTP(@RequestBody ResetPasswordRequest request) {
-        if (request.getMethod().contains("EMAIL")) {
-            if (request.getIdentifier() == null || request.getIdentifier().isEmpty()) {
-                return Error.createResponse("Email address require*.", HttpStatus.BAD_REQUEST,
-                    "Provide the email address you used to sign-up in this platform.");
-            }
-            return twoFactorAuthenticationServiceImplementation.requestOTPFORForgetPassword(request);
-        }else if(request.getMethod().contains("PHONE")){
-            if (request.getIdentifier() == null || request.getIdentifier().isEmpty()) {
-                return Error.createResponse("Phone number require*.", HttpStatus.BAD_REQUEST,
-                    "Provide the phone number you used to sign-up in this platform.");
-            }
-            return twoFactorAuthenticationServiceImplementation.requestOTPFORForgetPassword(request);
-        }else {
-            return Error.createResponse("Invalid request format*.", HttpStatus.BAD_REQUEST,
-                    "System can not accept the format which you are sending request.");
-        }
-    }
+    // NOTE: The old duplicate @PostMapping("/verify-otp") for forget-password
+    // has been removed. The new OTP-based password reset flow lives at:
+    //   POST /auth/forgot-password   — send OTP
+    //   POST /auth/reset-password    — verify OTP + set new password
 
     @GetMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(@RequestParam(name = "userId", required = false) Long userId) {
@@ -356,6 +303,72 @@ public class AuthController {
         response.put("timestamp", LocalDateTime.now());
 
         return ResponseEntity.ok(response);    
+    }
+
+    // ── Forgot Password — Step 1: send OTP ───────────────────────────────────
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(
+            @RequestBody ForgotPasswordRequest request) {
+
+        if (request.getIdentifier() == null || request.getIdentifier().trim().isEmpty()) {
+            return Error.createResponse("Email or phone number is required.",
+                    HttpStatus.BAD_REQUEST, "Identifier cannot be empty.");
+        }
+
+        String method = request.getMethod() != null ? request.getMethod().trim().toUpperCase() : "";
+        if (!"EMAIL".equals(method) && !"PHONE".equals(method)) {
+            return Error.createResponse("Method must be EMAIL or PHONE.",
+                    HttpStatus.BAD_REQUEST, "Invalid method value.");
+        }
+
+        if ("EMAIL".equals(method) && !request.getIdentifier().matches(EMAIL_REGEX)) {
+            return Error.createResponse("Invalid email address format.",
+                    HttpStatus.BAD_REQUEST, "Please provide a valid email address.");
+        }
+
+        return authenticationService.forgotPassword(request);
+    }
+
+    // ── Forgot Password — Step 2: confirm OTP + set new password ─────────────
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @RequestBody ConfirmResetPasswordRequest request,
+            HttpServletRequest httpRequest) {
+
+        if (request.getIdentifier() == null || request.getIdentifier().trim().isEmpty()) {
+            return Error.createResponse("Identifier is required.",
+                    HttpStatus.BAD_REQUEST, "Provide the email or phone you used to request the OTP.");
+        }
+        if (request.getOtp() == null || request.getOtp().trim().isEmpty()) {
+            return Error.createResponse("OTP is required.",
+                    HttpStatus.BAD_REQUEST, "Enter the 4-digit code sent to you.");
+        }
+        if (request.getNewPassword() == null || request.getNewPassword().trim().isEmpty()) {
+            return Error.createResponse("New password is required.",
+                    HttpStatus.BAD_REQUEST, "Password cannot be empty.");
+        }
+
+        return authenticationService.confirmResetPassword(request, httpRequest);
+    }
+
+    // ── Forgot Username ───────────────────────────────────────────────────────
+
+    @PostMapping("/forgot-username")
+    public ResponseEntity<?> forgotUsername(
+            @RequestBody ForgotUsernameRequest request) {
+
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            return Error.createResponse("Email address is required.",
+                    HttpStatus.BAD_REQUEST, "Provide your registered email address.");
+        }
+        if (!request.getEmail().trim().matches(EMAIL_REGEX)) {
+            return Error.createResponse("Invalid email address format.",
+                    HttpStatus.BAD_REQUEST, "Please provide a valid email address.");
+        }
+
+        return authenticationService.forgotUsername(request);
     }
 
     public static String FormatBigDecimal(BigDecimal amount) {

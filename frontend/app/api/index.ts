@@ -16,7 +16,7 @@ import targetSavingsService from './services/targetSavingsService';
 export * from './utils';
 export * from './config';
 
-// Export individual services
+
 export {
   xhrClient,
   authService,
@@ -34,7 +34,6 @@ export {
   targetSavingsService,
 };
 
-// Default export as a grouped object
 const api = {
   xhrClient,
   authService,

@@ -1,8 +1,5 @@
 package com.pesco.wallet_service.security;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,92 +7,118 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-
+/**
+ * Per-IP rate limiting filter for all wallet endpoints, backed by Redis.
+ *
+ * <p>Rules (per IP address):
+ * <ul>
+ *   <li>POST  /wallet/create/pin   — 5 attempts / 10 min (pin setup is sensitive)</li>
+ *   <li>POST  /wallet/verify/pin   — 10 attempts / 5 min (brute-force guard)</li>
+ *   <li>POST  /wallet/internal/**  — 30 req / 1 min (internal service-to-service)</li>
+ *   <li>Everything else /wallet/** — 60 req / 1 min</li>
+ * </ul>
+ *
+ * <p>Fine-grained per-user limits on sensitive actions are enforced separately
+ * via the {@link WalletRateLimited} annotation + {@link WalletRateLimitAspect}.
+ */
 @Component
 public class RateLimitingFilter extends OncePerRequestFilter {
 
-    private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
-    private static final int WALLET_RATE_LIMIT = 60; 
-    private static final int WALLET_BURST_LIMIT = 120;
+    // Capacities
+    private static final int PIN_SETUP_CAPACITY    = 5;
+    private static final Duration PIN_SETUP_WINDOW = Duration.ofMinutes(10);
 
-    private Bucket createWalletBucket() {
-        return Bucket.builder()
-            .addLimit(
-                Bandwidth.classic(
-                    WALLET_BURST_LIMIT,
-                    Refill.intervally(WALLET_RATE_LIMIT, Duration.ofMinutes(1))
-                )
-            )
-            .build();
+    private static final int PIN_VERIFY_CAPACITY    = 10;
+    private static final Duration PIN_VERIFY_WINDOW = Duration.ofMinutes(5);
+
+    private static final int INTERNAL_CAPACITY    = 30;
+    private static final Duration INTERNAL_WINDOW = Duration.ofMinutes(1);
+
+    private static final int GENERAL_CAPACITY    = 60;
+    private static final Duration GENERAL_WINDOW = Duration.ofMinutes(1);
+
+    private final RedisRateLimitService rateLimitService;
+
+    public RateLimitingFilter(RedisRateLimitService rateLimitService) {
+        this.rateLimitService = rateLimitService;
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-        String path = request.getRequestURI();
+        String ip     = extractClientIp(request);
+        String path   = request.getRequestURI();
+        String method = request.getMethod();
 
-        // SAFETY: This should never happen because of shouldNotFilter,
-        // but we keep it defensive.
-        if (!path.startsWith("/wallet")) {
-            filterChain.doFilter(request, response);
-            return;
+        String   bucketKey;
+        int      capacity;
+        Duration window;
+
+        if ("POST".equals(method) && path.contains("/wallet/create/pin")) {
+            bucketKey = "rl_w:pin_setup:" + ip;
+            capacity  = PIN_SETUP_CAPACITY;
+            window    = PIN_SETUP_WINDOW;
+
+        } else if ("POST".equals(method) && path.contains("/wallet/verify/pin")) {
+            bucketKey = "rl_w:pin_verify:" + ip;
+            capacity  = PIN_VERIFY_CAPACITY;
+            window    = PIN_VERIFY_WINDOW;
+
+        } else if (path.contains("/wallet/internal/")) {
+            bucketKey = "rl_w:internal:" + ip;
+            capacity  = INTERNAL_CAPACITY;
+            window    = INTERNAL_WINDOW;
+
+        } else {
+            bucketKey = "rl_w:general:" + ip;
+            capacity  = GENERAL_CAPACITY;
+            window    = GENERAL_WINDOW;
         }
 
-        String clientIp = getClientIp(request);
-        String bucketKey = clientIp + "_wallet";
+        boolean allowed = rateLimitService.tryConsume(bucketKey, capacity, window);
 
-        Bucket bucket = buckets.computeIfAbsent(bucketKey, k -> createWalletBucket());
-
-        if (bucket.tryConsume(1)) {
-            response.setHeader(
-                "X-Rate-Limit-Remaining",
-                String.valueOf(bucket.getAvailableTokens())
-            );
+        if (allowed) {
+            long remaining = rateLimitService.getAvailableTokens(bucketKey, capacity, window);
+            response.setHeader("X-Rate-Limit-Remaining", String.valueOf(remaining));
+            response.setHeader("X-Rate-Limit-Limit",     String.valueOf(capacity));
             filterChain.doFilter(request, response);
         } else {
+            long retryAfter = window.toSeconds();
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
-            response.setHeader("Retry-After", "60");
+            response.setHeader("Retry-After",            String.valueOf(retryAfter));
+            response.setHeader("X-Rate-Limit-Remaining", "0");
             response.getWriter().write(
                 "{\"error\":\"Too many wallet requests. Please try again later.\"," +
-                "\"code\":\"RATE_LIMIT_EXCEEDED\"}"
+                "\"code\":\"RATE_LIMIT_EXCEEDED\"," +
+                "\"retryAfterSeconds\":" + retryAfter + "}"
             );
         }
     }
 
-    /**
-     * IMPORTANT:
-     * Only apply filter to /wallet/**
-     * Explicitly exclude auth, health, swagger, etc.
-     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-
-        return
-            !path.startsWith("/wallet") ||
-            path.startsWith("/api/auth") ||
-            path.startsWith("/actuator") ||
-            path.startsWith("/swagger") ||
-            path.startsWith("/v3/api-docs") ||
-            path.contains("/health") ||
-            path.contains("/ping");
+        return !path.startsWith("/wallet")
+            || path.startsWith("/actuator")
+            || path.startsWith("/swagger")
+            || path.startsWith("/v3/api-docs")
+            || path.contains("/health")
+            || path.contains("/ping");
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String xfHeader = request.getHeader("X-Forwarded-For");
-        if (xfHeader == null || xfHeader.isBlank()) {
-            return request.getRemoteAddr();
-        }
-        return xfHeader.split(",")[0].trim();
+    private String extractClientIp(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) return xff.split(",")[0].trim();
+        String xri = request.getHeader("X-Real-IP");
+        if (xri != null && !xri.isBlank()) return xri.trim();
+        return request.getRemoteAddr();
     }
 }

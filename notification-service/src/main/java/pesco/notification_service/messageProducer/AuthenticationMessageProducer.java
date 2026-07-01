@@ -131,4 +131,38 @@ public class AuthenticationMessageProducer {
             throw e;
         }
     }
+
+    /**
+     * Sends a 4-digit OTP email for forgot-password flow.
+     *
+     * @param payload {@link pesco.notification_service.payloads.ForgotPasswordOtpPayload}
+     */
+    public void sendForgotPasswordOtp(pesco.notification_service.payloads.ForgotPasswordOtpPayload payload) {
+        try {
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.AUTH_EXCHANGE,
+                RabbitMQConfig.ROUTING_KEY_FORGOT_PASSWORD_OTP,
+                payload
+            );
+        } catch (AmqpException e) {
+            throw e;
+        }
+    }
+
+    /**
+     * Sends a forgot-username email — reminds the user of their username.
+     *
+     * @param payload {@link pesco.notification_service.payloads.ForgotUsernamePayload}
+     */
+    public void sendForgotUsername(pesco.notification_service.payloads.ForgotUsernamePayload payload) {
+        try {
+            rabbitTemplate.convertAndSend(
+                RabbitMQConfig.AUTH_EXCHANGE,
+                RabbitMQConfig.ROUTING_KEY_FORGOT_USERNAME,
+                payload
+            );
+        } catch (AmqpException e) {
+            throw e;
+        }
+    }
 }

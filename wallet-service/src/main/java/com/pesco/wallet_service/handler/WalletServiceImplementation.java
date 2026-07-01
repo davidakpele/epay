@@ -17,12 +17,12 @@ import io.grpc.Status;
 
 import com.google.protobuf.Timestamp;
 import com.pesco.wallet_service.client.UserServiceClient;
-import com.pesco.wallet_service.enums.Currency;
 import com.pesco.wallet_service.models.CurrencyBalanceMapStruct;
 import com.pesco.wallet_service.models.Wallet;
 import com.pesco.wallet_service.models.WalletSettings;
 import com.pesco.wallet_service.repository.WalletRepository;
 import com.pesco.wallet_service.repository.WalletSettingsRepository;
+import com.pesco.wallet_service.services.CurrencyConfigService;
 import com.pesco.wallet_service.util.AccountWrapper;
 import com.pesco.wallet_service.util.HazelcastWallet;
 import com.pesco.wallet_service.util.JwtTokenProvider;
@@ -66,19 +66,23 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
     private final WalletSettingsRepository walletSettingsRepository;
     private final HazelcastWallet redisWallet;
     private final JwtTokenProvider jwtprovider;
+    private final CurrencyConfigService currencyConfigService;
     
     public WalletServiceImplementation(WalletRepository walletRepository,
             PasswordEncoder passwordEncoder,
             UserServiceClient userServiceClient,
             AccountWrapper accountWrapper,
             WalletSettingsRepository walletSettingsRepository, 
-            HazelcastWallet redisWallet, JwtTokenProvider jwtprovider) {
-        this.walletRepository = walletRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.userServiceClient = userServiceClient;
+            HazelcastWallet redisWallet,
+            JwtTokenProvider jwtprovider,
+            CurrencyConfigService currencyConfigService) {
+        this.walletRepository         = walletRepository;
+        this.passwordEncoder          = passwordEncoder;
+        this.userServiceClient        = userServiceClient;
         this.walletSettingsRepository = walletSettingsRepository;
-        this.redisWallet = redisWallet;
-        this.jwtprovider = jwtprovider;
+        this.redisWallet              = redisWallet;
+        this.jwtprovider              = jwtprovider;
+        this.currencyConfigService    = currencyConfigService;
     }
 
     @Override
@@ -231,7 +235,8 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
             Long userId = request.getUserId();
             CurrencyType currencyType = request.getCurrency();
             BigDecimal amount = new BigDecimal(request.getAmount());
-            Currency currency = Currency.valueOf(currencyType.name());
+            // Use the currency code as a plain String — no enum lookup needed
+            String currencyCode = currencyType.name();
 
             CompletableFuture<Wallet> senderFuture = CompletableFuture.supplyAsync(
                 () -> walletRepository.findWalletByUserId(userId)
@@ -249,7 +254,7 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
             }
 
             CurrencyBalanceMapStruct senderCurrency = senderWallet.getBalances().stream()
-                    .filter(b -> b.getCurrencyCode().equalsIgnoreCase(currencyType.name()))
+                    .filter(b -> b.getCurrencyCode().equalsIgnoreCase(currencyCode))
                     .findFirst()
                     .orElse(null);
 
@@ -263,7 +268,7 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
             senderCurrency.setBalance(senderCurrency.getBalance().subtract(amount));
 
             CurrencyBalanceMapStruct recipientCurrency = recipientWallet.getBalances().stream()
-                    .filter(b -> b.getCurrencyCode().equalsIgnoreCase(currencyType.name()))
+                    .filter(b -> b.getCurrencyCode().equalsIgnoreCase(currencyCode))
                     .findFirst()
                     .orElse(null);
 
@@ -275,8 +280,8 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
             walletRepository.saveAll(List.of(senderWallet, recipientWallet));
 
             CompletableFuture.runAsync(() -> {
-                redisWallet.updateHazelcastWalletBalance(userId, currency, amount.negate());
-                redisWallet.updateHazelcastWalletBalance(recipientUserId, currency, amount);
+                redisWallet.updateHazelcastWalletBalance(userId, currencyCode, amount.negate());
+                redisWallet.updateHazelcastWalletBalance(recipientUserId, currencyCode, amount);
             }).exceptionally(ex -> null);
 
             WithdrawResponse response = WithdrawResponse.newBuilder()
@@ -411,7 +416,7 @@ public class WalletServiceImplementation extends WalletServiceGrpc.WalletService
             CompletableFuture.runAsync(() ->
                 redisWallet.updateHazelcastWalletBalance(
                     wallet.getUserId(),
-                    Currency.valueOf(currencyCode),
+                    currencyCode,
                     amountToAdd
                 )
             ).exceptionally(ex -> null);
@@ -494,10 +499,11 @@ public void createWallet(CreateWalletRequest request,
         wallet.setCreatedOn(LocalDateTime.now());
         wallet.setUpdatedOn(LocalDateTime.now());
 
-        List<CurrencyBalanceMapStruct> balances = Stream.of(Currency.values())
-                .map(currency -> new CurrencyBalanceMapStruct(
-                        currency.name(),
-                        currency.getSymbol(),
+        List<CurrencyBalanceMapStruct> balances = currencyConfigService.getEnabledCurrencies()
+                .stream()
+                .map(c -> new CurrencyBalanceMapStruct(
+                        c.getCode(),
+                        c.getSymbol(),
                         BigDecimal.ZERO
                 ))
                 .collect(Collectors.toList());

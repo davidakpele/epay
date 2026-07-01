@@ -1,4 +1,4 @@
-package pesco.example.withdraw_service.serviceImp;
+package com.example.auth_user_service.security;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -13,42 +13,36 @@ import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import pesco.example.withdraw_service.services.IRateLimitService;
 
 import java.time.Duration;
 import java.util.function.Supplier;
 
 /**
- * Distributed rate limiting + cool-down, backed by Redis via Lettuce (Bucket4j 8.x).
+ * Distributed rate limiting backed by Redis (Lettuce).
  *
- * <p>Two independent Redis key spaces:
- * <ul>
- *   <li>{@code rate_limit:*} — token buckets managed by Bucket4j's ProxyManager</li>
- *   <li>{@code cd:*}         — simple TTL keys for per-user cool-down periods</li>
- * </ul>
+ * <p>Also provides a cool-down mechanism: after a successful action
+ * (e.g. OTP sent) a Redis key with a TTL blocks further attempts until
+ * the cool-down expires — preventing spam without affecting the token bucket.
  */
-@Slf4j
 @Service
-public class RateLimitService implements IRateLimitService {
+public class RedisRateLimitService {
 
-    @Value("${spring.redis.host:redis}")
+    @Value("${spring.data.redis.host:redis}")
     private String redisHost;
 
-    @Value("${spring.redis.port:6379}")
+    @Value("${spring.data.redis.port:6379}")
     private int redisPort;
 
-    /** Used exclusively for cool-down TTL keys — plain String ops. */
     private final StringRedisTemplate stringRedis;
 
     private RedisClient redisClient;
     private StatefulRedisConnection<String, byte[]> connection;
     private ProxyManager<String> proxyManager;
 
-    public RateLimitService(StringRedisTemplate stringRedis) {
+    public RedisRateLimitService(StringRedisTemplate stringRedis) {
         this.stringRedis = stringRedis;
     }
 
@@ -60,54 +54,73 @@ public class RateLimitService implements IRateLimitService {
         proxyManager = LettuceBasedProxyManager.builderFor(connection)
                 .withExpirationStrategy(
                     io.github.bucket4j.distributed.ExpirationAfterWriteStrategy
-                        .basedOnTimeForRefillingBucketUpToMax(Duration.ofMinutes(10))
+                        .basedOnTimeForRefillingBucketUpToMax(Duration.ofMinutes(30))
                 )
                 .build();
-        log.info("[RateLimitService] Connected to Redis at {}:{}", redisHost, redisPort);
     }
 
     @PreDestroy
     public void destroy() {
         if (connection != null) connection.close();
-        if (redisClient != null) redisClient.shutdown();
+        if (redisClient != null)  redisClient.shutdown();
     }
 
     // ── Token-bucket rate limiting ────────────────────────────────────────────
 
-    @Override
-    public boolean tryConsume(String key, int capacity, Duration duration, int tokens) {
-        Bandwidth bandwidth = Bandwidth.classic(capacity, Refill.intervally(capacity, duration));
-        BucketConfiguration configuration = BucketConfiguration.builder()
+    /**
+     * Attempts to consume one token from the named bucket.
+     *
+     * @param key      Redis key prefix, e.g. "fp_ip:192.168.1.1"
+     * @param capacity max tokens (also the refill amount per window)
+     * @param window   refill window duration
+     * @return true if the request is allowed
+     */
+    public boolean tryConsume(String key, int capacity, Duration window) {
+        Bandwidth bandwidth = Bandwidth.classic(capacity, Refill.intervally(capacity, window));
+        BucketConfiguration config = BucketConfiguration.builder()
                 .addLimit(bandwidth)
                 .build();
-        Supplier<BucketConfiguration> configSupplier = () -> configuration;
-        Bucket bucket = proxyManager.builder().build(key, configSupplier);
-        return bucket.tryConsume(tokens);
+        Supplier<BucketConfiguration> supplier = () -> config;
+        Bucket bucket = proxyManager.builder().build(key, supplier);
+        return bucket.tryConsume(1);
     }
 
-    @Override
-    public long getRemainingTokens(String key, int capacity, Duration duration) {
-        Bandwidth bandwidth = Bandwidth.classic(capacity, Refill.intervally(capacity, duration));
-        BucketConfiguration configuration = BucketConfiguration.builder()
+    /**
+     * Returns the number of tokens currently available in the bucket.
+     * Returns 0 if the bucket does not exist yet.
+     */
+    public long getAvailableTokens(String key, int capacity, Duration window) {
+        Bandwidth bandwidth = Bandwidth.classic(capacity, Refill.intervally(capacity, window));
+        BucketConfiguration config = BucketConfiguration.builder()
                 .addLimit(bandwidth)
                 .build();
-        Bucket bucket = proxyManager.builder().build(key, () -> configuration);
+        Bucket bucket = proxyManager.builder().build(key, () -> config);
         return bucket.getAvailableTokens();
     }
 
-    // ── Cool-down support ─────────────────────────────────────────────────────
+    // ── Cool-down (minimum interval between successive actions) ──────────────
 
-    @Override
+    /**
+     * Starts a cool-down for the given key.
+     * While the key exists in Redis, {@link #isCoolingDown} returns true.
+     *
+     * @param key      unique key, e.g. "cd:forgot_pw:email:user@example.com"
+     * @param duration how long the cool-down lasts
+     */
     public void startCoolDown(String key, Duration duration) {
         stringRedis.opsForValue().set(key, "1", duration);
     }
 
-    @Override
+    /**
+     * Returns true if a cool-down is currently active for this key.
+     */
     public boolean isCoolingDown(String key) {
         return Boolean.TRUE.equals(stringRedis.hasKey(key));
     }
 
-    @Override
+    /**
+     * Remaining cool-down time in seconds, or 0 if not cooling down.
+     */
     public long getCoolDownTtlSeconds(String key) {
         Long ttl = stringRedis.getExpire(key);
         return (ttl != null && ttl > 0) ? ttl : 0;

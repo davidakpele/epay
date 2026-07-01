@@ -25,4 +25,11 @@ public @interface RateLimited {
     
     /** Cost of this request in tokens */
     int cost() default 1;
+
+    /**
+     * Minimum cool-down period in seconds between successive successful calls.
+     * 0 = no cool-down enforced.
+     * When > 0, after a successful call a Redis key blocks re-entry until it expires.
+     */
+    long coolDownSeconds() default 0;
 }

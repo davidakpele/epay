@@ -77,6 +77,16 @@ export default function Default() {
   const [resetPasswordErrors, setResetPasswordErrors] = useState<Record<string, string>>({});
   const [isResetPasswordSubmitting, setIsResetPasswordSubmitting] = useState(false);
 
+  // ── Dedicated state for Confirm Reset Password form (step 2) ──
+  const [showConfirmResetForm, setShowConfirmResetForm] = useState(false);
+  const [confirmResetData, setConfirmResetData] = useState({ password: '', confirmPassword: '' });
+  const [confirmResetPin, setConfirmResetPin] = useState(['', '', '', '']);
+  const [showConfirmResetPassword, setShowConfirmResetPassword] = useState(false);
+  const [showConfirmResetConfirmPassword, setShowConfirmResetConfirmPassword] = useState(false);
+  const [isConfirmResetSubmitting, setIsConfirmResetSubmitting] = useState(false);
+  const confirmResetPasswordRef = React.useRef<HTMLInputElement>(null);
+  const confirmResetConfirmPasswordRef = React.useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     document.title = showRegister ? "Create Account" : "Sign-In Account";
     if (showRegister) {
@@ -470,9 +480,10 @@ export default function Default() {
           : { identifier: `${selectedCountry?.code}${resetPasswordData.phone}`, method: 'PHONE' };
 
       await authService.forgotPassword(payload);
-      showToast('Password reset code sent successfully!', 'success');
-      setResetPasswordData({ email: '', phone: '' });
+      showToast('Password reset code sent to your email/phone!', 'success');
       setResetPasswordErrors({});
+      // Move to step 2: confirm reset form
+      setShowConfirmResetForm(true);
     } catch (error: any) {
       const errorMsg = error.toString();
       if (errorMsg.includes('internet connection')) {
@@ -486,6 +497,112 @@ export default function Default() {
       setIsResetPasswordSubmitting(false);
     }
   };
+
+  const validateConfirmResetForm = () => {
+    const { password, confirmPassword } = confirmResetData;
+
+    if (!password) {
+      showToast('Password is required');
+      confirmResetPasswordRef.current?.focus();
+      return false;
+    }
+    if (password.length < 8) {
+      showToast('Password must be at least 8 characters');
+      confirmResetPasswordRef.current?.focus();
+      return false;
+    }
+    if (!/[a-z]/.test(password)) {
+      showToast('Password must contain a lowercase letter');
+      confirmResetPasswordRef.current?.focus();
+      return false;
+    }
+    if (!/[A-Z]/.test(password)) {
+      showToast('Password must contain an uppercase letter');
+      confirmResetPasswordRef.current?.focus();
+      return false;
+    }
+    if (!/[0-9]/.test(password)) {
+      showToast('Password must contain a number');
+      confirmResetPasswordRef.current?.focus();
+      return false;
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      showToast('Password must contain a special character');
+      confirmResetPasswordRef.current?.focus();
+      return false;
+    }
+    if (password !== confirmPassword) {
+      showToast('Passwords do not match');
+      confirmResetConfirmPasswordRef.current?.focus();
+      return false;
+    }
+    const otp = confirmResetPin.join('');
+    if (otp.length !== 4) {
+      showToast('Please enter the 4-digit OTP');
+      return false;
+    }
+    return true;
+  };
+
+  const handleConfirmResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateConfirmResetForm()) return;
+
+    setIsConfirmResetSubmitting(true);
+    try {
+      const identifier =
+        regMode === 'email'
+          ? resetPasswordData.email
+          : `${selectedCountry?.code}${resetPasswordData.phone}`;
+
+      await authService.resetPassword({
+        identifier,
+        otp: confirmResetPin.join(''),
+        newPassword: confirmResetData.password,
+      });
+
+      showToast('Password reset successfully!', 'success');
+      // Reset all state and go back to login
+      setTimeout(() => {
+        setConfirmResetData({ password: '', confirmPassword: '' });
+        setConfirmResetPin(['', '', '', '']);
+        setResetPasswordData({ email: '', phone: '' });
+        setShowConfirmResetForm(false);
+        showForm('login');
+      }, 1500);
+    } catch (error: any) {
+      const errorMsg = error.toString();
+      if (errorMsg.includes('internet connection')) {
+        showToast('You are offline. Please check your network.');
+      } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
+        showToast('Service unavailable. The server might be down.');
+      } else {
+        showToast(errorMsg);
+      }
+    } finally {
+      setIsConfirmResetSubmitting(false);
+    }
+  };
+
+  const handleConfirmResetPinChange = (index: number, value: string) => {
+    if (!/^\d?$/.test(value)) return;
+    const newPin = [...confirmResetPin];
+    newPin[index] = value;
+    setConfirmResetPin(newPin);
+    if (value && index < 3) {
+      const next = document.getElementById(`confirm-reset-pin-${index + 1}`);
+      if (next) (next as HTMLInputElement).focus();
+    }
+  };
+
+  const handleConfirmResetPinKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !confirmResetPin[index] && index > 0) {
+      const prev = document.getElementById(`confirm-reset-pin-${index - 1}`);
+      if (prev) (prev as HTMLInputElement).focus();
+    }
+  };
+
+  const checkResetStrength = (req: boolean) => (req ? 'valid' : 'invalid');
 
   const handleRequestCode = async () => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -530,6 +647,9 @@ export default function Default() {
     setShowRegister(form === 'register');
     setshowForgetUsernameForm(form === 'forgotPin');
     setShowResetPasswordForm(form === 'resetPassword');
+    if (form !== 'resetPassword') {
+      setShowConfirmResetForm(false);
+    }
   };
 
   const handleScroll = () => {
@@ -1021,10 +1141,122 @@ export default function Default() {
               </form>
             )}
 
-            {/* Place that OTP REGISTER PASSWORD FORM HERE */}
+            {/* ── CONFIRM RESET PASSWORD Form (Step 2) ── */}
+            {!showRegister && !showForgetUsernameForm && !showOTPForm && showResetPasswordForm && showConfirmResetForm && (
+              <div className={styles.ResetPasswordCard}>
+                <div className={styles.cardHeader}>
+                  <button
+                    type="button"
+                    className={styles.cardBackBtn}
+                    onClick={() => setShowConfirmResetForm(false)}
+                    aria-label="Back to send code">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    </svg>
+                  </button>
+                  <h2 className={styles.cardHeaderTitle}>Create New Password</h2>
+                </div>
+
+                <p className={styles.ResetPasswordSubtitleHeader} style={{ marginBottom: '14px', marginTop: '4px' }}>
+                  OTP sent to your email/phone. Enter your new password and the OTP to complete reset.
+                </p>
+
+                <form onSubmit={handleConfirmResetSubmit} noValidate>
+                  {/* Password */}
+                  <div className={styles.inputGroup} style={{ position: 'relative' }}>
+                    <input
+                      ref={confirmResetPasswordRef}
+                      type={showConfirmResetPassword ? 'text' : 'password'}
+                      name="password"
+                      className={styles.cardInput}
+                      value={confirmResetData.password}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmResetData((prev: typeof confirmResetData) => ({ ...prev, password: e.target.value }))}
+                      placeholder="New password"
+                      style={{ paddingLeft: '12px' }}
+                    />
+                    <button
+                      type="button"
+                      className={styles.eyeBtn}
+                      onClick={() => setShowConfirmResetPassword((p: boolean) => !p)}
+                      aria-label="Toggle password visibility"
+                    >
+                      <i className={`fa-solid ${showConfirmResetPassword ? 'fa-eye-slash' : 'fa-eye'}`} style={{ fontSize: '12px' }}></i>
+                    </button>
+                  </div>
+
+                  {/* Password strength hints */}
+                  <div className={styles.passwordConstraints}>
+                    <span className={checkResetStrength(confirmResetData.password.length >= 8)}><i className="fa fa-info-circle"></i> At least 8 characters</span>
+                    <span className={checkResetStrength(/[a-z]/.test(confirmResetData.password))}><i className="fa fa-info-circle"></i> Lowercase (a-z)</span>
+                    <span className={checkResetStrength(/[A-Z]/.test(confirmResetData.password))}><i className="fa fa-info-circle"></i> Uppercase (A-Z)</span>
+                    <span className={checkResetStrength(/[0-9]/.test(confirmResetData.password))}><i className="fa fa-info-circle"></i> Number (0-9)</span>
+                    <span className={checkResetStrength(/[^A-Za-z0-9]/.test(confirmResetData.password))}><i className="fa fa-info-circle"></i> Special character</span>
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div className={styles.inputGroup} style={{ position: 'relative', marginTop: '10px' }}>
+                    <input
+                      ref={confirmResetConfirmPasswordRef}
+                      type={showConfirmResetConfirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      className={styles.cardInput}
+                      value={confirmResetData.confirmPassword}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmResetData((prev: typeof confirmResetData) => ({ ...prev, confirmPassword: e.target.value }))}
+                      placeholder="Confirm new password"
+                      style={{ paddingLeft: '12px' }}
+                    />
+                    <button
+                      type="button"
+                      className={styles.eyeBtn}
+                      onClick={() => setShowConfirmResetConfirmPassword((p: boolean) => !p)}
+                      aria-label="Toggle confirm password visibility"
+                    >
+                      <i className={`fa-solid ${showConfirmResetConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`} style={{ fontSize: '12px' }}></i>
+                    </button>
+                  </div>
+
+                  {/* OTP */}
+                  <div style={{ marginTop: '12px' }}>
+                    <p style={{ fontSize: '11px', color: '#555', marginBottom: '6px', textAlign: 'center', fontFamily: 'Karla, sans-serif' }}>Enter OTP</p>
+                    <div className={styles.confirmResetPinInputs}>
+                      {confirmResetPin.map((digit: string, index: number) => (
+                        <input
+                          key={index}
+                          id={`confirm-reset-pin-${index}`}
+                          type="password"
+                          className={styles.confirmResetPinInput}
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleConfirmResetPinChange(index, e.target.value)}
+                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => handleConfirmResetPinKeyDown(index, e)}
+                          autoFocus={index === 0}
+                          disabled={isConfirmResetSubmitting}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={styles.btnSubmit}
+                    disabled={isConfirmResetSubmitting}
+                    style={{ marginTop: '14px' }}
+                  >
+                    {isConfirmResetSubmitting ? (
+                      <>
+                        <div className={styles.spinner}></div>
+                        <span>Resetting...</span>
+                      </>
+                    ) : (
+                      'Reset Password'
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
 
             {/* ── RESET PASSWORD Form ── */}
-            {!showRegister && !showForgetUsernameForm && !showOTPForm && showResetPasswordForm && (
+            {!showRegister && !showForgetUsernameForm && !showOTPForm && showResetPasswordForm && !showConfirmResetForm && (
               <div className={styles.ResetPasswordCard}>
                 <div className={styles.cardHeader}>
                   <button

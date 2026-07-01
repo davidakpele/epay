@@ -32,6 +32,8 @@ import pesco.notification_service.payloads.RegistrationOtpMessage;
 import pesco.notification_service.payloads.SwapCurrencyPayload;
 import pesco.notification_service.payloads.UserOTPMessage;
 import pesco.notification_service.payloads.WalletPinNotification;
+import pesco.notification_service.payloads.ForgotPasswordOtpPayload;
+import pesco.notification_service.payloads.ForgotUsernamePayload;
 import pesco.notification_service.payloads.WelcomeMessagePayload;
 
 
@@ -427,6 +429,46 @@ public class MessageController {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
             error.put("message", "Failed to send account security alert: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
+
+    // ── Forgot Password OTP ───────────────────────────────────────────────────
+
+    @PostMapping("/send/forgot-password-otp")
+    public ResponseEntity<Map<String, Object>> sendForgotPasswordOtp(
+            HttpServletRequest httpRequest,
+            @RequestBody ForgotPasswordOtpPayload request) {
+        try {
+            authenticationMessageProducer.sendForgotPasswordOtp(request);
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Forgot-password OTP sent successfully!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", "Failed to send forgot-password OTP: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
+
+    // ── Forgot Username ───────────────────────────────────────────────────────
+
+    @PostMapping("/send/forgot-username")
+    public ResponseEntity<Map<String, Object>> sendForgotUsername(
+            HttpServletRequest httpRequest,
+            @RequestBody ForgotUsernamePayload request) {
+        try {
+            authenticationMessageProducer.sendForgotUsername(request);
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Forgot-username email sent successfully!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", "Failed to send forgot-username email: " + e.getMessage());
             return ResponseEntity.internalServerError().body(error);
         }
     }
