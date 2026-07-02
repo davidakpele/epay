@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: epay-server
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/epay
+    username: ${DB_USERNAME:epay}
+    password: ${DB_PASSWORD:epay}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+epay:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:change-me}
+      expiration-ms: 3600000
+  gateways:
+    paystack:
+      secret-key: ${PAYSTACK_SECRET_KEY:}
+    flutterwave:
+      secret-key: ${FLUTTERWAVE_SECRET_KEY:}
+  cards:
+    sudo:
+      api-key: ${SUDO_API_KEY:}
+
+logging:
+  level:
+    root: INFO
+    com.epay: DEBUG
