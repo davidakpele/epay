@@ -14,8 +14,7 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
 
     @Query("SELECT t FROM PasswordResetToken t WHERE t.tokenHash = :tokenHash " +
            "AND t.used = false AND t.expiresAt > :now")
-    Optional<PasswordResetToken> findValidToken(@Param("tokenHash") String tokenHash,
-                                                @Param("now") LocalDateTime now);
+    Optional<PasswordResetToken> findValidToken(@Param("tokenHash") String tokenHash, @Param("now") LocalDateTime now);
 
     @Modifying
     @Query("UPDATE PasswordResetToken t SET t.used = true WHERE t.user.id = :userId AND t.used = false")
@@ -24,4 +23,8 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
     @Modifying
     @Query("DELETE FROM PasswordResetToken t WHERE t.expiresAt < :before")
     void deleteExpiredTokens(@Param("before") LocalDateTime before);
+
+    PasswordResetToken findByToken(String token);
+
+    Optional<PasswordResetToken> findByUserId(Long userId);
 }

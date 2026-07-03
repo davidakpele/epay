@@ -18,13 +18,16 @@ public interface UserTracerRepository extends JpaRepository<UserTracer, Long> {
     Page<UserTracer> findByUserIdAndAttemptTypeOrderByCreatedAtDesc(
             Long userId, AttemptType attemptType, Pageable pageable);
 
+    Page<UserTracer> findByIpAddressOrderByCreatedAtDesc(String ipAddress, Pageable pageable);
+
     @Query("SELECT COUNT(t) FROM UserTracer t WHERE t.user.id = :userId " +
-           "AND t.attemptType = 'LOGIN' AND t.success = false AND t.createdAt > :since")
-    long countRecentFailedLogins(@Param("userId") Long userId, @Param("since") LocalDateTime since);
+           "AND t.attemptType = com.epay.domain.auth.enums.AttemptType.LOGIN " +
+           "AND t.success = false AND t.createdAt > :since")
+    long countRecentFailedLogins(@Param("userId") Long userId,
+                                 @Param("since") LocalDateTime since);
 
     @Query("SELECT COUNT(t) > 0 FROM UserTracer t WHERE t.user.id = :userId " +
            "AND t.ipAddress = :ip AND t.success = true")
-    boolean hasSuccessfulLoginFromIp(@Param("userId") Long userId, @Param("ip") String ipAddress);
-
-    Page<UserTracer> findByIpAddressOrderByCreatedAtDesc(String ipAddress, Pageable pageable);
+    boolean hasSuccessfulLoginFromIp(@Param("userId") Long userId,
+                                     @Param("ip") String ipAddress);
 }

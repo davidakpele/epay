@@ -19,8 +19,7 @@ public interface KycVerificationRepository extends JpaRepository<KycVerification
 
     @Query("SELECT v FROM KycVerification v WHERE v.user.id = :userId AND v.tier = :tier " +
            "ORDER BY v.createdAt DESC LIMIT 1")
-    Optional<KycVerification> findLatestByUserIdAndTier(@Param("userId") Long userId,
-                                                        @Param("tier") KycTier tier);
+    Optional<KycVerification> findLatestByUserIdAndTier(@Param("userId") Long userId, @Param("tier") KycTier tier);
 
     List<KycVerification> findByUserId(Long userId);
 
