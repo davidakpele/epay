@@ -20,6 +20,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.datastax.oss.protocol.internal.request.AuthResponse;
 import com.epay.auth.domain.entity.AuthorizeUserVerification;
 import com.epay.auth.domain.entity.TwoFactorAuthentication;
 import com.epay.auth.domain.entity.User;
@@ -39,6 +41,7 @@ import com.epay.auth.repository.VerificationTokenRepository;
 import com.epay.common.config.components.KeyWrapper;
 import com.epay.common.config.components.NotificationProperties;
 import com.epay.common.config.services.JwtService;
+import com.epay.common.exception.ErrorCode;
 import com.epay.domain.auth.dto.UserDTO;
 import com.epay.domain.auth.enums.AttemptType;
 import com.epay.domain.auth.enums.ContactMethod;
@@ -83,7 +86,6 @@ public class AuthenticationService implements IAuthenticationService{
     private String formatNow() {
         return ZonedDateTime.now(ZoneId.systemDefault()).format(LOGIN_TIME_FMT);
     }
-    
 
     private String extractClientIp(HttpServletRequest req) {
         if (req == null) return "";
@@ -114,8 +116,9 @@ public class AuthenticationService implements IAuthenticationService{
                 : request.getPhone();
 
         if (!messagingService.verifyOTP(identifier, request.getVerificationCode())) {
-            return Error.createResponse("Invalid or expired verification code.",
-                    HttpStatus.BAD_REQUEST, "The verification code you entered is invalid or has expired.");
+           throw new com.epay.common.exception.AuthenticationException(
+                    "The verification code you entered is invalid or has expired.",
+                    ErrorCode.INVALID_OTP);
         }
 
         Long nextUserId = getNextUserId();
@@ -141,8 +144,9 @@ public class AuthenticationService implements IAuthenticationService{
                     messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
         }
 
-        return Error.createResponse("success", HttpStatus.CREATED,
-                "Thanks for signing up! Your account has been created successfully.");
+        return ResponseEntity.status(HttpStatus.CREATED).body(com.epay.common.exception.ApiResponse.success(
+                "Thanks for signing up! Your account has been created successfully.", null));
+
     }
 
     @Override
