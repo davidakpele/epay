@@ -170,29 +170,24 @@ public class AuthenticationService implements IAuthenticationService{
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-            UserRecord record = userRecordRepository.findByUserId(user.getId()).orElse(null);
-            if (record != null) {
-                if (record.isLocked()) {
-                    return buildAuthError(authResponse,
-                            "Sorry, this account is currently locked. Please contact customer service.",
-                            HttpStatus.UNAUTHORIZED);
-                }
-                if (record.isBlocked()) {
-                    return buildAuthError(authResponse,
-                            "Sorry, this account is currently blocked. Please contact customer service.",
-                            HttpStatus.UNAUTHORIZED);
-                }
-                if (UserStatus.SUSPENDED
-                        .equals(record.getStatus())) {
-                    return buildAuthError(authResponse,
-                            "Sorry, this account is currently suspended. Please contact customer service to reactivate.",
-                            HttpStatus.UNAUTHORIZED);
-                }
+            // Account state checks — locked/blocked/2FA now on User entity
+            if (user.isAccountLocked()) {
+                return buildAuthError(authResponse,
+                        "Sorry, this account is currently locked. Please contact customer service.",
+                        HttpStatus.UNAUTHORIZED);
             }
 
-            if (user.isTwoFactorAuth()) {
+            if (!user.isEnabled()) {
+                return buildAuthError(authResponse,
+                        "Sorry, this account is currently suspended. Please contact customer service to reactivate.",
+                        HttpStatus.UNAUTHORIZED);
+            }
+
+            if (user.isTwoFactorEnabled()) {
                 return handleTwoFactorAuth(user, authResponse);
             }
+
+            UserRecord record = userRecordRepository.findByUserId(user.getId()).orElse(null);
 
             String jwtToken = jwtService.generateToken(user, user.getId());
             UserTracer session = userTracerService.createSession(user);
@@ -225,16 +220,15 @@ public class AuthenticationService implements IAuthenticationService{
             authResponse.put("username", user.getUsername());
             authResponse.put("is_verify", user.isEnabled());
             authResponse.put("is_profile_complete", rec.isProfileComplete());
-            authResponse.put("referral_username", rec.getReferralUsername());
-            authResponse.put("referral_link", rec.getReferralLink());
-            authResponse.put("date_of_birth", rec.getDateofBirth());
+            authResponse.put("referral_code", rec.getReferralCode());
+            authResponse.put("date_of_birth", rec.getDateOfBirth());
             authResponse.put("country", rec.getCountry());
             authResponse.put("state", rec.getState());
             authResponse.put("city", rec.getCity());
             authResponse.put("gender", rec.getGender());
-            authResponse.put("telephone", rec.getTelephone());
+            authResponse.put("phone_number", rec.getPhoneNumber());
             authResponse.put("fullname", rec.getFirstName() + " " + rec.getLastName());
-            authResponse.put("twoFactorAuthEnabled", false);
+            authResponse.put("twoFactorAuthEnabled", user.isTwoFactorEnabled());
 
             return ResponseEntity.ok()
                     .header("X-Session-ID", session.getSessionId())
@@ -543,7 +537,8 @@ public class AuthenticationService implements IAuthenticationService{
         user.setId(id);
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setTwoFactorAuth(false);
+        user.setTwoFactorEnabled(false);
+        user.setAccountLocked(false);
         user.setRole(Role.USER);
 
         if ("email".equals(request.getRegMode())) {
@@ -562,33 +557,17 @@ public class AuthenticationService implements IAuthenticationService{
         record.setUser(user);
         record.setFirstName(request.getFirstname());
         record.setLastName(request.getLastname());
-        record.setTransferPinSet(false);
-        record.setLocked(false);
-        record.setLockedAt(null);
-        record.setBlocked(false);
+        record.setPhoneNumber(request.getPhone());
         record.setProfileComplete(false);
-        record.setTotalReferers(null);
+        record.setTotalReferrals(0);
         record.setReferralCode(referralCode);
-        record.setReferralUsername("n13_" + request.getUsername());
-        record.setReferralLink(keysWrapper.getUrl() + "/auth/register?referral_code=" + referralCode);
-
-        if ("phone".equals(request.getRegMode())) {
-            record.setTelephone(request.getPhone());
-            record.setStatus(UserStatus.ACTIVE);
-        } else {
-            record.setStatus(UserStatus.PENDING_VERIFICATION);
-        }
         return record;
     }
 
     private void activateUserRecord(User user) {
-        userRecordRepository.findByUserId(user.getId()).ifPresent(record -> {
-            record.setStatus(UserStatus.ACTIVE);
-            record.setLocked(false);
-            record.setBlocked(false);
-            userRecordRepository.save(record);
-        });
+        // Lock/block state lives on User — just enable the account
         user.setEnabled(true);
+        user.setAccountLocked(false);
         userRepository.save(user);
     }
 
