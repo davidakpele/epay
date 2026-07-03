@@ -1,6 +1,5 @@
 package com.epay.auth.domain.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
@@ -15,7 +14,7 @@ public class UserAccountSettings {
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonBackReference
-    private Users user;
+    private User user;
     
     @Column(name = "is_biometric")
     private boolean isBiometric;
@@ -47,7 +46,7 @@ public class UserAccountSettings {
     public UserAccountSettings() {
     }
 
-    public UserAccountSettings(Long id, Users user, boolean isBiometric, String sessionTimeOut, boolean isEmailAlert, boolean isTransactionAlert, boolean isLoginAlert, boolean isReceiveMarketingNews, boolean isReceiveSmsMessage, String preferredLanguage, String timeZone) {
+    public UserAccountSettings(Long id, User user, boolean isBiometric, String sessionTimeOut, boolean isEmailAlert, boolean isTransactionAlert, boolean isLoginAlert, boolean isReceiveMarketingNews, boolean isReceiveSmsMessage, String preferredLanguage, String timeZone) {
         this.id = id;
         this.user = user;
         this.isBiometric = isBiometric;
@@ -69,11 +68,11 @@ public class UserAccountSettings {
         this.id = id;
     }
 
-    public Users getUser() {
+    public User getUser() {
         return this.user;
     }
 
-    public void setUser(Users user) {
+    public void setUser(User user) {
         this.user = user;
     }
 
