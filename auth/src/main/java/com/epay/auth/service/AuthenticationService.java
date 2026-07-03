@@ -20,8 +20,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.datastax.oss.protocol.internal.request.AuthResponse;
 import com.epay.auth.domain.entity.AuthorizeUserVerification;
 import com.epay.auth.domain.entity.TwoFactorAuthentication;
 import com.epay.auth.domain.entity.User;
@@ -54,6 +52,7 @@ import com.epay.domain.auth.input.OtpVerificationRequest;
 import com.epay.domain.auth.input.ResetPasswordRequest;
 import com.epay.domain.auth.input.UserSignInRequest;
 import com.epay.domain.auth.input.UserSignUpRequest;
+import com.epay.domain.auth.response.AuthResponse;
 import com.epay.domain.auth.response.VerificationTokenResult;
 import com.epay.notification.service.AuthenticationNotificationService;
 
@@ -70,7 +69,7 @@ public class AuthenticationService implements IAuthenticationService{
     private final UserRecordRepository userRecordRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuthenticationNotificationService notificationServiceClient;
+    private final AuthenticationNotificationService notificationService;
     private final AuthenticationManager authenticationManager;
     private final KeyWrapper keysWrapper; 
     private final IAuthorizeUserVerificationService authorizeUserVerificationService;
@@ -170,7 +169,6 @@ public class AuthenticationService implements IAuthenticationService{
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-            // Account state checks — locked/blocked/2FA now on User entity
             if (user.isAccountLocked()) {
                 return buildAuthError(authResponse,
                         "Sorry, this account is currently locked. Please contact customer service.",
@@ -196,13 +194,13 @@ public class AuthenticationService implements IAuthenticationService{
             UserRecord rec = userRecordRepository.findByUserId(user.getId())
                     .orElseThrow(() -> new RuntimeException("User record not found"));
 
-            // ── Login alert notification ──────────────────────────────────────
             final String loginTime = formatNow();
             final String ipAddr    = extractClientIp(httpRequest);
             final String device    = extractDevice(httpRequest);
             final String fullName  = rec.getFirstName() + " " + rec.getLastName();
+
             CompletableFuture.runAsync(() ->
-                notificationServiceClient.sendLoginAlertNotification(
+                notificationService.sendLoginAlertNotification(
                     user.getEmail(), fullName, user.getUsername(),
                     loginTime, ipAddr, device,
                     notificationProperties.getPhone(),
@@ -260,6 +258,7 @@ public class AuthenticationService implements IAuthenticationService{
         }
 
         User user = userRepository.findById(verificationToken.getUserId()).orElse(null);
+
         if (user == null) {
             verifyResponse.setMessage("User not found.");
             verifyResponse.setStatus(false);

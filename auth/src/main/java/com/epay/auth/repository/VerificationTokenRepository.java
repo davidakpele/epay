@@ -30,4 +30,7 @@ public interface VerificationTokenRepository extends JpaRepository<VerificationT
     @Modifying
     @Query("DELETE FROM VerificationToken t WHERE t.expiresAt < :before AND t.used = true")
     void deleteExpiredTokens(@Param("before") LocalDateTime before);
+
+    @Query("SELECT v FROM VerificationToken v WHERE v.token=:token")
+    VerificationToken findByToken(String token);
 }

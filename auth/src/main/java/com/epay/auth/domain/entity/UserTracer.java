@@ -56,6 +56,8 @@ public class UserTracer {
     @Column(name = "success", nullable = false)
     private boolean success;
 
+    private String sessionId;
+
     /** Human-readable reason for failure, if applicable. */
     @Column(name = "failure_reason")
     private String failureReason;
@@ -63,4 +65,8 @@ public class UserTracer {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
+
+    private LocalDateTime expiresAt;
+
+    private boolean active;
 }
