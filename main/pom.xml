@@ -11,12 +11,16 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>epay-main</artifactId>
+    <artifactId>main</artifactId>
     <packaging>jar</packaging>
-    <name>epay-main</name>
+    <name>ePay Main Module</name>
     <description>Single Spring Boot entry point - scans and wires up every module</description>
 
     <dependencies>
+        <dependency>
+            <groupId>com.epay</groupId>
+            <artifactId>epay-domain</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.epay</groupId>
             <artifactId>epay-domain</artifactId>
@@ -27,11 +31,11 @@
         </dependency>
         <dependency>
             <groupId>com.epay</groupId>
-            <artifactId>epay-auth</artifactId>
+            <artifactId>epay-wallet</artifactId>
         </dependency>
         <dependency>
             <groupId>com.epay</groupId>
-            <artifactId>epay-wallet</artifactId>
+            <artifactId>epay-notification</artifactId>
         </dependency>
         <dependency>
             <groupId>com.epay</groupId>
@@ -82,13 +86,10 @@
             <artifactId>epay-admin</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
