@@ -227,4 +227,5 @@ public class GlobalExceptionHandler {
         if (message == null) return "Invalid request";
         return message.replaceAll("\\b\\d{16}\\b", "****")  
                       .replaceAll("\\b\\d{3}-\\d{2}-\\d{4}\\b", "***-**-****");
+    }
 }
