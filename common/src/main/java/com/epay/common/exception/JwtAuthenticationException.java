@@ -2,25 +2,40 @@ package com.epay.common.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class JwtAuthenticationException extends BaseException {
+public class JwtAuthenticationException extends RuntimeException {
 
-    public JwtAuthenticationException(String message, String errorCode) {
-        super(message, errorCode, HttpStatus.UNAUTHORIZED);
+    private final HttpStatus status;
+    private final String errorCode;
+
+    public JwtAuthenticationException(String message, HttpStatus status, String errorCode) {
+        super(message);
+        this.status = status;
+        this.errorCode = errorCode;
     }
 
-    public JwtAuthenticationException(String message, String errorCode, Throwable cause) {
-        super(message, errorCode, HttpStatus.UNAUTHORIZED, cause);
+    public JwtAuthenticationException(String message, HttpStatus status, String errorCode, Throwable cause) {
+        super(message, cause);
+        this.status = status;
+        this.errorCode = errorCode;
     }
-    
-    public static JwtAuthenticationException tokenExpired() {
-        return new JwtAuthenticationException("Access token has expired", ErrorCode.TOKEN_EXPIRED);
+
+    public JwtAuthenticationException(String message, HttpStatus status) {
+        super(message);
+        this.status = status;
+        this.errorCode = "JWT_ERROR";
     }
-    
-    public static JwtAuthenticationException tokenInvalid() {
-        return new JwtAuthenticationException("Invalid access token", ErrorCode.TOKEN_INVALID);
+
+    public JwtAuthenticationException(String message, HttpStatus status, Throwable cause) {
+        super(message, cause);
+        this.status = status;
+        this.errorCode = "JWT_ERROR";
     }
-    
-    public static JwtAuthenticationException tokenMissing() {
-        return new JwtAuthenticationException("Access token is required", ErrorCode.UNAUTHORIZED_ACCESS);
+
+    public HttpStatus getStatus() {
+        return status;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
     }
 }
