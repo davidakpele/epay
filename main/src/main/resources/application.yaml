@@ -27,6 +27,27 @@ epay:
     jwt:
       secret: ${JWT_SECRET:change-me}
       expiration-ms: 3600000
+  rate-limit:
+    # Tier 1 — Global IP guard (all endpoints)
+    global-ip-limit: 200
+    global-window-seconds: 60
+    # Tier 2 — Auth endpoints: /auth/** (login, OTP, register, forgot-password)
+    # Tight: prevents brute-force and credential stuffing
+    auth-limit: 10
+    auth-window-seconds: 60
+    # Tier 2 — Wallet endpoints: /wallet/** (transfer, balance, PIN)
+    # Tight: prevents financial abuse
+    wallet-limit: 30
+    wallet-window-seconds: 60
+    # Tier 2 — User endpoints: /user/**
+    user-limit: 50
+    user-window-seconds: 60
+    # Progressive penalty: each repeat violation multiplies backoff by this factor
+    penalty-multiplier: 3
+    # Maximum block duration (1 hour)
+    max-penalty-seconds: 3600
+    # Number of violations before an IP gets blocked
+    suspicious-threshold: 5
   gateways:
     paystack:
       secret-key: ${PAYSTACK_SECRET_KEY:}
