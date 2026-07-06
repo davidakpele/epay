@@ -147,4 +147,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
            ORDER  BY FUNCTION('YEAR', u.createdAt) ASC
            """)
     List<Object[]> countYearlyRegistrations();
+
+    @Query("SELECT MAX(u.id) FROM Users u")
+    Optional<Long> findMaxId();
 }

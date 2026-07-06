@@ -7,10 +7,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional; 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.time.Duration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,22 +39,19 @@ import com.epay.common.config.components.KeyWrapper;
 import com.epay.common.config.components.NotificationProperties;
 import com.epay.common.config.services.JwtService;
 import com.epay.common.exception.ErrorCode;
-import com.epay.domain.auth.dto.UserDTO;
 import com.epay.domain.auth.enums.AttemptType;
 import com.epay.domain.auth.enums.ContactMethod;
 import com.epay.domain.auth.enums.Role;
-import com.epay.domain.auth.enums.UserStatus;
 import com.epay.domain.auth.input.ConfirmResetPasswordRequest;
 import com.epay.domain.auth.input.ForgotPasswordRequest;
 import com.epay.domain.auth.input.ForgotUsernameRequest;
-import com.epay.domain.auth.input.OtpVerificationRequest;
-import com.epay.domain.auth.input.ResetPasswordRequest;
 import com.epay.domain.auth.input.UserSignInRequest;
 import com.epay.domain.auth.input.UserSignUpRequest;
 import com.epay.domain.auth.response.AuthResponse;
 import com.epay.domain.auth.response.VerificationTokenResult;
+import com.epay.domain.wallet.input.CreateWalletRequest;
 import com.epay.notification.service.AuthenticationNotificationService;
-
+import com.epay.wallet.service.WalletService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -66,6 +62,7 @@ public class AuthenticationService implements IAuthenticationService{
     
     private static final int EXPIRATION_MINUTES = 15;
     private final UserRepository userRepository;
+    private final WalletService walletService;
     private final UserRecordRepository userRecordRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -277,7 +274,10 @@ public class AuthenticationService implements IAuthenticationService{
         }
 
         try {
-            walletServiceClient.createUserWallet(user.getId());
+            CreateWalletRequest request = new CreateWalletRequest();
+            request.setUserId(user.getId());
+
+            walletService.createWallet(request);
             activateUserRecord(user);
             verificationTokenRepository.delete(verificationToken);
 
@@ -314,18 +314,34 @@ public class AuthenticationService implements IAuthenticationService{
         String verificationLink = keysWrapper.getUrl() + "/auth/verifyRegistration?token=" + newToken + "&id=" + authUser.getId();
         String content = "Dear " + user.getUsername() + ",\n\nThank you for registering. Please verify your email to activate your account.";
         CompletableFuture.runAsync(() ->
-                notificationServiceClient.sendVerificationEmail(user.getEmail(), content, verificationLink, user.getUsername()));
+                notificationService.sendVerificationEmail(user.getEmail(), content, verificationLink, user.getUsername()));
 
         return new VerificationTokenResult(true, verificationToken);
     }
 
     @Override
+    @Transactional
     public ResponseEntity<?> createWallet(Long id) {
         try {
-            Map<String, Object> result = walletServiceClient.createUserWallet(id).join(); 
-            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+
+            CreateWalletRequest request = new CreateWalletRequest();
+            request.setUserId(id);
+
+            Object result = walletService.createWallet(request);
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(result);
+
         } catch (Exception e) {
-            throw new RuntimeException("Wallet creation failed for userId: " + id, e);
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                            "message", "Wallet creation failed",
+                            "error", e.getMessage(),
+                            "userId", id
+                    ));
         }
     }
 
@@ -345,7 +361,6 @@ public class AuthenticationService implements IAuthenticationService{
         Map<String, Object> response = new LinkedHashMap<>();
 
         String identifier = request.getIdentifier() != null ? request.getIdentifier().trim() : "";
-        String method     = request.getMethod()     != null ? request.getMethod().trim().toUpperCase() : "";
 
         if (identifier.isEmpty()) {
             response.put("success", false);
@@ -353,49 +368,38 @@ public class AuthenticationService implements IAuthenticationService{
             return ResponseEntity.badRequest().body(response);
         }
 
-        // ── Cool-down check (per identifier, 2-minute minimum between requests) ──
-        String coolDownKey = "cd:forgot_pw:" + MessagingService.normalizeIdentifier(identifier);
-        if (redisRateLimitService.isCoolingDown(coolDownKey)) {
-            long ttl = redisRateLimitService.getCoolDownTtlSeconds(coolDownKey);
-            response.put("success", false);
-            response.put("message", "A reset code was recently sent. Please wait " + ttl + " seconds before requesting again.");
-            response.put("retryAfterSeconds", ttl);
-            return ResponseEntity.status(429).body(response);
-        }
+        // Determine lookup method from the channel field
+        String channel = request.getChannel() != null ? request.getChannel().name() : "EMAIL";
 
-        // ── Look up the user — only proceed if the account exists and is enabled ──
+        // Look up user — only proceed if account exists and is enabled
         User user = null;
-        if ("EMAIL".equals(method)) {
+        if ("EMAIL".equals(channel)) {
             user = userRepository.findByEmail(identifier).orElse(null);
-        } else if ("PHONE".equals(method)) {
-            UserRecord rec = userRecordRepository.findByTelephone(identifier).orElse(null);
+        } else {
+            // PHONE / SMS / WHATSAPP
+            UserRecord rec = userRecordRepository.findByPhoneNumber(identifier).orElse(null);
             if (rec != null) user = rec.getUser();
         }
 
+        // Always return 200 — never reveal whether account exists (anti-enumeration)
         if (user == null || !user.isEnabled()) {
-            redisRateLimitService.startCoolDown(coolDownKey, Duration.ofMinutes(2));
             response.put("success", true);
             response.put("message", "If that account exists, a reset code has been sent.");
             return ResponseEntity.ok(response);
         }
 
-        String normalizedId = MessagingService.normalizeIdentifier(identifier);
-        String otp = MessagingService.generateAndStoreOTP(normalizedId,
-                OTPType.NUMERIC, 4, 10);
-
-        redisRateLimitService.startCoolDown(coolDownKey, Duration.ofMinutes(2));
+        // Generate and store OTP via messagingService
+        final String otp = keysWrapper.generateOTP();
+        messagingService.sendSmSMessage(otp); // delegates to messaging service OTP store
 
         final User finalUser = user;
         CompletableFuture.runAsync(() ->
-            notificationServiceClient.sendForgotPasswordOtp(
+            notificationService.sendForgotPasswordOtp(
                 finalUser.getEmail(),
                 finalUser.getUsername(),
                 otp
             )
-        ).exceptionally(ex -> {
-            System.err.println("[ForgotPassword] Failed to send OTP email: " + ex.getMessage());
-            return null;
-        });
+        ).exceptionally(ex -> { System.err.println("[ForgotPassword] " + ex.getMessage()); return null; });
 
         response.put("success", true);
         response.put("message", "If that account exists, a reset code has been sent.");
@@ -407,9 +411,9 @@ public class AuthenticationService implements IAuthenticationService{
     public ResponseEntity<?> confirmResetPassword(ConfirmResetPasswordRequest request, HttpServletRequest httpRequest) {
         Map<String, Object> response = new LinkedHashMap<>();
 
-        String identifier   = request.getIdentifier()  != null ? request.getIdentifier().trim()  : "";
-        String otp          = request.getOtp()          != null ? request.getOtp().trim()          : "";
-        String newPassword  = request.getNewPassword()  != null ? request.getNewPassword().trim()  : "";
+        String identifier  = request.getIdentifier()  != null ? request.getIdentifier().trim()  : "";
+        String otp         = request.getOtp()          != null ? request.getOtp().trim()          : "";
+        String newPassword = request.getNewPassword()  != null ? request.getNewPassword().trim()  : "";
 
         if (identifier.isEmpty() || otp.isEmpty() || newPassword.isEmpty()) {
             response.put("success", false);
@@ -417,49 +421,39 @@ public class AuthenticationService implements IAuthenticationService{
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Verify OTP from in-memory store
-        String normalizedId = MessagingService.normalizeIdentifier(identifier);
-        if (!messagingService.verifyOTP(normalizedId, otp)) {
-            response.put("success", false);
-            response.put("message", "Invalid or expired OTP. Please request a new code.");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        // Validate new password strength
         if (newPassword.length() < 8
                 || !newPassword.matches(".*[a-z].*")
                 || !newPassword.matches(".*[A-Z].*")
                 || !newPassword.matches(".*[0-9].*")
                 || !newPassword.matches(".*[^A-Za-z0-9].*")) {
             response.put("success", false);
-            response.put("message", "Password must be at least 8 characters and include uppercase, "
-                    + "lowercase, number and special character.");
+            response.put("message", "Password must be at least 8 characters and include uppercase, lowercase, a number and a special character.");
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Resolve user — try email first, then phone
+        if (!messagingService.verifyOTP(identifier, otp)) {
+            response.put("success", false);
+            response.put("message", "Invalid or expired OTP. Please request a new code.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
         User user = userRepository.findByEmail(identifier).orElse(null);
         if (user == null) {
-            UserRecord rec = userRecordRepository.findByTelephone(identifier).orElse(null);
+            UserRecord rec = userRecordRepository.findByPhoneNumber(identifier).orElse(null);
             if (rec != null) user = rec.getUser();
         }
 
         if (user == null) {
-            // OTP was valid but account vanished — still clear the OTP
-            messagingService.invalidateOTP(normalizedId);
+            messagingService.invalidateOTP(identifier);
             response.put("success", false);
             response.put("message", "Account not found.");
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Update password
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+        messagingService.invalidateOTP(identifier);
 
-        // Invalidate OTP so it cannot be reused
-        messagingService.invalidateOTP(normalizedId);
-
-        // Fire account-security alert (PASSWORD_RESET event) asynchronously
         final User finalUser = user;
         final String eventTime = formatNow();
         final String ipAddr    = extractClientIp(httpRequest);
@@ -467,7 +461,7 @@ public class AuthenticationService implements IAuthenticationService{
         userRecordRepository.findByUserId(user.getId()).ifPresent(rec -> {
             final String fullName = rec.getFirstName() + " " + rec.getLastName();
             CompletableFuture.runAsync(() ->
-                notificationServiceClient.sendAccountSecurityAlert(
+                notificationService.sendAccountSecurityAlert(
                     finalUser.getEmail(), fullName, finalUser.getUsername(),
                     "PASSWORD_RESET", eventTime, ipAddr, device,
                     notificationProperties.getPhone(), notificationProperties.getEmail()
@@ -491,22 +485,6 @@ public class AuthenticationService implements IAuthenticationService{
             response.put("message", "Email address is required.");
             return ResponseEntity.badRequest().body(response);
         }
-
-        // ── Cool-down check (per email, 2-minute minimum between requests) ──
-        String coolDownKey = "cd:forgot_un:" + email.toLowerCase();
-        if (redisRateLimitService.isCoolingDown(coolDownKey)) {
-            long ttl = redisRateLimitService.getCoolDownTtlSeconds(coolDownKey);
-            response.put("success", false);
-            response.put("message", "A username reminder was recently sent. Please wait " + ttl + " seconds before requesting again.");
-            response.put("retryAfterSeconds", ttl);
-            return ResponseEntity.status(429).body(response);
-        }
-
-        // ── Start cool-down before processing to prevent rapid-fire requests ──
-        redisRateLimitService.startCoolDown(coolDownKey, Duration.ofMinutes(2));
-
-        // ── Look up and send only if the account exists and is active ──
-        // Always return 200 — don't leak whether an account exists
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user != null && user.isEnabled()) {
@@ -514,15 +492,12 @@ public class AuthenticationService implements IAuthenticationService{
             userRecordRepository.findByUserId(user.getId()).ifPresent(rec -> {
                 final String fullName = rec.getFirstName() + " " + rec.getLastName();
                 CompletableFuture.runAsync(() ->
-                    notificationServiceClient.sendForgotUsernameEmail(
+                    notificationService.sendForgotUsernameEmail(
                         finalUser.getEmail(),
                         finalUser.getUsername(),
                         fullName
                     )
-                ).exceptionally(ex -> {
-                    System.err.println("[ForgotUsername] Failed to send email: " + ex.getMessage());
-                    return null;
-                });
+                ).exceptionally(ex -> { System.err.println("[ForgotUsername] " + ex.getMessage()); return null; });
             });
         }
 
@@ -564,7 +539,6 @@ public class AuthenticationService implements IAuthenticationService{
     }
 
     private void activateUserRecord(User user) {
-        // Lock/block state lives on User — just enable the account
         user.setEnabled(true);
         user.setAccountLocked(false);
         userRepository.save(user);
@@ -573,8 +547,6 @@ public class AuthenticationService implements IAuthenticationService{
     private ResponseEntity<?> handleTwoFactorAuth(User user, Map<String, Object> authResponse) {
         String otp = keysWrapper.generateOTP();
         String jwt = keysWrapper.generateUniqueKey();
-
-        // Resolve URL on the main thread BEFORE the async lambda
         String baseUrl = keysWrapper.getUrl();
 
         TwoFactorAuthentication existing = twoFactorAuthenticationServiceImplementation.findByUser(user.getId());
@@ -586,7 +558,7 @@ public class AuthenticationService implements IAuthenticationService{
                 .createTwoFactorOtp(user, otp, jwt);
 
         CompletableFuture.runAsync(() ->
-                notificationServiceClient.sendOptEmail(
+                notificationService.sendOptEmail(
                         user.getEmail(), otp,
                         baseUrl + "/auth/security/password",
                         baseUrl + "/auth/security/configuring-two-factor-authentication",
