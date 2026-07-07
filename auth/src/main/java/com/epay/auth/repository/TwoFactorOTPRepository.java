@@ -1,7 +1,9 @@
 package com.epay.auth.repository;
 
 import org.springframework.stereotype.Repository;
-import com.epay.auth.domain.entity.TwoFactorAuthentication;
+
+import com.epay.domain.auth.entity.TwoFactorAuthentication;
+
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

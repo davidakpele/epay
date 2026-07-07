@@ -1,9 +1,10 @@
 package com.epay.wallet.cache;
 
+import com.epay.domain.wallet.entity.CurrencyBalance;
+import com.epay.domain.wallet.entity.Wallet;
 import com.epay.wallet.cache.model.WalletBalanceCacheEntry;
 import com.epay.wallet.cache.model.WalletCacheEntry;
-import com.epay.wallet.domain.entity.CurrencyBalance;
-import com.epay.wallet.domain.entity.Wallet;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

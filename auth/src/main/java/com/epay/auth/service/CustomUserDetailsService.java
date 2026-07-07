@@ -1,24 +1,29 @@
-package com.epay.common.config.components;
+package com.epay.auth.service;
 
-import com.epay.common.config.security.UserLookupPort;
+import com.epay.auth.repository.UserRepository;
+import com.epay.domain.auth.entity.User;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserLookupPort userLookupPort;
+    private final UserRepository usersRepository;
 
-    public CustomUserDetailsService(UserLookupPort userLookupPort) {
-        this.userLookupPort = userLookupPort;
+    public CustomUserDetailsService(UserRepository usersRepository) {
+        this.usersRepository = usersRepository;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userLookupPort.findByUsername(username)
+        User user = usersRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found with username: " + username));
+        return user;
     }
 }

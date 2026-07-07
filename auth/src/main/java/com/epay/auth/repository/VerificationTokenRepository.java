@@ -1,6 +1,6 @@
 package com.epay.auth.repository;
 
-import com.epay.auth.domain.entity.VerificationToken;
+import com.epay.domain.auth.entity.VerificationToken;
 import com.epay.domain.auth.enums.TokenPurpose;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

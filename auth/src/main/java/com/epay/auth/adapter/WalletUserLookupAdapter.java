@@ -1,16 +1,11 @@
 package com.epay.auth.adapter;
 
 import com.epay.auth.repository.UserRepository;
-import com.epay.wallet.port.UserLookupPort;
+import com.epay.common.interfaces.UserLookupPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import java.util.Optional;
 
-/**
- * Implements the wallet module's UserLookupPort.
- * Bridges wallet → user validation without wallet importing auth entities.
- */
 @Component
 @RequiredArgsConstructor
 public class WalletUserLookupAdapter implements UserLookupPort {

@@ -23,10 +23,6 @@
         </dependency>
         <dependency>
             <groupId>com.epay</groupId>
-            <artifactId>epay-domain</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.epay</groupId>
             <artifactId>epay-common</artifactId>
         </dependency>
         <dependency>
@@ -72,10 +68,6 @@
         <dependency>
             <groupId>com.epay</groupId>
             <artifactId>epay-investment</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.epay</groupId>
-            <artifactId>epay-notification</artifactId>
         </dependency>
         <dependency>
             <groupId>com.epay</groupId>

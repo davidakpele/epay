@@ -1,7 +1,8 @@
 package com.epay.auth.interfaces;
 
 import org.springframework.http.ResponseEntity;
-import com.epay.auth.domain.entity.User;
+
+import com.epay.domain.auth.entity.User;
 import com.epay.domain.auth.input.ConfirmResetPasswordRequest;
 import com.epay.domain.auth.input.ForgotPasswordRequest;
 import com.epay.domain.auth.input.ForgotUsernameRequest;

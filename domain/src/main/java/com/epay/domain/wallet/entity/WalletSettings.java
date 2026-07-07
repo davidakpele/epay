@@ -1,4 +1,4 @@
-package com.epay.wallet.domain.entity;
+package com.epay.domain.wallet.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

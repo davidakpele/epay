@@ -1,11 +1,12 @@
 package com.epay.wallet.repository;
 
-import com.epay.wallet.domain.entity.SupportedCurrency;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import com.epay.domain.wallet.entity.SupportedCurrency;
 
 import java.math.BigDecimal;
 import java.util.List;

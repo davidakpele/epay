@@ -1,6 +1,6 @@
 package com.epay.auth.repository;
 
-import com.epay.auth.domain.entity.KycVerification;
+import com.epay.domain.auth.entity.KycVerification;
 import com.epay.domain.auth.enums.KycStatus;
 import com.epay.domain.auth.enums.KycTier;
 import org.springframework.data.domain.Page;

@@ -19,12 +19,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.epay.auth.domain.entity.AuthorizeUserVerification;
-import com.epay.auth.domain.entity.TwoFactorAuthentication;
-import com.epay.auth.domain.entity.User;
-import com.epay.auth.domain.entity.UserRecord;
-import com.epay.auth.domain.entity.UserTracer;
-import com.epay.auth.domain.entity.VerificationToken;
+
 import com.epay.auth.interfaces.IAuthenticationService;
 import com.epay.auth.interfaces.IAuthorizeUserVerificationService;
 import com.epay.auth.interfaces.IMessagingService;
@@ -39,6 +34,12 @@ import com.epay.common.config.components.KeyWrapper;
 import com.epay.common.config.components.NotificationProperties;
 import com.epay.common.config.services.JwtService;
 import com.epay.common.exception.ErrorCode;
+import com.epay.domain.auth.entity.AuthorizeUserVerification;
+import com.epay.domain.auth.entity.TwoFactorAuthentication;
+import com.epay.domain.auth.entity.User;
+import com.epay.domain.auth.entity.UserRecord;
+import com.epay.domain.auth.entity.UserTracer;
+import com.epay.domain.auth.entity.VerificationToken;
 import com.epay.domain.auth.enums.AttemptType;
 import com.epay.domain.auth.enums.ContactMethod;
 import com.epay.domain.auth.enums.Role;
@@ -49,9 +50,8 @@ import com.epay.domain.auth.input.UserSignInRequest;
 import com.epay.domain.auth.input.UserSignUpRequest;
 import com.epay.domain.auth.response.AuthResponse;
 import com.epay.domain.auth.response.VerificationTokenResult;
-import com.epay.domain.wallet.input.CreateWalletRequest;
-import com.epay.notification.service.AuthenticationNotificationService;
-import com.epay.wallet.service.WalletService;
+import com.epay.common.interfaces.IAuthNotificationPort;
+import com.epay.common.interfaces.IWalletPort;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -62,11 +62,11 @@ public class AuthenticationService implements IAuthenticationService{
     
     private static final int EXPIRATION_MINUTES = 15;
     private final UserRepository userRepository;
-    private final WalletService walletService;
+    private final IWalletPort walletPort;
     private final UserRecordRepository userRecordRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuthenticationNotificationService notificationService;
+    private final IAuthNotificationPort notificationService;
     private final AuthenticationManager authenticationManager;
     private final KeyWrapper keysWrapper; 
     private final IAuthorizeUserVerificationService authorizeUserVerificationService;
@@ -182,8 +182,6 @@ public class AuthenticationService implements IAuthenticationService{
                 return handleTwoFactorAuth(user, authResponse);
             }
 
-            UserRecord record = userRecordRepository.findByUserId(user.getId()).orElse(null);
-
             String jwtToken = jwtService.generateToken(user, user.getId());
             UserTracer session = userTracerService.createSession(user);
             userAttemptService.UpdateUserAccount(user.getId());
@@ -274,10 +272,7 @@ public class AuthenticationService implements IAuthenticationService{
         }
 
         try {
-            CreateWalletRequest request = new CreateWalletRequest();
-            request.setUserId(user.getId());
-
-            walletService.createWallet(request);
+            walletPort.createWalletForUser(user.getId(), "NGN");
             activateUserRecord(user);
             verificationTokenRepository.delete(verificationToken);
 
@@ -323,16 +318,8 @@ public class AuthenticationService implements IAuthenticationService{
     @Transactional
     public ResponseEntity<?> createWallet(Long id) {
         try {
-
-            CreateWalletRequest request = new CreateWalletRequest();
-            request.setUserId(id);
-
-            Object result = walletService.createWallet(request);
-
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(result);
-
+            walletPort.createWalletForUser(id, "NGN");
+            return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (Exception e) {
 
             return ResponseEntity

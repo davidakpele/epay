@@ -1,4 +1,4 @@
-package com.epay.auth.domain.entity;
+package com.epay.domain.auth.entity;
 
 import com.epay.domain.auth.enums.AccountType;
 import com.epay.domain.auth.enums.KycStatus;

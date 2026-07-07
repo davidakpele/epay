@@ -1,4 +1,4 @@
-package com.epay.auth.domain.entity;
+package com.epay.domain.auth.entity;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;

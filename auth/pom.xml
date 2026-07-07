@@ -25,14 +25,6 @@
             <artifactId>epay-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.epay</groupId>
-            <artifactId>epay-notification</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.epay</groupId>
-            <artifactId>epay-wallet</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>

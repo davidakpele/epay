@@ -1,36 +1,34 @@
 package com.epay.common.config.cors;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.util.List;
-
-@EnableWebMvc
+/**
+ * Supplemental CORS configuration.
+ * The primary CorsConfigurationSource bean is defined in SecurityConfiguration
+ * and takes effect for all secured endpoints.
+ * This configurer covers any MVC routes outside the security filter chain.
+ *
+ * NOTE: @EnableWebMvc is intentionally NOT used here — it would disable
+ * Spring Boot's MVC auto-configuration.
+ */
 @Configuration
 public class CorsAutoConfiguration implements WebMvcConfigurer {
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedHeaders("*")
-                .allowedMethods("*")
-                .allowedOriginPatterns("*");
+                .allowedOriginPatterns("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders(
+                        "Authorization", "Content-Type", "X-Requested-With",
+                        "Accept", "Origin", "X-Request-ID", "X-API-Version",
+                        "Cache-Control", "X-Forwarded-For")
+                .exposedHeaders(
+                        "Authorization", "X-Request-ID",
+                        "X-Rate-Limit-Limit", "X-Rate-Limit-Remaining", "X-Rate-Limit-Reset")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
-
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
-        configuration.setAllowedMethods(List.of("*"));
-        configuration.setAllowedHeaders(List.of("*"));
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
 }

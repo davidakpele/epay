@@ -23,9 +23,7 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import com.epay.common.config.components.JwtProperties;
-
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
@@ -115,7 +113,7 @@ public class SecurityConfiguration {
                 .xssProtection(xss -> xss
                     .headerValue(org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
                 )
-                .contentTypeOptions(contentType -> contentType.disable())
+                .contentTypeOptions(contentType -> {}) // enabled by default — do not disable
                 .referrerPolicy(referrer -> referrer
                     .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
                 )
@@ -242,14 +240,22 @@ public class SecurityConfiguration {
     @Bean
     public AccessDeniedHandler customAccessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
+            com.epay.common.exception.ErrorResponse body =
+                    com.epay.common.exception.ErrorResponse.builder()
+                    .success(false)
+                    .errorId(java.util.UUID.randomUUID().toString())
+                    .errorCode(com.epay.common.exception.ErrorCode.FORBIDDEN_ACCESS)
+                    .message("You do not have permission to access this resource")
+                    .timestamp(java.time.Instant.now())
+                    .path(request.getRequestURI())
+                    .status(HttpServletResponse.SC_FORBIDDEN)
+                    .build();
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            response.getWriter().write(
-                "{\"error\":\"Access Denied\"," +
-                "\"message\":\"You do not have permission to access this resource\"," +
-                "\"status\":403}"
-            );
+            new com.fasterxml.jackson.databind.ObjectMapper()
+                    .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
+                    .writeValue(response.getWriter(), body);
         };
     }
 }

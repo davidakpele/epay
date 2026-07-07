@@ -1,6 +1,6 @@
 package com.epay.auth.repository;
 
-import com.epay.auth.domain.entity.UserTracer;
+import com.epay.domain.auth.entity.UserTracer;
 import com.epay.domain.auth.enums.AttemptType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

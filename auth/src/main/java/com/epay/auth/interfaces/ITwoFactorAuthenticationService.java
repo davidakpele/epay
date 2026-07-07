@@ -2,8 +2,9 @@ package com.epay.auth.interfaces;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import com.epay.auth.domain.entity.TwoFactorAuthentication;
-import com.epay.auth.domain.entity.User;
+
+import com.epay.domain.auth.entity.TwoFactorAuthentication;
+import com.epay.domain.auth.entity.User;
 import com.epay.domain.auth.input.OTPRequest;
 
 public interface ITwoFactorAuthenticationService {

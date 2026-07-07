@@ -4,7 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import com.epay.auth.domain.entity.UserAccountSettings;
+
+import com.epay.domain.auth.entity.UserAccountSettings;
+
 import java.util.Optional;
 
 @Repository

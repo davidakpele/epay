@@ -1,7 +1,7 @@
 package com.epay.auth.interfaces;
 
-import com.epay.auth.domain.entity.User;
-import com.epay.auth.domain.entity.UserTracer;
+import com.epay.domain.auth.entity.User;
+import com.epay.domain.auth.entity.UserTracer;
 
 public interface IUserTracerService {
 
