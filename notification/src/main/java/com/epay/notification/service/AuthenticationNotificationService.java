@@ -23,10 +23,6 @@ public class AuthenticationNotificationService {
     private final JavaMailSender javaMailSender;
     private final SpringTemplateEngine templateEngine;
 
-    // -------------------------------------------------------------------------
-    // Email verification (registration link)
-    // -------------------------------------------------------------------------
-
     @Async
     public CompletableFuture<Void> sendVerificationEmail(String email, String content,
                                                           String link, String username) {
@@ -36,10 +32,6 @@ public class AuthenticationNotificationService {
         context.setVariable("content", content);
         return send(email, "Account Verification", "verification-email", context);
     }
-
-    // -------------------------------------------------------------------------
-    // Login alert
-    // -------------------------------------------------------------------------
 
     @Async
     public CompletableFuture<Void> sendLoginAlertNotification(String email, String fullName,
@@ -57,10 +49,6 @@ public class AuthenticationNotificationService {
         return send(email, "ePay — Login Alert", "auth/login-alert", context);
     }
 
-    // -------------------------------------------------------------------------
-    // 2FA OTP
-    // -------------------------------------------------------------------------
-
     @Async
     public CompletableFuture<Void> sendOptEmail(String email, String otp,
                                                  String resetPasswordUrl,
@@ -74,10 +62,6 @@ public class AuthenticationNotificationService {
         return send(email, "ePay — Your Two-Factor Authentication Code", "auth/forgot-password-otp", context);
     }
 
-    // -------------------------------------------------------------------------
-    // Forgot password OTP
-    // -------------------------------------------------------------------------
-
     @Async
     public CompletableFuture<Void> sendForgotPasswordOtp(String email, String username, String otp) {
         Context context = new Context();
@@ -85,10 +69,6 @@ public class AuthenticationNotificationService {
         context.setVariable("otp",      otp);
         return send(email, "ePay — Your Password Reset Code", "auth/forgot-password-otp", context);
     }
-
-    // -------------------------------------------------------------------------
-    // Account security alert (password reset, lock, unlock, 2FA toggle, etc.)
-    // -------------------------------------------------------------------------
 
     @Async
     public CompletableFuture<Void> sendAccountSecurityAlert(String email, String fullName,
@@ -110,10 +90,6 @@ public class AuthenticationNotificationService {
         return send(email, subject, "auth/account-security-alert", context);
     }
 
-    // -------------------------------------------------------------------------
-    // Forgot username
-    // -------------------------------------------------------------------------
-
     @Async
     public CompletableFuture<Void> sendForgotUsernameEmail(String email, String username, String fullName) {
         Context context = new Context();
@@ -121,10 +97,6 @@ public class AuthenticationNotificationService {
         context.setVariable("username", username);
         return send(email, "ePay — Your Username", "auth/forgot-username", context);
     }
-
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
 
     private CompletableFuture<Void> send(String to, String subject, String template, Context context) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();

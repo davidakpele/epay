@@ -1,7 +1,7 @@
 package com.epay.auth.service;
 
-import com.epay.auth.repository.UserRepository;
 import com.epay.domain.auth.entity.User;
+import com.epay.domain.auth.repository.UserRepository;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

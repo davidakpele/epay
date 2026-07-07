@@ -8,9 +8,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-
-import com.epay.domain.auth.entity.User;
-
 import java.util.Optional;
 
 @Component
@@ -33,10 +30,9 @@ public class WebSecurityContext {
     }
 
     public Optional<Long> getUserId() {
-    return getPrincipal()
-            .map(UserDetails::getUsername)
-            .flatMap(userLookupPort::findUserIdByUsername)
-            .map(User::getId); 
+        return getPrincipal()
+                .map(UserDetails::getUsername)
+                .flatMap(userLookupPort::findUserIdByUsername);
     }
 
     public Long getUserIdOrThrow() {

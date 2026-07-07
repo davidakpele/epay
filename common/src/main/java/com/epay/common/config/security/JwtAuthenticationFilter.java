@@ -20,9 +20,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -129,19 +127,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                path.startsWith("/user/list");
     }
 
-    private void handleAuthenticationError(
-            HttpServletResponse response,
-            String message
-    ) throws IOException {
+    private void handleAuthenticationError(HttpServletResponse response, String message) throws IOException {
+        com.epay.common.exception.ErrorResponse body =
+                com.epay.common.exception.ErrorResponse.builder()
+                .success(false)
+                .errorId(java.util.UUID.randomUUID().toString())
+                .errorCode(com.epay.common.exception.ErrorCode.UNAUTHORIZED_ACCESS)
+                .message(message)
+                .timestamp(java.time.Instant.now())
+                .status(HttpServletResponse.SC_UNAUTHORIZED)
+                .build();
+
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        Map<String, Object> errorDetails = new HashMap<>();
-        errorDetails.put("error", "Authentication Failed");
-        errorDetails.put("message", message);
-        errorDetails.put("timestamp", System.currentTimeMillis());
-        errorDetails.put("status", 401);
-
-        response.getWriter().write(objectMapper.writeValueAsString(errorDetails));
+        objectMapper.writeValue(response.getWriter(), body);
     }
 }

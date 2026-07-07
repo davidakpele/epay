@@ -5,6 +5,7 @@ import com.epay.common.exception.ConflictException;
 import com.epay.common.exception.ErrorCode;
 import com.epay.common.exception.ResourceNotFoundException;
 import com.epay.common.exception.WalletException;
+import com.epay.common.interfaces.IWalletNotificationPublisher;
 import com.epay.common.interfaces.UserLookupPort;
 import com.epay.domain.wallet.dto.WalletBalanceDTO;
 import com.epay.domain.wallet.dto.WalletSection;
@@ -31,13 +32,19 @@ import com.epay.wallet.repository.WalletSettingsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,12 +52,24 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class WalletService implements IWalletService {
 
-    private final WalletRepository            walletRepository;
-    private final WalletSettingsRepository    walletSettingsRepository;
-    private final SupportedCurrencyRepository supportedCurrencyRepository;
-    private final WalletCacheService          walletCacheService;
-    private final UserLookupPort              userLookupPort;
-    private final PasswordEncoder             passwordEncoder;
+    private final WalletRepository             walletRepository;
+    private final WalletSettingsRepository     walletSettingsRepository;
+    private final SupportedCurrencyRepository  supportedCurrencyRepository;
+    private final WalletCacheService           walletCacheService;
+    private final UserLookupPort               userLookupPort;
+    private final PasswordEncoder              passwordEncoder;
+    private final IWalletNotificationPublisher notificationPublisher;
+
+    private static final DateTimeFormatter EVT_FMT =
+            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
+
+    private String formatNow() {
+        return ZonedDateTime.now(ZoneId.systemDefault()).format(EVT_FMT);
+    }
+
+    // =========================================================================
+    // Read
+    // =========================================================================
 
     @Override
     public ResponseEntity<?> getWalletByUserId(Long userId) {
@@ -92,6 +111,10 @@ public class WalletService implements IWalletService {
 
         return ResponseEntity.ok(toBalanceDTO(balance));
     }
+
+    // =========================================================================
+    // Create / manage wallet
+    // =========================================================================
 
     @Transactional
     public ResponseEntity<?> createWallet(CreateWalletRequest request) {
@@ -162,33 +185,46 @@ public class WalletService implements IWalletService {
         walletRepository.save(wallet);
 
         walletCacheService.evict(userId);
-        log.info("Default currency set: userId={} currency={}", userId, code);
         return ResponseEntity.ok().build();
     }
 
+    // =========================================================================
+    // PIN management
+    // =========================================================================
+
     @Transactional
-    public ResponseEntity<?> setPin(Long userId, SetPinRequest request) {
+    public ResponseEntity<?> setPin(Long userId, SetPinRequest request, Authentication authentication) {
         validateUserId(userId);
         requireActiveUser(userId);
         if (!request.getPin().equals(request.getConfirmPin()))
             throw new BadRequestException("PINs do not match", ErrorCode.INVALID_INPUT);
 
-        Wallet wallet = walletRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"));
+        Optional<WalletSettings> settingsOpt = walletSettingsRepository.findByWalletId(request.getWalletId());
+        final boolean isUpdate = settingsOpt.isPresent() && settingsOpt.get().isIsSecure();
 
-        if (wallet.isPinSet())
-            throw new BadRequestException("PIN already set — use change PIN",
-                    ErrorCode.OPERATION_NOT_ALLOWED);
+        WalletSettings settings = settingsOpt.orElseGet(() -> {
+            Wallet w = walletRepository.findById(request.getWalletId())
+                    .orElseThrow(() -> new WalletException("Wallet not found.", ErrorCode.RESOURCE_NOT_FOUND));
+            WalletSettings s = new WalletSettings();
+            s.setWallet(w);
+            return s;
+        });
 
-        wallet.setTransactionPin(passwordEncoder.encode(request.getPin()));
-        wallet.setPinSet(true);
-        walletRepository.save(wallet);
-
-        WalletSettings settings = walletSettingsRepository.findByWalletId(wallet.getId())
-                .orElse(new WalletSettings());
-        settings.setWallet(wallet);
+        settings.setPassword(passwordEncoder.encode(request.getPin()));
         settings.setIsSecure(true);
         walletSettingsRepository.save(settings);
+
+        final String action     = isUpdate ? "UPDATED" : "CREATED";
+        final String actionTime = formatNow();
+        final String username   = authentication != null ? authentication.getName() : "";
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                notificationPublisher.publishWalletPinAlert(null, username, action, actionTime, null, null);
+            } catch (Exception ex) {
+                log.warn("[WalletPinAlert] Failed to publish: {}", ex.getMessage());
+            }
+        });
 
         walletCacheService.evict(userId);
         log.info("PIN set: userId={}", userId);
@@ -219,6 +255,10 @@ public class WalletService implements IWalletService {
         return ResponseEntity.ok().build();
     }
 
+    // =========================================================================
+    // Admin: freeze / unfreeze
+    // =========================================================================
+
     @Transactional
     public ResponseEntity<?> setWalletActive(Long userId, boolean active, Long adminId) {
         validateUserId(userId);
@@ -230,6 +270,10 @@ public class WalletService implements IWalletService {
         log.info("Wallet {} by adminId={} for userId={}", active ? "unfrozen" : "frozen", adminId, userId);
         return ResponseEntity.ok().build();
     }
+
+    // =========================================================================
+    // Transfer
+    // =========================================================================
 
     @Transactional
     public ResponseEntity<?> transfer(TransferRequest request, Long senderUserId) {
@@ -243,7 +287,6 @@ public class WalletService implements IWalletService {
 
         String code = request.getCurrency().trim().toUpperCase();
         requireActiveCurrency(code);
-
         requireActiveUser(senderUserId);
 
         Long recipientUserId = userLookupPort.findUserIdByUsername(request.getRecipientUsername())
@@ -255,6 +298,7 @@ public class WalletService implements IWalletService {
 
         Wallet senderWallet = walletRepository.findByUserId(senderUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sender wallet not found"));
+
         if (!senderWallet.isActive())
             throw new WalletException("Sender wallet is locked", ErrorCode.WALLET_LOCKED);
         if (!senderWallet.isPinSet())
@@ -265,6 +309,7 @@ public class WalletService implements IWalletService {
         CurrencyBalance senderBalance = senderWallet.getBalance(code)
                 .orElseThrow(() -> new WalletException(
                         "You don't have a " + code + " wallet", ErrorCode.WALLET_NOT_FOUND));
+
         if (senderBalance.getBalance().compareTo(request.getAmount()) < 0)
             throw new WalletException(
                     String.format("Insufficient %s balance. Available: %.2f",
@@ -272,39 +317,64 @@ public class WalletService implements IWalletService {
 
         Wallet recipientWallet = walletRepository.findByUserId(recipientUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Recipient wallet not found"));
+
         if (!recipientWallet.isActive())
             throw new WalletException("Recipient wallet is not available", ErrorCode.WALLET_SUSPENDED);
 
+        // Debit sender
         BigDecimal newSenderBal = senderBalance.getBalance().subtract(request.getAmount());
         senderBalance.setBalance(newSenderBal);
 
+        // Credit recipient (upsert currency if needed)
         SupportedCurrency currency = supportedCurrencyRepository.findByCodeIgnoreCase(code).get();
-        CurrencyBalance recipientBalance = recipientWallet.getBalance(code)
-                .orElseGet(() -> {
-                    CurrencyBalance nb = CurrencyBalance.builder()
-                            .currencyCode(code).currencySymbol(currency.getSymbol())
-                            .balance(BigDecimal.ZERO).isDefault(false).build();
-                    recipientWallet.addCurrency(nb);
-                    return nb;
-                });
+        CurrencyBalance recipientBalance = recipientWallet.getBalance(code).orElseGet(() -> {
+            CurrencyBalance nb = CurrencyBalance.builder()
+                    .currencyCode(code).currencySymbol(currency.getSymbol())
+                    .balance(BigDecimal.ZERO).isDefault(false).build();
+            recipientWallet.addCurrency(nb);
+            return nb;
+        });
         BigDecimal newRecipientBal = recipientBalance.getBalance().add(request.getAmount());
         recipientBalance.setBalance(newRecipientBal);
 
         walletRepository.save(senderWallet);
         walletRepository.save(recipientWallet);
 
+        // Update cache
         String txnId = newTxnId();
         walletCacheService.updateBalance(senderUserId, code, newSenderBal, newSenderBal, txnId);
         walletCacheService.updateBalance(recipientUserId, code, newRecipientBal, newRecipientBal, txnId);
 
+        // Async notifications — fire and forget
+        final String finalCode  = code;
+        final BigDecimal amount = request.getAmount();
+        final String recipient  = request.getRecipientUsername();
+        CompletableFuture.runAsync(() -> {
+            try {
+                notificationPublisher.publishDebitNotification(
+                        null, BigDecimal.ZERO, amount, "You", recipient,
+                        newSenderBal, finalCode, txnId, newSenderBal.add(amount));
+                notificationPublisher.publishCreditNotification(
+                        null, amount, "Sender", recipient,
+                        newRecipientBal, finalCode, txnId, newRecipientBal.subtract(amount));
+            } catch (Exception ex) {
+                log.warn("[Transfer] Notification failed txn={}: {}", txnId, ex.getMessage());
+            }
+        });
+
         log.info("Transfer: sender={} recipient={} currency={} amount={} ref={}",
-                senderUserId, recipientUserId, code, request.getAmount(), request.getIdempotencyKey());
+                senderUserId, recipientUserId, code, amount, request.getIdempotencyKey());
         return ResponseEntity.ok().build();
     }
 
+    // =========================================================================
+    // Balance operations
+    // =========================================================================
+
     @Override
     @Transactional
-    public ResponseEntity<?> updateBalance(String currency, BigDecimal amount, Long userId, Long walletId) {
+    public ResponseEntity<?> updateBalance(String currency, BigDecimal amount,
+                                           Long userId, Long walletId) {
         validateUserId(userId);
         requireActiveUser(userId);
         if (walletId == null || walletId <= 0)
@@ -356,6 +426,7 @@ public class WalletService implements IWalletService {
 
         CurrencyBalance balance = wallet.getBalance(code)
                 .orElseThrow(() -> new ResourceNotFoundException(code + " not found in wallet"));
+
         BigDecimal newBalance = balance.getBalance().add(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
@@ -364,6 +435,10 @@ public class WalletService implements IWalletService {
         log.info("Refund: userId={} currency={} amount={}", request.getSenderId(), code, request.getAmount());
         return ResponseEntity.ok().build();
     }
+
+    // =========================================================================
+    // Internal: maintenance / investment / savings
+    // =========================================================================
 
     @Override
     @Transactional
@@ -386,9 +461,7 @@ public class WalletService implements IWalletService {
         BigDecimal newBalance = balance.getBalance().subtract(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
-
         walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
-        log.info("Maintenance fee: walletId={} currency={} amount={}", request.getWalletId(), code, request.getAmount());
         return ResponseEntity.ok().build();
     }
 
@@ -411,9 +484,7 @@ public class WalletService implements IWalletService {
         BigDecimal newBalance = balance.getBalance().subtract(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
-
         walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
-        log.info("Investment debit: walletId={} currency={} amount={}", request.getWalletId(), code, request.getAmount());
         return ResponseEntity.ok().build();
     }
 
@@ -432,9 +503,7 @@ public class WalletService implements IWalletService {
         BigDecimal newBalance = balance.getBalance().add(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
-
         walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
-        log.info("Investment credit: walletId={} currency={} amount={}", request.getWalletId(), code, request.getAmount());
         return ResponseEntity.ok().build();
     }
 
@@ -457,9 +526,7 @@ public class WalletService implements IWalletService {
         BigDecimal newBalance = balance.getBalance().subtract(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
-
         walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
-        log.info("Savings debit: walletId={} currency={} amount={}", request.getWalletId(), code, request.getAmount());
         return ResponseEntity.ok().build();
     }
 
@@ -478,11 +545,13 @@ public class WalletService implements IWalletService {
         BigDecimal newBalance = balance.getBalance().add(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
-
         walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
-        log.info("Savings credit: walletId={} currency={} amount={}", request.getWalletId(), code, request.getAmount());
         return ResponseEntity.ok().build();
     }
+
+    // =========================================================================
+    // Private helpers
+    // =========================================================================
 
     private void validateUserId(Long userId) {
         if (userId == null || userId <= 0)

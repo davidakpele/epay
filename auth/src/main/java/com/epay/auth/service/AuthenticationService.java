@@ -26,10 +26,6 @@ import com.epay.auth.interfaces.IMessagingService;
 import com.epay.auth.interfaces.ITwoFactorAuthenticationService;
 import com.epay.auth.interfaces.IUserAttemptService;
 import com.epay.auth.interfaces.IUserTracerService;
-import com.epay.auth.repository.AuthorizeUserVerificationRepository;
-import com.epay.auth.repository.UserRecordRepository;
-import com.epay.auth.repository.UserRepository;
-import com.epay.auth.repository.VerificationTokenRepository;
 import com.epay.common.config.components.KeyWrapper;
 import com.epay.common.config.components.NotificationProperties;
 import com.epay.common.config.services.JwtService;
@@ -48,9 +44,13 @@ import com.epay.domain.auth.input.ForgotPasswordRequest;
 import com.epay.domain.auth.input.ForgotUsernameRequest;
 import com.epay.domain.auth.input.UserSignInRequest;
 import com.epay.domain.auth.input.UserSignUpRequest;
+import com.epay.domain.auth.repository.AuthorizeUserVerificationRepository;
+import com.epay.domain.auth.repository.UserRecordRepository;
+import com.epay.domain.auth.repository.UserRepository;
+import com.epay.domain.auth.repository.VerificationTokenRepository;
 import com.epay.domain.auth.response.AuthResponse;
 import com.epay.domain.auth.response.VerificationTokenResult;
-import com.epay.common.interfaces.IAuthNotificationPort;
+import com.epay.common.interfaces.IAuthNotificationPublisher;
 import com.epay.common.interfaces.IWalletPort;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -66,7 +66,7 @@ public class AuthenticationService implements IAuthenticationService{
     private final UserRecordRepository userRecordRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final IAuthNotificationPort notificationService;
+    private final IAuthNotificationPublisher notificationService;
     private final AuthenticationManager authenticationManager;
     private final KeyWrapper keysWrapper; 
     private final IAuthorizeUserVerificationService authorizeUserVerificationService;
@@ -195,7 +195,7 @@ public class AuthenticationService implements IAuthenticationService{
             final String fullName  = rec.getFirstName() + " " + rec.getLastName();
 
             CompletableFuture.runAsync(() ->
-                notificationService.sendLoginAlertNotification(
+                notificationService.publishLoginAlert(
                     user.getEmail(), fullName, user.getUsername(),
                     loginTime, ipAddr, device,
                     notificationProperties.getPhone(),
@@ -309,7 +309,7 @@ public class AuthenticationService implements IAuthenticationService{
         String verificationLink = keysWrapper.getUrl() + "/auth/verifyRegistration?token=" + newToken + "&id=" + authUser.getId();
         String content = "Dear " + user.getUsername() + ",\n\nThank you for registering. Please verify your email to activate your account.";
         CompletableFuture.runAsync(() ->
-                notificationService.sendVerificationEmail(user.getEmail(), content, verificationLink, user.getUsername()));
+                notificationService.publishVerificationEmail(user.getEmail(), content, verificationLink, user.getUsername()));
 
         return new VerificationTokenResult(true, verificationToken);
     }
@@ -381,7 +381,7 @@ public class AuthenticationService implements IAuthenticationService{
 
         final User finalUser = user;
         CompletableFuture.runAsync(() ->
-            notificationService.sendForgotPasswordOtp(
+            notificationService.publishForgotPasswordOtp(
                 finalUser.getEmail(),
                 finalUser.getUsername(),
                 otp
@@ -448,7 +448,7 @@ public class AuthenticationService implements IAuthenticationService{
         userRecordRepository.findByUserId(user.getId()).ifPresent(rec -> {
             final String fullName = rec.getFirstName() + " " + rec.getLastName();
             CompletableFuture.runAsync(() ->
-                notificationService.sendAccountSecurityAlert(
+                notificationService.publishAccountSecurityAlert(
                     finalUser.getEmail(), fullName, finalUser.getUsername(),
                     "PASSWORD_RESET", eventTime, ipAddr, device,
                     notificationProperties.getPhone(), notificationProperties.getEmail()
@@ -479,7 +479,7 @@ public class AuthenticationService implements IAuthenticationService{
             userRecordRepository.findByUserId(user.getId()).ifPresent(rec -> {
                 final String fullName = rec.getFirstName() + " " + rec.getLastName();
                 CompletableFuture.runAsync(() ->
-                    notificationService.sendForgotUsernameEmail(
+                    notificationService.publishForgotUsername(
                         finalUser.getEmail(),
                         finalUser.getUsername(),
                         fullName
@@ -545,7 +545,7 @@ public class AuthenticationService implements IAuthenticationService{
                 .createTwoFactorOtp(user, otp, jwt);
 
         CompletableFuture.runAsync(() ->
-                notificationService.sendOptEmail(
+                notificationService.publishTwoFactorOtp(
                         user.getEmail(), otp,
                         baseUrl + "/auth/security/password",
                         baseUrl + "/auth/security/configuring-two-factor-authentication",

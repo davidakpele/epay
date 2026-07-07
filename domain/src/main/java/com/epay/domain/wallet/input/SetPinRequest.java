@@ -21,4 +21,12 @@ public class SetPinRequest {
 
     @NotBlank(message = "Confirm PIN is required")
     private String confirmPin;
+
+    @NotBlank(message = "UserId is required")
+    private Long userId;
+    @NotBlank(message = "User Wallet ID is required")
+    private Long walletId;
+    @NotBlank(message = "Username is required")
+    private String username;
+    
 }

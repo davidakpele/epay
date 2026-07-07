@@ -1,21 +1,15 @@
 package com.epay.auth.config;
 
-import com.epay.auth.repository.UserRepository;
 import com.epay.common.config.security.UserLookupPort;
+import com.epay.domain.auth.entity.User;
+import com.epay.domain.auth.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-/**
- * Implements the {@link UserLookupPort} defined in common.
- * Bridges the security layer to the auth module's UserRepository.
- *
- * Dependency direction:
- *   common defines UserLookupPort  ←  auth implements it here
- *   common never imports auth.
- */
 @Component
 @RequiredArgsConstructor
 public class UserLookupAdapter implements UserLookupPort {
@@ -26,5 +20,11 @@ public class UserLookupAdapter implements UserLookupPort {
     public Optional<UserDetails> findByUsername(String username) {
         return userRepository.findByUsername(username)
                 .map(user -> (UserDetails) user);
+    }
+
+    @Override
+    public Optional<Long> findUserIdByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(User::getId);
     }
 }

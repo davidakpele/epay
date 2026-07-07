@@ -1,26 +1,30 @@
 package com.epay.notification.adapter;
 
 import com.epay.common.interfaces.IAuthNotificationPort;
-import com.epay.notification.service.AuthenticationNotificationService;
+import com.epay.common.interfaces.IAuthNotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Implements IAuthNotificationPort from epay-common.
- * auth injects IAuthNotificationPort — never AuthenticationNotificationService directly.
+ * Adapts IAuthNotificationPort (legacy synchronous contract)
+ * to IAuthNotificationPublisher (RabbitMQ async publisher).
+ *
+ * Kept for backward compatibility with any consumer still
+ * injecting IAuthNotificationPort.
  */
 @Component
 @RequiredArgsConstructor
 public class AuthNotificationAdapter implements IAuthNotificationPort {
 
-    private final AuthenticationNotificationService notificationService;
+    private final IAuthNotificationPublisher publisher;
 
     @Override
     public CompletableFuture<Void> sendVerificationEmail(String email, String content,
                                                           String link, String username) {
-        return notificationService.sendVerificationEmail(email, content, link, username);
+        publisher.publishVerificationEmail(email, content, link, username);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -28,8 +32,9 @@ public class AuthNotificationAdapter implements IAuthNotificationPort {
                                                                String username, String loginTime,
                                                                String ipAddress, String deviceInfo,
                                                                String supportPhone, String supportEmail) {
-        return notificationService.sendLoginAlertNotification(email, fullName, username,
-                loginTime, ipAddress, deviceInfo, supportPhone, supportEmail);
+        publisher.publishLoginAlert(email, fullName, username, loginTime,
+                ipAddress, deviceInfo, supportPhone, supportEmail);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -37,13 +42,14 @@ public class AuthNotificationAdapter implements IAuthNotificationPort {
                                                  String resetPasswordUrl,
                                                  String config2faUrl,
                                                  String config2faRecoveryUrl) {
-        return notificationService.sendOptEmail(email, otp, resetPasswordUrl,
-                config2faUrl, config2faRecoveryUrl);
+        publisher.publishTwoFactorOtp(email, otp, resetPasswordUrl, config2faUrl, config2faRecoveryUrl);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public CompletableFuture<Void> sendForgotPasswordOtp(String email, String username, String otp) {
-        return notificationService.sendForgotPasswordOtp(email, username, otp);
+        publisher.publishForgotPasswordOtp(email, username, otp);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -52,12 +58,14 @@ public class AuthNotificationAdapter implements IAuthNotificationPort {
                                                              String eventTime, String ipAddress,
                                                              String deviceInfo, String supportPhone,
                                                              String supportEmail) {
-        return notificationService.sendAccountSecurityAlert(email, fullName, username,
-                eventType, eventTime, ipAddress, deviceInfo, supportPhone, supportEmail);
+        publisher.publishAccountSecurityAlert(email, fullName, username, eventType,
+                eventTime, ipAddress, deviceInfo, supportPhone, supportEmail);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public CompletableFuture<Void> sendForgotUsernameEmail(String email, String username, String fullName) {
-        return notificationService.sendForgotUsernameEmail(email, username, fullName);
+        publisher.publishForgotUsername(email, username, fullName);
+        return CompletableFuture.completedFuture(null);
     }
 }

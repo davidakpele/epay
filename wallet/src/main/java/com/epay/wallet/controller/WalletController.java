@@ -1,5 +1,9 @@
 package com.epay.wallet.controller;
 
+import com.epay.common.config.interfaces.WalletRateLimited;
+import com.epay.common.exception.BadRequestException;
+import com.epay.common.exception.ErrorCode;
+import com.epay.domain.wallet.entity.WalletSettings;
 import com.epay.domain.wallet.input.AddCurrencyRequest;
 import com.epay.domain.wallet.input.ChangePinRequest;
 import com.epay.domain.wallet.input.CreateWalletRequest;
@@ -11,14 +15,20 @@ import com.epay.domain.wallet.input.SavingsDebitRequest;
 import com.epay.domain.wallet.input.SetPinRequest;
 import com.epay.domain.wallet.input.TransferRequest;
 import com.epay.domain.wallet.input.WalletRefundRequest;
+import com.epay.wallet.repository.WalletSettingsRepository;
 import com.epay.wallet.service.WalletService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/wallet")
@@ -26,19 +36,22 @@ import java.math.BigDecimal;
 public class WalletController {
 
     private final WalletService walletService;
+    private final WalletSettingsRepository walletSettingsRepository;
+    private static final DateTimeFormatter EVT_FMT = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
 
-    // --- Read ---
-
-    @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @GetMapping("/userId/{userId}")
+    @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.isOwner(#userId)")
     public ResponseEntity<?> getWallet(@PathVariable Long userId) {
+        if (userId == null || userId <= 0) {
+            return ResponseEntity.badRequest()
+                    .body("Invalid user ID provided. Please provide a valid user ID.");
+        }
         return walletService.getWalletByUserId(userId);
     }
 
     @GetMapping("/{userId}/balance/{currency}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> getWalletByCurrency(@PathVariable Long userId,
-                                                  @PathVariable String currency) {
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    public ResponseEntity<?> getWalletByCurrency(@PathVariable Long userId, @PathVariable String currency) {
         return walletService.getWalletByUserIdAndCurrencyType(userId, currency);
     }
 
@@ -68,11 +81,25 @@ public class WalletController {
 
     // --- PIN management ---
 
-    @PostMapping("/{userId}/pin")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> setPin(@PathVariable Long userId,
-                                     @Valid @RequestBody SetPinRequest request) {
-        return walletService.setPin(userId, request);
+    @PostMapping("/create/{userId}/pin")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    @WalletRateLimited(
+        keyPrefix      = "pin_setup",
+        capacity       = 5,
+        duration       = 10,
+        timeUnit       = java.util.concurrent.TimeUnit.MINUTES,
+        userIdentifier = "#authentication.name",
+        coolDownSeconds = 30
+    )
+    public ResponseEntity<?> setPin(@PathVariable Long userId,@Valid @RequestBody SetPinRequest request, Authentication authentication) {
+        String providedPin = request.getPin();
+        if (providedPin == null || providedPin.isEmpty()) {
+            throw new BadRequestException("Your withdrawal/transfer pin is required", ErrorCode.INVALID_INPUT);
+        }
+        if (providedPin.length() != 4 || !providedPin.matches("\\d{4}")) {
+            throw new BadRequestException("Invalid input. Please provide exactly 4 digits.", ErrorCode.INVALID_INPUT);
+        }
+        return walletService.setPin(userId, request, authentication);
     }
 
     @PutMapping("/{userId}/pin")

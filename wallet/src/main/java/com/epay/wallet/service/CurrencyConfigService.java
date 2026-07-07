@@ -1,6 +1,5 @@
 package com.epay.wallet.service;
 
-import com.epay.common.exception.BadRequestException;
 import com.epay.common.exception.ConflictException;
 import com.epay.common.exception.ErrorCode;
 import com.epay.common.exception.ResourceNotFoundException;
@@ -13,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,10 +21,6 @@ import java.util.stream.Collectors;
 public class CurrencyConfigService {
 
     private final SupportedCurrencyRepository currencyRepository;
-
-    // -------------------------------------------------------------------------
-    // Create
-    // -------------------------------------------------------------------------
 
     @Transactional
     public SupportedCurrencyDTO create(CreateCurrencyRequest request, Long adminId) {
@@ -57,10 +51,6 @@ public class CurrencyConfigService {
         return toDTO(currency);
     }
 
-    // -------------------------------------------------------------------------
-    // Update
-    // -------------------------------------------------------------------------
-
     @Transactional
     public SupportedCurrencyDTO update(Long currencyId, UpdateCurrencyRequest request, Long adminId) {
         SupportedCurrency currency = currencyRepository.findById(currencyId)
@@ -83,10 +73,6 @@ public class CurrencyConfigService {
         return toDTO(currency);
     }
 
-    // -------------------------------------------------------------------------
-    // Toggle active
-    // -------------------------------------------------------------------------
-
     @Transactional
     public void setActive(Long currencyId, boolean active, Long adminId) {
         if (!currencyRepository.existsById(currencyId)) {
@@ -96,10 +82,6 @@ public class CurrencyConfigService {
         log.info("Currency {} {}: id={} by adminId={}",
                 active ? "enabled" : "disabled", currencyId, currencyId, adminId);
     }
-
-    // -------------------------------------------------------------------------
-    // Read
-    // -------------------------------------------------------------------------
 
     public List<SupportedCurrencyDTO> getAllActive() {
         return currencyRepository.findByActiveTrue()
@@ -116,10 +98,6 @@ public class CurrencyConfigService {
                 .map(this::toDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Currency not found: " + code));
     }
-
-    // -------------------------------------------------------------------------
-    // Mapper
-    // -------------------------------------------------------------------------
 
     private SupportedCurrencyDTO toDTO(SupportedCurrency c) {
         return SupportedCurrencyDTO.builder()
