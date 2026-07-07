@@ -67,10 +67,6 @@ public class WalletService implements IWalletService {
         return ZonedDateTime.now(ZoneId.systemDefault()).format(EVT_FMT);
     }
 
-    // =========================================================================
-    // Read
-    // =========================================================================
-
     @Override
     public ResponseEntity<?> getWalletByUserId(Long userId) {
         validateUserId(userId);
@@ -112,9 +108,6 @@ public class WalletService implements IWalletService {
         return ResponseEntity.ok(toBalanceDTO(balance));
     }
 
-    // =========================================================================
-    // Create / manage wallet
-    // =========================================================================
 
     @Transactional
     public ResponseEntity<?> createWallet(CreateWalletRequest request) {
@@ -188,10 +181,6 @@ public class WalletService implements IWalletService {
         return ResponseEntity.ok().build();
     }
 
-    // =========================================================================
-    // PIN management
-    // =========================================================================
-
     @Transactional
     public ResponseEntity<?> setPin(Long userId, SetPinRequest request, Authentication authentication) {
         validateUserId(userId);
@@ -255,9 +244,6 @@ public class WalletService implements IWalletService {
         return ResponseEntity.ok().build();
     }
 
-    // =========================================================================
-    // Admin: freeze / unfreeze
-    // =========================================================================
 
     @Transactional
     public ResponseEntity<?> setWalletActive(Long userId, boolean active, Long adminId) {
@@ -270,10 +256,6 @@ public class WalletService implements IWalletService {
         log.info("Wallet {} by adminId={} for userId={}", active ? "unfrozen" : "frozen", adminId, userId);
         return ResponseEntity.ok().build();
     }
-
-    // =========================================================================
-    // Transfer
-    // =========================================================================
 
     @Transactional
     public ResponseEntity<?> transfer(TransferRequest request, Long senderUserId) {
@@ -321,11 +303,9 @@ public class WalletService implements IWalletService {
         if (!recipientWallet.isActive())
             throw new WalletException("Recipient wallet is not available", ErrorCode.WALLET_SUSPENDED);
 
-        // Debit sender
         BigDecimal newSenderBal = senderBalance.getBalance().subtract(request.getAmount());
         senderBalance.setBalance(newSenderBal);
 
-        // Credit recipient (upsert currency if needed)
         SupportedCurrency currency = supportedCurrencyRepository.findByCodeIgnoreCase(code).get();
         CurrencyBalance recipientBalance = recipientWallet.getBalance(code).orElseGet(() -> {
             CurrencyBalance nb = CurrencyBalance.builder()
@@ -340,12 +320,10 @@ public class WalletService implements IWalletService {
         walletRepository.save(senderWallet);
         walletRepository.save(recipientWallet);
 
-        // Update cache
         String txnId = newTxnId();
         walletCacheService.updateBalance(senderUserId, code, newSenderBal, newSenderBal, txnId);
         walletCacheService.updateBalance(recipientUserId, code, newRecipientBal, newRecipientBal, txnId);
 
-        // Async notifications — fire and forget
         final String finalCode  = code;
         final BigDecimal amount = request.getAmount();
         final String recipient  = request.getRecipientUsername();
@@ -366,10 +344,6 @@ public class WalletService implements IWalletService {
                 senderUserId, recipientUserId, code, amount, request.getIdempotencyKey());
         return ResponseEntity.ok().build();
     }
-
-    // =========================================================================
-    // Balance operations
-    // =========================================================================
 
     @Override
     @Transactional
@@ -435,10 +409,6 @@ public class WalletService implements IWalletService {
         log.info("Refund: userId={} currency={} amount={}", request.getSenderId(), code, request.getAmount());
         return ResponseEntity.ok().build();
     }
-
-    // =========================================================================
-    // Internal: maintenance / investment / savings
-    // =========================================================================
 
     @Override
     @Transactional
@@ -548,10 +518,6 @@ public class WalletService implements IWalletService {
         walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
         return ResponseEntity.ok().build();
     }
-
-    // =========================================================================
-    // Private helpers
-    // =========================================================================
 
     private void validateUserId(Long userId) {
         if (userId == null || userId <= 0)

@@ -42,7 +42,6 @@ public class DebitWalletNotification {
     public DebitWalletNotification() {
     }
 
-    // Constructor to map from JSON
     @JsonCreator
     public DebitWalletNotification(
             @JsonProperty("senderEmail") String senderEmail,

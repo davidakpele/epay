@@ -37,11 +37,8 @@ public class CreditWalletNotification {
 
     @NotNull(message = "Previous balance is required")
     private BigDecimal previousBalance;
-    // Default constructor
     public CreditWalletNotification() {
     }
-
-    // Constructor to map from JSON
     @JsonCreator
     public CreditWalletNotification(
             @JsonProperty("recipientEmail") String recipientEmail,
