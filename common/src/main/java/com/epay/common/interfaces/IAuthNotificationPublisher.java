@@ -1,10 +1,5 @@
 package com.epay.common.interfaces;
 
-/**
- * Publisher interface for auth-related notifications.
- * Defined in common — implemented in notification via RabbitMQ.
- * Inject this in auth, not AuthenticationNotificationService directly.
- */
 public interface IAuthNotificationPublisher {
 
     void publishVerificationEmail(String email, String content, String link, String username);

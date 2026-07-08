@@ -1,6 +1,6 @@
 package com.epay.domain.deposit.input;
 
-import com.epay.domain.deposit.enums.DepositChannel;
+import com.epay.domain.deposit.enums.DepositAndWithdrawSystem;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
@@ -19,6 +19,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class InitiateDepositRequest {
 
+    @NotNull(message = "User ID is required")
+    private Long userId;
+
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
     @Digits(integer = 15, fraction = 2)
@@ -28,8 +31,8 @@ public class InitiateDepositRequest {
     @Pattern(regexp = "^[A-Z]{3,10}$", message = "Invalid currency code")
     private String currency;
 
-    @NotNull(message = "Channel is required")
-    private DepositChannel channel;
+    @NotNull(message = "Deposit system is required")
+    private DepositAndWithdrawSystem depositSystem;
 
     /** Optional callback URL for redirect after payment. */
     private String callbackUrl;
@@ -37,4 +40,11 @@ public class InitiateDepositRequest {
     /** Client-supplied idempotency key — prevents duplicate initiations. */
     @NotBlank(message = "Idempotency key is required")
     private String idempotencyKey;
+
+    // ── Audit / compliance fields ──────────────────────────────────────────
+
+    private String ipAddress;
+    private String deviceId;
+    private String userAgent;
+    private String geoLocation;
 }

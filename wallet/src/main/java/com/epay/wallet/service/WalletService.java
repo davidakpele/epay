@@ -5,6 +5,7 @@ import com.epay.common.exception.ConflictException;
 import com.epay.common.exception.ErrorCode;
 import com.epay.common.exception.ResourceNotFoundException;
 import com.epay.common.exception.WalletException;
+import com.epay.common.interfaces.IHistoryPort;
 import com.epay.common.interfaces.IWalletNotificationPublisher;
 import com.epay.common.interfaces.UserLookupPort;
 import com.epay.domain.wallet.dto.WalletBalanceDTO;
@@ -59,6 +60,7 @@ public class WalletService implements IWalletService {
     private final UserLookupPort               userLookupPort;
     private final PasswordEncoder              passwordEncoder;
     private final IWalletNotificationPublisher notificationPublisher;
+    private final IHistoryPort                 historyPort;
 
     private static final DateTimeFormatter EVT_FMT =
             DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
@@ -324,6 +326,32 @@ public class WalletService implements IWalletService {
         walletCacheService.updateBalance(senderUserId, code, newSenderBal, newSenderBal, txnId);
         walletCacheService.updateBalance(recipientUserId, code, newRecipientBal, newRecipientBal, txnId);
 
+        final BigDecimal prevSenderBal = senderBalance.getBalance().add(request.getAmount());
+        final BigDecimal prevRecipientBal = recipientBalance.getBalance().subtract(request.getAmount());
+        final String senderFullName   = userLookupPort.findFullNameByUserId(senderUserId).orElse("Sender");
+        final String recipientFullName = userLookupPort.findFullNameByUserId(recipientUserId).orElse("Recipient");
+        final String symbol = currency.getSymbol();
+        CompletableFuture.runAsync(() -> {
+            try {
+                historyPort.record(senderUserId, senderWallet.getId(), txnId, request.getIdempotencyKey(),
+                        "TRANSFER_DEBIT", "DEBIT", "INTERNAL", "SUCCESS",
+                        request.getAmount(), BigDecimal.ZERO, request.getAmount(),
+                        prevSenderBal, newSenderBal, code, symbol,
+                        senderFullName, "TRANSFER TO " + recipientFullName,
+                        recipientFullName, recipientUserId, recipientWallet.getId(),
+                        null, null, null, null, java.time.LocalDateTime.now());
+                historyPort.record(recipientUserId, recipientWallet.getId(), txnId + "_CR", request.getIdempotencyKey() + "_CR",
+                        "TRANSFER_CREDIT", "CREDIT", "INTERNAL", "SUCCESS",
+                        request.getAmount(), BigDecimal.ZERO, request.getAmount(),
+                        prevRecipientBal, newRecipientBal, code, symbol,
+                        recipientFullName, "TRANSFER FROM " + senderFullName,
+                        senderFullName, senderUserId, senderWallet.getId(),
+                        null, null, null, null, java.time.LocalDateTime.now());
+            } catch (Exception ex) {
+                log.warn("[Transfer] History failed txn={}: {}", txnId, ex.getMessage());
+            }
+        });
+
         final String finalCode  = code;
         final BigDecimal amount = request.getAmount();
         final String recipient  = request.getRecipientUsername();
@@ -428,16 +456,32 @@ public class WalletService implements IWalletService {
                             code, request.getAmount(), code, balance.getBalance()),
                     ErrorCode.INSUFFICIENT_BALANCE);
 
+        BigDecimal prevMaint = balance.getBalance().add(request.getAmount());
         BigDecimal newBalance = balance.getBalance().subtract(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
         walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
-        return ResponseEntity.ok().build();
-    }
 
-    @Override
-    @Transactional
-    public ResponseEntity<?> processInvestmentDebit(InvestmentDebitRequest request) {
+        String maintTxnId = newTxnId();
+        SupportedCurrency maintCurrency = supportedCurrencyRepository.findByCodeIgnoreCase(code).orElse(null);
+        String symbol = maintCurrency != null ? maintCurrency.getSymbol() : code;
+        String holder = userLookupPort.findFullNameByUserId(request.getUserId()).orElse("Account Holder");
+        CompletableFuture.runAsync(() -> {
+            try {
+                historyPort.record(request.getUserId(), request.getWalletId(),
+                        maintTxnId, request.getReferenceNo(),
+                        "FEE", "DEBIT", "SYSTEM", "SUCCESS",
+                        request.getAmount(), request.getAmount(), request.getAmount(),
+                        prevMaint, newBalance, code, symbol, holder,
+                        "MAINTENANCE FEE DEDUCTION",
+                        null, null, null, null, null, null,
+                        request.getDescription(), java.time.LocalDateTime.now());
+            } catch (Exception ex) {
+                log.warn("[Maintenance] History failed: {}", ex.getMessage());
+            }
+        });
+        return ResponseEntity.ok().build();
+    }(InvestmentDebitRequest request) {
         validateTxRequest(request.getUserId(), request.getWalletId(),
                 request.getCurrencyType(), request.getAmount(), request.getReferenceNo());
         requireActiveUser(request.getUserId());

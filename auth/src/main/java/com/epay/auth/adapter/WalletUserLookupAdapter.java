@@ -1,11 +1,10 @@
 package com.epay.auth.adapter;
 
-import com.epay.auth.repository.UserRecordRepository;
-import com.epay.auth.repository.UserRepository;
 import com.epay.common.interfaces.UserLookupPort;
+import com.epay.domain.auth.repository.UserRecordRepository;
+import com.epay.domain.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import java.util.Optional;
 
 @Component

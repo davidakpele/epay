@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -24,7 +23,7 @@ public class DepositDTO {
     private String      currency;
     private DepositChannel channel;
     private DepositStatus  status;
-    private String      paymentUrl;     // redirect user to this after initiation
+    private String      paymentUrl;
     private LocalDateTime createdAt;
     private LocalDateTime completedAt;
 }

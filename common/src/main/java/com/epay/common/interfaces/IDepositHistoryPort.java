@@ -3,17 +3,19 @@ package com.epay.common.interfaces;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Port for recording deposit events in the history module.
- * Implemented by DepositHistoryAdapter in epay-history.
- */
 public interface IDepositHistoryPort {
-
     void recordDepositInitiated(Long userId, String reference, BigDecimal amount,
                                 String currency, String channel);
-
-    void recordDepositCompleted(Long userId, String reference, BigDecimal amount,
-                                String currency, String gatewayReference, LocalDateTime completedAt);
+    void recordDepositCompleted(Long userId, Long walletId,
+                                String reference, String gatewayReference,
+                                String transactionId, String channel,
+                                BigDecimal grossAmount, BigDecimal feeAmount,
+                                BigDecimal netAmount, BigDecimal previousBalance,
+                                BigDecimal newBalance, String currency,
+                                String currencySymbol, String accountHolder,
+                                String ipAddress, String deviceId,
+                                String userAgent, String geoLocation,
+                                LocalDateTime completedAt);
 
     void recordDepositFailed(Long userId, String reference, BigDecimal amount,
                              String currency, String reason);

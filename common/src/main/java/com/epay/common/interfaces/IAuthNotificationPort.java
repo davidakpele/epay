@@ -2,11 +2,6 @@ package com.epay.common.interfaces;
 
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Port interface defined in common.
- * epay-notification implements this via AuthNotificationAdapter.
- * auth calls this — no direct notification dependency needed.
- */
 public interface IAuthNotificationPort {
 
     CompletableFuture<Void> sendVerificationEmail(String email, String content,

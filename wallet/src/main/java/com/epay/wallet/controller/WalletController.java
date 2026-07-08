@@ -55,15 +55,11 @@ public class WalletController {
         return walletService.getWalletByUserIdAndCurrencyType(userId, currency);
     }
 
-    // --- Create wallet ---
-
     @PostMapping
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<?> createWallet(@Valid @RequestBody CreateWalletRequest request) {
         return walletService.createWallet(request);
     }
-
-    // --- Currency management ---
 
     @PostMapping("/{userId}/currencies")
     @PreAuthorize("hasRole('USER')")
@@ -78,8 +74,6 @@ public class WalletController {
                                                  @PathVariable String currency) {
         return walletService.setDefaultCurrency(userId, currency);
     }
-
-    // --- PIN management ---
 
     @PostMapping("/create/{userId}/pin")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
@@ -109,15 +103,11 @@ public class WalletController {
         return walletService.changePin(userId, request);
     }
 
-    // --- Transfer ---
-
     @PostMapping("/transfer")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> transfer(@Valid @RequestBody TransferRequest request) {
         return walletService.transfer(request, request.getSenderUserId());
     }
-
-    // --- Balance update (internal — called by other modules) ---
 
     @PatchMapping("/balance")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_USER')")
@@ -133,8 +123,6 @@ public class WalletController {
     public ResponseEntity<?> refund(@Valid @RequestBody WalletRefundRequest request) {
         return walletService.refundWallet(request);
     }
-
-    // --- Internal module endpoints (maintenance, investment, savings) ---
 
     @PostMapping("/internal/maintenance/debit")
     @PreAuthorize("hasRole('ADMIN')")

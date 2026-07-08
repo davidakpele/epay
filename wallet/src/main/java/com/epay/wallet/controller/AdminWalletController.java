@@ -21,8 +21,6 @@ public class AdminWalletController {
     private final WalletService          walletService;
     private final CurrencyConfigService  currencyConfigService;
 
-    // --- Wallet admin controls ---
-
     @PatchMapping("/{userId}/freeze")
     public ResponseEntity<?> freezeWallet(@PathVariable Long userId,
                                            @AuthenticationPrincipal UserDetails admin) {
@@ -34,8 +32,6 @@ public class AdminWalletController {
                                              @AuthenticationPrincipal UserDetails admin) {
         return walletService.setWalletActive(userId, true, resolveAdminId(admin));
     }
-
-    // --- Currency catalog CRUD ---
 
     @GetMapping("/currencies")
     public ResponseEntity<?> getAllCurrencies() {
@@ -80,7 +76,6 @@ public class AdminWalletController {
         return ResponseEntity.ok().build();
     }
 
-    // -------------------------------------------------------------------------
 
     private Long resolveAdminId(UserDetails admin) {
         // Username is the JWT subject; real ID lookup would use a port/service

@@ -3,11 +3,7 @@ package com.epay.common.interfaces;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
-/**
- * Publisher interface for wallet-related notifications.
- * Defined in common — implemented in notification via RabbitMQ.
- * Inject this in wallet module, not WalletNotificationMessageProducer directly.
- */
+
 public interface IWalletNotificationPublisher {
 
     void publishCreditNotification(String recipientEmail, BigDecimal transferAmount,
