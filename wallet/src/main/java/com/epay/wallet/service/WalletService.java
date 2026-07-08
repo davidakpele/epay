@@ -481,7 +481,11 @@ public class WalletService implements IWalletService {
             }
         });
         return ResponseEntity.ok().build();
-    }(InvestmentDebitRequest request) {
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<?> processInvestmentDebit(InvestmentDebitRequest request) {
         validateTxRequest(request.getUserId(), request.getWalletId(),
                 request.getCurrencyType(), request.getAmount(), request.getReferenceNo());
         requireActiveUser(request.getUserId());
@@ -495,10 +499,25 @@ public class WalletService implements IWalletService {
             throw new WalletException("Insufficient balance for investment debit",
                     ErrorCode.INSUFFICIENT_BALANCE);
 
+        BigDecimal prevInvDebit = balance.getBalance();
         BigDecimal newBalance = balance.getBalance().subtract(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
-        walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
+        String invDebitTxnId = newTxnId();
+        walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, invDebitTxnId);
+        CompletableFuture.runAsync(() -> {
+            try {
+                historyPort.record(request.getUserId(), request.getWalletId(),
+                        invDebitTxnId, request.getReferenceNo(),
+                        "INVESTMENT_DEBIT", "DEBIT", "SYSTEM", "SUCCESS",
+                        request.getAmount(), BigDecimal.ZERO, request.getAmount(),
+                        prevInvDebit, newBalance, code, code, null,
+                        "INVESTMENT DEBIT", null, null, null, null, null, null,
+                        request.getDescription(), java.time.LocalDateTime.now());
+            } catch (Exception ex) {
+                log.warn("[InvDebit] History failed: {}", ex.getMessage());
+            }
+        });
         return ResponseEntity.ok().build();
     }
 
@@ -514,10 +533,25 @@ public class WalletService implements IWalletService {
         CurrencyBalance balance = wallet.getBalance(code)
                 .orElseThrow(() -> new ResourceNotFoundException(code + " not found in wallet"));
 
+        BigDecimal prevInvCredit = balance.getBalance();
         BigDecimal newBalance = balance.getBalance().add(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
-        walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
+        String invCreditTxnId = newTxnId();
+        walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, invCreditTxnId);
+        CompletableFuture.runAsync(() -> {
+            try {
+                historyPort.record(request.getUserId(), request.getWalletId(),
+                        invCreditTxnId, request.getReferenceNo(),
+                        "INVESTMENT_CREDIT", "CREDIT", "SYSTEM", "SUCCESS",
+                        request.getAmount(), BigDecimal.ZERO, request.getAmount(),
+                        prevInvCredit, newBalance, code, code, null,
+                        "INVESTMENT CREDIT", null, null, null, null, null, null,
+                        request.getDescription(), java.time.LocalDateTime.now());
+            } catch (Exception ex) {
+                log.warn("[InvCredit] History failed: {}", ex.getMessage());
+            }
+        });
         return ResponseEntity.ok().build();
     }
 
@@ -537,10 +571,25 @@ public class WalletService implements IWalletService {
             throw new WalletException("Insufficient balance for savings debit",
                     ErrorCode.INSUFFICIENT_BALANCE);
 
+        BigDecimal prevSavDebit = balance.getBalance();
         BigDecimal newBalance = balance.getBalance().subtract(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
-        walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
+        String savDebitTxnId = newTxnId();
+        walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, savDebitTxnId);
+        CompletableFuture.runAsync(() -> {
+            try {
+                historyPort.record(request.getUserId(), request.getWalletId(),
+                        savDebitTxnId, request.getReferenceNo(),
+                        "SAVINGS_DEBIT", "DEBIT", "SYSTEM", "SUCCESS",
+                        request.getAmount(), BigDecimal.ZERO, request.getAmount(),
+                        prevSavDebit, newBalance, code, code, null,
+                        "SAVINGS DEBIT", null, null, null, null, null, null,
+                        request.getDescription(), java.time.LocalDateTime.now());
+            } catch (Exception ex) {
+                log.warn("[SavingsDebit] History failed: {}", ex.getMessage());
+            }
+        });
         return ResponseEntity.ok().build();
     }
 
@@ -556,10 +605,25 @@ public class WalletService implements IWalletService {
         CurrencyBalance balance = wallet.getBalance(code)
                 .orElseThrow(() -> new ResourceNotFoundException(code + " not found in wallet"));
 
+        BigDecimal prevSavCredit = balance.getBalance();
         BigDecimal newBalance = balance.getBalance().add(request.getAmount());
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
-        walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, newTxnId());
+        String savCreditTxnId = newTxnId();
+        walletCacheService.updateBalance(request.getUserId(), code, newBalance, newBalance, savCreditTxnId);
+        CompletableFuture.runAsync(() -> {
+            try {
+                historyPort.record(request.getUserId(), request.getWalletId(),
+                        savCreditTxnId, request.getReferenceNo(),
+                        "SAVINGS_CREDIT", "CREDIT", "SYSTEM", "SUCCESS",
+                        request.getAmount(), BigDecimal.ZERO, request.getAmount(),
+                        prevSavCredit, newBalance, code, code, null,
+                        "SAVINGS CREDIT", null, null, null, null, null, null,
+                        request.getDescription(), java.time.LocalDateTime.now());
+            } catch (Exception ex) {
+                log.warn("[SavingsCredit] History failed: {}", ex.getMessage());
+            }
+        });
         return ResponseEntity.ok().build();
     }
 
