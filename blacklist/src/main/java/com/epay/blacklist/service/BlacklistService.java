@@ -1,19 +1,14 @@
 package com.epay.blacklist.service;
 
-import com.epay.blacklist.domain.entity.BlacklistEntry;
 import com.epay.blacklist.repository.BlacklistRepository;
+import com.epay.domain.blacklist.domain.entity.BlacklistEntry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-/**
- * Blacklist service — Redis-cached for sub-millisecond lookups.
- * Falls back to DB if Redis is unavailable.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -37,8 +32,7 @@ public class BlacklistService {
         return accountNumber != null && check("ACCOUNT_NUMBER", accountNumber);
     }
 
-    public void addToBlacklist(String type, String value, Long userId,
-                                String reason, String addedBy, LocalDateTime expiresAt) {
+    public void addToBlacklist(String type, String value, Long userId, String reason, String addedBy, LocalDateTime expiresAt) {
         BlacklistEntry entry = BlacklistEntry.builder()
                 .type(type.toUpperCase())
                 .value(value)
@@ -49,7 +43,6 @@ public class BlacklistService {
                 .expiresAt(expiresAt)
                 .build();
         repository.save(entry);
-        // Warm cache immediately
         redisTemplate.opsForValue().set(cacheKey(type, value), "1", Duration.ofSeconds(CACHE_TTL_S));
         log.info("[Blacklist] Added: type={} value={} by={}", type, value, addedBy);
     }
@@ -63,25 +56,22 @@ public class BlacklistService {
         });
     }
 
-    // =========================================================================
-    // Private
-    // =========================================================================
+    public void getBlackListedWalletByWalletId(Long id){
+
+    }
 
     private boolean check(String type, String value) {
         String key = cacheKey(type, value);
         try {
-            // Check Redis first
             if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) return true;
         } catch (Exception e) {
             log.warn("[Blacklist] Redis check failed: {}", e.getMessage());
         }
 
-        // Fall back to DB
         boolean blacklisted = repository.existsActiveByTypeAndValue(
                 type, value, LocalDateTime.now());
 
         if (blacklisted) {
-            // Warm cache
             try {
                 redisTemplate.opsForValue().set(key, "1", Duration.ofSeconds(CACHE_TTL_S));
             } catch (Exception ignored) {}

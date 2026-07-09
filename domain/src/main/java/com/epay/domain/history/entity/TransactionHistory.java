@@ -1,4 +1,4 @@
-package com.epay.history.domain.entity;
+package com.epay.domain.history.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

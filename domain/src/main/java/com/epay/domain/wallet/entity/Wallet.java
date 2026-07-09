@@ -34,17 +34,14 @@ public class Wallet {
     @Builder.Default
     private List<CurrencyBalance> balances = new ArrayList<>();
 
-    /** Whether this wallet is active and can perform transactions. */
     @Column(nullable = false)
     @Builder.Default
     private boolean active = true;
 
-    /** Whether the transaction PIN has been set by the user. */
     @Column(name = "pin_set", nullable = false)
     @Builder.Default
     private boolean pinSet = false;
 
-    /** Bcrypt-hashed transaction PIN — never returned in responses. */
     @Column(name = "transaction_pin")
     private String transactionPin;
 

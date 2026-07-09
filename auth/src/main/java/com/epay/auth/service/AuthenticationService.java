@@ -355,10 +355,8 @@ public class AuthenticationService implements IAuthenticationService{
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Determine lookup method from the channel field
-        String channel = request.getChannel() != null ? request.getChannel().name() : "EMAIL";
 
-        // Look up user — only proceed if account exists and is enabled
+        String channel = request.getChannel() != null ? request.getChannel().name() : "EMAIL";
         User user = null;
         if ("EMAIL".equals(channel)) {
             user = userRepository.findByEmail(identifier).orElse(null);

@@ -1,9 +1,8 @@
-package com.epay.blacklist.domain.entity;
+package com.epay.domain.blacklist.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 
 @Data
@@ -22,16 +21,16 @@ public class BlacklistEntry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** ACCOUNT, IP, ACCOUNT_NUMBER, DEVICE */
     @Column(nullable = false, length = 30)
     private String type;
 
-    /** The blacklisted value — userId, IP string, account number, etc. */
     @Column(nullable = false, length = 255)
     private String value;
 
     @Column(name = "user_id")
     private Long userId;
+
+    private Long WalletId;
 
     @Column(nullable = false)
     private boolean active;

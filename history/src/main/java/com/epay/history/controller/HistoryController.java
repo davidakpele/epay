@@ -1,7 +1,7 @@
 package com.epay.history.controller;
 
 import com.epay.common.exception.ApiResponse;
-import com.epay.history.domain.entity.TransactionHistory;
+import com.epay.domain.history.entity.TransactionHistory;
 import com.epay.history.service.HistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -3,7 +3,6 @@ package com.epay.wallet.controller;
 import com.epay.common.config.interfaces.WalletRateLimited;
 import com.epay.common.exception.BadRequestException;
 import com.epay.common.exception.ErrorCode;
-import com.epay.domain.wallet.entity.WalletSettings;
 import com.epay.domain.wallet.input.AddCurrencyRequest;
 import com.epay.domain.wallet.input.ChangePinRequest;
 import com.epay.domain.wallet.input.CreateWalletRequest;
@@ -23,12 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/wallet")
@@ -36,8 +31,6 @@ import java.util.Optional;
 public class WalletController {
 
     private final WalletService walletService;
-    private final WalletSettingsRepository walletSettingsRepository;
-    private static final DateTimeFormatter EVT_FMT = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
 
     @GetMapping("/userId/{userId}")
     @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.isOwner(#userId)")
