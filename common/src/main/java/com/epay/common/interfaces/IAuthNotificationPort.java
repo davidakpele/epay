@@ -26,4 +26,7 @@ public interface IAuthNotificationPort {
                                                       String supportEmail);
 
     CompletableFuture<Void> sendForgotUsernameEmail(String email, String username, String fullName);
+
+    CompletableFuture<Void> sendBankStatementEmail(String email, String username,
+                                                    byte[] pdfBytes, String period);
 }

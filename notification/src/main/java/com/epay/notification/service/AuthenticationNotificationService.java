@@ -98,6 +98,32 @@ public class AuthenticationNotificationService {
         return send(email, "ePay — Your Username", "auth/forgot-username", context);
     }
 
+    @Async
+    public CompletableFuture<Void> sendBankStatementEmail(String email, String username,
+                                                           byte[] pdfBytes, String period) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "utf-8");
+            Context context = new Context();
+            context.setVariable("username", username);
+            context.setVariable("period",   period);
+            String html = templateEngine.process("auth/account-statement", context);
+            helper.setTo(email);
+            helper.setSubject("ePay — Your Account Statement");
+            helper.setText(html, true);
+            helper.addAttachment(
+                    "account-statement-" + period.replace(" ", "-") + ".pdf",
+                    new org.springframework.core.io.ByteArrayResource(pdfBytes),
+                    "application/pdf");
+            javaMailSender.send(mimeMessage);
+            log.info("Account statement sent to {}", email);
+            return CompletableFuture.completedFuture(null);
+        } catch (jakarta.mail.MessagingException | org.springframework.mail.MailException e) {
+            log.error("Failed to send statement to {}: {}", email, e.getMessage());
+            throw new org.springframework.mail.MailSendException("Failed to send statement: " + e.getMessage(), e);
+        }
+    }
+
     private CompletableFuture<Void> send(String to, String subject, String template, Context context) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         try {

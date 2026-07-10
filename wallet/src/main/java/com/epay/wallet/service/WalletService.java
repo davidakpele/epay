@@ -82,7 +82,7 @@ public class WalletService implements IWalletService {
 
         boolean pinSet = walletSettingsRepository.findByWalletId(wallet.getId())
                 .map(WalletSettings::isIsSecure).orElse(false);
-
+ 
         WalletSection section = new WalletSection();
         section.setWalletId(wallet.getId());
         section.setUserId(wallet.getUserId());

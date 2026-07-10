@@ -143,10 +143,33 @@ public class WalletNotificationService {
 
     @Async
     public CompletableFuture<Void> sendAccountStatement(StatementPayload p) {
-        Context ctx = new Context();
-        ctx.setVariable("username", p.getUsername());
-        ctx.setVariable("period",   p.getPeriod());
-        return send(p.getEmail(), "ePay — Your Account Statement", "wallet/credit-notification", ctx);
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "utf-8");
+            Context ctx = new Context();
+            ctx.setVariable("username", p.getUsername());
+            ctx.setVariable("period",   p.getPeriod());
+            String html = templateEngine.process("auth/account-statement", ctx);
+            helper.setTo(p.getEmail());
+            helper.setSubject("ePay — Your Account Statement");
+            helper.setText(html, true);
+
+            if (p.getPdfBytes() != null && p.getPdfBytes().length > 0) {
+                String filename = "account-statement-"
+                        + (p.getPeriod() != null ? p.getPeriod().replace(" ", "-") : "period")
+                        + ".pdf";
+                helper.addAttachment(filename,
+                        new org.springframework.core.io.ByteArrayResource(p.getPdfBytes()),
+                        "application/pdf");
+            }
+
+            javaMailSender.send(mimeMessage);
+            log.info("[Statement] Sent to {}", p.getEmail());
+            return CompletableFuture.completedFuture(null);
+        } catch (jakarta.mail.MessagingException | MailException e) {
+            log.error("Failed to send statement to {}: {}", p.getEmail(), e.getMessage());
+            throw new MailSendException("Failed to send statement email: " + e.getMessage(), e);
+        }
     }
 
     private CompletableFuture<Void> send(String to, String subject, String template, Context ctx) {

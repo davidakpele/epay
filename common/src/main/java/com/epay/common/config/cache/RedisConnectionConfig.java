@@ -16,7 +16,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Slf4j
@@ -29,10 +29,10 @@ public class RedisConnectionConfig {
     @Configuration
     @ConfigurationProperties(prefix = "cache.redis")
     public static class RedisProperties {
-        private String host = "localhost";
-        private int port = 6379;
+        private String host     = "localhost";
+        private int    port     = 6379;
         private String password = "";
-        private boolean ssl = false;
+        private boolean ssl     = false;
     }
 
     private final RedisProperties redisProperties;
@@ -40,22 +40,18 @@ public class RedisConnectionConfig {
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         log.info("Configuring Redis connection to {}:{}", redisProperties.getHost(), redisProperties.getPort());
-
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
         redisConfig.setHostName(redisProperties.getHost());
         redisConfig.setPort(redisProperties.getPort());
-
         if (redisProperties.getPassword() != null && !redisProperties.getPassword().isEmpty()) {
             redisConfig.setPassword(redisProperties.getPassword());
         }
-
         return new LettuceConnectionFactory(redisConfig);
     }
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate() {
-
-        GenericJackson2JsonRedisSerializer serializer = genericJackson2JsonRedisSerializer();
+        Jackson2JsonRedisSerializer<Object> serializer = jackson2JsonRedisSerializer();
 
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory());
@@ -69,15 +65,14 @@ public class RedisConnectionConfig {
     }
 
     @Bean
-    GenericJackson2JsonRedisSerializer genericJackson2JsonRedisSerializer() {
+    public Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         mapper.activateDefaultTyping(
                 LaissezFaireSubTypeValidator.instance,
                 ObjectMapper.DefaultTyping.NON_FINAL,
-                JsonTypeInfo.As.PROPERTY
-        );
-        return new GenericJackson2JsonRedisSerializer(mapper);
+                JsonTypeInfo.As.PROPERTY);
+        return new Jackson2JsonRedisSerializer<>(mapper, Object.class);
     }
 }

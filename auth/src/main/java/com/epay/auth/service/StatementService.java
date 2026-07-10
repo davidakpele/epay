@@ -16,15 +16,10 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-
-import com.example.auth_user_service.dtos.BankStatement;
-import com.example.auth_user_service.interfaces.INotificationServiceClient;
-import com.example.auth_user_service.interfaces.IPDFService;
 import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.Color;
@@ -51,12 +46,15 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import org.springframework.stereotype.Service;
 import com.epay.auth.interfaces.IStatementService;
+import com.epay.common.interfaces.IAuthNotificationPublisher;
 import com.epay.domain.auth.dto.BankStatement;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
-public class StatementService implements IStatementService{
+@RequiredArgsConstructor
+public class StatementService implements IStatementService {
 
     private static final Color LIGHT_GRAY = new DeviceRgb(220, 220, 220);
     private static final Color DARK_GRAY = new DeviceRgb(80, 80, 80);
@@ -65,8 +63,7 @@ public class StatementService implements IStatementService{
     // private static final Color BORDER_COLOR = new DeviceRgb(180, 180, 180);
 
 
-        @Autowired
-    private INotificationServiceClient notificationServiceClient;
+    private final IAuthNotificationPublisher notificationPublisher;
 
     // Inner class for footer event handler
     private static class FooterEventHandler implements IEventHandler {
@@ -751,17 +748,11 @@ public class StatementService implements IStatementService{
         try {
             byte[] pdfBytes = generateBankStatementPDF(statements);
             String period = getPeriodCovered(statements).replace(" ", "-").replace(":", "");
-            
-            ByteArrayResource pdfResource = new ByteArrayResource(pdfBytes) {
-                @Override
-                public String getFilename() {
-                    return "bank-statement.pdf";
-                }
-            };
-            
-            notificationServiceClient.sendBankStatementEmail(email, username, pdfResource, period);
-            
-        } catch (Exception e) { // catch ALL exceptions, not just IOException
+
+            // Publish via IAuthNotificationPublisher → RabbitMQ → notification module
+            notificationPublisher.publishAccountStatement(email, username, pdfBytes, period);
+
+        } catch (Exception e) {
             throw new RuntimeException("Failed to generate and send bank statement: " + e.getMessage(), e);
         }
     }

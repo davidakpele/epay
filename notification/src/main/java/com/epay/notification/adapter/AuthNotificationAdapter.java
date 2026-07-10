@@ -68,4 +68,11 @@ public class AuthNotificationAdapter implements IAuthNotificationPort {
         publisher.publishForgotUsername(email, username, fullName);
         return CompletableFuture.completedFuture(null);
     }
+
+    @Override
+    public CompletableFuture<Void> sendBankStatementEmail(String email, String username,
+                                                           byte[] pdfBytes, String period) {
+        publisher.publishAccountStatement(email, username, pdfBytes, period);
+        return CompletableFuture.completedFuture(null);
+    }
 }

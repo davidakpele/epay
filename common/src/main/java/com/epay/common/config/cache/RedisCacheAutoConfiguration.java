@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import java.time.Duration;
@@ -22,14 +22,14 @@ import java.util.Map;
 public class RedisCacheAutoConfiguration {
     private final RedisConnectionFactory redisConnectionFactory;
     private final CacheProperties cacheProperties;
-    private final GenericJackson2JsonRedisSerializer genericJackson2JsonRedisSerializer;
+    private final Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer;
 
     @Bean
     public RedisCacheManager redisCacheManager() {
         RedisCacheConfiguration defaultConfig =
                 RedisCacheConfiguration.defaultCacheConfig()
                         .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(genericJackson2JsonRedisSerializer));
+                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer));
 
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
         for (CacheProperties.CacheConfig cacheConfig : cacheProperties.getCaches()) {

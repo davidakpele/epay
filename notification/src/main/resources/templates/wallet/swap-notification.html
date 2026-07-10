@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Currency Swap</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 8px; overflow: hidden; }
+        .header { background: #1a237e; padding: 28px 32px; text-align: center; }
+        .header h1 { color: #fff; margin: 0; font-size: 22px; }
+        .body { padding: 32px; }
+        .body p { color: #333; font-size: 15px; line-height: 1.7; }
+        .info-box { background: #e8eaf6; border-left: 4px solid #1a237e; padding: 16px 20px; border-radius: 4px; margin: 20px 0; }
+        .info-box p { margin: 5px 0; font-size: 14px; }
+        .footer { background: #f9f9f9; padding: 18px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header"><h1>ePay — Currency Swap</h1></div>
+    <div class="body">
+        <p>Dear <strong th:text="${accountHolder}">Customer</strong>,</p>
+        <p>Your currency swap has been completed successfully.</p>
+        <div class="info-box">
+            <p><strong>Amount Swapped:</strong> <span th:text="${currencySymbol}"></span><span th:text="${amount}">0.00</span></p>
+            <p><strong>Exchanged To:</strong> <span th:text="${currencyExchange}">N/A</span></p>
+            <p><strong>Previous Balance:</strong> <span th:text="${previousBalance}">0.00</span></p>
+            <p><strong>New Balance:</strong> <span th:text="${availableBalance}">0.00</span></p>
+        </div>
+    </div>
+    <div class="footer"><p>ePay — Secure Digital Payments</p></div>
+</div>
+</body>
+</html>

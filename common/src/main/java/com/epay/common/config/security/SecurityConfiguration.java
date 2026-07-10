@@ -118,7 +118,7 @@ public class SecurityConfiguration {
                     .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
                 )
                 .permissionsPolicy(permissions -> permissions
-                    .policy("geolocation=(self), microphone=(), camera=(), payment=()")
+                    .policy("geolocation=(self), microphone=(), camera=()")
                 )
             )
             .addFilterBefore(
