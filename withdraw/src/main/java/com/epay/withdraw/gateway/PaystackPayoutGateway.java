@@ -32,7 +32,6 @@ public class PaystackPayoutGateway implements PayoutGateway {
             headers.setBearerAuth(secretKey);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // 1. Create transfer recipient
             Map<String, Object> recipientBody = Map.of(
                     "type",           "nuban",
                     "name",           accountName != null ? accountName : "Beneficiary",
@@ -55,7 +54,6 @@ public class PaystackPayoutGateway implements PayoutGateway {
                 return PayoutResult.builder().success(false)
                         .failureReason("Failed to create transfer recipient").build();
 
-            // 2. Initiate transfer
             Map<String, Object> transferBody = Map.of(
                     "source",    "balance",
                     "amount",    amount.multiply(BigDecimal.valueOf(100)).longValue(),

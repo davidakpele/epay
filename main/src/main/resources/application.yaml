@@ -19,9 +19,9 @@ spring:
     whitelabel:
       enabled: false
   datasource:
-    url: jdbc:postgresql://postgres:5432/pesco_db
-    username: postgres
-    password: root
+    url: jdbc:postgresql://postgres:5432/epay
+    username: ${DB_USERNAME:epay}
+    password: ${DB_PASSWORD:epay}
     driver-class-name: org.postgresql.Driver
     hikari:
       auto-commit: false
@@ -64,13 +64,6 @@ spring:
     task:
       initialize-enabled: false
       table-prefix: TASK_
-  cassandra:
-    contact-points: cassandra
-    port: 9042
-    local-datacenter: datacenter1
-    keyspace-name: epay_keyspace
-    username: ${CASSANDRA_USERNAME:cassandra}
-    password: ${CASSANDRA_PASSWORD:cassandra}
 
   devtools:
     restart:
@@ -132,26 +125,6 @@ file:
   upload-dir: ${FILE_UPLOAD_DIR:/var/www/uploads/images}
   max-file-size: 50MB
   allowed-file-types: image/jpeg,image/png,image/gif,image/webp
-
-web:
-  resources:
-    static-locations: classpath:/static/
-  datasource:
-    url: jdbc:postgresql://localhost:5432/epay
-    username: ${DB_USERNAME:epay}
-    password: ${DB_PASSWORD:epay}
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-    open-in-view: false
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
 
 server:
   port: ${SERVER_PORT:8080}

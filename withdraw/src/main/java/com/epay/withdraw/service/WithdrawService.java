@@ -1,9 +1,5 @@
 package com.epay.withdraw.service;
 
-import com.epay.common.exception.BadRequestException;
-import com.epay.common.exception.ErrorCode;
-import com.epay.common.exception.ResourceNotFoundException;
-import com.epay.common.exception.WithdrawalException;
 import com.epay.common.interfaces.IBlacklistPort;
 import com.epay.common.interfaces.IHistoryPort;
 import com.epay.common.interfaces.IIdempotencyPort;
@@ -22,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -59,18 +54,12 @@ public class WithdrawService {
     private final IIdempotencyPort             idempotencyPort;
     private final PayoutGatewayFactory         gatewayFactory;
 
-    // =========================================================================
-    // Process withdrawal
-    // =========================================================================
-
     public ResponseEntity<?> withdraw(Long userId, WithdrawRequest request) {
 
-        // ── 1. User validation ─────────────────────────────────────────────
         if (!userLookupPort.existsActiveUser(userId))
             return error("User not found or account inactive", HttpStatus.NOT_FOUND,
                     "The account does not exist or is inactive.");
 
-        // ── 2. Blacklist checks (account + IP) ────────────────────────────
         if (blacklistPort.isAccountBlacklisted(userId))
             return error("Account is blacklisted", HttpStatus.FORBIDDEN,
                     "This account has been flagged. Please contact support.");
@@ -84,13 +73,11 @@ public class WithdrawService {
             return error("Recipient account is blacklisted", HttpStatus.FORBIDDEN,
                     "The destination account has been flagged. Please contact support.");
 
-        // ── 3. Redis idempotency — prevent duplicate withdrawals ──────────
         String idemKey = "withdraw:" + userId + ":" + request.getIdempotencyKey();
         if (idempotencyPort.exists(idemKey))
             return error("Duplicate request", HttpStatus.CONFLICT,
                     "A withdrawal with this idempotency key has already been processed.");
 
-        // ── 4. Wallet validation ──────────────────────────────────────────
         if (!walletPort.walletExists(userId))
             return error("Wallet not found", HttpStatus.NOT_FOUND,
                     "No wallet found for this account.");
@@ -99,8 +86,6 @@ public class WithdrawService {
         if (!walletPort.isCurrencySupported(currency))
             return error("Unsupported currency: " + currency, HttpStatus.BAD_REQUEST,
                     "This currency is not supported.");
-
-        // ── 5. Balance check ──────────────────────────────────────────────
         BigDecimal fee            = calculateFee(request.getAmount(), request.getWithdrawalType());
         BigDecimal totalDebit     = request.getAmount().add(fee);
         BigDecimal previousBalance = walletPort.getBalance(userId, currency);
@@ -110,12 +95,10 @@ public class WithdrawService {
                     String.format("Available: %s %.2f, Required: %s %.2f (inc. fee: %.2f)",
                             currency, previousBalance, currency, totalDebit, fee));
 
-        // ── 6. PIN verification ───────────────────────────────────────────
         if (!walletPort.verifyPin(userId, request.getTransactionPin()))
             return error("Invalid transaction PIN", HttpStatus.UNAUTHORIZED,
                     "The transaction PIN you entered is incorrect.");
 
-        // ── 7. Debit wallet ───────────────────────────────────────────────
         String reference     = generateReference(request.getWithdrawalType(), userId);
         String transactionId = generateTxnId();
         String currencySymbol = walletPort.getCurrencySymbol(currency);
@@ -133,10 +116,8 @@ public class WithdrawService {
 
         BigDecimal newBalance = walletPort.getBalance(userId, currency);
 
-        // ── 8. Mark idempotency key in Redis ──────────────────────────────
         idempotencyPort.store(idemKey, IDEM_TTL_SEC);
 
-        // ── 9. Process payout via gateway (BANK_TRANSFER only) ───────────
         WithdrawalStatus status = WithdrawalStatus.COMPLETED;
         String failureReason    = null;
 
@@ -148,7 +129,6 @@ public class WithdrawService {
                         request.getAmount(), currency, request.getNarration());
 
                 if (!result.isSuccess()) {
-                    // Payout failed — refund wallet
                     walletPort.refundWallet(userId, currency, totalDebit, reference + "_REFUND");
                     idempotencyPort.remove(idemKey);
                     status        = WithdrawalStatus.FAILED;
@@ -164,9 +144,8 @@ public class WithdrawService {
             }
         }
 
-        // ── 10. History record ────────────────────────────────────────────
         final WithdrawalStatus finalStatus = status;
-        final String finalReason           = failureReason;
+        // final String finalReason           = failureReason;
         CompletableFuture.runAsync(() -> {
             try {
                 historyPort.record(
@@ -187,7 +166,6 @@ public class WithdrawService {
             }
         });
 
-        // ── 11. Notification ──────────────────────────────────────────────
         if (status == WithdrawalStatus.COMPLETED) {
             CompletableFuture.runAsync(() -> {
                 try {
@@ -205,7 +183,6 @@ public class WithdrawService {
                 request.getWithdrawalType(), userId, reference,
                 request.getAmount(), currency, fee, status);
 
-        // ── 12. Build response ────────────────────────────────────────────
         if (status == WithdrawalStatus.FAILED) {
             return error("Withdrawal failed: " + failureReason, HttpStatus.BAD_GATEWAY, failureReason);
         }
@@ -248,12 +225,8 @@ public class WithdrawService {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // =========================================================================
-    // Private helpers
-    // =========================================================================
-
+ 
     private BigDecimal calculateFee(BigDecimal amount, WithdrawalType type) {
-        // Flat zero for now — replace with FeeCalculationService when needed
         return BigDecimal.ZERO;
     }
 
