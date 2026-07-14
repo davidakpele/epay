@@ -63,6 +63,15 @@ services:
     networks:
       - epay-network
 
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+    networks:
+      - epay-network
   # ============================================================
   # Application — single monolith
   # ============================================================
