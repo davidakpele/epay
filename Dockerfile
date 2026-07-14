@@ -5,5 +5,5 @@ RUN mkdir -p /var/www/uploads/images && \
     chmod -R 755 /var/www/uploads/images
 
 VOLUME /tmp
-COPY target/*.jar app.jar
+COPY /main/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,9 +1,10 @@
 package com.epay.common.config.security;
 
-import com.epay.common.exception.UserNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,16 +18,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class ApplicationConfiguration {
 
-    private final UserLookupPort userLookupPort;
+    private final UserDetailsService userDetailsService;
 
-    public ApplicationConfiguration(UserLookupPort userLookupPort) {
-        this.userLookupPort = userLookupPort;
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> userLookupPort.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found."));
+    public ApplicationConfiguration(
+            @Qualifier("customUserDetailsService")
+            UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
     }
 
     @Bean
@@ -36,7 +33,7 @@ public class ApplicationConfiguration {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService());
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

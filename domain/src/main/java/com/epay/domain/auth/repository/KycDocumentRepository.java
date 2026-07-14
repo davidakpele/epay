@@ -9,19 +9,23 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface KycDocumentRepository extends JpaRepository<KycDocument, Long> {
 
-    List<KycDocument> findByUserId(Long userId);
+    @Query("SELECT d FROM KycDocument d WHERE d.user.id = :userId")
+    List<KycDocument> findByUserId(@Param("userId") Long userId);
 
-    List<KycDocument> findByUserIdAndStatus(Long userId, KycStatus status);
+    @Query("SELECT d FROM KycDocument d WHERE d.user.id = :userId AND d.status = :status")
+    List<KycDocument> findByUserIdAndStatus(@Param("userId") Long userId,
+                                             @Param("status") KycStatus status);
 
-    Optional<KycDocument> findByUserIdAndDocumentType(Long userId, KycDocumentType documentType);
+    @Query("SELECT d FROM KycDocument d WHERE d.user.id = :userId AND d.documentType = :type")
+    Optional<KycDocument> findByUserIdAndDocumentType(@Param("userId") Long userId,
+                                                       @Param("type") KycDocumentType type);
 
     Page<KycDocument> findByStatus(KycStatus status, Pageable pageable);
 
@@ -35,5 +39,9 @@ public interface KycDocumentRepository extends JpaRepository<KycDocument, Long> 
                               @Param("reviewedAt") LocalDateTime reviewedAt,
                               @Param("reason") String rejectionReason);
 
-    boolean existsByUserIdAndDocumentTypeAndStatus(Long userId, KycDocumentType documentType, KycStatus status);
+    @Query("SELECT CASE WHEN COUNT(d) > 0 THEN true ELSE false END " +
+           "FROM KycDocument d WHERE d.user.id = :userId AND d.documentType = :type AND d.status = :status")
+    boolean existsByUserIdAndDocumentTypeAndStatus(@Param("userId") Long userId,
+                                                    @Param("type") KycDocumentType type,
+                                                    @Param("status") KycStatus status);
 }

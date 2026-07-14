@@ -118,11 +118,11 @@ public class JwtService implements IJwtService{
 
     private Key getSigningKey() {
         try {
-            String secretKey = jwtProperties.getSecretKey();
-            if (secretKey == null || secretKey.trim().isEmpty()) {
+            String secret = jwtProperties.getSecret();
+            if (secret == null || secret.trim().isEmpty()) {
                 throw new IllegalStateException("JWT secret key is not configured");
             }
-            byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+            byte[] keyBytes = Decoders.BASE64.decode(secret);
             return Keys.hmacShaKeyFor(keyBytes);
         } catch (DecodingException | WeakKeyException e) {
             throw new IllegalStateException("Failed to initialize JWT signing key", e);

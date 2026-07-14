@@ -1,36 +1,36 @@
 package com.epay.domain.auth.repository;
 
 import com.epay.domain.auth.entity.VerificationToken;
-import com.epay.domain.auth.enums.TokenPurpose;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-import java.time.LocalDateTime;
+
+import java.util.Date;
 import java.util.Optional;
 
-@Repository
 public interface VerificationTokenRepository extends JpaRepository<VerificationToken, Long> {
-    @Query("SELECT t FROM VerificationToken t WHERE t.tokenHash = :tokenHash " +
-           "AND t.purpose = :purpose AND t.used = false AND t.expiresAt > :now")
-    Optional<VerificationToken> findValidToken(@Param("tokenHash") String tokenHash,
-                                               @Param("purpose") TokenPurpose purpose,
-                                               @Param("now") LocalDateTime now);
+
+    @Query("SELECT t FROM VerificationToken t WHERE t.token = :token")
+    VerificationToken findByToken(@Param("token") String token);
+
+    @Query("SELECT t FROM VerificationToken t WHERE t.token = :token")
+    Optional<VerificationToken> findOptionalByToken(@Param("token") String token);
+
+    @Query("SELECT t FROM VerificationToken t WHERE t.userId = :userId")
+    Optional<VerificationToken> findByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END " +
+           "FROM VerificationToken t " +
+           "WHERE t.userId = :userId AND t.expirationTime > :now")
+    boolean existsValidTokenByUserId(@Param("userId") Long userId,
+                                     @Param("now") Date now);
 
     @Modifying
-    @Query("UPDATE VerificationToken t SET t.used = true " +
-           "WHERE t.user.id = :userId AND t.purpose = :purpose AND t.used = false")
-    void invalidateAllForUserAndPurpose(@Param("userId") Long userId,
-                                        @Param("purpose") TokenPurpose purpose);
-
-    boolean existsByUserIdAndPurposeAndUsedFalseAndExpiresAtAfter(
-            Long userId, TokenPurpose purpose, LocalDateTime now);
+    @Query("DELETE FROM VerificationToken t WHERE t.userId = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 
     @Modifying
-    @Query("DELETE FROM VerificationToken t WHERE t.expiresAt < :before AND t.used = true")
-    void deleteExpiredTokens(@Param("before") LocalDateTime before);
-
-    @Query("SELECT v FROM VerificationToken v WHERE v.token=:token")
-    VerificationToken findByToken(String token);
+    @Query("DELETE FROM VerificationToken t WHERE t.expirationTime < :before")
+    void deleteExpiredTokens(@Param("before") Date before);
 }

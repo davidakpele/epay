@@ -28,9 +28,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByUsernameIn(List<String> usernames);
 
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.record WHERE u.id = :id")
-    Optional<User> findByIdWithRecord(@Param("id") Long id);
-
     @Modifying
     @Query("UPDATE User u SET u.enabled = :enabled WHERE u.id = :userId")
     void updateEnabled(@Param("userId") Long userId, @Param("enabled") boolean enabled);
@@ -148,6 +145,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
            """)
     List<Object[]> countYearlyRegistrations();
 
-    @Query("SELECT MAX(u.id) FROM Users u")
+    @Query("SELECT MAX(u.id) FROM User u")
     Optional<Long> findMaxId();
 }

@@ -14,11 +14,11 @@ import javax.validation.constraints.Positive;
 @Setter
 @Component
 @Validated
-@ConfigurationProperties(prefix = "jwt")
+@ConfigurationProperties(prefix = "epay.security.jwt")
 public class JwtProperties {
     
     @NotBlank(message = "JWT secret key is required")
-    private String secretKey;
+    private String secret;
     
     @NotNull(message = "Token expiration minutes is required")
     @Positive(message = "Token expiration must be positive")
@@ -90,8 +90,8 @@ public class JwtProperties {
     public JwtProperties() {
     }
 
-    public JwtProperties(String secretKey, Integer expirationMinutes, Integer refreshExpirationDays, String issuer, String audience, Integer clockSkewSeconds, String algorithm, String tokenPrefix, String authorizationHeader, Boolean enableTokenBlacklist, Long blacklistCleanupIntervalMinutes, Long maxBlacklistSize, String cookieName, Boolean httpOnlyCookie, Boolean secureCookie, String sameSiteCookie, String corsAllowedOrigins, Boolean enableMultiFactorSupport, Integer maxTokensPerUser, Boolean logTokenIssuance, Boolean enableTokenRotation, Integer rotationGracePeriodMinutes) {
-        this.secretKey = secretKey;
+    public JwtProperties(String secret, Integer expirationMinutes, Integer refreshExpirationDays, String issuer, String audience, Integer clockSkewSeconds, String algorithm, String tokenPrefix, String authorizationHeader, Boolean enableTokenBlacklist, Long blacklistCleanupIntervalMinutes, Long maxBlacklistSize, String cookieName, Boolean httpOnlyCookie, Boolean secureCookie, String sameSiteCookie, String corsAllowedOrigins, Boolean enableMultiFactorSupport, Integer maxTokensPerUser, Boolean logTokenIssuance, Boolean enableTokenRotation, Integer rotationGracePeriodMinutes) {
+        this.secret = secret;
         this.expirationMinutes = expirationMinutes;
         this.refreshExpirationDays = refreshExpirationDays;
         this.issuer = issuer;
@@ -115,12 +115,12 @@ public class JwtProperties {
         this.rotationGracePeriodMinutes = rotationGracePeriodMinutes;
     }
 
-    public String getSecretKey() {
-        return this.secretKey;
+    public String getSecret() {
+        return this.secret;
     }
 
-    public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
+    public void setSecret(String secret) {
+        this.secret = secret;
     }
 
     public Integer getExpirationMinutes() {

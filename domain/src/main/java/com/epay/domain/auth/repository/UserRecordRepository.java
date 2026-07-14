@@ -1,29 +1,35 @@
 package com.epay.domain.auth.repository;
 
+import com.epay.domain.auth.entity.UserRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import com.epay.domain.auth.entity.UserRecord;
 
 import java.util.Optional;
 
-@Repository
 public interface UserRecordRepository extends JpaRepository<UserRecord, Long> {
 
-    Optional<UserRecord> findByUserId(Long userId);
+    @Query("SELECT r FROM UserRecord r WHERE r.user.id = :userId")
+    Optional<UserRecord> findByUserId(@Param("userId") Long userId);
 
-    Optional<UserRecord> findByPhoneNumber(String phoneNumber);
+    @Query("SELECT r FROM UserRecord r WHERE r.phoneNumber = :phone")
+    Optional<UserRecord> findByPhoneNumber(@Param("phone") String phoneNumber);
 
-    Optional<UserRecord> findByReferralCode(String referralCode);
+    @Query("SELECT r FROM UserRecord r WHERE r.referralCode = :code")
+    Optional<UserRecord> findByReferralCode(@Param("code") String referralCode);
 
-    boolean existsByPhoneNumber(String phoneNumber);
+    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
+           "FROM UserRecord r WHERE r.phoneNumber = :phone")
+    boolean existsByPhoneNumber(@Param("phone") String phoneNumber);
 
-    boolean existsByReferralCode(String referralCode);
+    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
+           "FROM UserRecord r WHERE r.referralCode = :code")
+    boolean existsByReferralCode(@Param("code") String referralCode);
 
-    boolean existsByUserId(Long userId);
+    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
+           "FROM UserRecord r WHERE r.user.id = :userId")
+    boolean existsByUserId(@Param("userId") Long userId);
 
     @Modifying
     @Query("UPDATE UserRecord r SET r.profileComplete = true WHERE r.user.id = :userId")

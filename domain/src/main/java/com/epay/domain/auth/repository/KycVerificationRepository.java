@@ -9,19 +9,20 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface KycVerificationRepository extends JpaRepository<KycVerification, Long> {
 
     @Query("SELECT v FROM KycVerification v WHERE v.user.id = :userId AND v.tier = :tier " +
            "ORDER BY v.createdAt DESC LIMIT 1")
-    Optional<KycVerification> findLatestByUserIdAndTier(@Param("userId") Long userId, @Param("tier") KycTier tier);
+    Optional<KycVerification> findLatestByUserIdAndTier(@Param("userId") Long userId,
+                                                         @Param("tier") KycTier tier);
 
-    List<KycVerification> findByUserId(Long userId);
+    @Query("SELECT v FROM KycVerification v WHERE v.user.id = :userId ORDER BY v.createdAt DESC")
+    List<KycVerification> findByUserId(@Param("userId") Long userId);
 
     Page<KycVerification> findByStatus(KycStatus status, Pageable pageable);
 
@@ -36,5 +37,9 @@ public interface KycVerificationRepository extends JpaRepository<KycVerification
                               @Param("reason") String rejectionReason,
                               @Param("note") String internalNote);
 
-    boolean existsByUserIdAndTierAndStatus(Long userId, KycTier tier, KycStatus status);
+    @Query("SELECT CASE WHEN COUNT(v) > 0 THEN true ELSE false END " +
+           "FROM KycVerification v WHERE v.user.id = :userId AND v.tier = :tier AND v.status = :status")
+    boolean existsByUserIdAndTierAndStatus(@Param("userId") Long userId,
+                                            @Param("tier") KycTier tier,
+                                            @Param("status") KycStatus status);
 }

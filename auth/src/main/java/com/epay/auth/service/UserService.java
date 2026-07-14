@@ -33,10 +33,6 @@ public class UserService {
     private final PasswordEncoder             passwordEncoder;
     private final IAuthNotificationPublisher  notificationPublisher;
 
-    // =========================================================================
-    // Profile
-    // =========================================================================
-
     public UserDTO getCurrentUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -70,10 +66,6 @@ public class UserService {
         return toRecordDTO(record);
     }
 
-    // =========================================================================
-    // Settings — notifications
-    // =========================================================================
-
     @Transactional
     public void updateNotificationPreferences(Long userId, NotificationUpdateRequest request) {
         User user = userRepository.findById(userId)
@@ -96,10 +88,6 @@ public class UserService {
         log.info("Notification preferences updated: userId={}", userId);
     }
 
-    // =========================================================================
-    // Settings — preferences (language, timezone, session)
-    // =========================================================================
-
     @Transactional
     public void updatePreferences(Long userId, PreferenceUpdateRequest request) {
         User user = userRepository.findById(userId)
@@ -121,19 +109,11 @@ public class UserService {
         log.info("Preferences updated: userId={}", userId);
     }
 
-    // =========================================================================
-    // 2FA
-    // =========================================================================
-
     @Transactional
     public void toggleTwoFactor(Long userId, boolean enable) {
         userRepository.updateTwoFactorEnabled(userId, enable);
         log.info("2FA {} for userId={}", enable ? "enabled" : "disabled", userId);
     }
-
-    // =========================================================================
-    // Account deletion
-    // =========================================================================
 
     @Transactional
     public void requestAccountDeletion(Long userId, DeleteAccountRequest request) {
@@ -143,10 +123,8 @@ public class UserService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword()))
             throw new BadRequestException("Password confirmation failed", ErrorCode.INVALID_CREDENTIALS);
 
-        // Deactivate — not hard delete. Schedule for actual deletion after cooling-off period.
         userRepository.updateEnabled(userId, false);
 
-        // Send security alert
         userRecordRepository.findByUserId(userId).ifPresent(rec -> {
             String fullName = rec.getFirstName() + " " + rec.getLastName();
             java.util.concurrent.CompletableFuture.runAsync(() -> {
@@ -164,10 +142,6 @@ public class UserService {
 
         log.info("Account deletion requested: userId={} reason={}", userId, request.getReason());
     }
-
-    // =========================================================================
-    // Mappers
-    // =========================================================================
 
     private UserDTO toUserDTO(User user) {
         return UserDTO.builder()

@@ -10,7 +10,13 @@ import com.epay.domain.auth.entity.AuthorizeUserVerification;
 @Repository
 public interface AuthorizeUserVerificationRepository extends JpaRepository<AuthorizeUserVerification, Long> {
 
-    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM AuthorizeUserVerification a INNER JOIN Users u ON a.userId = u.id WHERE u.enabled = true AND a.id = :id")
+    @Query("""
+    SELECT COUNT(a) > 0
+    FROM AuthorizeUserVerification a, User u
+    WHERE a.userId = u.id
+    AND u.enabled = true
+    AND a.id = :id
+    """)
     boolean findUserById(Long id);
 
     @Query("select t from AuthorizeUserVerification t where t.userId = :id")

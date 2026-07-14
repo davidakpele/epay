@@ -5,29 +5,42 @@ import com.epay.domain.auth.enums.AttemptType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-import java.time.LocalDateTime;
 
-@Repository
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 public interface UserTracerRepository extends JpaRepository<UserTracer, Long> {
 
-    Page<UserTracer> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    @Query("SELECT t FROM UserTracer t WHERE t.user.id = :userId ORDER BY t.createdAt DESC")
+    Page<UserTracer> findByUserId(@Param("userId") Long userId, Pageable pageable);
 
-    Page<UserTracer> findByUserIdAndAttemptTypeOrderByCreatedAtDesc(
-            Long userId, AttemptType attemptType, Pageable pageable);
+    @Query("SELECT t FROM UserTracer t WHERE t.user.id = :userId AND t.attemptType = :type ORDER BY t.createdAt DESC")
+    Page<UserTracer> findByUserIdAndAttemptType(@Param("userId") Long userId,
+                                                @Param("type") AttemptType type,
+                                                Pageable pageable);
 
-    Page<UserTracer> findByIpAddressOrderByCreatedAtDesc(String ipAddress, Pageable pageable);
+    @Query("SELECT t FROM UserTracer t WHERE t.ipAddress = :ip ORDER BY t.createdAt DESC")
+    Page<UserTracer> findByIpAddress(@Param("ip") String ipAddress, Pageable pageable);
 
-    @Query("SELECT COUNT(t) FROM UserTracer t WHERE t.user.id = :userId " +
+    Optional<UserTracer> findBySessionId(String sessionId);
+
+    @Query("SELECT COUNT(t) FROM UserTracer t " +
+           "WHERE t.user.id = :userId " +
            "AND t.attemptType = com.epay.domain.auth.enums.AttemptType.LOGIN " +
            "AND t.success = false AND t.createdAt > :since")
     long countRecentFailedLogins(@Param("userId") Long userId,
                                  @Param("since") LocalDateTime since);
 
-    @Query("SELECT COUNT(t) > 0 FROM UserTracer t WHERE t.user.id = :userId " +
-           "AND t.ipAddress = :ip AND t.success = true")
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END " +
+           "FROM UserTracer t " +
+           "WHERE t.user.id = :userId AND t.ipAddress = :ip AND t.success = true")
     boolean hasSuccessfulLoginFromIp(@Param("userId") Long userId,
                                      @Param("ip") String ipAddress);
+
+    @Modifying
+    @Query("DELETE FROM UserTracer t WHERE t.user.id = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 }

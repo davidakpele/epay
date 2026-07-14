@@ -7,10 +7,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Next-of-kin contact details for a user.
- * Required by AML/CFT regulations and for account recovery.
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -35,7 +31,6 @@ public class NextOfKin {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    /** Relationship to the account holder — e.g. Spouse, Parent, Sibling */
     @Column(nullable = false)
     private String relationship;
 
