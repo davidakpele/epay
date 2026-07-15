@@ -62,8 +62,7 @@ public class WalletService implements IWalletService {
     private final IWalletNotificationPublisher notificationPublisher;
     private final IHistoryPort                 historyPort;
 
-    private static final DateTimeFormatter EVT_FMT =
-            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
+    private static final DateTimeFormatter EVT_FMT = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
 
     private String formatNow() {
         return ZonedDateTime.now(ZoneId.systemDefault()).format(EVT_FMT);

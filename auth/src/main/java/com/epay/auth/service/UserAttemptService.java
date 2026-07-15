@@ -14,10 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Timestamp;
 import java.time.Instant;
 
-/**
- * Tracks failed login attempts and resets them on successful authentication.
- * After 5 consecutive failures the account is locked (enforced in UserRepository).
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -5,14 +5,6 @@ import com.epay.domain.auth.enums.ContactMethod;
 import com.epay.domain.auth.enums.TokenPurpose;
 import lombok.Getter;
 
-/**
- * Published when an OTP needs to be delivered to the user.
- * Consumed by:
- *  - NotificationModule → sends OTP via the specified channel
- *
- * The raw OTP is included here only for delivery — it is never persisted
- * by any listener. Only the hash is stored in the database.
- */
 @Getter
 public class OtpRequestedEvent extends DomainEvent {
 
@@ -20,7 +12,7 @@ public class OtpRequestedEvent extends DomainEvent {
     private final String        email;
     private final String        phoneNumber;
     private final String        username;
-    private final String        rawOtp;       // used for delivery only — never stored
+    private final String        rawOtp;       
     private final TokenPurpose  purpose;
     private final ContactMethod channel;
 

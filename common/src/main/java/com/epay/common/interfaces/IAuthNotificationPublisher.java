@@ -12,6 +12,8 @@ public interface IAuthNotificationPublisher {
                               String resetPasswordUrl, String config2faUrl,
                               String config2faRecoveryUrl);
 
+    void publishNewUserOTPVerification(String email, String otp);
+
     void publishForgotPasswordOtp(String email, String username, String otp);
 
     void publishAccountSecurityAlert(String email, String fullName, String username,

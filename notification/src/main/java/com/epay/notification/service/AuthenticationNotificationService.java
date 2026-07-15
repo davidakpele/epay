@@ -154,4 +154,11 @@ public class AuthenticationNotificationService {
             default                       -> "ePay — Account Security Alert";
         };
     }
+
+    @Async
+    public CompletableFuture<Void> sendVerificationOptEmail(String email, String otp) {
+        Context context = new Context();
+        context.setVariable("otp", otp);
+        return send(email, "ePay — Verify Your Account", "auth/signup-otp", context);
+    }
 }

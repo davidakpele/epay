@@ -113,7 +113,7 @@ public class SecurityConfiguration {
                 .xssProtection(xss -> xss
                     .headerValue(org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
                 )
-                .contentTypeOptions(contentType -> {}) // enabled by default — do not disable
+                .contentTypeOptions(contentType -> {}) 
                 .referrerPolicy(referrer -> referrer
                     .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
                 )
@@ -154,7 +154,11 @@ public class SecurityConfiguration {
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/swagger-resources/**",
-                    "/webjars/**"
+                    "/webjars/**",
+                    "/docs",
+                    "/docs/**",
+                    "/v1/health",
+                    "/webhook/**"
                 ).permitAll() 
                 .requestMatchers("/uploads/images/**").permitAll()
                 .requestMatchers("/static/**").permitAll()

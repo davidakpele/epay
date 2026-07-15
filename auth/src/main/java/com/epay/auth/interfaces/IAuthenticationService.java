@@ -3,6 +3,7 @@ package com.epay.auth.interfaces;
 import org.springframework.http.ResponseEntity;
 
 import com.epay.domain.auth.entity.User;
+import com.epay.domain.auth.enums.ContactMethod;
 import com.epay.domain.auth.input.ConfirmResetPasswordRequest;
 import com.epay.domain.auth.input.ForgotPasswordRequest;
 import com.epay.domain.auth.input.ForgotUsernameRequest;
@@ -33,4 +34,6 @@ public interface IAuthenticationService {
     ResponseEntity<?> confirmResetPassword(ConfirmResetPasswordRequest request, HttpServletRequest httpRequest);
 
     ResponseEntity<?> forgotUsername(ForgotUsernameRequest request);
+
+    ResponseEntity<?> sendVerificationCode(String identifier, ContactMethod method);
 }

@@ -33,8 +33,7 @@ import java.util.concurrent.CompletableFuture;
 public class TwoFactorAuthenticationService implements ITwoFactorAuthenticationService {
 
     private static final int    EXPIRATION_MINUTES = 1;
-    private static final DateTimeFormatter EVT_FMT =
-            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
+    private static final DateTimeFormatter EVT_FMT =DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
 
     private final TwoFactorOTPRepository   twoFactorOTPRepository;
     private final UserRepository           userRepository;

@@ -14,14 +14,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Manages user login sessions via UserTracer (DB) + Redis active-session flag.
- *
- * Redis key: session:active:{userId}  →  sessionId string, TTL = session lifetime
- * Redis key: session:id:{sessionId}   →  userId string, TTL = session lifetime
- *
- * Fail-open: if Redis is down, session checks pass through without blocking the user.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -15,11 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.epay.auth.interfaces.IAuthenticationService;
 import com.epay.auth.interfaces.IAuthorizeUserVerificationService;
 import com.epay.auth.interfaces.IMessagingService;
@@ -29,6 +27,8 @@ import com.epay.auth.interfaces.IUserTracerService;
 import com.epay.common.config.components.KeyWrapper;
 import com.epay.common.config.components.NotificationProperties;
 import com.epay.common.config.services.JwtService;
+import com.epay.common.exception.ApiResponse;
+import com.epay.common.exception.AuthenticationException;
 import com.epay.common.exception.ErrorCode;
 import com.epay.domain.auth.entity.AuthorizeUserVerification;
 import com.epay.domain.auth.entity.TwoFactorAuthentication;
@@ -72,6 +72,7 @@ public class AuthenticationService implements IAuthenticationService{
     private final IAuthorizeUserVerificationService authorizeUserVerificationService;
     private final AuthorizeUserVerificationRepository authorizeUserVerificationRepository;
     private final ITwoFactorAuthenticationService twoFactorAuthenticationServiceImplementation;
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$";
     private static final DateTimeFormatter LOGIN_TIME_FMT = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
     private final IUserTracerService userTracerService;
     private final IUserAttemptService userAttemptService;
@@ -107,40 +108,119 @@ public class AuthenticationService implements IAuthenticationService{
     @Override
     @Transactional
     public ResponseEntity<?> createAccount(UserSignUpRequest request) {
-        String identifier = "email".equals(request.getRegMode())
-                ? request.getEmail()
-                : request.getPhone();
-
-        if (!messagingService.verifyOTP(identifier, request.getVerificationCode())) {
-           throw new com.epay.common.exception.AuthenticationException(
-                    "The verification code you entered is invalid or has expired.",
-                    ErrorCode.INVALID_OTP);
+        if (request.getFirstname() == null || request.getFirstname().trim().isEmpty()) {
+            throw new AuthenticationException("FirstName is required.", ErrorCode.INVALID_INPUT);
         }
 
-        Long nextUserId = getNextUserId();
-        User user = buildUser(request, nextUserId);
-        userRepository.save(user);
-        UserRecord userRecord = buildUserRecord(request, user);
-        userRecordRepository.save(userRecord);
-
-        boolean isEmail = "email".equals(request.getRegMode());
-
-        createWallet(user.getId());
-
-        if (isEmail) {
-            authorizeUserVerificationService.save(nextUserId, KeyWrapper.generateUniqueAuthorizeUserId());
-            activateUserRecord(user);
-        } else {
-            activateUserRecord(user);
-            messagingService.invalidateOTP(identifier);
-            ContactMethod method = "WHATSAPP".equals(request.getVerificationMethod())
-                    ? ContactMethod.WHATSAPP
-                    : ContactMethod.SMS;
-            CompletableFuture.runAsync(() ->
-                    messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
+        if (request.getLastname() == null || request.getLastname().trim().isEmpty()) {
+            throw new AuthenticationException("LastName is required.*",ErrorCode.INVALID_INPUT);
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(com.epay.common.exception.ApiResponse.success(
+        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+            throw new AuthenticationException("Username is required.", ErrorCode.INVALID_INPUT);
+        }
+        
+        if (existUsername(request.getUsername())) {
+            throw new AuthenticationException("Sorry..! Username already been chosen by another user.", ErrorCode.CONFLICT_ON_REQUEST);
+        }
+
+        // if (request.getRegMode() == null ||
+        //     (!request.getRegMode().equals("email") 
+        //     && !request.getRegMode().equals("phone"))) {
+        //     throw new AuthenticationException("Invalid registration mode.", ErrorCode.INVALID_INPUT);
+        // }
+
+        // if (request.getRegMode().equals("email")) {
+        //     if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+        //         throw new AuthenticationException("Email is required.", ErrorCode.INVALID_INPUT);
+        //     }
+
+        //     if (!request.getEmail().matches(EMAIL_REGEX)) {
+        //         throw new AuthenticationException("Invalid email address", ErrorCode.INVALID_INPUT);
+        //     }
+
+        //     if (emailExists(request.getEmail())) {
+        //         throw new AuthenticationException("Sorry..! Email already been used by another user.", ErrorCode.CONFLICT_ON_REQUEST);
+        //     }
+
+        //     if (!"EMAIL".equals(request.getVerificationMethod())) {
+        //         throw new AuthenticationException("Invalid verification method for email registration.", ErrorCode.INVALID_INPUT);
+        //     }
+        // } else {
+        //     if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
+        //         throw new AuthenticationException("Phone number is required", ErrorCode.INVALID_INPUT);
+        //     }
+
+        //     if (phoneExists(request.getPhone())) {
+        //         throw new AuthenticationException("Sorry..! Phone number already been used by another user.", ErrorCode.INVALID_INPUT);
+        //     }
+
+        //     if (!"SMS".equals(request.getVerificationMethod()) && 
+        //         !"WHATSAPP".equals(request.getVerificationMethod())) {
+        //         throw new AuthenticationException("Verification method must be SMS or WHATSAPP", ErrorCode.INVALID_INPUT);
+        //     }
+        // }
+
+        // if (request.getPassword() == null || request.getPassword().isEmpty()) {
+        //     throw new AuthenticationException("Password is required", ErrorCode.INVALID_INPUT);
+        // }
+
+        // if (request.getPassword().length() < 8) {
+        //     throw new AuthenticationException("Password is too short", ErrorCode.INVALID_INPUT);
+        // }
+
+        // if (!request.getPassword().matches(".*[a-z].*")) {
+        //     throw new AuthenticationException("Password must contain lowercase letter.", ErrorCode.INVALID_INPUT);
+        // }
+
+        // if (!request.getPassword().matches(".*[A-Z].*")) {
+        //     throw new AuthenticationException("Password must contain uppercase letter.", ErrorCode.INVALID_INPUT);
+        // }
+
+        // if (!request.getPassword().matches(".*[0-9].*")) {
+        //     throw new AuthenticationException("Password must contain a number.", ErrorCode.INVALID_INPUT);
+        // }
+
+        // if (!request.getPassword().matches(".*[^A-Za-z0-9].*")) {
+        //     throw new AuthenticationException("Password must contain special character.", ErrorCode.INVALID_INPUT);
+        // }
+
+        // if (!request.getPassword().equals(request.getConfirmPassword())) {
+        //     throw new AuthenticationException("Passwords do not match.", ErrorCode.INVALID_INPUT);
+        // }
+
+        // if (request.getVerificationCode() == null || request.getVerificationCode().trim().isEmpty()) {
+        //     throw new AuthenticationException("Verification code is required.", ErrorCode.INVALID_INPUT);
+        // }
+   
+        // if (!messagingService.verifyOTP(request.getRegMode(), request.getVerificationCode())) {
+        //    throw new AuthenticationException("The verification code you entered is invalid or has expired.", ErrorCode.INVALID_OTP);
+        // }
+
+        // Long nextUserId = getNextUserId();
+        // User user = buildUser(request, nextUserId);
+        // userRepository.save(user);
+        // UserRecord userRecord = buildUserRecord(request, user);
+        // userRecordRepository.save(userRecord);
+
+        // boolean isEmail = "email".equals(request.getRegMode());
+
+        // createWallet(user.getId());
+
+        // if (isEmail) {
+        //     authorizeUserVerificationService.save(nextUserId, KeyWrapper.generateUniqueAuthorizeUserId());
+        //     activateUserRecord(user);
+        // } else {
+        //     activateUserRecord(user);
+        //     messagingService.invalidateOTP(identifier);
+        //     ContactMethod method = "WHATSAPP".equals(request.getVerificationMethod())
+        //             ? ContactMethod.WHATSAPP
+        //             : ContactMethod.SMS;
+        //     CompletableFuture.runAsync(() ->
+        //             messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
+        // }
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
                 "Thanks for signing up! Your account has been created successfully.", null));
 
     }
@@ -366,16 +446,14 @@ public class AuthenticationService implements IAuthenticationService{
             if (rec != null) user = rec.getUser();
         }
 
-        // Always return 200 — never reveal whether account exists (anti-enumeration)
+
         if (user == null || !user.isEnabled()) {
             response.put("success", true);
             response.put("message", "If that account exists, a reset code has been sent.");
             return ResponseEntity.ok(response);
         }
-
-        // Generate and store OTP via messagingService
         final String otp = keysWrapper.generateOTP();
-        messagingService.sendSmSMessage(otp); // delegates to messaging service OTP store
+        messagingService.sendSmSMessage(otp); 
 
         final User finalUser = user;
         CompletableFuture.runAsync(() ->
@@ -576,5 +654,63 @@ public class AuthenticationService implements IAuthenticationService{
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE, expirationMinutes);
         return calendar.getTime();
+    }
+
+    @Override
+    public ResponseEntity<?> sendVerificationCode(String identifier, ContactMethod method) {
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        if (identifier.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Identifier (email or phone) is required.");
+            return ResponseEntity.badRequest().body(response);
+        }
+        if (method == ContactMethod.EMAIL) {
+            if (!identifier.matches(EMAIL_REGEX)) {
+                return buildAuthError(response, "Invalid email format.", HttpStatus.BAD_REQUEST);
+            }
+
+            User user = userRepository.findByEmail(identifier).orElse(null);
+            if (user != null) {
+                response.put("success", false);
+                response.put("message", "Email already exists");
+                return ResponseEntity.badRequest().body(response);
+            }
+        }
+
+        else if (method == ContactMethod.SMS || method == ContactMethod.WHATSAPP) {
+            if (phoneExists(identifier)) {
+                response.put("success", false);
+                response.put("message", "Phone number already exists");
+                return ResponseEntity.badRequest().body(response);
+            }
+        }
+
+        switch (method) {
+            case SMS -> messagingService.sendSmSMessage(identifier);
+            case WHATSAPP -> messagingService.sendWhatsAppMessage(identifier);
+            case EMAIL -> messagingService.sendEmailMessage(identifier);
+        }
+
+        response.put("success", true);
+        response.put("status", HttpStatus.CREATED.value());
+        response.put("message", "Verification code sent successfully.");
+        response.put("contactMethod", method);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    private boolean phoneExists(String phone) {
+        return userRecordRepository.findByPhoneNumber(phone).isPresent();
+    }
+
+    private boolean existUsername(String username) {
+        Optional<User> existingUsers = userRepository.findByUsername(username);
+        return existingUsers.isPresent();
+    }
+
+    private boolean emailExists(String email) {
+        Optional<User> existingUsers = userRepository.findByEmail(email);
+        return existingUsers.isPresent();
     }
 }

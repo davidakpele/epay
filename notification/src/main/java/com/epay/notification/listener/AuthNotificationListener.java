@@ -6,6 +6,7 @@ import com.epay.domain.notification.input.AccountVerificationNotification;
 import com.epay.domain.notification.input.ForgotPasswordOtpNotification;
 import com.epay.domain.notification.input.ForgotUsernameNotification;
 import com.epay.domain.notification.input.LoginAlertNotification;
+import com.epay.domain.notification.input.OTPOnSignUp;
 import com.epay.domain.notification.input.TwoFactorOtpNotification;
 import com.epay.notification.service.AuthenticationNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,12 @@ public class AuthNotificationListener {
                 payload.getEmail(), payload.getOtp(),
                 payload.getResetPasswordUrl(), payload.getConfig2faUrl(),
                 payload.getConfig2faRecoveryUrl());
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.USER_SIGNUP_QUEUE)
+    public void oTPOnSignUp(OTPOnSignUp payload) {
+        if (payload == null) { log.warn("[AuthListener] Null payload on user-signup-otp queue"); return; }
+        notificationService.sendVerificationOptEmail(payload.getEmail(), payload.getOtp());
     }
 
     @RabbitListener(queues = RabbitMQConfig.FORGOT_PASSWORD_OTP_QUEUE)

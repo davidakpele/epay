@@ -5,12 +5,6 @@ import com.epay.domain.auth.enums.AccountType;
 import com.epay.domain.auth.enums.ContactMethod;
 import lombok.Getter;
 
-/**
- * Published when a new user account is created.
- * Consumed by:
- *  - NotificationModule → sends welcome email/SMS
- *  - HistoryModule      → writes registration audit entry
- */
 @Getter
 public class UserRegisteredEvent extends DomainEvent {
 

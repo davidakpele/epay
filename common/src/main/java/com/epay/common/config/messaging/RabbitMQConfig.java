@@ -33,6 +33,7 @@ public class RabbitMQConfig {
     public static final String ACCOUNT_SECURITY_QUEUE = "auth.account.security";
     public static final String FORGOT_PASSWORD_OTP_QUEUE = "auth.forgot.password.otp";
     public static final String FORGOT_USERNAME_QUEUE = "auth.forgot.username";
+    public static final String USER_SIGNUP_QUEUE = "auth.user.otp";
 
     public static final String ROUTING_KEY_ACCOUNT_VERIFICATION = "auth.account";
     public static final String ROUTING_KEY_ACCOUNT_USER_OTP = "auth.user";
@@ -52,6 +53,7 @@ public class RabbitMQConfig {
     public static final String ROUTING_KEY_ACCOUNT_SECURITY = "auth.account.security";
     public static final String ROUTING_KEY_FORGOT_PASSWORD_OTP = "auth.forgot.password.otp";
     public static final String ROUTING_KEY_FORGOT_USERNAME     = "auth.forgot.username";
+    public static final String ROUTING_KEY_SIGNUP_OTP = "auth.signup.otp";
 
     @Bean
     public TopicExchange authExchange() {
@@ -76,6 +78,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue userOTPQueue() {
         return new Queue(USER_OTP_QUEUE);
+    }
+
+    @Bean
+    public Queue authOTPQueue() {
+        return new Queue(USER_SIGNUP_QUEUE);
     }
 
     @Bean
@@ -159,6 +166,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Binding signupOtpBinding(Queue authOTPQueue, TopicExchange authExchange) {
+        return BindingBuilder.bind(authOTPQueue).to(authExchange).with(ROUTING_KEY_SIGNUP_OTP);
+    }
+
+    @Bean
     public Binding userOTPBinding(Queue userOTPQueue, TopicExchange authExchange) {
         return BindingBuilder.bind(userOTPQueue).to(authExchange).with(ROUTING_KEY_ACCOUNT_USER_OTP);
     }
@@ -171,6 +183,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding registrationOtpBinding(Queue registrationOtpQueue, TopicExchange authExchange) {
         return BindingBuilder.bind(registrationOtpQueue).to(authExchange).with(ROUTING_KEY_REGISTRATION_OTP); 
+    }
+
+    @Bean
+    public Binding authUserOTPBinding(Queue userOTPQueue, TopicExchange authExchange) {
+        return BindingBuilder.bind(userOTPQueue).to(authExchange).with(ROUTING_KEY_ACCOUNT_USER_OTP);
     }
 
     @Bean

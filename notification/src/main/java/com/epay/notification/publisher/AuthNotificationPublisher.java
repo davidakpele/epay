@@ -7,6 +7,7 @@ import com.epay.domain.notification.input.AccountVerificationNotification;
 import com.epay.domain.notification.input.ForgotPasswordOtpNotification;
 import com.epay.domain.notification.input.ForgotUsernameNotification;
 import com.epay.domain.notification.input.LoginAlertNotification;
+import com.epay.domain.notification.input.OTPOnSignUp;
 import com.epay.domain.notification.input.StatementPayload;
 import com.epay.domain.notification.input.TwoFactorOtpNotification;
 import lombok.RequiredArgsConstructor;
@@ -83,6 +84,12 @@ public class AuthNotificationPublisher implements IAuthNotificationPublisher {
     public void publishAccountStatement(String email, String username, byte[] pdfBytes, String period) {
         StatementPayload payload = new StatementPayload(email, username, pdfBytes, period);
         send(RabbitMQConfig.ACCOUNT_EXCHANGE, RabbitMQConfig.ROUTING_KEY_ACCOUNT_STATEMENT, payload);
+    }
+
+    @Override
+    public void publishNewUserOTPVerification(String email, String otp) {
+       OTPOnSignUp payload = new OTPOnSignUp(otp, email);
+       send(RabbitMQConfig.AUTH_EXCHANGE, RabbitMQConfig.ROUTING_KEY_ACCOUNT_USER_OTP, payload);
     }
 
     private void send(String exchange, String routingKey, Object payload) {

@@ -94,6 +94,7 @@ public final class ErrorCode {
     // Validation Errors (11xxx)
     public static final String VALIDATION_ERROR = "VALID_11001";
     public static final String INVALID_INPUT = "VALID_11002";
+    public static final String CONFLICT_ON_REQUEST = "VALID_11402";
     public static final String MISSING_REQUIRED_FIELD = "VALID_11003";
     public static final String INVALID_FORMAT = "VALID_11004";
     public static final String CONSTRAINT_VIOLATION = "VALID_11005";

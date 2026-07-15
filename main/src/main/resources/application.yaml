@@ -132,14 +132,7 @@ file:
   allowed-file-types: image/jpeg,image/png,image/gif,image/webp
 
 server:
-  port: ${SERVER_PORT:8080}
-  error:
-    include-message: always
-    include-binding-errors: always
-    include-stacktrace: never
-    include-exception: false
-    whitelabel:
-      enabled: false
+  port: ${SERVER_PORT:8029}
 epay:
   security:
     jwt:

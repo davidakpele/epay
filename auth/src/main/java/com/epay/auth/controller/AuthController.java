@@ -1,6 +1,7 @@
 package com.epay.auth.controller;
 
 import com.epay.auth.interfaces.IAuthenticationService;
+import com.epay.domain.auth.enums.ContactMethod;
 import com.epay.domain.auth.input.ConfirmResetPasswordRequest;
 import com.epay.domain.auth.input.ForgotPasswordRequest;
 import com.epay.domain.auth.input.ForgotUsernameRequest;
@@ -32,6 +33,11 @@ public class AuthController {
                                     HttpServletResponse response,
                                     HttpServletRequest httpRequest) {
         return authService.login(request, response, httpRequest);
+    }
+
+    @PostMapping("/send-verify-code")
+    public ResponseEntity<?> sendVerificationCode(@RequestParam String identifier, @RequestParam ContactMethod method) {
+        return authService.sendVerificationCode(identifier, method);
     }
 
     /** GET /auth/verify?token=&id= */

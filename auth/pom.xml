@@ -24,10 +24,13 @@
             <groupId>com.epay</groupId>
             <artifactId>epay-common</artifactId>
         </dependency>
+         <dependency>
+            <groupId>com.epay</groupId>
+            <artifactId>epay-notification</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
