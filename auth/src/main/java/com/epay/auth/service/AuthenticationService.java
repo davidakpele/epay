@@ -143,9 +143,6 @@ public class AuthenticationService implements IAuthenticationService{
                 throw new AuthenticationException("Sorry..! Email already been used by another user.", ErrorCode.CONFLICT_ON_REQUEST);
             }
 
-            if (!"EMAIL".equals(request.getVerificationMethod())) {
-                throw new AuthenticationException("Invalid verification method for email registration.", ErrorCode.INVALID_INPUT);
-            }
         } else {
             if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
                 throw new AuthenticationException("Phone number is required", ErrorCode.INVALID_INPUT);
@@ -193,9 +190,13 @@ public class AuthenticationService implements IAuthenticationService{
             throw new AuthenticationException("Verification code is required.", ErrorCode.INVALID_INPUT);
         }
    
-        // if (!messagingService.verifyOTP(request.getRegMode(), request.getVerificationCode())) {
-        //    throw new AuthenticationException("The verification code you entered is invalid or has expired.", ErrorCode.INVALID_OTP);
-        // }
+        String identifier = "email".equals(request.getRegMode())
+        ? request.getEmail()
+        : request.getPhone();
+
+        if (!messagingService.verifyOTP(identifier, request.getVerificationCode())) {
+            throw new AuthenticationException("The verification code you entered is invalid or has expired.", ErrorCode.INVALID_OTP);
+        }
 
         // Long nextUserId = getNextUserId();
         // User user = buildUser(request, nextUserId);
