@@ -233,6 +233,9 @@ management:
       enabled: true
     health:
       show-details: when-authorized
+  health:
+    mail:
+      enabled: false
   metrics:
     tags:
       application: ${spring.application.name}

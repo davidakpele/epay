@@ -40,15 +40,17 @@ public class SecurityConfiguration {
     private final JwtProperties jwtProperties;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final RateLimitingFilter rateLimitingFilter;
-    private final BotDetectionFilter botDetectionFilter;
 
-    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider, JwtProperties jwtProperties, CustomAuthenticationEntryPoint authenticationEntryPoint, RateLimitingFilter rateLimitingFilter, BotDetectionFilter botDetectionFilter) {
-        this.jwtAuthFilter = jwtAuthFilter;
-        this.authenticationProvider = authenticationProvider;
-        this.jwtProperties = jwtProperties;
+    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter,
+                                  AuthenticationProvider authenticationProvider,
+                                  JwtProperties jwtProperties,
+                                  CustomAuthenticationEntryPoint authenticationEntryPoint,
+                                  RateLimitingFilter rateLimitingFilter) {
+        this.jwtAuthFilter            = jwtAuthFilter;
+        this.authenticationProvider   = authenticationProvider;
+        this.jwtProperties            = jwtProperties;
         this.authenticationEntryPoint = authenticationEntryPoint;
-        this.rateLimitingFilter = rateLimitingFilter;
-        this.botDetectionFilter = botDetectionFilter;
+        this.rateLimitingFilter       = rateLimitingFilter;
     }
     
     
@@ -121,23 +123,6 @@ public class SecurityConfiguration {
                     .policy("geolocation=(self), microphone=(), camera=()")
                 )
             )
-            .addFilterBefore(
-                new FirewallExceptionFilter(),
-                UsernamePasswordAuthenticationFilter.class
-            )
-            .addFilterBefore(
-                botDetectionFilter,
-                UsernamePasswordAuthenticationFilter.class
-            )
-            .addFilterBefore(
-                new InputValidationFilter(),
-                UsernamePasswordAuthenticationFilter.class
-            )
-            .addFilterBefore(
-                new SecurityHeadersFilter(),
-                UsernamePasswordAuthenticationFilter.class
-            )
-            
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth

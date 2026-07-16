@@ -62,10 +62,10 @@ public class UserRecord {
     @Column(length = 500)
     private String address;
 
-    @Column(name = "referral_code", unique = true, length = 20)
+    @Column(name = "referral_code", unique = true, length = 36)
     private String referralCode;
 
-    @Column(name = "referred_by_code", length = 20)
+    @Column(name = "referred_by_code", length = 36)
     private String referredByCode;
 
     @Column(name = "total_referrals", nullable = false)

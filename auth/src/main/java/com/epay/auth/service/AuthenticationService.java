@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,6 +19,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import com.epay.auth.interfaces.IAuthenticationService;
 import com.epay.auth.interfaces.IAuthorizeUserVerificationService;
 import com.epay.auth.interfaces.IMessagingService;
@@ -30,14 +32,19 @@ import com.epay.common.config.services.JwtService;
 import com.epay.common.exception.ApiResponse;
 import com.epay.common.exception.AuthenticationException;
 import com.epay.common.exception.ErrorCode;
+import com.epay.common.interfaces.IAuthNotificationPublisher;
+import com.epay.common.interfaces.IWalletPort;
 import com.epay.domain.auth.entity.AuthorizeUserVerification;
 import com.epay.domain.auth.entity.TwoFactorAuthentication;
 import com.epay.domain.auth.entity.User;
 import com.epay.domain.auth.entity.UserRecord;
 import com.epay.domain.auth.entity.UserTracer;
 import com.epay.domain.auth.entity.VerificationToken;
+import com.epay.domain.auth.enums.AccountType;
 import com.epay.domain.auth.enums.AttemptType;
 import com.epay.domain.auth.enums.ContactMethod;
+import com.epay.domain.auth.enums.KycStatus;
+import com.epay.domain.auth.enums.KycTier;
 import com.epay.domain.auth.enums.Role;
 import com.epay.domain.auth.input.ConfirmResetPasswordRequest;
 import com.epay.domain.auth.input.ForgotPasswordRequest;
@@ -50,8 +57,7 @@ import com.epay.domain.auth.repository.UserRepository;
 import com.epay.domain.auth.repository.VerificationTokenRepository;
 import com.epay.domain.auth.response.AuthResponse;
 import com.epay.domain.auth.response.VerificationTokenResult;
-import com.epay.common.interfaces.IAuthNotificationPublisher;
-import com.epay.common.interfaces.IWalletPort;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -198,31 +204,30 @@ public class AuthenticationService implements IAuthenticationService{
             throw new AuthenticationException("The verification code you entered is invalid or has expired.", ErrorCode.INVALID_OTP);
         }
 
-        // Long nextUserId = getNextUserId();
-        // User user = buildUser(request, nextUserId);
-        // userRepository.save(user);
-        // UserRecord userRecord = buildUserRecord(request, user);
-        // userRecordRepository.save(userRecord);
+        User user = buildUser(request);
+        userRepository.save(user);
+        UserRecord userRecord = buildUserRecord(request, user);
+        userRecordRepository.save(userRecord);
 
-        // boolean isEmail = "email".equals(request.getRegMode());
+        boolean isEmail = "email".equals(request.getRegMode());
 
-        // createWallet(user.getId());
+        createWallet(user.getId());
 
-        // if (isEmail) {
-        //     authorizeUserVerificationService.save(nextUserId, KeyWrapper.generateUniqueAuthorizeUserId());
-        //     activateUserRecord(user);
-        // } else {
-        //     activateUserRecord(user);
-        //     messagingService.invalidateOTP(identifier);
-        //     ContactMethod method = "WHATSAPP".equals(request.getVerificationMethod())
-        //             ? ContactMethod.WHATSAPP
-        //             : ContactMethod.SMS;
-        //     CompletableFuture.runAsync(() ->
-        //             messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
-        // }
+        if (isEmail) {
+            authorizeUserVerificationService.save(user.getId(), KeyWrapper.generateUniqueAuthorizeUserId());
+            activateUserRecord(user);
+        } else {
+            activateUserRecord(user);
+            messagingService.invalidateOTP(identifier);
+            ContactMethod method = "WHATSAPP".equals(request.getVerificationMethod())
+                    ? ContactMethod.WHATSAPP
+                    : ContactMethod.SMS;
+            CompletableFuture.runAsync(() ->
+                    messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
-                "Thanks for signing up! Your account has been created successfully.", null));
+                "Thanks for signing up! Your account has been created successfully.", userRecord));
 
     }
 
@@ -570,14 +575,19 @@ public class AuthenticationService implements IAuthenticationService{
         return ResponseEntity.ok(response);
     }
 
-    private User buildUser(UserSignUpRequest request, Long id) {
+    private User buildUser(UserSignUpRequest request) {
         User user = new User();
-        user.setId(id);
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setTwoFactorEnabled(false);
         user.setAccountLocked(false);
         user.setRole(Role.USER);
+        user.setAccountType(AccountType.INDIVIDUAL);
+        user.setKycTier(KycTier.TIER_1);
+        user.setKycStatus(KycStatus.NOT_SUBMITTED);
+        user.setEmailVerified(false);
+        user.setPhoneVerified(false);
+        user.setFailedLoginAttempts(0);
 
         if ("email".equals(request.getRegMode())) {
             user.setEmail(request.getEmail());
@@ -585,6 +595,7 @@ public class AuthenticationService implements IAuthenticationService{
         } else {
             user.setEmail(null);
             user.setEnabled(true);
+            user.setPhoneVerified(true);
         }
         return user;
     }
@@ -645,10 +656,6 @@ public class AuthenticationService implements IAuthenticationService{
         response.put("success", false);
         response.put("message", message);
         return ResponseEntity.status(status).body(response);
-    }
-
-    private Long getNextUserId() {
-        return userRepository.findMaxId().orElse(1000L) + 1;
     }
 
     private Date calculateExpirationDate(int expirationMinutes) {

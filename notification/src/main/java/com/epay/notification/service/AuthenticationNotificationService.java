@@ -1,11 +1,8 @@
 package com.epay.notification.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.CompletableFuture;
+
 import org.springframework.mail.MailException;
-import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -13,7 +10,10 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import java.util.concurrent.CompletableFuture;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -119,25 +119,27 @@ public class AuthenticationNotificationService {
             log.info("Account statement sent to {}", email);
             return CompletableFuture.completedFuture(null);
         } catch (jakarta.mail.MessagingException | org.springframework.mail.MailException e) {
-            log.error("Failed to send statement to {}: {}", email, e.getMessage());
-            throw new org.springframework.mail.MailSendException("Failed to send statement: " + e.getMessage(), e);
+            log.error("[Email] Failed to send statement to {}: {}", email, e.getMessage());
+            // Never rethrow — mail failure must not roll back caller transaction
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     private CompletableFuture<Void> send(String to, String subject, String template, Context context) {
-        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         try {
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
             String html = templateEngine.process(template, context);
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(html, true);
             javaMailSender.send(mimeMessage);
-            return CompletableFuture.completedFuture(null);
+            log.info("[Email] Sent '{}' to {}", subject, to);
         } catch (MessagingException | MailException e) {
-            log.error("Failed to send email to {} (template={}): {}", to, template, e.getMessage());
-            throw new MailSendException("Failed to send email: " + e.getMessage(), e);
+            log.error("[Email] Failed to send '{}' to {}: {}", subject, to, e.getMessage());
+            // Never rethrow — mail failure must not roll back caller transaction
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     private String resolveSecuritySubject(String eventType) {
