@@ -18,7 +18,6 @@ public class AuthorizeUserVerificationService implements IAuthorizeUserVerificat
     @Override
     public void save(Long userId, Long id) {
         AuthorizeUserVerification auth = new AuthorizeUserVerification();
-        auth.setId(id);
         auth.setUserId(userId);
         authorizeUserVerificationRepository.save(auth);
     }

@@ -9,8 +9,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Data
 @Builder
 @Entity
+@Table(name = "authorize_user_verification")
 public class AuthorizeUserVerification {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long userId;
     @CreationTimestamp

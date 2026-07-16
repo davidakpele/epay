@@ -214,7 +214,7 @@ public class AuthenticationService implements IAuthenticationService{
         createWallet(user.getId());
 
         if (isEmail) {
-            authorizeUserVerificationService.save(user.getId(), KeyWrapper.generateUniqueAuthorizeUserId());
+            authorizeUserVerificationService.save(user.getId(), null);
             activateUserRecord(user);
         } else {
             activateUserRecord(user);
@@ -226,9 +226,7 @@ public class AuthenticationService implements IAuthenticationService{
                     messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
-                "Thanks for signing up! Your account has been created successfully.", userRecord));
-
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Thanks for signing up! Your account has been created successfully.", userRecord));
     }
 
     @Override
@@ -272,8 +270,7 @@ public class AuthenticationService implements IAuthenticationService{
             UserTracer session = userTracerService.createSession(user);
             userAttemptService.UpdateUserAccount(user.getId());
 
-            UserRecord rec = userRecordRepository.findByUserId(user.getId())
-                    .orElseThrow(() -> new RuntimeException("User record not found"));
+            UserRecord rec = userRecordRepository.findByUserId(user.getId()).orElseThrow(() -> new RuntimeException("User record not found"));
 
             final String loginTime = formatNow();
             final String ipAddr    = extractClientIp(httpRequest);
