@@ -96,6 +96,8 @@ services:
       SERVER_PORT: 8029
       PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
       FLUTTERWAVE_SECRET_KEY: ${FLUTTERWAVE_SECRET_KEY:-}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
+      GMAIL_USERNAME: ${GMAIL_USERNAME:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -110,6 +112,9 @@ services:
       retries: 3
       start_period: 60s
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     volumes:
       - app_uploads:/var/www/uploads
     networks:
@@ -211,6 +216,8 @@ volumes:
 networks:
   epay-network:
     driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "true"
     ipam:
       config:
         - subnet: 172.28.0.0/16

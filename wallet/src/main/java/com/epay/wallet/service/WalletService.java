@@ -113,13 +113,14 @@ public class WalletService implements IWalletService {
     @Transactional
     public ResponseEntity<?> createWallet(CreateWalletRequest request) {
         validateUserId(request.getUserId());
-        requireActiveUser(request.getUserId());
 
         if (walletRepository.existsByUserId(request.getUserId()))
             throw new ConflictException("Wallet already exists for this user",
                     ErrorCode.WALLET_ALREADY_EXISTS);
 
-        String code = request.getDefaultCurrency().trim().toUpperCase();
+        String code = request.getDefaultCurrency() != null
+                ? request.getDefaultCurrency().trim().toUpperCase()
+                : "NGN";
         SupportedCurrency currency = requireActiveCurrency(code);
 
         Wallet wallet = Wallet.builder()

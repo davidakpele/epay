@@ -11,6 +11,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -73,5 +77,10 @@ public class AuthController {
     @PostMapping("/forgot-username")
     public ResponseEntity<?> forgotUsername(@Valid @RequestBody ForgotUsernameRequest request) {
         return authService.forgotUsername(request);
+    }
+
+    @GetMapping("/logout")
+    public ResponseEntity<?> logout(@RequestParam(name = "userId", required = false) Long userId) {
+        return authService.logoutUser(userId); 
     }
 }

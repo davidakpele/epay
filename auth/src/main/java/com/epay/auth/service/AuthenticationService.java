@@ -61,8 +61,10 @@ import com.epay.domain.auth.response.VerificationTokenResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor 
 public class AuthenticationService implements IAuthenticationService{
     
@@ -211,8 +213,6 @@ public class AuthenticationService implements IAuthenticationService{
 
         boolean isEmail = "email".equals(request.getRegMode());
 
-        createWallet(user.getId());
-
         if (isEmail) {
             authorizeUserVerificationService.save(user.getId(), null);
             activateUserRecord(user);
@@ -226,7 +226,35 @@ public class AuthenticationService implements IAuthenticationService{
                     messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Thanks for signing up! Your account has been created successfully.", userRecord));
+        // Create wallet async after activation — user must be enabled first
+        final Long newUserId = user.getId();
+        CompletableFuture.runAsync(() -> {
+            try {
+                walletPort.createWalletForUser(newUserId, "NGN");
+                log.info("[Register] Wallet created for userId={}", newUserId);
+            } catch (Exception ex) {
+                log.warn("[Register] Wallet creation failed for userId={}: {}", newUserId, ex.getMessage());
+            }
+        });
+
+        // Send welcome/verification email async
+        final String username = user.getUsername();
+        final String email    = user.getEmail();
+        if (isEmail && email != null) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    notificationService.publishVerificationEmail(
+                            email,
+                            "Welcome to ePay! Your account has been created successfully.",
+                            null, username);
+                } catch (Exception ex) {
+                    log.warn("[Register] Welcome email failed for userId={}: {}", newUserId, ex.getMessage());
+                }
+            });
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
+                "Thanks for signing up! Your account has been created successfully.", null));
     }
 
     @Override
@@ -717,5 +745,20 @@ public class AuthenticationService implements IAuthenticationService{
     private boolean emailExists(String email) {
         Optional<User> existingUsers = userRepository.findByEmail(email);
         return existingUsers.isPresent();
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<?> logoutUser(Long userId) {
+        Map<String, Object> authResponse = new LinkedHashMap<>();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user == null) {
+            return buildAuthError(authResponse, "Invalid user ID.", HttpStatus.BAD_REQUEST);
+        }
+        userTracerService.deleteByUserId(userId);
+        authResponse.put("message", "User successfully logout from the system");
+        authResponse.put("status", "success");
+        return ResponseEntity.ok().body(authResponse);
     }
 }

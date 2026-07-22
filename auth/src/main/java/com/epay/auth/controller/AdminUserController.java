@@ -93,8 +93,6 @@ public class AdminUserController {
         return ResponseEntity.ok(ApiResponse.success(null, stats));
     }
 
-    // ── Mapper ───────────────────────────────────────────────────────────────
-
     private UserDTO toDTO(User user) {
         return UserDTO.builder()
                 .id(user.getId())

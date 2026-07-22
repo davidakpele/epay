@@ -36,4 +36,6 @@ public interface IAuthenticationService {
     ResponseEntity<?> forgotUsername(ForgotUsernameRequest request);
 
     ResponseEntity<?> sendVerificationCode(String identifier, ContactMethod method);
+
+    ResponseEntity<?> logoutUser(Long userId);
 }

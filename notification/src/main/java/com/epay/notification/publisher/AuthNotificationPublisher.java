@@ -89,7 +89,7 @@ public class AuthNotificationPublisher implements IAuthNotificationPublisher {
     @Override
     public void publishNewUserOTPVerification(String email, String otp) {
        OTPOnSignUp payload = new OTPOnSignUp(otp, email);
-       send(RabbitMQConfig.AUTH_EXCHANGE, RabbitMQConfig.ROUTING_KEY_ACCOUNT_USER_OTP, payload);
+       send(RabbitMQConfig.AUTH_EXCHANGE, RabbitMQConfig.ROUTING_KEY_SIGNUP_OTP, payload);
     }
 
     private void send(String exchange, String routingKey, Object payload) {

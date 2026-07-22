@@ -20,10 +20,8 @@ public class AuthorizeUserVerification {
     @UpdateTimestamp
     private LocalDateTime updatedOn;
 
-
     public AuthorizeUserVerification() {
     }
-
 
     public AuthorizeUserVerification(Long id, Long userId, LocalDateTime createdOn, LocalDateTime updatedOn) {
         this.id = id;
