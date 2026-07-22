@@ -201,6 +201,8 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
+    persist-authorization: true
+    default-models-expand-depth: 1
   show-actuator: false
   packages-to-scan: com.epay
 
