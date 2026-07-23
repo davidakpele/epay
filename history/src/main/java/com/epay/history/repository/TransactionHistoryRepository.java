@@ -11,6 +11,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * @deprecated Superseded by {@link com.epay.history.repository.TransactionRepository}.
+ * Kept for backward compatibility with existing transaction_history table data.
+ * New code must use TransactionRepository + Transaction entity.
+ */
+@Deprecated(since = "2.0", forRemoval = false)
 @Repository
 public interface TransactionHistoryRepository extends JpaRepository<TransactionHistory, Long> {
 

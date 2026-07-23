@@ -118,20 +118,40 @@ public class WalletService implements IWalletService {
             throw new ConflictException("Wallet already exists for this user",
                     ErrorCode.WALLET_ALREADY_EXISTS);
 
-        String code = request.getDefaultCurrency() != null
+        String defaultCode = request.getDefaultCurrency() != null
                 ? request.getDefaultCurrency().trim().toUpperCase()
                 : "NGN";
-        SupportedCurrency currency = requireActiveCurrency(code);
+
+        List<SupportedCurrency> activeCurrencies = supportedCurrencyRepository.findByActiveTrue();
+
+        if (activeCurrencies.isEmpty())
+            throw new BadRequestException("No supported currencies configured",
+                    ErrorCode.CURRENCY_NOT_SUPPORTED);
 
         Wallet wallet = Wallet.builder()
-                .userId(request.getUserId()).active(true).pinSet(false).build();
-        wallet.addCurrency(CurrencyBalance.builder()
-                .currencyCode(code).currencySymbol(currency.getSymbol())
-                .balance(BigDecimal.ZERO).isDefault(true).build());
+                .userId(request.getUserId())
+                .active(true)
+                .pinSet(false)
+                .build();
+
+        for (SupportedCurrency currency : activeCurrencies) {
+            boolean isDefault = currency.getCode().equalsIgnoreCase(defaultCode);
+            wallet.addCurrency(CurrencyBalance.builder()
+                    .currencyCode(currency.getCode())
+                    .currencySymbol(currency.getSymbol())
+                    .balance(BigDecimal.ZERO)
+                    .isDefault(isDefault)
+                    .build());
+        }
+
         walletRepository.save(wallet);
 
-        walletCacheService.warmFromWallet(request.getUserId(), wallet, null, code, List.of(code));
-        log.info("Wallet created: userId={} currency={}", request.getUserId(), code);
+        List<String> codes = activeCurrencies.stream()
+                .map(SupportedCurrency::getCode)
+                .toList();
+        walletCacheService.warmFromWallet(request.getUserId(), wallet, null, defaultCode, codes);
+
+        log.info("Wallet created: userId={} currencies={}", request.getUserId(), codes);
         return ResponseEntity.status(201).build();
     }
 

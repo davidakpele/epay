@@ -16,7 +16,7 @@ public class WalletServiceAdapter implements IWalletPort {
     public void createWalletForUser(Long userId, String defaultCurrency) {
         CreateWalletRequest request = new CreateWalletRequest();
         request.setUserId(userId);
-        request.setDefaultCurrency(defaultCurrency != null ? defaultCurrency : "NGN");
+        request.setDefaultCurrency(defaultCurrency != null ? defaultCurrency.toUpperCase() : "NGN");
         walletService.createWallet(request);
     }
 }

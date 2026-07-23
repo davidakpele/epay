@@ -9,12 +9,9 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * Seeds the supported_currencies table on startup if empty.
- * Safe to run multiple times — only inserts if the row doesn't already exist.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -22,32 +19,52 @@ public class CurrencyDataInitializer implements ApplicationRunner {
 
     private final SupportedCurrencyRepository currencyRepository;
 
+    private static final List<CurrencyDef> CURRENCIES = List.of(
+        new CurrencyDef("NGN", "₦",  "Nigerian Naira",          "NG", new BigDecimal("0.00065")),
+        new CurrencyDef("USD", "$",  "United States Dollar",    "US", BigDecimal.ONE),
+        new CurrencyDef("EUR", "€",  "Euro",                    "EU", new BigDecimal("0.92")),
+        new CurrencyDef("GBP", "£",  "British Pound Sterling",  "GB", new BigDecimal("0.79")),
+        new CurrencyDef("AUD", "A$", "Australian Dollar",       "AU", new BigDecimal("1.54")),
+        new CurrencyDef("JPY", "¥",  "Japanese Yen",            "JP", new BigDecimal("149.50")),
+        new CurrencyDef("CAD", "C$", "Canadian Dollar",         "CA", new BigDecimal("1.36")),
+        new CurrencyDef("CNY", "¥",  "Chinese Yuan Renminbi",   "CN", new BigDecimal("7.24")),
+        new CurrencyDef("CHF", "Fr", "Swiss Franc",             "CH", new BigDecimal("0.90")),
+        new CurrencyDef("GHS", "₵",  "Ghanaian Cedi",           "GH", new BigDecimal("12.50"))
+    );
+
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        seedIfAbsent("NGN", "₦",  "Nigerian Naira");
-        seedIfAbsent("USD", "$",  "United States Dollar");
-        seedIfAbsent("GBP", "£",  "British Pound Sterling");
-        seedIfAbsent("EUR", "€",  "Euro");
-        seedIfAbsent("GHS", "₵",  "Ghanaian Cedi");
-        seedIfAbsent("KES", "KSh","Kenyan Shilling");
-        seedIfAbsent("ZAR", "R",  "South African Rand");
-        seedIfAbsent("XOF", "CFA","West African CFA Franc");
-    }
+        long existing = currencyRepository.count();
+        if (existing > 0) {
+            log.info("[CurrencyInit] {} currencies already in DB — skipping seed", existing);
+            return;
+        }
 
-    private void seedIfAbsent(String code, String symbol, String name) {
-        if (currencyRepository.findByCodeIgnoreCase(code).isEmpty()) {
+        for (CurrencyDef def : CURRENCIES) {
             SupportedCurrency currency = SupportedCurrency.builder()
-                    .code(code)
-                    .symbol(symbol)
-                    .name(name)
+                    .code(def.code())
+                    .symbol(def.symbol())
+                    .name(def.name())
+                    .countryCode(def.countryCode())
+                    .exchangeRate(def.exchangeRate())
+                    .decimalPlaces(def.code().equals("JPY") ? 0 : 2)
                     .active(true)
                     .defaultEligible(true)
-                    .exchangeRate(java.math.BigDecimal.ONE)
-                    .decimalPlaces(2)
+                    .minDeposit(new BigDecimal("1.00"))
+                    .minWithdrawal(new BigDecimal("1.00"))
                     .build();
             currencyRepository.save(currency);
-            log.info("[CurrencyInit] Seeded currency: {} ({})", code, symbol);
         }
+
+        log.info("[CurrencyInit] Seeded {} currencies successfully", CURRENCIES.size());
     }
+
+    private record CurrencyDef(
+        String code,
+        String symbol,
+        String name,
+        String countryCode,
+        BigDecimal exchangeRate
+    ) {}
 }

@@ -1,8 +1,13 @@
 package com.epay.auth.service;
 
+import com.epay.domain.auth.dto.FullUserProfileDTO;
+import com.epay.domain.auth.entity.KycDocument;
+import com.epay.domain.auth.entity.NextOfKin;
 import com.epay.domain.auth.entity.User;
 import com.epay.domain.auth.entity.UserAccountSettings;
 import com.epay.domain.auth.entity.UserRecord;
+import com.epay.domain.auth.repository.KycDocumentRepository;
+import com.epay.domain.auth.repository.NextOfKinRepository;
 import com.epay.domain.auth.repository.UserAccountSettingsRepository;
 import com.epay.domain.auth.repository.UserRecordRepository;
 import com.epay.domain.auth.repository.UserRepository;

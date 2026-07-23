@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +18,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.epay.auth.interfaces.IAuthenticationService;
 import com.epay.auth.interfaces.IAuthorizeUserVerificationService;
 import com.epay.auth.interfaces.IMessagingService;
@@ -57,7 +55,6 @@ import com.epay.domain.auth.repository.UserRepository;
 import com.epay.domain.auth.repository.VerificationTokenRepository;
 import com.epay.domain.auth.response.AuthResponse;
 import com.epay.domain.auth.response.VerificationTokenResult;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -226,7 +223,6 @@ public class AuthenticationService implements IAuthenticationService{
                     messagingService.sendWelcomeMessage(request.getPhone(), request.getUsername(), method));
         }
 
-        // Create wallet async after activation — user must be enabled first
         final Long newUserId = user.getId();
         CompletableFuture.runAsync(() -> {
             try {
@@ -237,7 +233,7 @@ public class AuthenticationService implements IAuthenticationService{
             }
         });
 
-        // Send welcome/verification email async
+
         final String username = user.getUsername();
         final String email    = user.getEmail();
         if (isEmail && email != null) {
