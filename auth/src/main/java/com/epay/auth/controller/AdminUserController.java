@@ -1,8 +1,10 @@
 package com.epay.auth.controller;
 
 
+import com.epay.auth.service.UserService;
 import com.epay.common.exception.ApiResponse;
 import com.epay.common.exception.ResourceNotFoundException;
+import com.epay.domain.auth.dto.FullUserProfileDTO;
 import com.epay.domain.auth.dto.UserDTO;
 import com.epay.domain.auth.entity.User;
 import com.epay.domain.auth.enums.KycStatus;
@@ -26,6 +28,7 @@ import java.time.LocalDateTime;
 public class AdminUserController {
 
     private final UserRepository userRepository;
+    private final UserService    userService;
 
     /** GET /admin/users — paginated all users */
     @GetMapping
@@ -37,10 +40,9 @@ public class AdminUserController {
 
     /** GET /admin/users/{userId} */
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserDTO>> getUser(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return ResponseEntity.ok(ApiResponse.success(null, toDTO(user)));
+    public ResponseEntity<ApiResponse<FullUserProfileDTO>> getUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(ApiResponse.success(null,
+                userService.getFullProfile(userId)));
     }
 
     /** POST /admin/users/{userId}/lock */

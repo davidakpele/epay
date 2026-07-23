@@ -32,11 +32,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository              userRepository;
-    private final UserRecordRepository        userRecordRepository;
+    private final UserRepository                userRepository;
+    private final UserRecordRepository          userRecordRepository;
     private final UserAccountSettingsRepository settingsRepository;
-    private final PasswordEncoder             passwordEncoder;
-    private final IAuthNotificationPublisher  notificationPublisher;
+    private final KycDocumentRepository         kycDocumentRepository;
+    private final NextOfKinRepository           nextOfKinRepository;
+    private final PasswordEncoder               passwordEncoder;
+    private final IAuthNotificationPublisher    notificationPublisher;
 
     public UserDTO getCurrentUser(Long userId) {
         User user = userRepository.findById(userId)
@@ -48,6 +50,92 @@ public class UserService {
         UserRecord record = userRecordRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
         return toRecordDTO(record);
+    }
+
+    /**
+     * Returns the complete user profile — account, personal info,
+     * next of kin, KYC documents, and account settings — in one call.
+     */
+    public FullUserProfileDTO getFullProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        UserRecord record = userRecordRepository.findByUserId(userId).orElse(null);
+        NextOfKin nok     = nextOfKinRepository.findByUserId(userId).orElse(null);
+        UserAccountSettings settings = settingsRepository.findByUserId(userId).orElse(null);
+
+        java.util.List<KycDocument> docs = kycDocumentRepository.findByUserId(userId);
+
+        return FullUserProfileDTO.builder()
+                // Account fields
+                .id(user.getId())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .role(user.getRole())
+                .accountType(user.getAccountType())
+                .kycTier(user.getKycTier())
+                .kycStatus(user.getKycStatus())
+                .enabled(user.isEnabled())
+                .emailVerified(user.isEmailVerified())
+                .phoneVerified(user.isPhoneVerified())
+                .twoFactorEnabled(user.isTwoFactorEnabled())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                // Personal info
+                .personal(record != null ? FullUserProfileDTO.PersonalInfo.builder()
+                        .firstName(record.getFirstName())
+                        .lastName(record.getLastName())
+                        .fullName(record.getFirstName() + " " + record.getLastName())
+                        .phoneNumber(record.getPhoneNumber())
+                        .gender(record.getGender())
+                        .dateOfBirth(record.getDateOfBirth())
+                        .address(record.getAddress())
+                        .city(record.getCity())
+                        .state(record.getState())
+                        .country(record.getCountry())
+                        .countryCode(record.getCountryCode())
+                        .referralCode(record.getReferralCode())
+                        .referredByCode(record.getReferredByCode())
+                        .totalReferrals(record.getTotalReferrals())
+                        .profilePhotoUrl(record.getProfilePhotoUrl())
+                        .profileComplete(record.isProfileComplete())
+                        .build() : null)
+                // Next of kin
+                .nextOfKin(nok != null ? FullUserProfileDTO.NextOfKinInfo.builder()
+                        .firstName(nok.getFirstName())
+                        .lastName(nok.getLastName())
+                        .relationship(nok.getRelationship())
+                        .phone(nok.getPhone())
+                        .email(nok.getEmail())
+                        .address(nok.getAddress())
+                        .build() : null)
+                // KYC documents
+                .kycDocuments(docs.stream().map(d ->
+                        FullUserProfileDTO.KycDocumentInfo.builder()
+                                .id(d.getId())
+                                .documentType(d.getDocumentType())
+                                .status(d.getStatus())
+                                .storageReference(d.getStorageReference())
+                                .documentNumber(d.getDocumentNumber())
+                                .expiryDate(d.getExpiryDate())
+                                .issuingCountry(d.getIssuingCountry())
+                                .rejectionReason(d.getRejectionReason())
+                                .uploadedAt(d.getUploadedAt())
+                                .build())
+                        .toList())
+                // Account settings
+                .settings(settings != null ? FullUserProfileDTO.AccountSettingsInfo.builder()
+                        .emailAlert(settings.getIsEmailAlert())
+                        .transactionAlert(settings.getIsTransactionAlert())
+                        .loginAlert(settings.getIsLoginAlert())
+                        .smsMessage(settings.getIsReceiveSmsMessage())
+                        .marketingNews(settings.getIsReceiveMarketingNews())
+                        .biometric(settings.getIsBiometric())
+                        .preferredLanguage(settings.getPreferredLanguage())
+                        .timeZone(settings.getTimeZone())
+                        .sessionTimeout(settings.getSessionTimeOut())
+                        .build() : null)
+                .build();
     }
 
     @Transactional

@@ -1,15 +1,17 @@
 package com.epay.auth.controller;
 
+import com.epay.auth.service.UserService;
 import com.epay.common.exception.ApiResponse;
 import com.epay.common.exception.ResourceNotFoundException;
-import com.epay.domain.auth.dto.UserDTO;
+import com.epay.domain.auth.dto.FullUserProfileDTO;
 import com.epay.domain.auth.dto.UserRecordDTO;
-import com.epay.domain.auth.entity.User;
 import com.epay.domain.auth.entity.UserRecord;
+import com.epay.domain.auth.input.DeleteAccountRequest;
+import com.epay.domain.auth.input.NotificationUpdateRequest;
+import com.epay.domain.auth.input.PreferenceUpdateRequest;
 import com.epay.domain.auth.input.UpdateProfileRequest;
 import com.epay.domain.auth.repository.UserRecordRepository;
 import com.epay.domain.auth.repository.UserRepository;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,103 +23,108 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
+    private final UserService          userService;
     private final UserRepository       userRepository;
     private final UserRecordRepository userRecordRepository;
 
-    /** GET /user/profile — get the authenticated user's profile */
+    // -----------------------------------------------------------------------
+    // Full profile (authenticated user)
+    // -----------------------------------------------------------------------
+
+    /** GET /user/me — full profile of the authenticated user */
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<FullUserProfileDTO>> getMyFullProfile(
+            @RequestAttribute("userId") Long userId) {
+        return ResponseEntity.ok(ApiResponse.success(null,
+                userService.getFullProfile(userId)));
+    }
+
+    /** GET /user/profile — personal record only (lighter call) */
     @GetMapping("/profile")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<UserRecordDTO>> getProfile(
             @RequestAttribute("userId") Long userId) {
-
-        UserRecord record = userRecordRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
-
-        UserRecordDTO dto = toRecordDTO(record);
-        return ResponseEntity.ok(ApiResponse.success(null, dto));
+        return ResponseEntity.ok(ApiResponse.success(null,
+                userService.getProfile(userId)));
     }
 
-    /** GET /user/{userId} — get a user by ID (public lookup) */
+    // -----------------------------------------------------------------------
+    // Public lookups — returns full profile
+    // -----------------------------------------------------------------------
+
+    /** GET /user/{userId} */
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserDTO>> getUserById(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return ResponseEntity.ok(ApiResponse.success(null, toUserDTO(user)));
+    public ResponseEntity<ApiResponse<FullUserProfileDTO>> getUserById(
+            @PathVariable Long userId) {
+        return ResponseEntity.ok(ApiResponse.success(null,
+                userService.getFullProfile(userId)));
     }
 
-    /** GET /user/username/{username} — find by username (public lookup) */
+    /** GET /user/username/{username} */
     @GetMapping("/username/{username}")
-    public ResponseEntity<ApiResponse<UserDTO>> getUserByUsername(@PathVariable String username) {
-        User user = userRepository.findByUsername(username)
+    public ResponseEntity<ApiResponse<FullUserProfileDTO>> getUserByUsername(
+            @PathVariable String username) {
+        Long userId = userRepository.findByUsername(username)
+                .map(u -> u.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return ResponseEntity.ok(ApiResponse.success(null, toUserDTO(user)));
+        return ResponseEntity.ok(ApiResponse.success(null,
+                userService.getFullProfile(userId)));
     }
 
-    /** PUT /user/profile — update the authenticated user's profile */
+    // -----------------------------------------------------------------------
+    // Profile updates
+    // -----------------------------------------------------------------------
+
+    /** PUT /user/profile */
     @PutMapping("/profile")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<UserRecordDTO>> updateProfile(
             @RequestAttribute("userId") Long userId,
             @Valid @RequestBody UpdateProfileRequest request) {
-
-        UserRecord record = userRecordRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
-
-        if (request.getFirstName() != null)  record.setFirstName(request.getFirstName());
-        if (request.getLastName() != null)   record.setLastName(request.getLastName());
-        if (request.getPhoneNumber() != null) record.setPhoneNumber(request.getPhoneNumber());
-        if (request.getGender() != null)     record.setGender(request.getGender());
-        if (request.getDateOfBirth() != null) record.setDateOfBirth(request.getDateOfBirth());
-        if (request.getAddress() != null)    record.setAddress(request.getAddress());
-        if (request.getCity() != null)       record.setCity(request.getCity());
-        if (request.getState() != null)      record.setState(request.getState());
-        if (request.getCountry() != null)    record.setCountry(request.getCountry());
-        if (request.getCountryCode() != null) record.setCountryCode(request.getCountryCode());
-
-        userRecordRepository.save(record);
-        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully.", toRecordDTO(record)));
+        return ResponseEntity.ok(ApiResponse.success("Profile updated.",
+                userService.updateProfile(userId, request)));
     }
 
-    // ── Mappers ──────────────────────────────────────────────────────────────
-
-    private UserDTO toUserDTO(User user) {
-        return UserDTO.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .username(user.getUsername())
-                .role(user.getRole())
-                .accountType(user.getAccountType())
-                .kycTier(user.getKycTier())
-                .kycStatus(user.getKycStatus())
-                .enabled(user.isEnabled())
-                .emailVerified(user.isEmailVerified())
-                .phoneVerified(user.isPhoneVerified())
-                .twoFactorAuth(user.isTwoFactorEnabled())
-                .createdOn(user.getCreatedAt())
-                .updatedOn(user.getUpdatedAt())
-                .build();
+    /** PUT /user/settings/notifications */
+    @PutMapping("/settings/notifications")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<Void>> updateNotifications(
+            @RequestAttribute("userId") Long userId,
+            @Valid @RequestBody NotificationUpdateRequest request) {
+        userService.updateNotificationPreferences(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("Notification settings updated.", null));
     }
 
-    private UserRecordDTO toRecordDTO(UserRecord r) {
-        return UserRecordDTO.builder()
-                .id(r.getId())
-                .firstName(r.getFirstName())
-                .lastName(r.getLastName())
-                .phoneNumber(r.getPhoneNumber())
-                .gender(r.getGender())
-                .countryCode(r.getCountryCode())
-                .country(r.getCountry())
-                .city(r.getCity())
-                .state(r.getState())
-                .dateOfBirth(r.getDateOfBirth())
-                .address(r.getAddress())
-                .referralCode(r.getReferralCode())
-                .referredByCode(r.getReferredByCode())
-                .totalReferrals(r.getTotalReferrals())
-                .profilePhotoUrl(r.getProfilePhotoUrl())
-                .profileComplete(r.isProfileComplete())
-                .createdAt(r.getCreatedAt())
-                .updatedAt(r.getUpdatedAt())
-                .build();
+    /** PUT /user/settings/preferences */
+    @PutMapping("/settings/preferences")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<Void>> updatePreferences(
+            @RequestAttribute("userId") Long userId,
+            @Valid @RequestBody PreferenceUpdateRequest request) {
+        userService.updatePreferences(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("Preferences updated.", null));
+    }
+
+    /** POST /user/2fa/toggle?enable=true */
+    @PostMapping("/2fa/toggle")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<Void>> toggle2fa(
+            @RequestAttribute("userId") Long userId,
+            @RequestParam boolean enable) {
+        userService.toggleTwoFactor(userId, enable);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Two-factor authentication " + (enable ? "enabled" : "disabled") + ".", null));
+    }
+
+    /** DELETE /user/account */
+    @DeleteMapping("/account")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(
+            @RequestAttribute("userId") Long userId,
+            @Valid @RequestBody DeleteAccountRequest request) {
+        userService.requestAccountDeletion(userId, request);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Account deletion requested. It will be processed within 30 days.", null));
     }
 }
