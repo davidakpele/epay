@@ -18,4 +18,9 @@ public class DeleteAccountRequest {
 
     @Size(max = 500, message = "Reason must not exceed 500 characters")
     private String reason;
+
+    private String username;
+    private Long userId;
+    private String email;
+    private String action;
 }

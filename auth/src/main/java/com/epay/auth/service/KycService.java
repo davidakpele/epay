@@ -1,25 +1,38 @@
 package com.epay.auth.service;
 
+import com.epay.common.config.security.FileStorageConfig;
 import com.epay.common.exception.BadRequestException;
 import com.epay.common.exception.ErrorCode;
 import com.epay.common.exception.ResourceNotFoundException;
 import com.epay.domain.auth.entity.KycDocument;
 import com.epay.domain.auth.entity.KycVerification;
 import com.epay.domain.auth.entity.User;
+import com.epay.domain.auth.entity.UserRecord;
 import com.epay.domain.auth.enums.KycDocumentType;
 import com.epay.domain.auth.enums.KycStatus;
 import com.epay.domain.auth.enums.KycTier;
 import com.epay.domain.auth.repository.KycDocumentRepository;
 import com.epay.domain.auth.repository.KycVerificationRepository;
+import com.epay.domain.auth.repository.UserRecordRepository;
 import com.epay.domain.auth.repository.UserRepository;
-
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,10 +44,8 @@ public class KycService {
     private final KycDocumentRepository     kycDocumentRepository;
     private final KycVerificationRepository kycVerificationRepository;
     private final UserRepository            userRepository;
-
-    // =========================================================================
-    // User-facing
-    // =========================================================================
+    private final UserRecordRepository userRecordRepository;
+    private final FileStorageConfig fileStorageConfig;
 
     @Transactional
     public KycDocument uploadDocument(Long userId, KycDocumentType documentType,
@@ -99,9 +110,6 @@ public class KycService {
                 .getKycStatus();
     }
 
-    // =========================================================================
-    // Admin/Compliance-facing
-    // =========================================================================
 
     public Page<KycVerification> getPendingReviews(Pageable pageable) {
         return kycVerificationRepository.findByStatus(KycStatus.SUBMITTED, pageable);
@@ -138,5 +146,96 @@ public class KycService {
         userRepository.updateKycStatus(v.getUser().getId(), KycStatus.REJECTED);
 
         log.info("[KYC] Rejected: verificationId={} reason={}", verificationId, rejectionReason);
+    }
+
+    public ResponseEntity<?> uploadUserProfileImage(Long id, MultipartFile image) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("status", "error", "message", "Unauthorized or user not found."));
+        }
+
+        Optional<UserRecord> recordOpt = userRecordRepository.findByUserId(id);
+        if (recordOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "error", "message", "User record not found."));
+        }
+
+        try {
+            Path uploadDir = Paths.get(fileStorageConfig.getUploadDir()).toAbsolutePath().normalize();
+            Files.createDirectories(uploadDir);
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(uploadDir, id + ".*")) {
+                for (Path existingFile : stream) {
+                    Files.deleteIfExists(existingFile);
+                }
+            }
+
+            String ext = StringUtils.getFilenameExtension(image.getOriginalFilename());
+            String fileName = id + (ext != null ? "." + ext : "");
+            Path filePath = uploadDir.resolve(fileName);
+
+            Files.copy(image.getInputStream(), filePath);
+
+            String profilePath = "/uploads/images/" + fileName;
+
+            UserRecord userRecord = recordOpt.get();
+            userRecord.setProfilePhotoUrl(profilePath);
+            userRecord.setUser(userOpt.get());
+            userRecordRepository.save(userRecord);
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "status", "success",
+                            "message", "Profile image uploaded successfully.",
+                            "userId", id,
+                            "imageUrl", profilePath
+                    )
+            );
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "error", "message", "Error uploading image."));
+        }
+    }
+
+    public ResponseEntity<?> enableUserTwoFactorKey(Boolean enable2fa, Authentication authentication) {
+        String username = authentication.getName();
+        Optional<User> optionalUser = userRepository.findByUsername(username);
+        if (!optionalUser.isPresent()) {
+            throw new BadRequestException("You don't have access to the endpoints", ErrorCode.FORBIDDEN_ACCESS);
+        }
+        User user = optionalUser.get();
+        user.setTwoFactorEnabled(enable2fa);
+        userRepository.save(user);
+        return ResponseEntity.ok().body("Two-Factor Authentication updated successfully");
+    }
+
+    public ResponseEntity<?> removeUserProfileImage(Long id) {
+        Optional<UserRecord> recordOpt = userRecordRepository.findByUserId(id);
+        if (recordOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", "error", "message", "User record not found."));
+        }
+
+        UserRecord userRecord = recordOpt.get();
+        String profilePath = userRecord.getProfilePhotoUrl();
+
+        if (profilePath != null && !profilePath.isEmpty()) {
+            try {
+                Path uploadDir = Paths.get(fileStorageConfig.getUploadDir()).toAbsolutePath().normalize();
+                Path filePath = uploadDir.resolve(profilePath.replaceFirst("^/", "")); 
+                Files.deleteIfExists(filePath);
+                userRecord.setProfilePhotoUrl(null);
+                userRecordRepository.save(userRecord);
+
+                return ResponseEntity.ok(Map.of("status", "success", "message", "Profile image removed."));
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("status", "error", "message", "Error removing image."));
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("status", "error", "message", "No profile image to remove."));
+        }
     }
 }

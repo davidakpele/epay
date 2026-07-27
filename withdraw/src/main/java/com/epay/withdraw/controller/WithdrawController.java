@@ -10,31 +10,24 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/withdrawal")
+@RequestMapping("/withdrawals")
 @RequiredArgsConstructor
 public class WithdrawController {
 
     private final WithdrawService withdrawService;
 
-    /**
-     * POST /withdrawal
-     * Processes a withdrawal request.
-     * userId is injected from the JWT via JwtAuthenticationFilter.
-     */
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> withdraw(
             @Valid @RequestBody WithdrawRequest request,
-            @RequestAttribute("userId") Long userId,
             HttpServletRequest httpRequest) {
 
-        // Inject request context for audit trail
         if (request.getIpAddress() == null)
             request.setIpAddress(extractIp(httpRequest));
         if (request.getUserAgent() == null)
             request.setUserAgent(httpRequest.getHeader("User-Agent"));
 
-        return withdrawService.withdraw(userId, request);
+        return withdrawService.withdraw(request.getUserId(), request);
     }
 
     private String extractIp(HttpServletRequest request) {

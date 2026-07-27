@@ -27,7 +27,6 @@ public class WithdrawRequest {
     @NotNull(message = "Withdrawal type is required")
     private WithdrawalType withdrawalType;
 
-    /** Required for BANK_TRANSFER */
     private String bankCode;
     private String accountNumber;
     private String accountName;
@@ -39,9 +38,8 @@ public class WithdrawRequest {
     private String idempotencyKey;
 
     private String narration;
-
-    // Audit fields — injected by controller
     private String ipAddress;
     private String deviceId;
     private String userAgent;
+    private Long userId;
 }

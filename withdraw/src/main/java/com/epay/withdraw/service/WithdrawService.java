@@ -25,26 +25,13 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Withdrawal service — no DB table in this module.
- * All side effects go through ports:
- *   UserLookupPort              → auth   (email, full name)
- *   IWithdrawWalletPort         → wallet (balance, debit, refund, PIN verify)
- *   IBlacklistPort              → blacklist (fraud/compliance checks)
- *   IHistoryPort                → history (full double-entry ledger)
- *   IWalletNotificationPublisher → notification (debit email)
- *   IIdempotencyPort            → Redis  (duplicate request guard)
- *
- * Fee calculation: flat 0 by default — extend FeeCalculationService later.
- * Reference format: WDR_{TYPE}_{USERID}_{RANDOM12}
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class WithdrawService {
 
     private static final String TX_PREFIX    = "NX";
-    private static final long   IDEM_TTL_SEC = 86_400L; // 24 hours
+    private static final long   IDEM_TTL_SEC = 86_400L; 
 
     private final IWithdrawWalletPort          walletPort;
     private final IBlacklistPort               blacklistPort;
@@ -145,7 +132,6 @@ public class WithdrawService {
         }
 
         final WithdrawalStatus finalStatus = status;
-        // final String finalReason           = failureReason;
         CompletableFuture.runAsync(() -> {
             try {
                 historyPort.record(

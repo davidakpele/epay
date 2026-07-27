@@ -110,11 +110,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean isPublicEndpoint(HttpServletRequest request) {
         String path = request.getRequestURI();
 
+        // Spring Boot sees bare paths — nginx strips /api/v1 before forwarding.
+        // e.g. client calls /api/v1/auth/login → Spring sees /auth/login
         return path.startsWith("/auth/") ||
                path.startsWith("/error/") ||
                path.equals("/actuator/health") ||
                path.equals("/health") ||
-               path.equals("/v1/health") ||
                path.equals("/ping") ||
                path.startsWith("/swagger-ui") ||
                path.startsWith("/v3/api-docs") ||

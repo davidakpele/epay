@@ -1,6 +1,7 @@
 package com.epay.domain.wallet.input;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -22,11 +23,13 @@ public class SetPinRequest {
     @NotBlank(message = "Confirm PIN is required")
     private String confirmPin;
 
-    @NotBlank(message = "UserId is required")
+    @NotNull(message = "UserId is required")
     private Long userId;
-    @NotBlank(message = "User Wallet ID is required")
+
+    @NotNull(message = "User Wallet ID is required")
     private Long walletId;
+
     @NotBlank(message = "Username is required")
     private String username;
-    
+
 }

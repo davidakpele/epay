@@ -33,7 +33,7 @@ public class SpringDocConfig {
                                 .name("Private")
                                 .url("https://epay.com")))
                 .servers(List.of(
-                        new Server().url("/").description("Current server")
+                        new Server().url("/api/v1").description("API Gateway (nginx)")
                 ))
                 // Apply bearer auth globally — every endpoint shows the lock icon
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))

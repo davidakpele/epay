@@ -6,10 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Password reset tokens.
- * Tokens are hashed before storage. Each reset invalidates all prior tokens for the user.
- */
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -30,10 +27,6 @@ public class PasswordResetToken {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /**
-     * SHA-256 hash of the reset token.
-     * Never store plaintext reset tokens.
-     */
     @Column(name = "token_hash", nullable = false, unique = true)
     private String tokenHash;
 
@@ -46,7 +39,6 @@ public class PasswordResetToken {
     @Column(name = "is_used", nullable = false)
     private boolean used;
 
-    /** IP that initiated the reset request. */
     @Column(name = "requested_from_ip")
     private String requestedFromIp;
 

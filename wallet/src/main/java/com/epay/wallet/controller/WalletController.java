@@ -14,7 +14,6 @@ import com.epay.domain.wallet.input.SavingsDebitRequest;
 import com.epay.domain.wallet.input.SetPinRequest;
 import com.epay.domain.wallet.input.TransferRequest;
 import com.epay.domain.wallet.input.WalletRefundRequest;
-import com.epay.wallet.repository.WalletSettingsRepository;
 import com.epay.wallet.service.WalletService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/wallet")

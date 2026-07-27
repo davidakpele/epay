@@ -19,29 +19,21 @@ public class DepositController {
 
     private final DepositService depositService;
 
-    /**
-     * POST /deposit/initiate
-     * Validates user, wallet, currency — then credits wallet and records ledger.
-     */
     @PostMapping("/initiate")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> initiate(
             @Valid @RequestBody InitiateDepositRequest request,
-            @RequestAttribute("userId") Long userId,
             HttpServletRequest httpRequest) {
 
-        // Inject request context into payload for audit trail
-        request.setUserId(userId);
-        if (request.getIpAddress() == null) request.setIpAddress(extractIp(httpRequest));
-        if (request.getUserAgent() == null) request.setUserAgent(httpRequest.getHeader("User-Agent"));
+        if (request.getIpAddress() == null)
+            request.setIpAddress(extractIp(httpRequest));
+
+        if (request.getUserAgent() == null)
+            request.setUserAgent(httpRequest.getHeader("User-Agent"));
 
         return depositService.createDeposit(request);
     }
 
-    /**
-     * POST /deposit/verify
-     * Called after returning from gateway payment page, or for polling status.
-     */
     @PostMapping("/verify")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<DepositDTO>> verify(

@@ -127,12 +127,11 @@ public class SecurityConfiguration {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/auth/**", "/error/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/user/username/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/user/{id}").permitAll()
-                .requestMatchers(HttpMethod.DELETE, "/user/attempt/delete/**").permitAll()
-                .requestMatchers("/cache/users/**").permitAll()
-                .requestMatchers("/user/list").permitAll()
+                .requestMatchers(
+                    "/auth/**",
+                    "/api/v1/auth/**",
+                    "/error/**"
+                ).permitAll()
                 .requestMatchers("/home/**").permitAll()
                 .requestMatchers(
                     "/swagger-ui.html",
@@ -145,7 +144,6 @@ public class SecurityConfiguration {
                     "/v1/health",
                     "/webhook/**"
                 ).permitAll() 
-                .requestMatchers("/uploads/images/**").permitAll()
                 .requestMatchers("/static/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/user/{id}/block").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/user/{id}/lock").hasAnyRole("ADMIN", "SUPER_ADMIN")
@@ -200,7 +198,9 @@ public class SecurityConfiguration {
         firewall.setAllowUrlEncodedPercent(false);
         firewall.setAllowBackSlash(false);
         firewall.setAllowUrlEncodedSlash(false);
-        firewall.setAllowUrlEncodedPeriod(false);
+        // NOTE: period must be allowed — springdoc requests /v3/api-docs.yaml
+        // and swagger-ui assets like swagger-ui.css, swagger-ui-bundle.js
+        firewall.setAllowUrlEncodedPeriod(true);
         firewall.setAllowUrlEncodedDoubleSlash(false);
         firewall.setAllowNull(false);
         firewall.setAllowUrlEncodedLineFeed(false);

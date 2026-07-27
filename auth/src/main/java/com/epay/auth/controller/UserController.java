@@ -5,12 +5,10 @@ import com.epay.common.exception.ApiResponse;
 import com.epay.common.exception.ResourceNotFoundException;
 import com.epay.domain.auth.dto.FullUserProfileDTO;
 import com.epay.domain.auth.dto.UserRecordDTO;
-import com.epay.domain.auth.entity.UserRecord;
 import com.epay.domain.auth.input.DeleteAccountRequest;
 import com.epay.domain.auth.input.NotificationUpdateRequest;
 import com.epay.domain.auth.input.PreferenceUpdateRequest;
 import com.epay.domain.auth.input.UpdateProfileRequest;
-import com.epay.domain.auth.repository.UserRecordRepository;
 import com.epay.domain.auth.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +23,7 @@ public class UserController {
 
     private final UserService          userService;
     private final UserRepository       userRepository;
-    private final UserRecordRepository userRecordRepository;
 
-    // -----------------------------------------------------------------------
-    // Full profile (authenticated user)
-    // -----------------------------------------------------------------------
-
-    /** GET /user/me — full profile of the authenticated user */
     @GetMapping("/me")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<FullUserProfileDTO>> getMyFullProfile(
@@ -40,7 +32,6 @@ public class UserController {
                 userService.getFullProfile(userId)));
     }
 
-    /** GET /user/profile — personal record only (lighter call) */
     @GetMapping("/profile")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<UserRecordDTO>> getProfile(
@@ -49,11 +40,6 @@ public class UserController {
                 userService.getProfile(userId)));
     }
 
-    // -----------------------------------------------------------------------
-    // Public lookups — returns full profile
-    // -----------------------------------------------------------------------
-
-    /** GET /user/{userId} */
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<FullUserProfileDTO>> getUserById(
             @PathVariable Long userId) {
@@ -61,7 +47,6 @@ public class UserController {
                 userService.getFullProfile(userId)));
     }
 
-    /** GET /user/username/{username} */
     @GetMapping("/username/{username}")
     public ResponseEntity<ApiResponse<FullUserProfileDTO>> getUserByUsername(
             @PathVariable String username) {
@@ -72,11 +57,6 @@ public class UserController {
                 userService.getFullProfile(userId)));
     }
 
-    // -----------------------------------------------------------------------
-    // Profile updates
-    // -----------------------------------------------------------------------
-
-    /** PUT /user/profile */
     @PutMapping("/profile")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<UserRecordDTO>> updateProfile(
@@ -86,7 +66,6 @@ public class UserController {
                 userService.updateProfile(userId, request)));
     }
 
-    /** PUT /user/settings/notifications */
     @PutMapping("/settings/notifications")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Void>> updateNotifications(
@@ -96,7 +75,6 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Notification settings updated.", null));
     }
 
-    /** PUT /user/settings/preferences */
     @PutMapping("/settings/preferences")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Void>> updatePreferences(
@@ -106,7 +84,6 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Preferences updated.", null));
     }
 
-    /** POST /user/2fa/toggle?enable=true */
     @PostMapping("/2fa/toggle")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Void>> toggle2fa(
@@ -117,7 +94,6 @@ public class UserController {
                 "Two-factor authentication " + (enable ? "enabled" : "disabled") + ".", null));
     }
 
-    /** DELETE /user/account */
     @DeleteMapping("/account")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Void>> deleteAccount(
@@ -127,4 +103,6 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Account deletion requested. It will be processed within 30 days.", null));
     }
+
+
 }

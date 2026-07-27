@@ -7,11 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Immutable audit log of every login and sensitive action attempt.
- * Records are never updated or deleted — append-only for forensic integrity.
- * Required for AML/fraud investigation and compliance reporting.
- */
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -46,7 +42,6 @@ public class UserTracer {
     @Column(name = "user_agent", length = 500)
     private String userAgent;
 
-    /** Approximate location derived from IP — never from GPS. */
     @Column(name = "location")
     private String location;
 
@@ -58,7 +53,6 @@ public class UserTracer {
 
     private String sessionId;
 
-    /** Human-readable reason for failure, if applicable. */
     @Column(name = "failure_reason")
     private String failureReason;
 

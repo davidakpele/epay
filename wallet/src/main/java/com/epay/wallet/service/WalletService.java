@@ -81,7 +81,7 @@ public class WalletService implements IWalletService {
 
         boolean pinSet = walletSettingsRepository.findByWalletId(wallet.getId())
                 .map(WalletSettings::isIsSecure).orElse(false);
- 
+
         WalletSection section = new WalletSection();
         section.setWalletId(wallet.getId());
         section.setUserId(wallet.getUserId());
@@ -305,9 +305,16 @@ public class WalletService implements IWalletService {
 
         if (!senderWallet.isActive())
             throw new WalletException("Sender wallet is locked", ErrorCode.WALLET_LOCKED);
-        if (!senderWallet.isPinSet())
+
+        boolean pinSet = walletSettingsRepository.findByWalletId(senderWallet.getId())
+            .map(WalletSettings::isIsSecure).orElse(false);
+
+        if (!pinSet)
             throw new WalletException("Transaction PIN not set", ErrorCode.INVALID_PIN);
-        if (!passwordEncoder.matches(request.getTransactionPin(), senderWallet.getTransactionPin()))
+
+        Optional<WalletSettings> walletSettings = walletSettingsRepository.findByWalletId(senderWallet.getId());
+
+        if (!passwordEncoder.matches(request.getTransactionPin(), walletSettings.get().getPassword()))
             throw new WalletException("Invalid transaction PIN", ErrorCode.INVALID_PIN);
 
         CurrencyBalance senderBalance = senderWallet.getBalance(code)

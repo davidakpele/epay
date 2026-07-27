@@ -31,16 +31,68 @@ public class HistoryController {
     // User: own history
     // -----------------------------------------------------------------------
 
-    /** GET /history?page=0&size=20 */
+    /**
+     * GET /history?page=0&size=50
+     *
+     * Returns paginated transaction history for the authenticated user.
+     * Default page size is 50. "Load more" → increment page by 1.
+     *
+     * Response includes:
+     *   - content[]     : list of transactions for this page
+     *   - page          : current page number (0-based)
+     *   - size          : page size
+     *   - totalElements : total number of transactions
+     *   - hasMore       : true if there are more pages
+     */
     @GetMapping
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<Page<TransactionDTO>>> getHistory(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getHistory(
             @RequestAttribute("userId") Long userId,
             @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "20") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return ResponseEntity.ok(ApiResponse.success(null,
-                historyService.getByUserId(userId, pageable)));
+            @RequestParam(defaultValue = "50") int size) {
+
+        // Cap page size at 100 to prevent abuse
+        int safeSize = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, safeSize, Sort.by("createdAt").descending());
+        Page<TransactionDTO> result = historyService.getByUserId(userId, pageable);
+
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("content",       result.getContent());
+        body.put("page",          result.getNumber());
+        body.put("size",          result.getSize());
+        body.put("totalElements", result.getTotalElements());
+        body.put("totalPages",    result.getTotalPages());
+        body.put("hasMore",       !result.isLast());
+
+        return ResponseEntity.ok(ApiResponse.success(null, body));
+    }
+
+    /**
+     * GET /history/user/{userId}?page=0&size=50
+     *
+     * Fetch history for a specific user by their ID.
+     * Same pagination as /history — designed for both user self-fetch and admin use.
+     */
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('USER','ADMIN','SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getHistoryByUserId(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "50") int size) {
+
+        int safeSize = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, safeSize, Sort.by("createdAt").descending());
+        Page<TransactionDTO> result = historyService.getByUserId(userId, pageable);
+
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("content",       result.getContent());
+        body.put("page",          result.getNumber());
+        body.put("size",          result.getSize());
+        body.put("totalElements", result.getTotalElements());
+        body.put("totalPages",    result.getTotalPages());
+        body.put("hasMore",       !result.isLast());
+
+        return ResponseEntity.ok(ApiResponse.success(null, body));
     }
 
     /** GET /history/type/{type}?page=0&size=20 */
