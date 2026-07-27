@@ -178,13 +178,11 @@ public class MessagingService implements IMessagingService{
     }
 
 
-    
     @Override
     public void invalidateOTP(String identifier) {
         String normalizedIdentifier = normalizeIdentifier(identifier);
         OTP_STORE.remove(normalizedIdentifier);
     }
-    
 
     public static long getRemainingTime(String identifier) {
         String normalizedIdentifier = normalizeIdentifier(identifier);

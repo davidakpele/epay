@@ -20,13 +20,6 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-/**
- * Distributed rate limiting backed by Redis (Lettuce).
- *
- * <p>Also provides a cool-down mechanism: after a successful action
- * (e.g. OTP sent) a Redis key with a TTL blocks further attempts until
- * the cool-down expires — preventing spam without affecting the token bucket.
- */
 @Service
 public class RedisRateLimitService {
 
@@ -65,11 +58,7 @@ public class RedisRateLimitService {
         if (redisClient != null)  redisClient.shutdown();
     }
 
-    // ── Token-bucket rate limiting ────────────────────────────────────────────
-
     /**
-     * Attempts to consume one token from the named bucket.
-     *
      * @param key      Redis key prefix, e.g. "fp_ip:192.168.1.1"
      * @param capacity max tokens (also the refill amount per window)
      * @param window   refill window duration
@@ -98,12 +87,7 @@ public class RedisRateLimitService {
         return bucket.getAvailableTokens();
     }
 
-    // ── Cool-down (minimum interval between successive actions) ──────────────
-
     /**
-     * Starts a cool-down for the given key.
-     * While the key exists in Redis, {@link #isCoolingDown} returns true.
-     *
      * @param key      unique key, e.g. "cd:forgot_pw:email:user@example.com"
      * @param duration how long the cool-down lasts
      */

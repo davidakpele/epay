@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import jakarta.servlet.http.HttpServletRequest;
-
+ 
 @Component
 public class IpExtractor {
 
@@ -14,7 +14,7 @@ public class IpExtractor {
     private static final List<String> IP_HEADERS = List.of(
             "X-Forwarded-For",
             "X-Real-IP",
-            "CF-Connecting-IP",      // Cloudflare
+            "CF-Connecting-IP",    
             "X-Original-Forwarded-For",
             "Proxy-Client-IP",
             "WL-Proxy-Client-IP"

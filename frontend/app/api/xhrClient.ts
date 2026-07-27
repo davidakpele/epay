@@ -5,7 +5,7 @@ interface XhrClientOptions {
   shouldRetry?: (status: number) => boolean;
   onRetry?: (attempt: number, maxRetries: number, delay: number, status?: number) => void;
 }
-const authPages = ['/auth/login', '/auth/register'];
+const authPages = ['/default'];
 const xhrClient = <T = any>(
   api_url: string,
   method: string,
@@ -85,16 +85,24 @@ const xhrClient = <T = any>(
             }, delay);
             return;
           } else if (xhr.status > 0) {
-            let errorMessage = "An error occurred";
-            
+            let errorPayload: any;
+
             try {
               const errorResponse = JSON.parse(xhr.responseText);
-              errorMessage = errorResponse.message || errorResponse.error || `Error: ${xhr.status}`;
+              errorPayload = {
+                ...errorResponse,
+                status: errorResponse.status ?? xhr.status,
+                success: false,
+              };
             } catch (e) {
-              errorMessage = xhr.responseText || `Error: ${xhr.status}`;
+              errorPayload = {
+                message: xhr.responseText || `Error: ${xhr.status}`,
+                status: xhr.status,
+                success: false,
+              };
             }
-            
-            reject(errorMessage);
+
+            reject(errorPayload);
           }
         }
       };

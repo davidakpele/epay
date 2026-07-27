@@ -27,7 +27,7 @@ import org.springframework.security.authentication.AuthenticationServiceExceptio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
+ 
 @Service
 public class TwoFactorAuthenticationService implements ITwoFactorAuthenticationService {
     private final TwoFactorOTPRepository twoFactorOTPRepository;

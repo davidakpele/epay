@@ -12,9 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import io.grpc.Status;
-
 import com.google.protobuf.Timestamp;
 import com.pesco.wallet_service.client.UserServiceClient;
 import com.pesco.wallet_service.models.CurrencyBalanceMapStruct;

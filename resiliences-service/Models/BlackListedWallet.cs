@@ -11,7 +11,7 @@ namespace resiliences_service.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public uint Id { get; set; }
 
-        [Required]
+        [Required] 
         public uint WalletId { get; set; }
 
         [Required]

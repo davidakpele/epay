@@ -250,10 +250,10 @@ public class UserRecordService implements IUserRecordService{
 
             String profilePath = "/uploads/images/" + fileName;
 
-            UserRecord userRecord = recordOpt.get();
+            UserRecord userRecord = recordOpt.get(); 
             userRecord.setPhoto(profilePath);
             userRecord.setUser(userOpt.get());
-            userRecordRepository.save(userRecord);
+            userRecordRepository.save(userRecord); 
 
             return ResponseEntity.ok(
                     Map.of(

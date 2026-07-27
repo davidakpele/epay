@@ -293,7 +293,8 @@ public class WalletService {
     }
     
     @Transactional
-    public ResponseEntity<?> refundWallet(WalletRefundRequest request) {        Map<String, Object> response = new LinkedHashMap<>();
+    public ResponseEntity<?> refundWallet(WalletRefundRequest request) {        
+        Map<String, Object> response = new LinkedHashMap<>();
 
         try {
             Wallet wallet = walletRepository.findByUserId(request.getSenderId())

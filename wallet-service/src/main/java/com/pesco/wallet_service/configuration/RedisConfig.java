@@ -43,7 +43,7 @@ public class RedisConfig {
         if (!redisPassword.isEmpty()) {
             config.setPassword(RedisPassword.of(redisPassword));
         }
-        
+         
         LettuceClientConfiguration clientConfig;
         clientConfig = LettuceClientConfiguration.builder()
                 .commandTimeout(Duration.ofMillis(redisTimeout))

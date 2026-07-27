@@ -69,7 +69,7 @@ public class AuthenticationService implements IAuthenticationService{
     private final JwtService jwtService;
     private final NotificationServiceClient notificationServiceClient;
     private final AuthenticationManager authenticationManager;
-    private final KeyWrapper keysWrapper;
+    private final KeyWrapper keysWrapper; 
     private final IAuthorizeUserVerificationService authorizeUserVerificationService;
     private final AuthorizeUserVerificationRepository authorizeUserVerificationRepository;
     private final ITwoFactorAuthenticationService twoFactorAuthenticationServiceImplementation;

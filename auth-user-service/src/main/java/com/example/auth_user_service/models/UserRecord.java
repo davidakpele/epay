@@ -1,7 +1,6 @@
 package com.example.auth_user_service.models;
 
 import java.time.LocalDateTime;
-
 import com.example.auth_user_service.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;

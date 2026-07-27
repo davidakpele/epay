@@ -13,6 +13,60 @@ import { countries } from '@/components/countries';
 
 type LoginState = 'idle' | 'error' | 'loading' | 'success';
 
+// ── Shape of a structured API error response, e.g.:
+// { errorCode: "VALID_11001", errorId: "...", fieldErrors: { password: "..." },
+//   message: "Validation failed", path: "/auth/login", status: 400, success: false, timestamp: "..." }
+// or the simpler shape: { status: 400, success: false, message: "Invalid user credentials." }
+interface ApiErrorResponse {
+  errorCode?: string;
+  errorId?: string;
+  fieldErrors?: Record<string, string>;
+  message: string;
+  path?: string;
+  status: number;
+  success: false;
+  timestamp?: string;
+}
+
+/**
+ * Normalizes whatever `authService` throws into an ApiErrorResponse, or
+ * returns null if it doesn't look like one of our backend's error shapes
+ * (e.g. a network failure, where `error` is a plain Error/TypeError).
+ *
+ * Handles a few common cases so this keeps working regardless of exactly
+ * how authService surfaces errors:
+ *   1. authService throws the parsed JSON body directly.
+ *   2. authService throws an Error whose `.message` IS the JSON string.
+ *   3. axios-style: authService throws an error with `.response.data`.
+ *
+ * NOTE: if authService currently does something like
+ * `throw new Error(data.message)`, fieldErrors/errorCode are being
+ * discarded before they ever reach this component — that needs to throw
+ * the full parsed body (or attach it as `error.data`) instead.
+ */
+function parseApiError(error: any): ApiErrorResponse | null {
+  if (error && typeof error === 'object' && error.success === false && typeof error.message === 'string') {
+    return error as ApiErrorResponse;
+  }
+  if (error?.response?.data && typeof error.response.data === 'object') {
+    return error.response.data as ApiErrorResponse;
+  }
+  if (error?.data && typeof error.data === 'object' && error.data.success === false) {
+    return error.data as ApiErrorResponse;
+  }
+  if (typeof error?.message === 'string') {
+    try {
+      const parsed = JSON.parse(error.message);
+      if (parsed && typeof parsed === 'object' && 'success' in parsed) {
+        return parsed as ApiErrorResponse;
+      }
+    } catch {
+      // error.message wasn't JSON — fall through
+    }
+  }
+  return null;
+}
+
 export default function Default() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [rememberUser, setRememberUser] = useState(false);
@@ -146,6 +200,52 @@ export default function Default() {
 
       return [...prev, newToast];
     });
+  };
+
+  /**
+   * Shared error handler for every auth form. Give it:
+   *  - the caught error
+   *  - (optional) a field-error setter, so validation errors like
+   *    { fieldErrors: { password: "..." } } populate the right form field
+   *  - (optional) a map of field name -> input ref, so the offending
+   *    field gets focused
+   *  - (optional) a fallback message for the generic case (e.g. wrong
+   *    username/password), since the backend's own `message` is often
+   *    fine to show as-is but you may want something friendlier
+   */
+  const handleAuthError = (
+    error: any,
+    setFieldErrors?: React.Dispatch<React.SetStateAction<Record<string, string>>>,
+    fieldRefs?: Record<string, React.RefObject<HTMLInputElement | null>>,
+    fallbackMessage?: string
+  ) => {
+    const apiError = parseApiError(error);
+console.log('RAW ERROR:', error);
+    if (apiError) {
+      if (apiError.fieldErrors && Object.keys(apiError.fieldErrors).length > 0) {
+        const fieldErrors = apiError.fieldErrors;
+        setFieldErrors?.((prev) => ({ ...prev, ...fieldErrors }));
+
+        const firstField = Object.keys(fieldErrors)[0];
+        showToast(fieldErrors[firstField]);
+        fieldRefs?.[firstField]?.current?.focus();
+      } else {
+        // e.g. { message: "Invalid user credentials." } — no field to blame,
+        // so just surface the backend's message (or errorCode as fallback)
+        showToast(apiError.message || fallbackMessage || 'Something went wrong. Please try again.');
+      }
+      return;
+    }
+
+    // Not a recognized API error shape — likely a network/runtime error
+    const errorMsg = error?.toString?.() ?? fallbackMessage ?? 'An unexpected error occurred';
+    if (errorMsg.includes('internet connection') || errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+      showToast('You are offline. Please check your network.');
+    } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
+      showToast('Service unavailable. The server might be down.');
+    } else {
+      showToast(fallbackMessage || errorMsg);
+    }
   };
 
   const validateForm = () => {
@@ -388,14 +488,12 @@ export default function Default() {
       }
       
     } catch (error: any) {
-      const errorMsg = error.toString();
-      if (errorMsg.includes('internet connection')) {
-        showToast('You are offline. Please check your network.');
-      } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
-        showToast('Service unavailable. The server might be down.');
-      } else {
-        showToast(errorMsg);
-      }
+      handleAuthError(
+        error,
+        setErrors as React.Dispatch<React.SetStateAction<Record<string, string>>>,
+        { username: usernameRef, password: passwordRef },
+        'Invalid username or password.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -430,14 +528,12 @@ export default function Default() {
       setCodeSent(false);
       setShowRegister(false);
     } catch (error: any) {
-      const errorMsg = error.toString();
-      if (errorMsg.includes('internet connection')) {
-        showToast('You are offline. Please check your network.');
-      } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
-        showToast('Service unavailable. The server might be down.');
-      } else {
-        showToast(errorMsg);
-      }
+      handleAuthError(
+        error,
+        setRegisterErrors,
+        { username: usernameRef, email: emailRef, firstname: firstnameRef },
+        'Could not create account. Please check your details and try again.'
+      );
     } finally {
       setIsRegisterSubmitting(false);
     }
@@ -455,14 +551,12 @@ export default function Default() {
       setForgotPinErrors({});
       showForm('login');
     } catch (error: any) {
-      const errorMsg = error.toString();
-      if (errorMsg.includes('internet connection')) {
-        showToast('You are offline. Please check your network.');
-      } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
-        showToast('Service unavailable. The server might be down.');
-      } else {
-        showToast(errorMsg);
-      }
+      handleAuthError(
+        error,
+        setForgotPinErrors,
+        { email: forgotPinEmailRef },
+        'Could not send username. Please check the email and try again.'
+      );
     } finally {
       setIsForgotPinSubmitting(false);
     }
@@ -485,14 +579,12 @@ export default function Default() {
       // Move to step 2: confirm reset form
       setShowConfirmResetForm(true);
     } catch (error: any) {
-      const errorMsg = error.toString();
-      if (errorMsg.includes('internet connection')) {
-        showToast('You are offline. Please check your network.');
-      } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
-        showToast('Service unavailable. The server might be down.');
-      } else {
-        showToast(errorMsg);
-      }
+      handleAuthError(
+        error,
+        setResetPasswordErrors,
+        { email: resetEmailRef, phone: resetPhoneRef },
+        'Could not send reset code. Please check your details and try again.'
+      );
     } finally {
       setIsResetPasswordSubmitting(false);
     }
@@ -571,14 +663,12 @@ export default function Default() {
         showForm('login');
       }, 1500);
     } catch (error: any) {
-      const errorMsg = error.toString();
-      if (errorMsg.includes('internet connection')) {
-        showToast('You are offline. Please check your network.');
-      } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
-        showToast('Service unavailable. The server might be down.');
-      } else {
-        showToast(errorMsg);
-      }
+      handleAuthError(
+        error,
+        undefined,
+        { password: confirmResetPasswordRef, confirmPassword: confirmResetConfirmPasswordRef },
+        'Could not reset password. The code may be invalid or expired.'
+      );
     } finally {
       setIsConfirmResetSubmitting(false);
     }
@@ -629,7 +719,7 @@ export default function Default() {
         showToast('Verification code sent to your email!', 'success');
       }
     } catch (error: any) {
-      showToast(error.toString());
+      handleAuthError(error, undefined, { email: emailRef }, 'Could not send verification code. Please try again.');
     } finally {
       setIsRequestingCode(false);
     }
@@ -685,60 +775,53 @@ export default function Default() {
 
     try {
         const payload = { otp: verificationCode };
-        await authService.verifyOtp(payload)
-        .then((response) => {
-            const payload = {
-                token: response.jwt,
-                username: response.username,
-                userId: response.userId,
-                email: response.email,
-                referral_link: response.referral_link,
-                referral_username: response.referral_username,
-                twoFactorAuthEnabled: response.twoFactorAuthEnabled,
-                is_verify: response.is_verify,
-                fullname: response.fullname,
-                country: response.country,
-                state: response.state,
-                city: response.city,
-                dob: response.date_of_birth,
-                gender: response.gender,
-                telephone: response.telephone || "",
-                isCompleteProfile: response.is_profile_complete,
-                sessionId: response.sessionId
-            };
-            updateNotificationContainer({
-                type: "welcome",
-                description: "Welcome to our platform!",
-                date: new Date().toISOString()
-            });
-        
-            setAuthToken(payload);
-            showToast('Verification successful!', 'success');
-            setTimeout(() => {
-                router.push('/dashboard');
-            }, 1000);
-        }) .catch((error) => {
-            showToast(error)
-        })
-        
+        const response = await authService.verifyOtp(payload);
+
+        const authPayload = {
+            token: response.jwt,
+            username: response.username,
+            userId: response.userId,
+            email: response.email,
+            referral_link: response.referral_link,
+            referral_username: response.referral_username,
+            twoFactorAuthEnabled: response.twoFactorAuthEnabled,
+            is_verify: response.is_verify,
+            fullname: response.fullname,
+            country: response.country,
+            state: response.state,
+            city: response.city,
+            dob: response.date_of_birth,
+            gender: response.gender,
+            telephone: response.telephone || "",
+            isCompleteProfile: response.is_profile_complete,
+            sessionId: response.sessionId
+        };
+        updateNotificationContainer({
+            type: "welcome",
+            description: "Welcome to our platform!",
+            date: new Date().toISOString()
+        });
+
+        setAuthToken(authPayload);
         showToast('Verification successful!', 'success');
         setTimeout(() => {
-        router.push('/dashboard');
+            router.push('/dashboard');
         }, 1000);
     } catch (error: any) {
-        const errorMsg = error.toString();
-        if (errorMsg.includes('Invalid verification code') || errorMsg.includes('invalid') || errorMsg.includes('Invalid')) {
-        showToast('Invalid verification code. Please try again.');
-        setCode(['', '', '', '']);
-        inputRefs.current[0]?.focus();
-        } else if (errorMsg.includes('expired') || errorMsg.includes('Expired')) {
-        showToast('Verification code has expired. Please request a new one.');
-        } else if (errorMsg.includes('internet connection')) {
-        showToast('You are offline. Please check your network.');
-        } else if (errorMsg.includes('maintenance') || errorMsg.includes('down')) {
-        showToast('Service unavailable. The server might be down.');
+        const apiError = parseApiError(error);
+        const code = apiError?.errorCode ?? '';
+        const message = apiError?.message ?? '';
+
+        if (/invalid/i.test(code) || /invalid/i.test(message)) {
+            showToast('Invalid verification code. Please try again.');
+            setCode(['', '', '', '']);
+            inputRefs.current[0]?.focus();
+        } else if (/expired/i.test(code) || /expired/i.test(message)) {
+            showToast('Verification code has expired. Please request a new one.');
+            setCode(['', '', '', '']);
+            inputRefs.current[0]?.focus();
         } else {
-        showToast(errorMsg || 'Verification failed. Please try again.');
+            handleAuthError(error, undefined, undefined, 'Verification failed. Please try again.');
         }
     } finally {
         setIsSubmitting(false);
@@ -855,12 +938,13 @@ export default function Default() {
                       type="text"
                       name="username"
                       id='username'
-                      className={styles.cardInput}
+                      className={`${styles.cardInput} ${errors.username ? styles.inputError : ''}`}
                       value={formData.username}
                       onChange={handleChange}
                       placeholder="Enter your username or email"
                     />
                   </div>
+                  {errors.username && <p style={{ color: '#e53e3e', fontSize: '0.75rem', margin: '4px 0 0' }}>{errors.username}</p>}
 
                   <div className={styles.inputGroup}>  
                     <svg className={styles.inputIcon} viewBox="0 0 24 24" fill="currentColor">
@@ -872,7 +956,7 @@ export default function Default() {
                       type={showLoginPassword ? 'text' : 'password'}
                       name="password"
                       id='password'
-                      className={styles.cardInput}
+                      className={`${styles.cardInput} ${errors.password ? styles.inputError : ''}`}
                       value={formData.password}
                       onChange={handleChange}
                       placeholder="•••••"
@@ -886,6 +970,7 @@ export default function Default() {
                       <i className={`fa-solid ${showLoginPassword ? 'fa-eye-slash' : 'fa-eye'}`} style={{fontSize:"12px"}}></i>
                     </button>
                   </div>
+                  {errors.password && <p style={{ color: '#e53e3e', fontSize: '0.75rem', margin: '4px 0 0' }}>{errors.password}</p>}
                   <p className={styles.inputHint}>If Corporate, format is Corp ID.User ID</p>
 
                   <div className={styles.cardRemember}>

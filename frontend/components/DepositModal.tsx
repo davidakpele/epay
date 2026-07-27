@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useRef} from 'react';
 import { X, Landmark, CreditCard, Smartphone, ArrowRight, ShieldCheck, Copy, CheckCircle, Lock, ArrowLeft, AlertCircle } from 'lucide-react';
 import './DepositModal.css';
 import { DepositModalProps } from '@/app/types/utils';
@@ -14,7 +14,8 @@ import {
   getFiat,
   getWallet,
   depositService,
-  updateNotificationContainer 
+  updateNotificationContainer, 
+  uuidv4
 } from '@/app/api';
 import { eventEmitter } from '@/app/utils/eventEmitter';
 import { useRouter } from 'next/navigation';
@@ -35,6 +36,7 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
   const [showFailModal, setShowFailModal] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
   const [bankList, setBankList] = useState<any[]>([]);
+  const idempotencyKeyRef = useRef<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoadingBanks, setIsLoadingBanks] = useState(false);
   const router = useRouter();
@@ -87,6 +89,7 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
 
   useEffect(() => {
     if (isOpen) {
+      generateIdempotencyKey();
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -149,6 +152,10 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
     try {
       const formattedAmount = parseFloat(rawAmount.replace(/,/g, '')).toFixed(2);
       
+      const idempotencyKey = idempotencyKeyRef.current;
+
+      console.log(idempotencyKey)
+      
       const active_wallet = getActiveWallet();
       const user_id = getUserId();
       const wallet_id = getUserWalletId();
@@ -165,7 +172,8 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
         walletId: wallet_id,
         amount: formattedAmount,
         type: "DEPOSIT",
-        currencyType: active_wallet,
+        currency: active_wallet,
+        idempotencyKey: idempotencyKey,
         currencySymbol: extract_symbol?.symbol || getFiat(),
       };
 
@@ -301,6 +309,12 @@ const DepositModal = ({ isOpen, onClose, theme, onDepositSuccess }: DepositModal
   const handleRedirect =()=>{
     router.push("/wallet/deposit-banks");
   }
+
+  const generateIdempotencyKey = () => {
+    const newKey = uuidv4();
+    idempotencyKeyRef.current = newKey;
+    return newKey;
+  };
 
   if (!isOpen) return null;
 

@@ -52,8 +52,7 @@ public class WalletController {
     private final NotificationProperties notificationProperties;
     private final UserServiceClient userServiceClient;
 
-    private static final DateTimeFormatter EVT_FMT =
-            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
+    private static final DateTimeFormatter EVT_FMT = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
 
     private String formatNow() {
         return ZonedDateTime.now(ZoneId.systemDefault()).format(EVT_FMT);

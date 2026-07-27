@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense, lazy, useRef} from 'react';
+import React, { useState, useEffect, useRef} from 'react';
 import { X, Landmark, Wallet, User, ArrowRight, ShieldCheck, Lock, ArrowLeft, AlertCircle, CheckCircle, ChevronDown, Star } from 'lucide-react';
 import Select from 'react-select';
 import './WithdrawModal.css';

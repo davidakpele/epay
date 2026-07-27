@@ -1,6 +1,6 @@
 import { HistoryFilterPayload } from "../types/utils";
 
-const BASE_URL = 'http://localhost:8292/api';
+const BASE_URL = 'http://localhost/api/v1';
 
 export const SERVICE_URLS = {
   AUTH: BASE_URL,
@@ -62,7 +62,7 @@ export const API_URLS = {
   },
 
   DEPOSIT: {
-    BASE: `${SERVICE_URLS.DEPOSIT}/deposit/create`,
+    BASE: `${SERVICE_URLS.DEPOSIT}/deposit/initiate`,
     BY_ID: (id: string | number) => `${SERVICE_URLS.DEPOSIT}/deposit/${id}`,
     HISTORY: (userId: string | number) => `${SERVICE_URLS.DEPOSIT}/deposit/history/${userId}`,
     STATUS: (id: string | number) => `${SERVICE_URLS.DEPOSIT}/deposit/${id}/status`,
