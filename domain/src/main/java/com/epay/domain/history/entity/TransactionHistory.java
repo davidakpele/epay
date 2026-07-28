@@ -49,9 +49,6 @@ public class TransactionHistory {
     @Column(name = "session_id")
     private String sessionId;
 
-    @Column(name = "idempotency_key", unique = true)
-    private String idempotencyKey;
-
     @Column(name = "transaction_type", nullable = false)
     private String transactionType;
 

@@ -12,21 +12,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Blocks known malicious scanning tools.
- * curl/wget are only blocked in production — they are legitimate API testing tools in dev.
- */
 @Slf4j
 @Component
 public class BotDetectionFilter extends OncePerRequestFilter {
-
-    /** Always blocked regardless of environment. */
     private static final List<String> ALWAYS_BLOCKED = List.of(
             "sqlmap", "nikto", "nessus", "hydra", "zgrab", "masscan",
             "nmap", "dirbuster", "gobuster", "nuclei", "acunetix"
     );
 
-    /** Only blocked in production. */
     private static final List<String> PROD_ONLY_BLOCKED = List.of(
             "python-requests", "scrapy", "mechanize", "libwww-perl"
     );
@@ -37,7 +30,6 @@ public class BotDetectionFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // Never filter WebSocket upgrades or health probes
         return path.startsWith("/ws/") || path.equals("/actuator/health");
     }
 
@@ -57,7 +49,6 @@ public class BotDetectionFilter extends OncePerRequestFilter {
 
         String ua = userAgent.toLowerCase();
 
-        // Always block known attack tools
         for (String blocked : ALWAYS_BLOCKED) {
             if (ua.contains(blocked)) {
                 log.warn("[BOT] Blocked known attack tool '{}' from IP: {}", blocked, extractIp(request));
@@ -66,7 +57,6 @@ public class BotDetectionFilter extends OncePerRequestFilter {
             }
         }
 
-        // Block scrapers only in production
         boolean isProduction = activeProfile.contains("prod");
         if (isProduction) {
             for (String blocked : PROD_ONLY_BLOCKED) {
@@ -78,7 +68,6 @@ public class BotDetectionFilter extends OncePerRequestFilter {
             }
         }
 
-        // Allow legitimate search engine bots only on public paths
         if (isSearchEngineBot(ua)) {
             String path = request.getRequestURI();
             if (!path.startsWith("/public") && !path.equals("/")

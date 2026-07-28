@@ -5,10 +5,6 @@ import com.epay.common.interfaces.IBlacklistPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-/**
- * Implements IBlacklistPort from epay-common.
- * withdraw module calls this through the port — no direct blacklist import needed.
- */
 @Component
 @RequiredArgsConstructor
 public class BlacklistCheckAdapter implements IBlacklistPort {

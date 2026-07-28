@@ -8,10 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-/**
- * Admin request to update an existing supported currency.
- * All fields are optional — only provided fields are updated.
- */
 @Data
 @Builder
 @NoArgsConstructor

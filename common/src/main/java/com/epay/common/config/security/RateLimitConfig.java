@@ -5,22 +5,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-/**
- * Rate limit configuration — override in application.yaml per environment.
- *
- * epay:
- *   rate-limit:
- *     global-ip-limit: 200
- *     global-window-seconds: 60
- *     auth-limit: 10
- *     auth-window-seconds: 60
- *     wallet-limit: 30
- *     wallet-window-seconds: 60
- *     user-limit: 50
- *     user-window-seconds: 60
- *     penalty-multiplier: 3
- *     max-penalty-seconds: 3600
- */
+
 @Getter
 @Setter
 @Component

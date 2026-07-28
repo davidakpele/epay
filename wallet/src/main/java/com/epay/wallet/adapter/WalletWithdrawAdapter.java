@@ -1,15 +1,15 @@
 package com.epay.wallet.adapter;
 
+import java.math.BigDecimal;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 import com.epay.common.exception.ResourceNotFoundException;
 import com.epay.common.interfaces.IWithdrawWalletPort;
 import com.epay.wallet.repository.SupportedCurrencyRepository;
 import com.epay.wallet.repository.WalletRepository;
+import com.epay.wallet.repository.WalletSettingsRepository;
 import com.epay.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
 
 @Component
 @RequiredArgsConstructor
@@ -17,6 +17,7 @@ public class WalletWithdrawAdapter implements IWithdrawWalletPort {
 
     private final WalletService               walletService;
     private final WalletRepository            walletRepository;
+    private final WalletSettingsRepository    walletSettingsRepository;
     private final SupportedCurrencyRepository currencyRepository;
     private final PasswordEncoder             passwordEncoder;
 
@@ -63,10 +64,18 @@ public class WalletWithdrawAdapter implements IWithdrawWalletPort {
                 .map(c -> c.getSymbol()).orElse(currency);
     }
 
+
     @Override
     public boolean verifyPin(Long userId, String rawPin) {
-        return walletRepository.findByUserId(userId)
-                .map(w -> w.isPinSet() && passwordEncoder.matches(rawPin, w.getTransactionPin()))
+        if (rawPin == null || rawPin.isBlank()) return false;
+
+        Long walletId = walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"))
+                .getId();
+
+        return walletSettingsRepository.findByWalletId(walletId)
+                .filter(ws -> ws.getIsSecure())
+                .map(ws -> passwordEncoder.matches(rawPin, ws.getPassword()))
                 .orElse(false);
     }
 }

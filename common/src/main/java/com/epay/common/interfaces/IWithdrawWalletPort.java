@@ -2,12 +2,7 @@ package com.epay.common.interfaces;
 
 import java.math.BigDecimal;
 
-/**
- * Port for withdraw module to interact with wallet.
- * Implemented by WalletWithdrawAdapter in epay-wallet.
- */
 public interface IWithdrawWalletPort {
-
     void debitWallet(Long userId, String currency, BigDecimal amount, String reference);
 
     void refundWallet(Long userId, String currency, BigDecimal amount, String reference);

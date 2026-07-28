@@ -22,24 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Enterprise-grade multi-tier rate limiting filter.
- *
- * Tier 1 — Global IP:       all requests, coarse DDoS guard
- * Tier 2 — Endpoint group:  auth / wallet / user each have their own tighter window
- * Tier 3 — Per-user:        authenticated requests tracked by userId in addition to IP
- * Tier 4 — Progressive:     repeat offenders get exponentially longer backoffs
- * Tier 5 — Suspicious IP:   IPs that repeatedly violate get flagged + blocked longer
- *
- * Fail-open: if Redis is unavailable, requests pass through with a warning log.
- *
- * Redis key structure:
- *   rl:ip:{ip}:global                — global IP counter
- *   rl:ip:{ip}:group:{group}         — per-endpoint-group IP counter
- *   rl:user:{userId}:group:{group}   — per-user counter
- *   rl:penalty:{ip}                  — violation count (drives exponential backoff)
- *   rl:blocked:{ip}                  — set when IP is actively blocked
- */
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -102,9 +85,6 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 
-    /**
-     * Increments counter, sets TTL on first request, returns current count.
-     */
     private Long increment(String key, long windowSeconds) {
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count == 1L) {
@@ -113,9 +93,6 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         return count != null ? count : 0L;
     }
 
-    /**
-     * Returns true if the given key exceeds its limit within its window.
-     */
     private boolean exceeds(String identifier, String group, int limit, long windowSeconds) {
         String key = identifier.contains(":") ? identifier
                 : String.format(KEY_IP_GLOBAL, identifier);
@@ -124,10 +101,6 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         return count > limit;
     }
 
-    /**
-     * On a violation: increment penalty counter, block IP if threshold exceeded,
-     * then send the 429 response.
-     */
     private void recordViolation(String ip, String group,
                                   HttpServletRequest request,
                                   HttpServletResponse response) throws IOException {
@@ -149,7 +122,6 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         log.warn("[RATE] Violation #{} for IP={} group={} path={} backoff={}s",
                 violations, ip, group, request.getRequestURI(), retryAfter);
 
-        // Tier 5: block IP after threshold breaches
         if (violations != null && violations >= config.getSuspiciousThreshold()) {
             String blockedKey = String.format(KEY_BLOCKED, ip);
             redisTemplate.opsForValue().set(blockedKey, "1",

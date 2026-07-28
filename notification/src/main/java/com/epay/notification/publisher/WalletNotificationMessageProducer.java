@@ -123,4 +123,5 @@ public class WalletNotificationMessageProducer implements IWalletNotificationPub
             throw e;
         }
     }
+
 }

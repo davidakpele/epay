@@ -38,13 +38,6 @@ public class Wallet {
     @Builder.Default
     private boolean active = true;
 
-    @Column(name = "pin_set", nullable = false)
-    @Builder.Default
-    private boolean pinSet = false;
-
-    @Column(name = "transaction_pin")
-    private String transactionPin;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -55,10 +48,6 @@ public class Wallet {
 
     @Version
     private Long version;
-
-    // -------------------------------------------------------------------------
-    // Convenience methods
-    // -------------------------------------------------------------------------
 
     public Optional<CurrencyBalance> getBalance(String currencyCode) {
         return balances.stream()

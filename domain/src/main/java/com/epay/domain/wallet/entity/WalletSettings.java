@@ -22,10 +22,8 @@ public class WalletSettings {
     @Column(name = "is_secure", nullable = false)
     private boolean isSecure;
 
-
     public WalletSettings() {
     }
-
 
     public WalletSettings(Long id, Wallet wallet, String password, boolean isSecure) {
         this.id = id;
@@ -33,7 +31,6 @@ public class WalletSettings {
         this.password = password;
         this.isSecure = isSecure;
     }
-
 
     public Long getId() {
         return this.id;

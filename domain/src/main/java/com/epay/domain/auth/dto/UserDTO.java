@@ -32,8 +32,6 @@ public class UserDTO {
     private boolean twoFactorAuth;
     private LocalDateTime createdOn;
     private LocalDateTime updatedOn;
-
-    // Embedded profile — populated only when needed (e.g. profile endpoint)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private UserRecordDTO profile;
 }

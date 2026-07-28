@@ -131,7 +131,6 @@ public class WalletService implements IWalletService {
         Wallet wallet = Wallet.builder()
                 .userId(request.getUserId())
                 .active(true)
-                .pinSet(false)
                 .build();
 
         for (SupportedCurrency currency : activeCurrencies) {
@@ -252,15 +251,19 @@ public class WalletService implements IWalletService {
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"));
 
-        if (!wallet.isPinSet())
+        Optional<WalletSettings> settings = walletSettingsRepository.findByWalletId(wallet.getId());
+
+        if (!settings.get().getIsSecure())
             throw new BadRequestException("No PIN set — use set PIN first",
                     ErrorCode.OPERATION_NOT_ALLOWED);
 
-        if (!passwordEncoder.matches(request.getCurrentPin(), wallet.getTransactionPin()))
+        if (!passwordEncoder.matches(request.getCurrentPin(), settings.get().getPassword()))
             throw new WalletException("Current PIN is incorrect", ErrorCode.INVALID_PIN);
 
-        wallet.setTransactionPin(passwordEncoder.encode(request.getNewPin()));
-        walletRepository.save(wallet);
+        WalletSettings updateWalletSettings = settings.get();
+
+        updateWalletSettings.setPassword(passwordEncoder.encode(request.getNewPin()));
+        walletSettingsRepository.save(updateWalletSettings);
         walletCacheService.evict(userId);
         log.info("PIN changed: userId={}", userId);
         return ResponseEntity.ok().build();
@@ -403,14 +406,14 @@ public class WalletService implements IWalletService {
     @Override
     @Transactional
     public ResponseEntity<?> updateBalance(String currency, BigDecimal amount,
-                                           Long userId, Long walletId) {
+                                        Long userId, Long walletId) {
         validateUserId(userId);
         requireActiveUser(userId);
         if (walletId == null || walletId <= 0)
             throw new BadRequestException("Valid wallet ID is required", ErrorCode.INVALID_INPUT);
         if (currency == null || currency.isBlank())
             throw new BadRequestException("Currency is required", ErrorCode.INVALID_CURRENCY);
-        validateAmount(amount);
+        validateDelta(amount);
 
         String code = currency.trim().toUpperCase();
         SupportedCurrency supported = requireActiveCurrency(code);
@@ -425,6 +428,9 @@ public class WalletService implements IWalletService {
         });
 
         BigDecimal newBalance = balance.getBalance().add(amount);
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0)
+            throw new WalletException("Insufficient balance", ErrorCode.INSUFFICIENT_BALANCE);
+
         balance.setBalance(newBalance);
         walletRepository.save(wallet);
 
@@ -432,6 +438,13 @@ public class WalletService implements IWalletService {
         log.info("Balance updated: userId={} walletId={} currency={} delta={} new={}",
                 userId, walletId, code, amount, newBalance);
         return ResponseEntity.ok().build();
+    }
+
+    private void validateDelta(BigDecimal amount) {
+        if (amount == null)
+            throw new BadRequestException("Amount is required", ErrorCode.INVALID_AMOUNT);
+        if (amount.compareTo(BigDecimal.ZERO) == 0)
+            throw new BadRequestException("Amount must not be zero", ErrorCode.INVALID_AMOUNT);
     }
 
     @Override

@@ -6,18 +6,22 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WithdrawRequest {
+public class InternalWithdrawRequest {
+
+    @NotBlank(message = "Username is required")
+    private String username;
+
+    @NotBlank(message = "User Id is required")
+    @NotNull(message = "User Id is required")
+    private Long userId;
 
     @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
-    @Digits(integer = 15, fraction = 2)
     private BigDecimal amount;
 
     @NotBlank(message = "Currency is required")
@@ -27,19 +31,18 @@ public class WithdrawRequest {
     @NotNull(message = "Withdrawal type is required")
     private WithdrawalType withdrawalType;
 
-    private String bankCode;
-    private String accountNumber;
-    private String accountName;
-
-    @NotBlank(message = "Transaction PIN is required")
-    private String transactionPin;
+    @NotBlank(message = "Transfer Pin is required")
+    @Size(min = 4, max = 4, message = "Your Transfer Pin must be 4 Digit")
+    @NotNull(message = "Transfer Pin is required")
+    private String transferPin;
 
     @NotBlank(message = "Idempotency key is required")
     private String idempotencyKey;
+    
+    @NotBlank(message = "Recipient is required")
+    @NotNull(message = "Recipient is required")
+    private String recipient;
 
     private String narration;
-    private String ipAddress;
-    private String deviceId;
-    private String userAgent;
-    private Long userId;
+
 }

@@ -1,21 +1,30 @@
 package com.epay.history.adapter;
 
-import com.epay.common.interfaces.IHistoryPort;
-import com.epay.domain.history.enums.TransactionStatus;
-import com.epay.history.service.HistoryService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Component;
+
+import com.epay.common.interfaces.IHistoryPort;
+import com.epay.common.interfaces.IHistoryReadPort;
+import com.epay.domain.history.dto.TransactionDTO;
+import com.epay.domain.history.enums.TransactionStatus;
+import com.epay.history.service.HistoryService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class GeneralHistoryAdapter implements IHistoryPort {
+public class GeneralHistoryAdapter implements IHistoryPort, IHistoryReadPort {
 
     private final HistoryService historyService;
+
+    // ── IHistoryPort (write) ──────────────────────────────────────────────────
 
     @Override
     public void record(Long userId, Long walletId,
@@ -56,6 +65,24 @@ public class GeneralHistoryAdapter implements IHistoryPort {
         } catch (Exception e) {
             log.error("[GeneralHistoryAdapter] Failed to advance status for txn={}: {}",
                     transactionId, e.getMessage());
+        }
+    }
+
+    // ── IHistoryReadPort (read) ───────────────────────────────────────────────
+
+    /**
+     * Returns the most recent {@code limit} transactions for a user,
+     * ordered newest first. Used by UserTransactionsAgent for fraud detection.
+     */
+    @Override
+    public List<TransactionDTO> findRecentByUserId(Long userId, int limit) {
+        try {
+            PageRequest pageable = PageRequest.of(0, limit, Sort.by("createdAt").descending());
+            return historyService.getByUserId(userId, pageable).getContent();
+        } catch (Exception e) {
+            log.error("[GeneralHistoryAdapter] Failed to read recent history for userId={}: {}",
+                    userId, e.getMessage());
+            return List.of();
         }
     }
 }

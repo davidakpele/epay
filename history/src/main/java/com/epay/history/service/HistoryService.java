@@ -1,5 +1,17 @@
 package com.epay.history.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.epay.domain.history.dto.StatusTimeline;
 import com.epay.domain.history.dto.TransactionDTO;
 import com.epay.domain.history.entity.Transaction;
@@ -7,19 +19,9 @@ import com.epay.domain.history.entity.TransactionAuditLog;
 import com.epay.domain.history.enums.TransactionStatus;
 import com.epay.history.repository.AuditLogRepository;
 import com.epay.history.repository.TransactionRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -40,10 +42,12 @@ public class HistoryService {
      */
     @Transactional
     public Transaction record(RecordRequest req) {
-        // Idempotency check — never create duplicate
-        if (req.idempotencyKey() != null &&
-                transactionRepository.existsByIdempotencyKey(req.idempotencyKey())) {
-            return transactionRepository.findByIdempotencyKey(req.idempotencyKey()).orElse(null);
+        // Dedup by transactionId — Redis already blocked duplicate submissions upstream.
+        // This is a safety net only for retries that slip through.
+        if (req.transactionId() != null
+                && transactionRepository.existsByTransactionId(req.transactionId())) {
+            log.warn("[History] Duplicate transactionId={} — skipping insert", req.transactionId());
+            return transactionRepository.findByTransactionId(req.transactionId()).orElse(null);
         }
 
         String txnId = txnOrGenerate(req.transactionId());
@@ -337,7 +341,10 @@ public class HistoryService {
             String adminNote,
             LocalDateTime completedAt
     ) {
-        /** Convenience builder-style factory for the most common case */
+        /** Convenience builder-style factory — no idempotencyKey parameter.
+         *  Idempotency is enforced upstream via Redis (RedisIdempotencyService).
+         *  The transactionId itself acts as the natural dedup key inside history.
+         */
         public static RecordRequest of(Long userId, Long walletId,
                                         String transactionId, String reference,
                                         String transactionType, String debitCredit,
@@ -351,8 +358,8 @@ public class HistoryService {
                                         Long counterpartyUserId, Long counterpartyWalletId,
                                         String ipAddress, String deviceId, String userAgent,
                                         String adminNote, LocalDateTime completedAt) {
-            String idemKey = transactionType + "_" + (transactionId != null ? transactionId : "");
-            return new RecordRequest(userId, walletId, transactionId, reference, idemKey,
+            return new RecordRequest(userId, walletId, transactionId, reference,
+                    null,   // idempotencyKey — not used; Redis handles dedup externally
                     transactionType, debitCredit, channel, status,
                     grossAmount, feeAmount, netAmount, previousBalance, newBalance,
                     currency, currencySymbol, accountHolder, description, null,

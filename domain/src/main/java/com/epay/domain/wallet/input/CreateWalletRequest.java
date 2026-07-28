@@ -19,7 +19,6 @@ public class CreateWalletRequest {
     @Positive(message = "User ID must be positive")
     private Long userId;
 
-    /** ISO 4217 default currency for this wallet — e.g. NGN, USD. */
     @NotBlank(message = "Default currency is required")
     @Pattern(regexp = "^[A-Z]{3,10}$", message = "Invalid currency code")
     private String defaultCurrency;

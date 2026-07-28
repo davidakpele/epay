@@ -40,7 +40,6 @@ public class WalletBalanceCacheEntry {
     private String lastTransactionId;
     private Long   transactionVersion;
 
-    /** SHA-256 checksum of the balance fields — used to detect cache tampering. */
     private String checksum;
 
     private Instant updatedAt;
