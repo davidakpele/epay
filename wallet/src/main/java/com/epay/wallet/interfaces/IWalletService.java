@@ -7,6 +7,7 @@ import com.epay.domain.wallet.input.InvestmentDebitRequest;
 import com.epay.domain.wallet.input.MaintenanceDebitRequest;
 import com.epay.domain.wallet.input.SavingsCreditRequest;
 import com.epay.domain.wallet.input.SavingsDebitRequest;
+import com.epay.domain.wallet.input.SwapRequest;
 import com.epay.domain.wallet.input.WalletRefundRequest;
 
 public interface IWalletService {
@@ -19,4 +20,5 @@ public interface IWalletService {
     ResponseEntity<?> processInvestmentCredit(InvestmentCreditRequest request);
     ResponseEntity<?> processSavingsDebit(SavingsDebitRequest request);
     ResponseEntity<?> processSavingsCredit(SavingsCreditRequest request);
+    ResponseEntity<?> swapCurrency(Long userId, SwapRequest request);
 }

@@ -5,7 +5,6 @@ import com.epay.auth.interfaces.IAuthorizeUserVerificationService;
 import com.epay.domain.auth.entity.AuthorizeUserVerification;
 import com.epay.domain.auth.repository.AuthorizeUserVerificationRepository;
 
-
 @Service
 public class AuthorizeUserVerificationService implements IAuthorizeUserVerificationService {
 

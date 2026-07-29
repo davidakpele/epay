@@ -120,7 +120,6 @@ public class AuthenticationNotificationService {
             return CompletableFuture.completedFuture(null);
         } catch (jakarta.mail.MessagingException | org.springframework.mail.MailException e) {
             log.error("[Email] Failed to send statement to {}: {}", email, e.getMessage());
-            // Never rethrow — mail failure must not roll back caller transaction
         }
         return CompletableFuture.completedFuture(null);
     }
@@ -137,7 +136,6 @@ public class AuthenticationNotificationService {
             log.info("[Email] Sent '{}' to {}", subject, to);
         } catch (MessagingException | MailException e) {
             log.error("[Email] Failed to send '{}' to {}: {}", subject, to, e.getMessage());
-            // Never rethrow — mail failure must not roll back caller transaction
         }
         return CompletableFuture.completedFuture(null);
     }

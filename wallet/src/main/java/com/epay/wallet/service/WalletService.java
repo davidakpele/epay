@@ -23,6 +23,7 @@ import com.epay.domain.wallet.input.MaintenanceDebitRequest;
 import com.epay.domain.wallet.input.SavingsCreditRequest;
 import com.epay.domain.wallet.input.SavingsDebitRequest;
 import com.epay.domain.wallet.input.SetPinRequest;
+import com.epay.domain.wallet.input.SwapRequest;
 import com.epay.domain.wallet.input.TransferRequest;
 import com.epay.domain.wallet.input.WalletRefundRequest;
 import com.epay.wallet.cache.WalletCacheService;
@@ -37,12 +38,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -665,6 +666,267 @@ public class WalletService implements IWalletService {
             }
         });
         return ResponseEntity.ok().build();
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<?> swapCurrency(Long userId, SwapRequest request) {
+        validateUserId(userId);
+        requireActiveUser(userId);
+
+        if (!Boolean.TRUE.equals(request.getAcceptRate()))
+            throw new BadRequestException(
+                    "You must accept the exchange rate to proceed", ErrorCode.INVALID_INPUT);
+
+        String fromCode = request.getCurrency().trim().toUpperCase();
+        String toCode   = request.getTargetWallet().trim().toUpperCase();
+
+        if (fromCode.equals(toCode))
+            throw new BadRequestException(
+                    "Source and target currencies must be different", ErrorCode.INVALID_INPUT);
+
+        validateAmount(request.getAmount());
+
+        BigDecimal exchangeRate;
+        try {
+            exchangeRate = getExchangeRate(fromCode, toCode);
+        } catch (RuntimeException e) {
+            throw new BadRequestException(e.getMessage(), ErrorCode.INVALID_CURRENCY);
+        }
+
+        Map<String, Object> swapAmounts = calculateSwapAmounts(request.getAmount(), exchangeRate);
+        BigDecimal convertedAmount = (BigDecimal) swapAmounts.get("finalAmount");
+        BigDecimal feePercentage   = (BigDecimal) swapAmounts.get("feePercentage");
+
+        BigDecimal sourceFee  = request.getAmount().multiply(feePercentage)
+                .setScale(8, java.math.RoundingMode.HALF_UP);
+        BigDecimal totalDebit = request.getAmount().add(sourceFee);
+
+        Wallet wallet = walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"));
+
+        if (!wallet.isActive())
+            throw new WalletException("Wallet is locked", ErrorCode.WALLET_LOCKED);
+
+        Optional<WalletSettings> settingsOpt = walletSettingsRepository.findByWalletId(wallet.getId());
+        if (settingsOpt.isEmpty() || !settingsOpt.get().getIsSecure())
+            throw new WalletException("Transaction PIN not set. Please set a PIN first.",
+                    ErrorCode.INVALID_PIN);
+
+        if (!passwordEncoder.matches(request.getTransactionPin(), settingsOpt.get().getPassword()))
+            throw new WalletException("Invalid transaction PIN", ErrorCode.INVALID_PIN);
+
+        CurrencyBalance fromBalance = wallet.getBalance(fromCode)
+                .orElseThrow(() -> new WalletException(
+                        "You don't have a " + fromCode + " balance", ErrorCode.WALLET_NOT_FOUND));
+
+        if (fromBalance.getBalance().compareTo(totalDebit) < 0)
+            throw new WalletException(
+                    String.format("Insufficient %s balance. Available: %.4f, Required: %.4f (inc. %.0f%% fee)",
+                            fromCode, fromBalance.getBalance(), totalDebit,
+                            feePercentage.multiply(new BigDecimal("100")).doubleValue()),
+                    ErrorCode.INSUFFICIENT_BALANCE);
+
+        String toSymbol = supportedCurrencyRepository.findByCodeIgnoreCase(toCode)
+                .map(SupportedCurrency::getSymbol)
+                .orElse(toCode);
+        String fromSymbol = supportedCurrencyRepository.findByCodeIgnoreCase(fromCode)
+                .map(SupportedCurrency::getSymbol)
+                .orElse(fromCode);
+
+        BigDecimal prevFromBalance = fromBalance.getBalance();
+        BigDecimal newFromBalance  = prevFromBalance.subtract(totalDebit);
+        fromBalance.setBalance(newFromBalance);
+
+        CurrencyBalance toBalance = wallet.getBalance(toCode).orElseGet(() -> {
+            CurrencyBalance nb = CurrencyBalance.builder()
+                    .currencyCode(toCode)
+                    .currencySymbol(toSymbol)
+                    .balance(BigDecimal.ZERO)
+                    .isDefault(false)
+                    .build();
+            wallet.addCurrency(nb);
+            return nb;
+        });
+
+        BigDecimal prevToBalance = toBalance.getBalance();
+        BigDecimal newToBalance  = prevToBalance.add(convertedAmount);
+        toBalance.setBalance(newToBalance);
+
+        walletRepository.save(wallet);
+
+        String txnId = newTxnId();
+        walletCacheService.updateBalance(userId, fromCode, newFromBalance, newFromBalance, txnId);
+        walletCacheService.updateBalance(userId, toCode,   newToBalance,  newToBalance,  txnId);
+
+        final String fullName  = userLookupPort.findFullNameByUserId(userId).orElse("Account Holder");
+        final String email     = userLookupPort.findEmailByUserId(userId).orElse(null);
+        final String rateLabel = String.format("1 %s = %.6f %s (incl. %.0f%% spread)",
+                fromCode, exchangeRate.doubleValue(), toCode,
+                feePercentage.multiply(new BigDecimal("100")).doubleValue());
+
+        final BigDecimal finalConverted      = convertedAmount;
+        final BigDecimal finalNewToBalance   = newToBalance;
+        final BigDecimal finalPrevToBalance  = prevToBalance;
+        final BigDecimal finalSourceFee      = sourceFee;
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                historyPort.record(
+                        userId, wallet.getId(),
+                        txnId, request.getIdempotencyKey(),
+                        "SWAP", "DEBIT", "INTERNAL", "SUCCESS",
+                        request.getAmount(), finalSourceFee, request.getAmount(),
+                        prevFromBalance, newFromBalance, fromCode, fromSymbol,
+                        fullName,
+                        "SWAP " + fromCode + " → " + toCode + " @ " + rateLabel,
+                        null, null, null, null, null, null, null,
+                        java.time.LocalDateTime.now());
+
+                historyPort.record(
+                        userId, wallet.getId(),
+                        txnId + "_CR", request.getIdempotencyKey() + "_CR",
+                        "SWAP", "CREDIT", "INTERNAL", "SUCCESS",
+                        finalConverted, BigDecimal.ZERO, finalConverted,
+                        finalPrevToBalance, finalNewToBalance, toCode, toSymbol,
+                        fullName,
+                        "SWAP CREDIT " + fromCode + " → " + toCode + " @ " + rateLabel,
+                        null, null, null, null, null, null, null,
+                        java.time.LocalDateTime.now());
+            } catch (Exception ex) {
+                log.warn("[Swap] History failed txn={}: {}", txnId, ex.getMessage());
+            }
+        });
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                notificationPublisher.publishSwapNotification(
+                        email, finalConverted, fullName,
+                        finalNewToBalance, finalPrevToBalance,
+                        toSymbol, rateLabel);
+            } catch (Exception ex) {
+                log.warn("[Swap] Notification failed txn={}: {}", txnId, ex.getMessage());
+            }
+        });
+
+        log.info("[Swap] userId={} {} {} → {} {} rate={} fee={} txn={}",
+                userId, request.getAmount(), fromCode, convertedAmount, toCode, exchangeRate, sourceFee, txnId);
+
+        java.util.Map<String, Object> response = new java.util.LinkedHashMap<>();
+        response.put("success",             true);
+        response.put("transactionId",       txnId);
+        response.put("fromCurrency",        fromCode);
+        response.put("toCurrency",          toCode);
+        response.put("grossAmount",         request.getAmount());
+        response.put("fee",                 sourceFee);
+        response.put("feePercentage",       feePercentage.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString() + "%");
+        response.put("convertedAmount",     convertedAmount);
+        response.put("exchangeRate",        rateLabel);
+        response.put("previousFromBalance", prevFromBalance);
+        response.put("newFromBalance",      newFromBalance);
+        response.put("previousToBalance",   prevToBalance);
+        response.put("newToBalance",        newToBalance);
+        response.put("timestamp",           java.time.Instant.now().toString());
+        return ResponseEntity.status(201).body(response);
+    }
+
+
+    private BigDecimal getExchangeRate(String fromCurrency, String toCurrency) {
+        java.util.Map<String, java.util.Map<String, BigDecimal>> exchangeRates = java.util.Map.of(
+            "USD", java.util.Map.of(
+                "EUR", new BigDecimal("0.92"),  "GBP", new BigDecimal("0.80"),
+                "NGN", new BigDecimal("1500.50"), "JPY", new BigDecimal("147.11"),
+                "AUD", new BigDecimal("1.52"),  "CAD", new BigDecimal("1.35"),
+                "CHF", new BigDecimal("0.88"),  "CNY", new BigDecimal("7.25"),
+                "GHS", new BigDecimal("12.50")),
+            "EUR", java.util.Map.of(
+                "USD", new BigDecimal("1.09"),  "GBP", new BigDecimal("0.87"),
+                "NGN", new BigDecimal("1630.75"), "JPY", new BigDecimal("159.25"),
+                "AUD", new BigDecimal("1.65"),  "CAD", new BigDecimal("1.47"),
+                "CHF", new BigDecimal("0.96"),  "CNY", new BigDecimal("7.88"),
+                "GHS", new BigDecimal("13.63")),
+            "GBP", java.util.Map.of(
+                "USD", new BigDecimal("1.25"),  "EUR", new BigDecimal("1.15"),
+                "NGN", new BigDecimal("1875.30"), "JPY", new BigDecimal("184.22"),
+                "AUD", new BigDecimal("1.90"),  "CAD", new BigDecimal("1.69"),
+                "CHF", new BigDecimal("1.10"),  "CNY", new BigDecimal("9.06"),
+                "GHS", new BigDecimal("15.62")),
+            "NGN", java.util.Map.of(
+                "USD", new BigDecimal("0.00067"), "EUR", new BigDecimal("0.00061"),
+                "GBP", new BigDecimal("0.00053"), "JPY", new BigDecimal("0.098"),
+                "AUD", new BigDecimal("0.00101"), "CAD", new BigDecimal("0.00090"),
+                "CHF", new BigDecimal("0.00059"), "CNY", new BigDecimal("0.0048"),
+                "GHS", new BigDecimal("0.0083")),
+            "JPY", java.util.Map.of(
+                "USD", new BigDecimal("0.0068"), "EUR", new BigDecimal("0.0063"),
+                "GBP", new BigDecimal("0.0054"), "NGN", new BigDecimal("10.20"),
+                "AUD", new BigDecimal("0.0103"), "CAD", new BigDecimal("0.0092"),
+                "CHF", new BigDecimal("0.0060"), "CNY", new BigDecimal("0.0493"),
+                "GHS", new BigDecimal("0.085")),
+            "AUD", java.util.Map.of(
+                "USD", new BigDecimal("0.66"),  "EUR", new BigDecimal("0.61"),
+                "GBP", new BigDecimal("0.53"),  "NGN", new BigDecimal("987.45"),
+                "JPY", new BigDecimal("97.10"), "CAD", new BigDecimal("0.89"),
+                "CHF", new BigDecimal("0.58"),  "CNY", new BigDecimal("4.77"),
+                "GHS", new BigDecimal("8.22")),
+            "CAD", java.util.Map.of(
+                "USD", new BigDecimal("0.74"),  "EUR", new BigDecimal("0.68"),
+                "GBP", new BigDecimal("0.59"),  "NGN", new BigDecimal("1111.11"),
+                "JPY", new BigDecimal("108.75"), "AUD", new BigDecimal("1.12"),
+                "CHF", new BigDecimal("0.65"),  "CNY", new BigDecimal("5.37"),
+                "GHS", new BigDecimal("9.24")),
+            "CHF", java.util.Map.of(
+                "USD", new BigDecimal("1.14"),  "EUR", new BigDecimal("1.04"),
+                "GBP", new BigDecimal("0.91"),  "NGN", new BigDecimal("1705.88"),
+                "JPY", new BigDecimal("166.67"), "AUD", new BigDecimal("1.72"),
+                "CAD", new BigDecimal("1.54"),  "CNY", new BigDecimal("8.24"),
+                "GHS", new BigDecimal("14.20")),
+            "CNY", java.util.Map.of(
+                "USD", new BigDecimal("0.14"),  "EUR", new BigDecimal("0.13"),
+                "GBP", new BigDecimal("0.11"),  "NGN", new BigDecimal("206.90"),
+                "JPY", new BigDecimal("20.28"), "AUD", new BigDecimal("0.21"),
+                "CAD", new BigDecimal("0.19"),  "CHF", new BigDecimal("0.12"),
+                "GHS", new BigDecimal("1.72")),
+            "GHS", java.util.Map.of(
+                "USD", new BigDecimal("0.080"), "EUR", new BigDecimal("0.073"),
+                "GBP", new BigDecimal("0.064"), "NGN", new BigDecimal("120.05"),
+                "JPY", new BigDecimal("11.77"), "AUD", new BigDecimal("0.122"),
+                "CAD", new BigDecimal("0.108"), "CHF", new BigDecimal("0.070"),
+                "CNY", new BigDecimal("0.581"))
+        );
+
+        if (!exchangeRates.containsKey(fromCurrency))
+            throw new RuntimeException("Unsupported source currency: " + fromCurrency);
+
+        java.util.Map<String, BigDecimal> fromRates = exchangeRates.get(fromCurrency);
+        if (!fromRates.containsKey(toCurrency))
+            throw new RuntimeException("Unsupported target currency: " + toCurrency
+                    + " for source: " + fromCurrency);
+
+        BigDecimal rate   = fromRates.get(toCurrency);
+        BigDecimal margin = new BigDecimal("0.005"); 
+        return rate.multiply(BigDecimal.ONE.subtract(margin));
+    }
+
+    private java.util.Map<String, Object> calculateSwapAmounts(BigDecimal amount,
+                                                                BigDecimal exchangeRate) {
+        BigDecimal baseConvertedAmount = amount.multiply(exchangeRate);
+        BigDecimal feePercentage       = calculateSwapFee(amount);
+        BigDecimal feeAmount           = baseConvertedAmount.multiply(feePercentage);
+        BigDecimal finalAmount         = baseConvertedAmount.subtract(feeAmount);
+
+        return java.util.Map.of(
+                "baseConvertedAmount", baseConvertedAmount,
+                "feePercentage",       feePercentage,
+                "feeAmount",           feeAmount,
+                "finalAmount",         finalAmount,
+                "exchangeRate",        exchangeRate);
+    }
+
+    private BigDecimal calculateSwapFee(BigDecimal amount) {
+        if (amount.compareTo(new BigDecimal("1000")) > 0) return new BigDecimal("0.005");
+        if (amount.compareTo(new BigDecimal("100"))  > 0) return new BigDecimal("0.01");
+        return new BigDecimal("0.015");
     }
 
     private void validateUserId(Long userId) {

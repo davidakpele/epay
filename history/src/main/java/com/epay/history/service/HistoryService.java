@@ -180,6 +180,36 @@ public class HistoryService {
         return result != null ? result : BigDecimal.ZERO;
     }
 
+    /**
+     * Flexible filter for GET /history/user/{userId}/filter
+     *
+     * @param transactionType "ALL" to skip type filter, or a specific type e.g. "DEPOSIT", "TRANSFER_DEBIT"
+     * @param currency        null or a currency code e.g. "NGN"
+     * @param status          null to return all statuses, or a specific TransactionStatus
+     * @param fromDate        inclusive start of date range
+     * @param toDate          inclusive end of date range (set to end-of-day internally)
+     */
+    public Page<TransactionDTO> filterByUser(Long userId,
+                                              LocalDateTime fromDate,
+                                              LocalDateTime toDate,
+                                              String transactionType,
+                                              String currency,
+                                              TransactionStatus status,
+                                              Pageable pageable) {
+        String type     = (transactionType == null || transactionType.isBlank()) ? "ALL"
+                          : transactionType.toUpperCase();
+        String cur      = (currency == null || currency.isBlank()) ? null
+                          : currency.toUpperCase();
+        // Ensure toDate covers the full end-of-day if only a date was supplied
+        LocalDateTime endOfDay = toDate.getHour() == 0 && toDate.getMinute() == 0
+                ? toDate.withHour(23).withMinute(59).withSecond(59)
+                : toDate;
+
+        return transactionRepository
+                .filterByUser(userId, fromDate, endOfDay, type, cur, status, pageable)
+                .map(this::toDTO);
+    }
+
     // -----------------------------------------------------------------------
     // Mapper
     // -----------------------------------------------------------------------

@@ -30,19 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Deposit service — no database table in this module.
- *
- * All cross-module calls go through ports:
- *   UserLookupPort              → auth   (email, full name)
- *   IDepositWalletPort          → wallet (balance, credit, currency validation)
- *   IDepositHistoryPort         → history (full ledger entry)
- *   IWalletNotificationPublisher → notification (deposit email)
- *
- * Reference format: DEP_{CHANNEL}_{USERID}_{RANDOM12}
- * e.g.              DEP_PAY_1001_A3F9C2B7D812
- * The userId is embedded so webhooks can resolve it without a DB lookup.
- */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -257,10 +245,6 @@ public class DepositService {
         }
     }
 
-    // =========================================================================
-    // Private: gateway resolution
-    // =========================================================================
-
     private DepositVerificationResult callGatewayVerify(DepositGateway gateway, String reference) {
         try {
             return gateway.verify(reference);
@@ -286,12 +270,6 @@ public class DepositService {
         };
     }
 
-    // =========================================================================
-    // Private: reference and transaction ID generation
-    //
-    // Reference format: DEP_{CHANNEL}_{USERID}_{RANDOM12}
-    // Example:          DEP_PAY_1001_A3F9C2B7D812
-    // =========================================================================
 
     private String generateReference(DepositAndWithdrawSystem system, Long userId) {
         String channelPrefix = switch (system) {
@@ -308,7 +286,6 @@ public class DepositService {
     private Long extractUserIdFromReference(String reference) {
         try {
             String[] parts = reference.split("_");
-            // Format: DEP | CHANNEL | userId | random  (min 4 parts)
             if (parts.length >= 4) return Long.parseLong(parts[2]);
         } catch (NumberFormatException ignored) {}
         return null;
@@ -318,10 +295,6 @@ public class DepositService {
         long hash = Math.abs(UUID.randomUUID().getMostSignificantBits());
         return TX_PREFIX + String.valueOf(hash).substring(0, 9);
     }
-
-    // =========================================================================
-    // Private: error response helper
-    // =========================================================================
 
     private ResponseEntity<Map<String, Object>> error(String message, HttpStatus status, String detail) {
         Map<String, Object> body = new LinkedHashMap<>();

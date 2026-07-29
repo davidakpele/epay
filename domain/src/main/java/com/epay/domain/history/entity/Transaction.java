@@ -10,13 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * One row per transaction — the business record.
- *
- * Status progression is stored in statusTimeline (JSON) rather than
- * creating duplicate rows per status change.
- * currentStatus is a dedicated indexed column for fast filtering.
- */
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -39,19 +33,15 @@ public class Transaction {
     @SequenceGenerator(name = "txn_seq", sequenceName = "transaction_sequence", allocationSize = 1)
     private Long id;
 
-    /** System-generated unique transaction ID — e.g. TXN-20260723-000001 */
     @Column(name = "transaction_id", nullable = false, unique = true, length = 50)
     private String transactionId;
 
-    /** External/payment reference — e.g. gateway reference or transfer ref */
     @Column(name = "reference", length = 100)
     private String reference;
 
-    /** Idempotency key — prevents duplicate processing */
     @Column(name = "idempotency_key", unique = true, length = 100)
     private String idempotencyKey;
 
-    // ---- User & Wallet ----
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -62,7 +52,6 @@ public class Transaction {
     @Column(name = "account_holder", length = 200)
     private String accountHolder;
 
-    // ---- Counterparty ----
 
     @Column(name = "counterparty_user_id")
     private Long counterpartyUserId;
@@ -73,21 +62,14 @@ public class Transaction {
     @Column(name = "counterparty_account_holder", length = 200)
     private String counterpartyAccountHolder;
 
-    // ---- Transaction metadata ----
-
-    /** DEPOSIT, WITHDRAWAL, TRANSFER_DEBIT, TRANSFER_CREDIT, SWAP, FEE, REFUND, etc. */
     @Column(name = "transaction_type", nullable = false, length = 50)
     private String transactionType;
 
-    /** DEBIT or CREDIT */
     @Column(name = "debit_credit", nullable = false, length = 10)
     private String debitCredit;
 
-    /** INTERNAL, PAYSTACK, FLUTTERWAVE, BANK_TRANSFER, USSD, etc. */
     @Column(name = "channel", length = 50)
     private String channel;
-
-    // ---- Amounts ----
 
     @Column(name = "gross_amount", nullable = false, precision = 20, scale = 8)
     private BigDecimal grossAmount;
@@ -103,8 +85,6 @@ public class Transaction {
     @Column(name = "net_amount", precision = 20, scale = 8)
     private BigDecimal netAmount;
 
-    // ---- Balances ----
-
     @Column(name = "previous_balance", precision = 20, scale = 8)
     private BigDecimal previousBalance;
 
@@ -113,8 +93,6 @@ public class Transaction {
 
     @Column(name = "running_balance", precision = 20, scale = 8)
     private BigDecimal runningBalance;
-
-    // ---- Currency ----
 
     @Column(name = "currency", nullable = false, length = 10)
     private String currency;
@@ -126,17 +104,11 @@ public class Transaction {
     @Builder.Default
     private BigDecimal exchangeRate = BigDecimal.ONE;
 
-    // ---- Status ----
-
-    /** Fast-filter column — mirrors the latest entry in statusTimeline */
     @Enumerated(EnumType.STRING)
     @Column(name = "current_status", nullable = false, length = 20)
     private TransactionStatus currentStatus;
 
-    /**
-     * Full status progression stored as JSON text.
-     * Converted by StatusTimelineConverter (autoApply=true in history module).
-     */
+
     @Column(name = "status_timeline", columnDefinition = "text")
     @Builder.Default
     private StatusTimeline statusTimeline = new StatusTimeline();

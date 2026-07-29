@@ -83,7 +83,6 @@ public class KycService {
             throw new BadRequestException("Upload at least one document before submitting",
                     ErrorCode.INVALID_INPUT);
 
-        // Check if already under review
         if (kycVerificationRepository.existsByUserIdAndTierAndStatus(
                 userId, tier, KycStatus.SUBMITTED))
             throw new BadRequestException("A submission for this tier is already under review",

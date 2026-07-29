@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.sql.Timestamp;
 import java.time.Instant;
 
@@ -44,7 +43,6 @@ public class UserAttemptService implements IUserAttemptService {
         attempt.setCounter(attempt.getCounter() == null ? 1 : attempt.getCounter() + 1);
         userAttemptRepository.save(attempt);
 
-        // Lock account after MAX_ATTEMPTS consecutive failures
         if (attempt.getCounter() >= MAX_ATTEMPTS) {
             userRepository.lockAccount(userId, java.time.LocalDateTime.now(),
                     "Account locked after " + MAX_ATTEMPTS + " failed login attempts");
@@ -57,7 +55,6 @@ public class UserAttemptService implements IUserAttemptService {
     @Override
     @Transactional
     public ResponseEntity<?> UpdateUserAccount(Long userId) {
-        // Reset attempt counter on successful login
         userAttemptRepository.findFirstByUserIdOrderByCreatedOnDesc(userId).ifPresent(attempt -> {
             attempt.setCounter(0);
             attempt.setSuccess(true);
@@ -65,7 +62,6 @@ public class UserAttemptService implements IUserAttemptService {
             userAttemptRepository.save(attempt);
         });
 
-        // Ensure account is unlocked after successful auth
         userRepository.unlockAccount(userId);
 
         log.debug("[Attempt] Reset attempts for userId={}", userId);

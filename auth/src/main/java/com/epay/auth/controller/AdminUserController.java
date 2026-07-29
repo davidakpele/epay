@@ -26,7 +26,6 @@ public class AdminUserController {
     private final UserRepository userRepository;
     private final UserService    userService;
 
-    /** GET /admin/users — paginated all users */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<UserDTO>>> getAllUsers(
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
@@ -34,14 +33,12 @@ public class AdminUserController {
         return ResponseEntity.ok(ApiResponse.success(null, page));
     }
 
-    /** GET /admin/users/{userId} */
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<FullUserProfileDTO>> getUser(@PathVariable Long userId) {
         return ResponseEntity.ok(ApiResponse.success(null,
                 userService.getFullProfile(userId)));
     }
 
-    /** POST /admin/users/{userId}/lock */
     @PostMapping("/{userId}/lock")
     public ResponseEntity<ApiResponse<Void>> lockUser(@PathVariable Long userId,
                                                         @RequestParam String reason) {
@@ -49,28 +46,24 @@ public class AdminUserController {
         return ResponseEntity.ok(ApiResponse.success("User locked.", null));
     }
 
-    /** POST /admin/users/{userId}/unlock */
     @PostMapping("/{userId}/unlock")
     public ResponseEntity<ApiResponse<Void>> unlockUser(@PathVariable Long userId) {
         userRepository.unlockAccount(userId);
         return ResponseEntity.ok(ApiResponse.success("User unlocked.", null));
     }
 
-    /** POST /admin/users/{userId}/enable */
     @PostMapping("/{userId}/enable")
     public ResponseEntity<ApiResponse<Void>> enableUser(@PathVariable Long userId) {
         userRepository.updateEnabled(userId, true);
         return ResponseEntity.ok(ApiResponse.success("User enabled.", null));
     }
 
-    /** POST /admin/users/{userId}/disable */
     @PostMapping("/{userId}/disable")
     public ResponseEntity<ApiResponse<Void>> disableUser(@PathVariable Long userId) {
         userRepository.updateEnabled(userId, false);
         return ResponseEntity.ok(ApiResponse.success("User disabled.", null));
     }
 
-    /** GET /admin/users/kyc-pending — users pending KYC review */
     @GetMapping("/kyc-pending")
     public ResponseEntity<ApiResponse<Page<UserDTO>>> getKycPending(
             @PageableDefault(size = 20) Pageable pageable) {
@@ -79,7 +72,6 @@ public class AdminUserController {
         return ResponseEntity.ok(ApiResponse.success(null, page));
     }
 
-    /** GET /admin/users/stats — dashboard counts */
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<Object>> getStats() {
         java.util.Map<String, Object> stats = new java.util.LinkedHashMap<>();

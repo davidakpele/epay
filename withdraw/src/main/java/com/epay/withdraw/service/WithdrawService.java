@@ -53,14 +53,10 @@ public class WithdrawService {
     private final PayoutGatewayFactory         gatewayFactory;
     private final ErrorHandler                 errorHandler;
 
-    // =========================================================================
-    // Internal transfer (wallet-to-wallet between registered users)
-    // =========================================================================
 
     public ResponseEntity<?> internalWithdrawProcess(InternalWithdrawRequest request) {
         Long userId = request.getUserId();
 
-        // ── Initiator checks ─────────────────────────────────────────────────
         Optional<User> initiatorOpt = userRepository.findByUsername(request.getUsername());
         if (initiatorOpt.isEmpty())
             return errorHandler.error("User not found or account inactive", HttpStatus.NOT_FOUND,
@@ -76,7 +72,6 @@ public class WithdrawService {
             return errorHandler.error("User not found or account inactive", HttpStatus.NOT_FOUND,
                     "The account does not exist or is inactive.");
 
-        // ── Recipient checks ─────────────────────────────────────────────────
         Optional<User> recipientOpt = userRepository.findByUsername(request.getRecipient());
         if (recipientOpt.isEmpty())
             return errorHandler.error(
@@ -85,23 +80,19 @@ public class WithdrawService {
 
         User recipient = recipientOpt.get();
 
-        // Prevent self-transfer
         if (initiator.getId().equals(recipient.getId()))
             return errorHandler.error("Self-transfer not allowed", HttpStatus.BAD_REQUEST,
                     "The sender and recipient accounts are the same.");
 
-        // ── Blacklist / fraud checks ──────────────────────────────────────────
         if (blacklistPort.isAccountBlacklisted(userId))
             return errorHandler.error("Account is blacklisted", HttpStatus.FORBIDDEN,
                     "This account has been flagged. Please contact support.");
 
-        // ── Redis idempotency ─────────────────────────────────────────────────
         String idemKey = "withdraw:internal:" + userId + ":" + request.getIdempotencyKey();
         if (idempotencyPort.exists(idemKey))
             return errorHandler.error("Duplicate request", HttpStatus.CONFLICT,
                     "A transfer with this idempotency key has already been processed.");
 
-        // ── Wallet checks ─────────────────────────────────────────────────────
         if (!walletPort.walletExists(userId))
             return errorHandler.error("Wallet not found", HttpStatus.NOT_FOUND,
                     "No wallet found for your account.");
@@ -124,12 +115,10 @@ public class WithdrawService {
                     String.format("Available: %s %.2f  Required: %s %.2f (fee: %.2f)",
                             currency, previousBalance, currency, totalDebit, fee));
 
-        // ── PIN verification ──────────────────────────────────────────────────
         if (!walletPort.verifyPin(userId, request.getTransferPin()))
             return errorHandler.error("Invalid transaction PIN", HttpStatus.UNAUTHORIZED,
                     "The transaction PIN you entered is incorrect.");
 
-        // ── Fraud agent checks ────────────────────────────────────────────────
         Long   walletId  = walletPort.getWalletId(userId);
         String fullName  = userLookupPort.findFullNameByUserId(userId).orElse("Account Holder");
         String email     = userLookupPort.findEmailByUserId(userId).orElse(null);
@@ -163,17 +152,27 @@ public class WithdrawService {
 
         BigDecimal newBalance = walletPort.getBalance(userId, currency);
 
-        // Store idemKey now to block duplicate in-flight requests.
-        // It is removed once the transaction settles (success or failure below).
+        String creditReference = reference + "_CREDIT";
+        try {
+            walletPort.creditWallet(recipient.getId(), currency, request.getAmount(), creditReference);
+        } catch (Exception e) {
+            log.error("[Withdraw.Internal] Credit failed recipientId={} ref={}: {}", recipient.getId(), reference, e.getMessage());
+            walletPort.refundWallet(userId, currency, totalDebit, reference + "_REFUND");
+            idempotencyPort.remove(idemKey);
+            return errorHandler.error("Failed to credit recipient. Transaction reversed.",
+                    HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+
+        final BigDecimal finalRecipientNewBalance = walletPort.getBalance(recipient.getId(), currency);
         idempotencyPort.store(idemKey, IDEM_TTL_SEC);
 
-        // ── Async: history + notification ─────────────────────────────────────
-        String recipientName = userLookupPort.findFullNameByUserId(recipient.getId())
+        String recipientName     = userLookupPort.findFullNameByUserId(recipient.getId())
                 .orElse(request.getRecipient());
-        Long recipientWalletId = walletPort.getWalletId(recipient.getId());
+        String recipientEmail    = userLookupPort.findEmailByUserId(recipient.getId()).orElse(null);
+        Long   recipientWalletId = walletPort.getWalletId(recipient.getId());
 
-        final BigDecimal finalPreviousBalance = previousBalance;
-        final BigDecimal finalNewBalance      = newBalance;
+        final BigDecimal finalPreviousBalance     = previousBalance;
+        final BigDecimal finalNewBalance          = newBalance;
 
         CompletableFuture.runAsync(() -> {
             try {
@@ -190,7 +189,28 @@ public class WithdrawService {
                         "Internal withdrawal via " + request.getWithdrawalType().name(),
                         LocalDateTime.now());
             } catch (Exception ex) {
-                log.warn("[Withdraw.Internal] History failed txn={}: {}", transactionId, ex.getMessage());
+                log.warn("[Withdraw.Internal] Debit history failed txn={}: {}", transactionId, ex.getMessage());
+            }
+        });
+
+        String creditTxnId = generateTxnId();
+        CompletableFuture.runAsync(() -> {
+            try {
+                historyPort.record(
+                        recipient.getId(), recipientWalletId, creditTxnId, creditReference,
+                        "TRANSFER_CREDIT", "CREDIT",
+                        "INTERNAL", WithdrawalStatus.COMPLETED.name(),
+                        request.getAmount(), BigDecimal.ZERO, request.getAmount(),
+                        walletPort.getBalance(recipient.getId(), currency).subtract(request.getAmount()),
+                        finalRecipientNewBalance, currency, currencySymbol,
+                        recipientName.toUpperCase(),
+                        "INTERNAL TRANSFER FROM " + fullName.toUpperCase(),
+                        fullName.toUpperCase(), userId, walletId,
+                        null, null, null,
+                        "Internal credit from " + fullName,
+                        LocalDateTime.now());
+            } catch (Exception ex) {
+                log.warn("[Withdraw.Internal] Credit history failed txn={}: {}", creditTxnId, ex.getMessage());
             }
         });
 
@@ -201,11 +221,23 @@ public class WithdrawService {
                         fullName, recipientName,
                         finalNewBalance, currency, transactionId, finalPreviousBalance);
             } catch (Exception ex) {
-                log.warn("[Withdraw.Internal] Notification failed txn={}: {}", transactionId, ex.getMessage());
+                log.warn("[Withdraw.Internal] Debit notification failed txn={}: {}", transactionId, ex.getMessage());
             }
         });
 
-        // Transaction settled — remove idemKey so the client can retry if needed
+        CompletableFuture.runAsync(() -> {
+            try {
+                notificationPublisher.publishCreditNotification(
+                        recipientEmail, request.getAmount(),
+                        fullName, recipientName,
+                        finalRecipientNewBalance, currency,
+                        creditTxnId,
+                        finalRecipientNewBalance.subtract(request.getAmount()));
+            } catch (Exception ex) {
+                log.warn("[Withdraw.Internal] Credit notification failed txn={}: {}", creditTxnId, ex.getMessage());
+            }
+        });
+
         idempotencyPort.remove(idemKey);
 
         log.info("[Withdraw.Internal] userId={} ref={} amount={} {} status=COMPLETED",
@@ -218,14 +250,10 @@ public class WithdrawService {
                 fullName, null, null, null, request.getNarration()));
     }
 
-    // =========================================================================
-    // Bank transfer (external payout via gateway)
-    // =========================================================================
 
     public ResponseEntity<?> bankWithdrawProcess(BankWithdrawRequest request) {
         Long userId = request.getUserId();
 
-        // ── User checks ───────────────────────────────────────────────────────
         if (!userLookupPort.existsActiveUser(userId))
             return errorHandler.error("User not found or account inactive", HttpStatus.NOT_FOUND,
                     "The account does not exist or is inactive.");
@@ -239,13 +267,11 @@ public class WithdrawService {
             return errorHandler.error("Recipient account is blacklisted", HttpStatus.FORBIDDEN,
                     "The destination account has been flagged. Please contact support.");
 
-        // ── Redis idempotency ─────────────────────────────────────────────────
         String idemKey = "withdraw:bank:" + userId + ":" + request.getIdempotencyKey();
         if (idempotencyPort.exists(idemKey))
             return errorHandler.error("Duplicate request", HttpStatus.CONFLICT,
                     "A withdrawal with this idempotency key has already been processed.");
 
-        // ── Wallet checks ─────────────────────────────────────────────────────
         if (!walletPort.walletExists(userId))
             return errorHandler.error("Wallet not found", HttpStatus.NOT_FOUND,
                     "No wallet found for this account.");
@@ -264,12 +290,10 @@ public class WithdrawService {
                     String.format("Available: %s %.2f  Required: %s %.2f (fee: %.2f)",
                             currency, previousBalance, currency, totalDebit, fee));
 
-        // ── PIN verification ──────────────────────────────────────────────────
         if (!walletPort.verifyPin(userId, request.getTransferPin()))
             return errorHandler.error("Invalid transaction PIN", HttpStatus.UNAUTHORIZED,
                     "The transaction PIN you entered is incorrect.");
 
-        // ── Fraud agent checks ────────────────────────────────────────────────
         Long   walletId  = walletPort.getWalletId(userId);
         String fullName  = userLookupPort.findFullNameByUserId(userId).orElse("Account Holder");
         String email     = userLookupPort.findEmailByUserId(userId).orElse(null);
@@ -285,7 +309,6 @@ public class WithdrawService {
             return errorHandler.error("Transaction blocked", HttpStatus.FORBIDDEN,
                     "Fraudulent activity pattern detected. Account suspended pending review.");
 
-        // ── Execute debit ─────────────────────────────────────────────────────
         String reference     = generateReference(request.getWithdrawalType(), userId);
         String transactionId = generateTxnId();
         String currencySymbol = walletPort.getCurrencySymbol(currency);
@@ -294,18 +317,15 @@ public class WithdrawService {
             walletPort.debitWallet(userId, currency, totalDebit, reference);
         } catch (Exception e) {
             log.error("[Withdraw.Bank] Debit failed userId={} ref={}: {}", userId, reference, e.getMessage());
-            idempotencyPort.remove(idemKey);  // debit failed — free the key so client can retry
+            idempotencyPort.remove(idemKey);
             return errorHandler.error("Failed to process withdrawal. Please try again.",
                     HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
 
         BigDecimal newBalance = walletPort.getBalance(userId, currency);
 
-        // Store idemKey to block duplicate in-flight requests while gateway processes.
-        // Removed below once the transaction fully settles.
         idempotencyPort.store(idemKey, IDEM_TTL_SEC);
 
-        // ── Gateway payout ────────────────────────────────────────────────────
         WithdrawalStatus status = WithdrawalStatus.COMPLETED;
         String failureReason   = null;
 
@@ -318,20 +338,19 @@ public class WithdrawService {
 
             if (!result.isSuccess()) {
                 walletPort.refundWallet(userId, currency, totalDebit, reference + "_REFUND");
-                idempotencyPort.remove(idemKey);  // failed — allow client to retry
+                idempotencyPort.remove(idemKey); 
                 status        = WithdrawalStatus.FAILED;
                 failureReason = result.getFailureReason();
                 log.warn("[Withdraw.Bank] Payout failed ref={} reason={}", reference, failureReason);
             }
         } catch (Exception e) {
             walletPort.refundWallet(userId, currency, totalDebit, reference + "_REFUND");
-            idempotencyPort.remove(idemKey);  // exception — allow client to retry
+            idempotencyPort.remove(idemKey); 
             status        = WithdrawalStatus.FAILED;
             failureReason = "Gateway error: " + e.getMessage();
             log.error("[Withdraw.Bank] Gateway exception ref={}: {}", reference, e.getMessage());
         }
 
-        // ── Async: history + notification ─────────────────────────────────────
         final WithdrawalStatus finalStatus      = status;
         final BigDecimal finalPreviousBalance   = previousBalance;
         final BigDecimal finalNewBalance        = newBalance;
@@ -374,7 +393,6 @@ public class WithdrawService {
         log.info("[Withdraw.Bank] userId={} ref={} amount={} {} status={}",
                 userId, reference, request.getAmount(), currency, status);
 
-        // Transaction settled — remove idemKey whether success or failure
         idempotencyPort.remove(idemKey);
 
         if (status == WithdrawalStatus.FAILED)
@@ -389,11 +407,6 @@ public class WithdrawService {
                 request.getAccountName(), request.getNarration()));
     }
 
-    // =========================================================================
-    // Shared helpers
-    // =========================================================================
-
-    @SuppressWarnings("unused") // fee logic to be implemented — amount and type reserved
     private BigDecimal calculateFee(BigDecimal amount, WithdrawalType type) {
         return BigDecimal.ZERO;
     }

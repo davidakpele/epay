@@ -33,7 +33,6 @@ public class SettingController {
         this.userService = userService;
     }
 
-    /** GET /settings/user/{id} — full profile for a user */
     @GetMapping("/user/{id}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<FullUserProfileDTO>> findById(@PathVariable Long id) {
@@ -52,7 +51,6 @@ public class SettingController {
         }
     }
 
-    /** POST /settings/upload-profile-image/{id} */
     @PreAuthorize("hasRole('USER')")
     @PostMapping(value = "/upload-profile-image/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadProfileImage(@PathVariable Long id,
@@ -60,7 +58,6 @@ public class SettingController {
         return kycService.uploadUserProfileImage(id, image);
     }
 
-    /** POST /settings/enable-twofactor */
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/enable-twofactor")
     public ResponseEntity<?> verifyUserOtp(@RequestBody Map<String, Boolean> requestPayload,
@@ -77,7 +74,6 @@ public class SettingController {
         }
     }
 
-    /** DELETE /settings/remove-profile-image/{id} */
     @DeleteMapping("/remove-profile-image/{id}")
     public ResponseEntity<?> removeProfileImage(@PathVariable Long id) {
         return kycService.removeUserProfileImage(id);

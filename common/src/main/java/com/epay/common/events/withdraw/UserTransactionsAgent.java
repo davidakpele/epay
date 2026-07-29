@@ -4,15 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-
 import org.springframework.stereotype.Component;
-
+import org.springframework.transaction.annotation.Transactional;
 import com.epay.common.interfaces.IBlacklistPort;
 import com.epay.common.interfaces.IHistoryReadPort;
 import com.epay.common.interfaces.IWalletNotificationPublisher;
 import com.epay.domain.auth.repository.UserRepository;
 import com.epay.domain.history.dto.TransactionDTO;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -86,7 +84,7 @@ public class UserTransactionsAgent {
                 });
     }
 
-
+    @Transactional
     public boolean isFraudulentBehavior(Long userId, String email,
             String firstName, String lastName, Long walletId) {
 
@@ -107,8 +105,6 @@ public class UserTransactionsAgent {
 
         if (hasDeposit && hasOutbound) {
             log.warn("[Agent.Fraud] TRIGGERED userId={} — deposit + outbound within 1h", userId);
-
-            // Lock the account in DB
             userRepository.lockAccount(userId, LocalDateTime.now(),
                     "Auto-locked: deposit-and-transfer fraud pattern detected");
 
@@ -125,19 +121,11 @@ public class UserTransactionsAgent {
         return false;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 4. Blacklisted address
-    // ─────────────────────────────────────────────────────────────────────────
-
     public boolean isFromBlacklistedAddress(Long userId) {
         boolean result = blacklistPort.isAccountBlacklisted(userId);
         log.info("[Agent.Blacklist] userId={} result={}", userId, result);
         return result;
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // 5. High-risk region
-    // ─────────────────────────────────────────────────────────────────────────
 
     public boolean isHighRiskRegion(String region) {
         boolean result = region != null && HIGH_RISK_REGIONS.contains(region);
@@ -145,14 +133,6 @@ public class UserTransactionsAgent {
         return result;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Fetches the latest RECENT_FETCH_LIMIT transactions and filters
-     * to those within the last {@code minutesBack} minutes.
-     */
     private List<TransactionDTO> fetchRecent(Long userId, int minutesBack) {
         try {
             List<TransactionDTO> all = historyReadPort.findRecentByUserId(userId, RECENT_FETCH_LIMIT);

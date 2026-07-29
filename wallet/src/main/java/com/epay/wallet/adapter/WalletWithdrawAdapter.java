@@ -34,6 +34,12 @@ public class WalletWithdrawAdapter implements IWithdrawWalletPort {
     }
 
     @Override
+    public void creditWallet(Long userId, String currency, BigDecimal amount, String reference) {
+        Long walletId = getWalletId(userId);
+        walletService.updateBalance(currency, amount, userId, walletId);
+    }
+
+    @Override
     public BigDecimal getBalance(Long userId, String currency) {
         return walletRepository.findByUserId(userId)
                 .map(w -> w.getBalanceAmount(currency))

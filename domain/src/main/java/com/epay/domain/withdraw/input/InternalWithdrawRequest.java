@@ -17,7 +17,6 @@ public class InternalWithdrawRequest {
     @NotBlank(message = "Username is required")
     private String username;
 
-    @NotBlank(message = "User Id is required")
     @NotNull(message = "User Id is required")
     private Long userId;
 
@@ -33,7 +32,6 @@ public class InternalWithdrawRequest {
 
     @NotBlank(message = "Transfer Pin is required")
     @Size(min = 4, max = 4, message = "Your Transfer Pin must be 4 Digit")
-    @NotNull(message = "Transfer Pin is required")
     private String transferPin;
 
     @NotBlank(message = "Idempotency key is required")

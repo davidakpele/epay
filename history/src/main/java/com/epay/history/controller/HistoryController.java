@@ -27,31 +27,13 @@ public class HistoryController {
 
     private final HistoryService historyService;
 
-    // -----------------------------------------------------------------------
-    // User: own history
-    // -----------------------------------------------------------------------
-
-    /**
-     * GET /history?page=0&size=50
-     *
-     * Returns paginated transaction history for the authenticated user.
-     * Default page size is 50. "Load more" → increment page by 1.
-     *
-     * Response includes:
-     *   - content[]     : list of transactions for this page
-     *   - page          : current page number (0-based)
-     *   - size          : page size
-     *   - totalElements : total number of transactions
-     *   - hasMore       : true if there are more pages
-     */
+    
     @GetMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getHistory(
             @RequestAttribute("userId") Long userId,
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "50") int size) {
-
-        // Cap page size at 100 to prevent abuse
         int safeSize = Math.min(size, 100);
         Pageable pageable = PageRequest.of(page, safeSize, Sort.by("createdAt").descending());
         Page<TransactionDTO> result = historyService.getByUserId(userId, pageable);
@@ -67,12 +49,7 @@ public class HistoryController {
         return ResponseEntity.ok(ApiResponse.success(null, body));
     }
 
-    /**
-     * GET /history/user/{userId}?page=0&size=50
-     *
-     * Fetch history for a specific user by their ID.
-     * Same pagination as /history — designed for both user self-fetch and admin use.
-     */
+
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasAnyRole('USER','ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getHistoryByUserId(
@@ -95,7 +72,6 @@ public class HistoryController {
         return ResponseEntity.ok(ApiResponse.success(null, body));
     }
 
-    /** GET /history/type/{type}?page=0&size=20 */
     @GetMapping("/type/{type}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Page<TransactionDTO>>> getByType(
@@ -108,7 +84,6 @@ public class HistoryController {
                 historyService.getByUserIdAndType(userId, type, pageable)));
     }
 
-    /** GET /history/status/{status}?page=0&size=20 */
     @GetMapping("/status/{status}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Page<TransactionDTO>>> getByStatus(
@@ -122,8 +97,59 @@ public class HistoryController {
                 historyService.getByUserIdAndStatus(userId, txnStatus, pageable)));
     }
 
-    /** GET /history/date-range?from=2026-01-01T00:00:00&to=2026-12-31T23:59:59 */
-    @GetMapping("/date-range")
+    @GetMapping("/user/{userId}/filter")
+    @PreAuthorize("hasAnyRole('USER','ADMIN','SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> filterByUser(
+            @PathVariable Long userId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate toDate,
+            @RequestParam(defaultValue = "ALL")  String transactionType,
+            @RequestParam(required = false)      String currency,
+            @RequestParam(required = false)      String status,
+            @RequestParam(defaultValue = "0")    int page,
+            @RequestParam(defaultValue = "20")   int size) {
+
+        int safeSize = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, safeSize, Sort.by("createdAt").descending());
+
+        TransactionStatus txnStatus = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                txnStatus = TransactionStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Invalid status value: '" + status
+                                + "'. Valid values: " + java.util.Arrays.toString(TransactionStatus.values())));
+            }
+        }
+
+        Page<TransactionDTO> result = historyService.filterByUser(
+                userId,
+                fromDate.atStartOfDay(),
+                toDate.atTime(23, 59, 59),
+                transactionType,
+                currency,
+                txnStatus,
+                pageable);
+
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("content",       result.getContent());
+        body.put("page",          result.getNumber());
+        body.put("size",          result.getSize());
+        body.put("totalElements", result.getTotalElements());
+        body.put("totalPages",    result.getTotalPages());
+        body.put("hasMore",       !result.isLast());
+        body.put("filters", Map.of(
+                "userId",          userId,
+                "fromDate",        fromDate.toString(),
+                "toDate",          toDate.toString(),
+                "transactionType", transactionType.toUpperCase(),
+                "currency",        currency != null ? currency.toUpperCase() : "ALL",
+                "status",          status   != null ? status.toUpperCase()   : "ALL"
+        ));
+
+        return ResponseEntity.ok(ApiResponse.success(null, body));
+    }
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<List<TransactionDTO>>> getByDateRange(
             @RequestAttribute("userId") Long userId,
@@ -133,7 +159,6 @@ public class HistoryController {
                 historyService.getByDateRange(userId, from, to)));
     }
 
-    /** GET /history/{transactionId} */
     @GetMapping("/{transactionId}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<TransactionDTO>> getByTransactionId(
@@ -143,7 +168,6 @@ public class HistoryController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /** GET /history/{transactionId}/timeline — returns just the status timeline */
     @GetMapping("/{transactionId}/timeline")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Object>> getTimeline(
@@ -154,7 +178,6 @@ public class HistoryController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /** GET /history/summary?type=DEPOSIT — total delivered amount for a type */
     @GetMapping("/summary")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getSummary(
@@ -165,11 +188,6 @@ public class HistoryController {
                 Map.of("type", type.toUpperCase(), "totalDelivered", total)));
     }
 
-    // -----------------------------------------------------------------------
-    // Admin endpoints
-    // -----------------------------------------------------------------------
-
-    /** GET /history/admin/wallet/{walletId} */
     @GetMapping("/admin/wallet/{walletId}")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Page<TransactionDTO>>> getByWallet(
@@ -181,7 +199,6 @@ public class HistoryController {
                 historyService.getByWalletId(walletId, pageable)));
     }
 
-    /** GET /history/admin/audit/{transactionId} — full audit trail for a transaction */
     @GetMapping("/admin/audit/{transactionId}")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<TransactionAuditLog>>> getAuditLog(
@@ -190,7 +207,6 @@ public class HistoryController {
                 historyService.getAuditLog(transactionId)));
     }
 
-    /** GET /history/admin/reference/{reference} */
     @GetMapping("/admin/reference/{reference}")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<TransactionDTO>> getByReference(

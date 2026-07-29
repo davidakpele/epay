@@ -52,10 +52,6 @@ public class UserService {
         return toRecordDTO(record);
     }
 
-    /**
-     * Returns the complete user profile — account, personal info,
-     * next of kin, KYC documents, and account settings — in one call.
-     */
     public FullUserProfileDTO getFullProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -67,7 +63,6 @@ public class UserService {
         java.util.List<KycDocument> docs = kycDocumentRepository.findByUserId(userId);
 
         return FullUserProfileDTO.builder()
-                // Account fields
                 .id(user.getId())
                 .email(user.getEmail())
                 .username(user.getUsername())
@@ -81,7 +76,6 @@ public class UserService {
                 .twoFactorEnabled(user.isTwoFactorEnabled())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
-                // Personal info
                 .personal(record != null ? FullUserProfileDTO.PersonalInfo.builder()
                         .firstName(record.getFirstName())
                         .lastName(record.getLastName())
@@ -100,7 +94,6 @@ public class UserService {
                         .profilePhotoUrl(record.getProfilePhotoUrl())
                         .profileComplete(record.isProfileComplete())
                         .build() : null)
-                // Next of kin
                 .nextOfKin(nok != null ? FullUserProfileDTO.NextOfKinInfo.builder()
                         .firstName(nok.getFirstName())
                         .lastName(nok.getLastName())
@@ -109,7 +102,6 @@ public class UserService {
                         .email(nok.getEmail())
                         .address(nok.getAddress())
                         .build() : null)
-                // KYC documents
                 .kycDocuments(docs.stream().map(d ->
                         FullUserProfileDTO.KycDocumentInfo.builder()
                                 .id(d.getId())
@@ -123,7 +115,6 @@ public class UserService {
                                 .uploadedAt(d.getUploadedAt())
                                 .build())
                         .toList())
-                // Account settings
                 .settings(settings != null ? FullUserProfileDTO.AccountSettingsInfo.builder()
                         .emailAlert(settings.getIsEmailAlert())
                         .transactionAlert(settings.getIsTransactionAlert())

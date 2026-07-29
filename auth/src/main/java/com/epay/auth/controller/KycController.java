@@ -35,13 +35,6 @@ public class KycController {
     private final KycVerificationRepository  kycVerificationRepository;
     private final UserRepository             userRepository;
 
-    // ── User: upload document ─────────────────────────────────────────────────
-
-    /**
-     * POST /kyc/documents
-     * User uploads a KYC document.
-     * Real file storage (S3 etc.) would handle the bytes — here we record the reference.
-     */
     @PostMapping("/documents")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Void>> uploadDocument(
@@ -55,7 +48,6 @@ public class KycController {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Store a reference — in production, upload to S3 and store the key
         String storageRef = "uploads/kyc/" + userId + "/" + documentType.name() + "_"
                 + System.currentTimeMillis() + "_" + file.getOriginalFilename();
 
@@ -71,7 +63,6 @@ public class KycController {
         return ResponseEntity.ok(ApiResponse.success("Document uploaded successfully.", null));
     }
 
-    /** GET /kyc/documents — list user's KYC documents */
     @GetMapping("/documents")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<List<KycDocument>>> getDocuments(
@@ -80,7 +71,6 @@ public class KycController {
                 kycDocumentRepository.findByUserId(userId)));
     }
 
-    /** POST /kyc/submit/{tier} — submit for KYC review */
     @PostMapping("/submit/{tier}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Void>> submitForReview(
@@ -90,7 +80,6 @@ public class KycController {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Check if there are documents uploaded
         List<KycDocument> docs = kycDocumentRepository.findByUserId(userId);
         if (docs.isEmpty())
             throw new BadRequestException("Please upload at least one document before submitting",
@@ -107,15 +96,11 @@ public class KycController {
 
         kycVerificationRepository.save(verification);
 
-        // Update user KYC status
         userRepository.updateKycStatus(userId, KycStatus.SUBMITTED);
 
         return ResponseEntity.ok(ApiResponse.success("KYC submission received. Under review.", null));
     }
 
-    // ── Admin/Compliance: review documents ────────────────────────────────────
-
-    /** GET /kyc/admin/pending — pending KYC submissions */
     @GetMapping("/admin/pending")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")
     public ResponseEntity<ApiResponse<Page<KycVerification>>> getPending(
@@ -125,7 +110,6 @@ public class KycController {
         return ResponseEntity.ok(ApiResponse.success(null, page));
     }
 
-    /** POST /kyc/admin/{verificationId}/approve */
     @PostMapping("/admin/{verificationId}/approve")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")
     public ResponseEntity<ApiResponse<Void>> approve(
@@ -140,13 +124,11 @@ public class KycController {
                 verificationId, KycStatus.APPROVED, reviewerId,
                 LocalDateTime.now(), null, internalNote);
 
-        // Promote user tier
         userRepository.updateKycTierAndStatus(v.getUser().getId(), v.getTier(), KycStatus.APPROVED);
 
         return ResponseEntity.ok(ApiResponse.success("KYC approved.", null));
     }
 
-    /** POST /kyc/admin/{verificationId}/reject */
     @PostMapping("/admin/{verificationId}/reject")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")
     public ResponseEntity<ApiResponse<Void>> reject(
@@ -167,7 +149,6 @@ public class KycController {
         return ResponseEntity.ok(ApiResponse.success("KYC rejected.", null));
     }
 
-    /** GET /kyc/status — get the authenticated user's KYC status */
     @GetMapping("/status")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Object>> getStatus(

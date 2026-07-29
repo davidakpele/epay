@@ -12,6 +12,7 @@ import com.epay.domain.wallet.input.MaintenanceDebitRequest;
 import com.epay.domain.wallet.input.SavingsCreditRequest;
 import com.epay.domain.wallet.input.SavingsDebitRequest;
 import com.epay.domain.wallet.input.SetPinRequest;
+import com.epay.domain.wallet.input.SwapRequest;
 import com.epay.domain.wallet.input.TransferRequest;
 import com.epay.domain.wallet.input.WalletRefundRequest;
 import com.epay.wallet.service.WalletService;
@@ -98,6 +99,14 @@ public class WalletController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> transfer(@Valid @RequestBody TransferRequest request) {
         return walletService.transfer(request, request.getSenderUserId());
+    }
+
+    @PostMapping("/{userId}/swap")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> swapCurrency(@PathVariable Long userId,
+                                           @Valid @RequestBody SwapRequest request) {
+        request.setUserId(userId);
+        return walletService.swapCurrency(userId, request);
     }
 
     @PatchMapping("/balance")

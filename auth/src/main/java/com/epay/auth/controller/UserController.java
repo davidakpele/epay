@@ -24,14 +24,6 @@ public class UserController {
     private final UserService          userService;
     private final UserRepository       userRepository;
 
-    @GetMapping("/me")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<FullUserProfileDTO>> getMyFullProfile(
-            @RequestAttribute("userId") Long userId) {
-        return ResponseEntity.ok(ApiResponse.success(null,
-                userService.getFullProfile(userId)));
-    }
-
     @GetMapping("/profile")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<UserRecordDTO>> getProfile(

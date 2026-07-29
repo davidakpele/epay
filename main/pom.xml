@@ -27,6 +27,10 @@
         </dependency>
         <dependency>
             <groupId>com.epay</groupId>
+            <artifactId>epay-bank</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.epay</groupId>
             <artifactId>epay-wallet</artifactId>
         </dependency>
         <dependency>

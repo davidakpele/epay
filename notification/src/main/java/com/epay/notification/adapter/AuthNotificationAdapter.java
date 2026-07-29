@@ -4,16 +4,8 @@ import com.epay.common.interfaces.IAuthNotificationPort;
 import com.epay.common.interfaces.IAuthNotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Adapts IAuthNotificationPort (legacy synchronous contract)
- * to IAuthNotificationPublisher (RabbitMQ async publisher).
- *
- * Kept for backward compatibility with any consumer still
- * injecting IAuthNotificationPort.
- */
 @Component
 @RequiredArgsConstructor
 public class AuthNotificationAdapter implements IAuthNotificationPort {

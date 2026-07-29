@@ -34,6 +34,7 @@
         <module>investment</module>
         <module>notification</module>
         <module>history</module>
+        <module>bank</module>
         <module>admin</module>
         <module>main</module>
     </modules>
@@ -266,6 +267,11 @@
             <dependency>
                 <groupId>com.epay</groupId>
                 <artifactId>epay-common</artifactId>
+                <version>${epay.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.epay</groupId>
+                <artifactId>epay-bank</artifactId>
                 <version>${epay.version}</version>
             </dependency>
             <dependency>

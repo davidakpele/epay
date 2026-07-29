@@ -31,7 +31,7 @@ public class UserTracerService implements IUserTracerService {
             return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_ACTIVE + userId));
         } catch (Exception e) {
             log.warn("[Session] Redis check failed for userId={}: {}", userId, e.getMessage());
-            return false; // fail-open
+            return false;
         }
     }
 
@@ -97,7 +97,7 @@ public class UserTracerService implements IUserTracerService {
             return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_BY_ID + sessionId));
         } catch (Exception e) {
             log.warn("[Session] Redis validity check failed for sessionId={}: {}", sessionId, e.getMessage());
-            return true; // fail-open
+            return true;
         }
     }
 }

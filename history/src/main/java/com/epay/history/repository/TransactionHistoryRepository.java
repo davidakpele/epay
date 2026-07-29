@@ -10,14 +10,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import com.epay.domain.history.entity.TransactionHistory;
 
-/**
- * @deprecated Superseded by {@link com.epay.history.repository.TransactionRepository}.
- * Kept for backward compatibility with existing transaction_history table data.
- * New code must use TransactionRepository + Transaction entity.
- */
+
 @Deprecated(since = "2.0", forRemoval = false)
 @Repository
 public interface TransactionHistoryRepository extends JpaRepository<TransactionHistory, Long> {

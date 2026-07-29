@@ -1,15 +1,9 @@
 package com.epay.notification.service;
 
-import com.epay.domain.notification.input.MaintenanceDeductionNotification;
-import com.epay.domain.notification.input.StatementPayload;
-import com.epay.domain.notification.input.SwapCurrencyPayload;
-import com.epay.domain.notification.input.WalletPinNotification;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.concurrent.CompletableFuture;
+
 import org.springframework.mail.MailException;
-import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -17,8 +11,15 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import java.math.BigDecimal;
-import java.util.concurrent.CompletableFuture;
+import com.epay.domain.notification.input.MaintenanceDeductionNotification;
+import com.epay.domain.notification.input.StatementPayload;
+import com.epay.domain.notification.input.SwapCurrencyPayload;
+import com.epay.domain.notification.input.WalletPinNotification;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -167,12 +168,16 @@ public class WalletNotificationService {
             log.info("[Statement] Sent to {}", p.getEmail());
             return CompletableFuture.completedFuture(null);
         } catch (jakarta.mail.MessagingException | MailException e) {
-            log.error("Failed to send statement to {}: {}", p.getEmail(), e.getMessage());
-            throw new MailSendException("Failed to send statement email: " + e.getMessage(), e);
+            log.error("[Statement] Failed to send to {}: {}", p.getEmail(), e.getMessage());
+            return CompletableFuture.failedFuture(e);
         }
     }
 
     private CompletableFuture<Void> send(String to, String subject, String template, Context ctx) {
+        if (to == null || to.isBlank()) {
+            log.warn("[WalletNotification] Skipping email — recipient address is null/blank (template={})", template);
+            return CompletableFuture.completedFuture(null);
+        }
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
@@ -180,10 +185,12 @@ public class WalletNotificationService {
             helper.setSubject(subject);
             helper.setText(templateEngine.process(template, ctx), true);
             javaMailSender.send(mimeMessage);
+            log.info("[WalletNotification] Sent '{}' to {}", subject, to);
             return CompletableFuture.completedFuture(null);
         } catch (MessagingException | MailException e) {
-            log.error("Failed to send email to {} (template={}): {}", to, template, e.getMessage());
-            throw new MailSendException("Failed to send email: " + e.getMessage(), e);
+            log.error("[WalletNotification] Failed to send '{}' to {} (template={}): {}",
+                    subject, to, template, e.getMessage());
+            return CompletableFuture.failedFuture(e);
         }
     }
 }

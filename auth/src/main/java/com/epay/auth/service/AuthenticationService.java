@@ -468,11 +468,9 @@ public class AuthenticationService implements IAuthenticationService{
         if ("EMAIL".equals(channel)) {
             user = userRepository.findByEmail(identifier).orElse(null);
         } else {
-            // PHONE / SMS / WHATSAPP
             UserRecord rec = userRecordRepository.findByPhoneNumber(identifier).orElse(null);
             if (rec != null) user = rec.getUser();
         }
-
 
         if (user == null || !user.isEnabled()) {
             response.put("success", true);
