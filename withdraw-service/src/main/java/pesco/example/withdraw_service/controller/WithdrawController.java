@@ -86,6 +86,7 @@ public class WithdrawController {
         timeUnit = TimeUnit.MINUTES,
         userIdentifier = "#request.userId"
     )
+    
     @PostMapping("/bank")
     public ResponseEntity<?> withdrawToBank(@Valid @RequestBody TransferWalletRequestDTO request, @RequestHeader("Authorization") String authorizationHeader, Authentication authentication,   @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         String token = authorizationHeader.replace("Bearer ", "");

@@ -11,20 +11,16 @@ export default function Logout() {
 
   useEffect(() => {
     setMounted(true);
-
-    // Animated dots for loading text
     const dotsInterval = setInterval(() => {
       setDots(prev => prev.length >= 3 ? '' : prev + '.');
     }, 500);
 
     const checkAuth = async () => {
-      // Wait 3 seconds before making request
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       const userId = getUserId();
   
       if (!userId || userId == 'undefined' || userId == 'null') {
-        // If no session or user ID, just redirect to login
         router.push('/default');
         return;
       }

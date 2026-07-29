@@ -54,6 +54,23 @@ const xhrClient = <T = any>(
             } catch (error) {
               resolve(xhr.responseText as unknown as T);
             }
+          } else if (xhr.status === 401 && !isAuthPage) {
+            // Token expired or invalid — redirect to logout
+            try {
+              const errorResponse = JSON.parse(xhr.responseText);
+              const isTokenExpired =
+                errorResponse?.errorCode === 'AUTH_1006' ||
+                errorResponse?.status === 401;
+              if (isTokenExpired) {
+                window.location.href = '/auth/logout';
+                reject(errorResponse);
+                return;
+              }
+            } catch {
+              window.location.href = '/auth/logout';
+              reject({ message: 'Unauthorized', status: 401 });
+              return;
+            }
           } else if (xhr.status === 429 && retryCount < maxRetries) {
             const retryAfter = xhr.getResponseHeader('Retry-After');
             let delay = baseDelay * Math.pow(2, retryCount);

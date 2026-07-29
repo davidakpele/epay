@@ -140,7 +140,7 @@ public class WalletServiceImp implements WalletService {
             if (senderRecord.isLocked()) {
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Account locked.", HttpStatus.FORBIDDEN, "Your account has been temporarily locked.");
-            }
+            } 
             if (senderRecord.isIsBlocked()) {
                 idempotencyService.clearKey(idempotencyKey);
                 return Error.createResponse("Account blocked.", HttpStatus.FORBIDDEN, "Your account has been blocked.");

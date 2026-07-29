@@ -258,21 +258,37 @@ const Statements = () => {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         const response = await historyService.getFilteredHistory(userId, filterPayload);
-        
-        if (response && response.data && response.data.length > 0) {
-          const transformedStatements = response.data.map((item: any) => ({
-            id: item.id || "",
-            date: item.timestamp || item.createdOn || "",
-            description: item.description || item.message || "",
-            type: item.type || "Transfer",
-            netAmount: Number(item.netAmount) || 0,
-            status: mapStatus(item.status),
-            reference: item.referenceNo || item.transactionId || "",
-            currencyType: item.currencyType || selectedCurrency.code || 'USD',
-            availableBalance: Number(item.availableBalance) || 0,
-            previousBalance: Number(item.previousBalance) || 0,
-          }));
-          
+        const rawItems: any[] =
+          response?.data?.content ??
+          (Array.isArray(response?.data) ? response.data : []);
+
+        if (rawItems.length > 0) {
+          const transformedStatements = rawItems.map((item: any) => {
+            const isCredit = item.debitCredit === 'CREDIT';
+            const netAmt = Number(item.amount?.net ?? item.netAmount ?? 0);
+            return {
+              id: item.transactionId || item.id || "",
+              date: item.createdAt || item.timestamp || item.createdOn || "",
+              description: item.description || item.message || "",
+              type: item.transactionType || item.type || "Transfer",
+              netAmount: isCredit ? Math.abs(netAmt) : -Math.abs(netAmt),
+              amount: isCredit ? Math.abs(netAmt) : -Math.abs(netAmt),
+              status: mapStatus(item.currentStatus || item.status),
+              reference: item.reference || item.referenceNo || item.transactionId || "",
+              currencyType: item.amount?.currency || item.currencyType || selectedCurrency.code || 'NGN',
+              availableBalance: Number(item.balance?.available ?? item.availableBalance ?? 0),
+              previousBalance: Number(item.balance?.previous ?? item.previousBalance ?? 0),
+              runningBalance: Number(item.balance?.running ?? 0),
+              channel: item.channel || "",
+              debitCredit: item.debitCredit || "",
+              recipient: item.recipient || null,
+              sender: item.user || null,
+              symbol: item.amount?.symbol || selectedCurrency.symbol || "",
+              fee: Number(item.amount?.fee ?? 0),
+              grossAmount: Number(item.amount?.gross ?? netAmt),
+            };
+          });
+
           setCurrentPage(1);
           setStatements(transformedStatements);
           showToast(`Found ${transformedStatements.length} transactions`, 'success');
@@ -298,9 +314,11 @@ const Statements = () => {
         case 'success':
         case 'completed':
         case 'confirmed':
+        case 'delivered':
           return 'Completed';
         case 'pending':
         case 'processing':
+        case 'initiated': 
           return 'Pending';
         case 'failed':
         case 'rejected':
@@ -433,24 +451,24 @@ const Statements = () => {
         await new Promise(resolve => setTimeout(resolve, 1500));
         
         const receiptContent = `
-TRANSACTION RECEIPT
-====================
+            TRANSACTION RECEIPT
+            ====================
 
-Transaction ID: ${selectedTransaction.id}
-Reference: ${selectedTransaction.reference}
-Date: ${selectedTransaction.date}
-Type: ${selectedTransaction.type}
-Description: ${selectedTransaction.description}
-Amount: ${formatAmount(selectedTransaction.amount)}
-Status: ${selectedTransaction.status}
+            Transaction ID: ${selectedTransaction.id}
+            Reference: ${selectedTransaction.reference}
+            Date: ${selectedTransaction.date}
+            Type: ${selectedTransaction.type}
+            Description: ${selectedTransaction.description}
+            Amount: ${formatAmount(Math.abs(selectedTransaction.netAmount))}
+            Status: ${selectedTransaction.status}
 
-Account Details:
-Name: Nezer Techy
-Account: 5001320096
+            Account Details:
+            Name: Nezer Techy
+            Account: 5001320096
 
-Generated: ${new Date().toLocaleString()}
+            Generated: ${new Date().toLocaleString()}
 
-This is an official receipt for your records.
+            This is an official receipt for your records.
         `;
         
         const blob = new Blob([receiptContent], { type: 'text/plain' });
@@ -554,23 +572,25 @@ This is an official receipt for your records.
       return baseClass + " bg-green-700 text-white hover:bg-green-700";
     };
 
-    const isDebitTransaction = (type: string): boolean => {
-      const debitTypes = ['DEBITED', 'WITHDRAW', 'BILL PAYMENT', 'BILLS PAYMENT', 'PAYMENT', 'TRANSFER'];
+    const isDebitTransaction = (type: string, debitCredit?: string): boolean => {
+      if (debitCredit) return debitCredit === 'DEBIT';
+      const debitTypes = ['DEBITED', 'WITHDRAW', 'BILL PAYMENT', 'BILLS PAYMENT', 'PAYMENT', 'TRANSFER', 'TRANSFER_DEBIT'];
       return debitTypes.some(debitType => type.toUpperCase().includes(debitType));
     };
 
-    const isCreditTransaction = (type: string): boolean => {
+    const isCreditTransaction = (type: string, debitCredit?: string): boolean => {
+      if (debitCredit) return debitCredit === 'CREDIT';
       const creditTypes = ['CREDIT', 'CREDITED', 'DEPOSIT', 'DEPOSITED'];
       return creditTypes.some(creditType => type.toUpperCase().includes(creditType));
     };
 
     const totalCredits = statements
-      .filter(s => s.amount >= 0)
-      .reduce((sum, s) => sum + s.amount, 0);
+      .filter(s => isCreditTransaction(s.type, (s as any).debitCredit))
+      .reduce((sum, s) => sum + Math.abs(s.netAmount), 0);
       
     const totalDebits = statements
-      .filter(s => s.amount < 0)
-      .reduce((sum, s) => sum + Math.abs(s.amount), 0);
+      .filter(s => isDebitTransaction(s.type, (s as any).debitCredit))
+      .reduce((sum, s) => sum + Math.abs(s.netAmount), 0);
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -855,11 +875,9 @@ This is an official receipt for your records.
                                   <td>
                                     <div className="ah-transaction-cell">
                                       <div className={`ah-transaction-icon ${
-                                        isCreditTransaction(transaction.type) ? 'credit' : 
-                                        isDebitTransaction(transaction.type) ? 'debit' : 
-                                        transaction.netAmount >= 0 ? 'credit' : 'debit'
+                                        isCreditTransaction(transaction.type, (transaction as any).debitCredit) ? 'credit' : 'debit'
                                       }`}>
-                                        {isCreditTransaction(transaction.type) || (!isDebitTransaction(transaction.type) && transaction.netAmount >= 0) ? 
+                                        {isCreditTransaction(transaction.type, (transaction as any).debitCredit) ? 
                                           <ArrowDownLeft size={18} /> : 
                                           <ArrowUpRight size={18} />
                                         }
@@ -875,14 +893,10 @@ This is an official receipt for your records.
                                   </td>
                                   <td>
                                     <span className={`ah-amount ${
-                                      isCreditTransaction(transaction.type) ? 'credit' : 
-                                      isDebitTransaction(transaction.type) ? 'debit' : 
-                                      transaction.netAmount >= 0 ? 'credit' : 'debit'
+                                      isCreditTransaction(transaction.type, (transaction as any).debitCredit) ? 'credit' : 'debit'
                                     }`}>
-                                      {isCreditTransaction(transaction.type) ? '+' : 
-                                      isDebitTransaction(transaction.type) ? '-' : 
-                                      transaction.netAmount >= 0 ? '+' : '-'}
-                                      {formatAmount(Math.abs(transaction.netAmount))}
+                                      {isCreditTransaction(transaction.type, (transaction as any).debitCredit) ? '+' : '-'}
+                                      {(transaction as any).symbol || (transaction as any).currencyType || ''}{formatAmount(Math.abs(transaction.netAmount))}
                                     </span>
                                   </td>
                                   <td>
@@ -1109,7 +1123,7 @@ This is an official receipt for your records.
                           </p>
 
                           {successMessage && (
-                            <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg text-xs">
+                            <div className="bg-black border border-green-200 text-white px-3 py-2 rounded-lg text-xs">
                               {successMessage}
                             </div>
                           )}
@@ -1140,7 +1154,7 @@ This is an official receipt for your records.
 
                           <button 
                             type='submit'
-                            className="w-full rounded-lg bg-green-800 py-3 text-sm font-medium text-white hover:bg-green-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
+                            className="w-full rounded-lg bg-[#2b0f56] py-3 text-sm font-medium text-white hover:bg-[#2b0f56] transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
                             disabled={isSendingEmail}
                           >
                             {isSendingEmail ? (
@@ -1190,26 +1204,22 @@ This is an official receipt for your records.
                       <div className="flex-1 overflow-y-auto p-5 space-y-5">
                         <div className="flex items-center gap-4 p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
                           <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            selectedTransaction.amount >= 0 ? 'bg-green-100' : 'bg-red-100'
+                            isCreditTransaction(selectedTransaction.type, (selectedTransaction as any).debitCredit) ? 'bg-green-100' : 'bg-red-100'
                           }`}>
-                            {selectedTransaction.amount >= 0 ? 
+                            {isCreditTransaction(selectedTransaction.type, (selectedTransaction as any).debitCredit) ? 
                               <ArrowDownLeft size={20} className="text-green-600" /> : 
                               <ArrowUpRight size={20} className="text-red-600" />
                             }
                           </div>
                           <div className="flex-1 min-w-0">
                             <h2 className={`text-2xl font-bold truncate ${
-                              isCreditTransaction(selectedTransaction.type) ? 'text-green-600' : 
-                              isDebitTransaction(selectedTransaction.type) ? 'text-red-600' : 
-                              selectedTransaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
+                              isCreditTransaction(selectedTransaction.type, (selectedTransaction as any).debitCredit) ? 'text-green-600' : 'text-red-600'
                             }`}>
-                              {isCreditTransaction(selectedTransaction.type) ? '+' : 
-                              isDebitTransaction(selectedTransaction.type) ? '-' : 
-                              selectedTransaction.amount >= 0 ? '+' : '-'}
-                              {formatAmount(Math.abs(selectedTransaction.amount))}
+                              {isCreditTransaction(selectedTransaction.type, (selectedTransaction as any).debitCredit) ? '+' : '-'}
+                              {(selectedTransaction as any).symbol || ''}{formatAmount(Math.abs(selectedTransaction.netAmount))}
                             </h2>
                             <p className="text-xs text-gray-500 mt-0.5">
-                              {selectedTransaction.amount >= 0 ? 'Money In' : 'Money Out'}
+                              {isCreditTransaction(selectedTransaction.type, (selectedTransaction as any).debitCredit) ? 'Money In' : 'Money Out'}
                             </p>
                           </div>
                         </div>
@@ -1237,10 +1247,67 @@ This is an official receipt for your records.
                             </span>
                           </div>
 
+                          {(selectedTransaction as any).channel && (
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                              <span className="text-xs font-medium text-gray-600">Channel</span>
+                              <span className="text-xs text-gray-900">{(selectedTransaction as any).channel}</span>
+                            </div>
+                          )}
+
                           <div className="flex items-center justify-between py-2 border-b border-gray-100">
                             <span className="text-xs font-medium text-gray-600">Date & Time</span>
                             <span className="text-xs text-gray-900">{formatDate(selectedTransaction.date)}</span>
                           </div>
+
+                          <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                            <span className="text-xs font-medium text-gray-600">Available Balance</span>
+                            <span className="text-xs text-gray-900">
+                              {(selectedTransaction as any).symbol || ''}{formatAmount(selectedTransaction.availableBalance)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                            <span className="text-xs font-medium text-gray-600">Previous Balance</span>
+                            <span className="text-xs text-gray-900">
+                              {(selectedTransaction as any).symbol || ''}{formatAmount(selectedTransaction.previousBalance)}
+                            </span>
+                          </div>
+
+                          {(selectedTransaction as any).runningBalance !== undefined && (
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                              <span className="text-xs font-medium text-gray-600">Running Balance</span>
+                              <span className="text-xs text-gray-900">
+                                {(selectedTransaction as any).symbol || ''}{formatAmount((selectedTransaction as any).runningBalance)}
+                              </span>
+                            </div>
+                          )}
+
+                          {(selectedTransaction as any).fee !== undefined && (selectedTransaction as any).fee > 0 && (
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                              <span className="text-xs font-medium text-gray-600">Fee</span>
+                              <span className="text-xs text-gray-900">
+                                {(selectedTransaction as any).symbol || ''}{formatAmount((selectedTransaction as any).fee)}
+                              </span>
+                            </div>
+                          )}
+
+                          {(selectedTransaction as any).recipient && (
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                              <span className="text-xs font-medium text-gray-600">Recipient</span>
+                              <span className="text-xs text-gray-900">
+                                {(selectedTransaction as any).recipient.accountHolder}
+                              </span>
+                            </div>
+                          )}
+
+                          {(selectedTransaction as any).sender && (
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                              <span className="text-xs font-medium text-gray-600">Sender</span>
+                              <span className="text-xs text-gray-900">
+                                {(selectedTransaction as any).sender.accountHolder}
+                              </span>
+                            </div>
+                          )}
 
                           <div className="flex items-center justify-between py-2 border-b border-gray-100 gap-2">
                             <span className="text-xs font-medium text-gray-600 flex-shrink-0">Reference</span>
@@ -1263,7 +1330,7 @@ This is an official receipt for your records.
                           </div>
 
                           <div className="flex items-center justify-between py-2">
-                            <span className="text-xs font-medium text-gray-600">ID</span>
+                            <span className="text-xs font-medium text-gray-600">Transaction ID</span>
                             <span className="text-xs text-gray-900 font-mono">
                               {selectedTransaction.id}
                             </span>

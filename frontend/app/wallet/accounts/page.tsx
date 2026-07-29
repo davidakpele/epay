@@ -89,7 +89,13 @@ const Wallet = () => {
       
       const response = await historyService.getHistory(userId);
       
-      const transformedTransactions = transformApiResponseToTransactions(response);
+      // Support new paginated structure { success, data: { content: [...] } }
+      // and legacy flat array response
+      const rawItems: any[] = response?.data?.content ??
+        (Array.isArray(response?.data) ? response.data :
+        (Array.isArray(response) ? response : []));
+
+      const transformedTransactions = transformApiResponseToTransactions(rawItems);
       setTransactions(transformedTransactions);
       
     } catch (error: any) {
@@ -104,32 +110,52 @@ const Wallet = () => {
 
   const transformApiResponseToTransactions = (apiData: any[]): Transaction[] => {
     return apiData.map((item: any) => {
-      const type = mapTransactionType(item.type, item.description);
-      const status = mapTransactionStatus(item.status);
+      // New API: debitCredit field; fallback to type/description inference
+      const debitCredit: string = item.debitCredit || '';
+      const type = mapTransactionType(
+        item.transactionType || item.type || debitCredit,
+        item.description
+      );
+      const status = mapTransactionStatus(item.currentStatus || item.status);
+
+      // New API: amount is nested { net, gross, currency, symbol, fee, tax }
+      const netAmt = Number(item.amount?.net ?? item.netAmount ?? item.grossAmount ?? item.amount ?? 0);
+      const currency = item.amount?.currency || item.currencyType || 'NGN';
+      const symbol = item.amount?.symbol || '';
 
       return {
-        id: item.id || item.transactionId || "",
+        id: item.transactionId || item.id || "",
         type,
-        currency: item.currencyType || 'NGN',
+        currency,
 
-        amount: Number(item.netAmount ?? item.grossAmount ?? item.amount) || 0.0,
-        fiatAmount: Math.abs(Number(item.netAmount ?? item.grossAmount ?? item.amount) || 0),
+        amount: netAmt,
+        fiatAmount: Math.abs(netAmt),
 
         status,
-        date: item.timestamp || item.createdOn || "",
+        date: item.createdAt || item.timestamp || item.createdOn || "",
         description: item.description || item.message || "",
         transactionId: item.transactionId || undefined,
         sessionId: item.sessionId || undefined,
 
-        referenceNo: item.referenceId || item.referenceNo || undefined,
+        referenceNo: item.reference || item.referenceId || item.referenceNo || undefined,
 
         terminalId: item.terminalId || undefined,
         erId: item.erId || undefined,
-        accountHolder: item.accountHolder || undefined,
-        previousBalance: item.previousBalance ? Number(item.previousBalance) : undefined,
-        availableBalance: item.availableBalance ? Number(item.availableBalance) : undefined,
+        accountHolder: item.user?.accountHolder || item.recipient?.accountHolder || item.accountHolder || undefined,
+        previousBalance: item.balance?.previous !== undefined ? Number(item.balance.previous) : (item.previousBalance ? Number(item.previousBalance) : undefined),
+        availableBalance: item.balance?.available !== undefined ? Number(item.balance.available) : (item.availableBalance ? Number(item.availableBalance) : undefined),
         icon: getTransactionIcon(type),
-        originalData: item,
+        originalData: {
+          ...item,
+          runningBalance: item.balance?.running,
+          symbol,
+          fee: item.amount?.fee ?? 0,
+          grossAmount: item.amount?.gross ?? netAmt,
+          channel: item.channel,
+          debitCredit,
+          recipient: item.recipient,
+          sender: item.user,
+        },
       };
     });
   };
@@ -254,10 +280,12 @@ const Wallet = () => {
       case 'success':
       case 'completed':
       case 'confirmed':
+      case 'delivered':        // new API DELIVERED status
         return 'completed';
 
       case 'pending':
       case 'processing':
+      case 'initiated':        // new API INITIATED status
         return 'pending';
 
       case 'failed':
@@ -273,28 +301,39 @@ const Wallet = () => {
   const mapTransactionType = (apiType: string | undefined, description: string = ''): TransactionType => {
     const type = String(apiType || '').toLowerCase();
     const desc = description.toLowerCase();
+
+    // Check specific transactionType values first — before any generic debitCredit inference
+    if (type === 'swap' || type.includes('swap') || desc.includes('swap')) {
+      return 'swap';
+    }
+
     if (type.includes('deposit') || desc.includes('deposit') || type === 'deposit') {
       return 'deposit';
     }
 
-    if (type.includes('credited') || type.includes('credit') || desc.includes('received') || type === 'credited') {
+    if (type.includes('transfer_credit')) {
       return 'credited';
     }
 
-    if (
-      type.includes('withdraw') || type.includes('debit') || type.includes('debited') ||
-      desc.includes('withdraw') || desc.includes('withdrawal') || desc.includes('sent') ||
-      type === 'withdrawal'
-    ) {
+    if (type.includes('transfer_debit') || type.includes('withdraw') || type === 'withdrawal') {
       return 'withdrawal';
-    }
-
-    if (type.includes('swap') || desc.includes('swap') || desc.includes('exchange') || desc.includes('conversion')) {
-      return 'swap';
     }
 
     if (type.includes('transfer') || desc.includes('transfer')) {
       return 'transfer';
+    }
+
+    if (desc.includes('exchange') || desc.includes('conversion')) {
+      return 'swap';
+    }
+
+    // Fall back to generic credit/debit direction
+    if (type === 'credit' || type.includes('credited') || desc.includes('received')) {
+      return 'credited';
+    }
+
+    if (type === 'debit' || type.includes('debit') || type.includes('debited') || desc.includes('withdraw') || desc.includes('sent')) {
+      return 'withdrawal';
     }
 
     return 'transfer';
@@ -743,7 +782,38 @@ const Wallet = () => {
                     </span>
                   </div>
                 )}
-                          </div>
+                {transaction.originalData?.channel && (
+                  <div className="detail-item">
+                    <span className="detail-label">Channel:</span>
+                    <span className="detail-value">{transaction.originalData.channel}</span>
+                  </div>
+                )}
+                {transaction.originalData?.recipient?.accountHolder && (
+                  <div className="detail-item">
+                    <span className="detail-label">Recipient:</span>
+                    <span className="detail-value">{transaction.originalData.recipient.accountHolder}</span>
+                  </div>
+                )}
+                {transaction.originalData?.sender?.accountHolder && (
+                  <div className="detail-item">
+                    <span className="detail-label">From:</span>
+                    <span className="detail-value">{transaction.originalData.sender.accountHolder}</span>
+                  </div>
+                )}
+                {transaction.referenceNo && (
+                  <div className="detail-item">
+                    <span className="detail-label">Reference:</span>
+                    <span className="detail-value">
+                      {transaction.referenceNo}
+                      <button
+                        className="copy-btn"
+                        onClick={() => copyToClipboard(transaction.referenceNo || "")}
+                      >
+                        <Copy />
+                      </button>
+                    </span>
+                  </div>
+                )}                          </div>
                           
                           <div className="transaction-actions">
                             <button 
