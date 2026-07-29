@@ -59,6 +59,9 @@ public class PaystackDtos {
 
         @JsonProperty("bank_id")
         private int bankId;
+        
+        @JsonProperty("bank_code")
+        private String bankCode;
     }
 
     @Data
