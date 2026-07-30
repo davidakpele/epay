@@ -40,17 +40,19 @@ public class SecurityConfiguration {
     private final JwtProperties jwtProperties;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final RateLimitingFilter rateLimitingFilter;
+    private final BotDetectionFilter botDetectionFilter;
 
     public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter,
                                   AuthenticationProvider authenticationProvider,
                                   JwtProperties jwtProperties,
                                   CustomAuthenticationEntryPoint authenticationEntryPoint,
-                                  RateLimitingFilter rateLimitingFilter) {
+                                  RateLimitingFilter rateLimitingFilter, BotDetectionFilter botDetectionFilter) {
         this.jwtAuthFilter            = jwtAuthFilter;
         this.authenticationProvider   = authenticationProvider;
         this.jwtProperties            = jwtProperties;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.rateLimitingFilter       = rateLimitingFilter;
+        this.botDetectionFilter = botDetectionFilter;
     }
     
     
@@ -123,6 +125,22 @@ public class SecurityConfiguration {
                     .policy("geolocation=(self), microphone=(), camera=()")
                 )
             )
+            .addFilterBefore(
+                new FirewallExceptionFilter(),
+                UsernamePasswordAuthenticationFilter.class
+            )
+            .addFilterBefore(
+                botDetectionFilter,
+                UsernamePasswordAuthenticationFilter.class
+            )
+            .addFilterBefore(
+                new InputValidationFilter(),
+                UsernamePasswordAuthenticationFilter.class
+            )
+            .addFilterBefore(
+                new SecurityHeadersFilter(),
+                UsernamePasswordAuthenticationFilter.class
+            )
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
@@ -145,6 +163,7 @@ public class SecurityConfiguration {
                     "/webhook/**"
                 ).permitAll() 
                 .requestMatchers("/static/**").permitAll()
+                .requestMatchers("/uploads/images/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/user/{id}/block").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/user/{id}/lock").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/user/{id}").hasAnyRole("ADMIN", "SUPER_ADMIN")

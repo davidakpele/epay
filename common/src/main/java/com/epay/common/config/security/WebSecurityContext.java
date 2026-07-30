@@ -57,7 +57,6 @@ public class WebSecurityContext {
         return getAuthentication().isPresent();
     }
 
-    /** Safe logging helper — never throws, never returns sensitive data. */
     public String getUserForLog() {
         return getUserId().map(String::valueOf).orElse("anonymous");
     }

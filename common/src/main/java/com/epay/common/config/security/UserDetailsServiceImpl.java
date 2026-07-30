@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import com.epay.domain.auth.repository.UserRepository;
 
-
 @Slf4j
 @Service
 @RequiredArgsConstructor

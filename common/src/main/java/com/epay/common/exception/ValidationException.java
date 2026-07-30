@@ -2,7 +2,6 @@ package com.epay.common.exception;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
-
 import java.util.HashMap;
 import java.util.Map;
 

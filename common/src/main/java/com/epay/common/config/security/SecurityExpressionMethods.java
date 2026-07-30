@@ -3,7 +3,6 @@ package com.epay.common.config.security;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
 import com.epay.domain.auth.entity.User;
 
 @Component("security")

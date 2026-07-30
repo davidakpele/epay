@@ -16,7 +16,13 @@ import java.util.regex.Pattern;
 public class ValidationFilter extends OncePerRequestFilter {
 
     private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile(
-            "('|--|;|\\b(UNION|SELECT|INSERT|UPDATE|DELETE|DROP|EXEC)\\b|/\\*|\\*/|@@|#)",
+            "('|--|;|/\\*|\\*/|@@|#)",
+            Pattern.CASE_INSENSITIVE
+    );
+
+    // Separate stricter pattern for request body scanning only
+    private static final Pattern SQL_BODY_PATTERN = Pattern.compile(
+            "('|--|;|\\b(UNION|SELECT|INSERT|DROP|EXEC)\\b|/\\*|\\*/|@@|#)",
             Pattern.CASE_INSENSITIVE
     );
 
@@ -53,7 +59,7 @@ public class ValidationFilter extends OncePerRequestFilter {
                     (path.contains("/auth/login") || path.contains("/auth/register"))) {
 
                 String requestBody = new String(wrappedRequest.getContentAsByteArray(), StandardCharsets.UTF_8);
-                if (containsMaliciousInput(requestBody)) {
+                if (containsMaliciousBody(requestBody)) {
                     sendErrorResponse(response, "Invalid input detected in request body");
                     return;
                 }
@@ -63,13 +69,17 @@ public class ValidationFilter extends OncePerRequestFilter {
     }
 
     private boolean containsMaliciousInput(String input) {
-        if (input == null || input.isEmpty()) {
-            return false;
-        }
+        if (input == null || input.isEmpty()) return false;
         if (SQL_INJECTION_PATTERN.matcher(input).find()) return true;
-
         if (XSS_PATTERN.matcher(input).find()) return true;
+        return PATH_TRAVERSAL_PATTERN.matcher(input).find();
+    }
 
+    /** Stricter check for request bodies — includes SQL keyword matching. */
+    private boolean containsMaliciousBody(String input) {
+        if (input == null || input.isEmpty()) return false;
+        if (SQL_BODY_PATTERN.matcher(input).find()) return true;
+        if (XSS_PATTERN.matcher(input).find()) return true;
         return PATH_TRAVERSAL_PATTERN.matcher(input).find();
     }
 

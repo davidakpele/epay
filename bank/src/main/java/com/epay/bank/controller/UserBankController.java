@@ -63,9 +63,7 @@ public class UserBankController {
     
     @GetMapping("/verify")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<PaystackAccountData>> verifyAccount(
-            @RequestParam String accountNumber,
-            @RequestParam String bankCode) {
+    public ResponseEntity<ApiResponse<PaystackAccountData>> verifyAccount(@RequestParam String accountNumber, @RequestParam String bankCode) {
         PaystackAccountData data = bankService.verifyExternal(accountNumber, bankCode);
         return ResponseEntity.ok(ApiResponse.success(null, data));
     }

@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 public class ChangePasswordRequest {
 
     @NotBlank(message = "Current password is required")
-    private String currentPassword;
+    private String oldPassword;
 
     @NotBlank(message = "New password is required")
     @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
-    private String newPassword;
+    private String password;
 
     @NotBlank(message = "Confirm password is required")
-    private String confirmNewPassword;
+    private String confirmPassword;
 }

@@ -17,15 +17,20 @@ import com.epay.common.exception.ResourceNotFoundException;
 import com.epay.common.interfaces.IAuthNotificationPublisher;
 import com.epay.domain.auth.dto.UserDTO;
 import com.epay.domain.auth.dto.UserRecordDTO;
+import com.epay.domain.auth.input.ChangePasswordRequest;
 import com.epay.domain.auth.input.DeleteAccountRequest;
 import com.epay.domain.auth.input.NotificationUpdateRequest;
 import com.epay.domain.auth.input.PreferenceUpdateRequest;
 import com.epay.domain.auth.input.UpdateProfileRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -131,21 +136,45 @@ public class UserService {
 
     @Transactional
     public UserRecordDTO updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         UserRecord record = userRecordRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
 
-        if (request.getFirstName() != null)   record.setFirstName(request.getFirstName());
-        if (request.getLastName() != null)    record.setLastName(request.getLastName());
-        if (request.getPhoneNumber() != null) record.setPhoneNumber(request.getPhoneNumber());
-        if (request.getGender() != null)      record.setGender(request.getGender());
-        if (request.getDateOfBirth() != null) record.setDateOfBirth(request.getDateOfBirth());
-        if (request.getAddress() != null)     record.setAddress(request.getAddress());
-        if (request.getCity() != null)        record.setCity(request.getCity());
-        if (request.getState() != null)       record.setState(request.getState());
-        if (request.getCountry() != null)     record.setCountry(request.getCountry());
+        // ── UserRecord fields ─────────────────────────────────────────────────
+        if (request.getFirstName()   != null) record.setFirstName(request.getFirstName());
+        if (request.getLastName()    != null) record.setLastName(request.getLastName());
+        if (request.getTelephone()   != null) record.setPhoneNumber(request.getTelephone());
+        if (request.getGender()      != null) record.setGender(request.getGender().toUpperCase());
+        if (request.getDob()         != null) record.setDateOfBirth(request.getDob());
+        if (request.getAddress()     != null) record.setAddress(request.getAddress());
+        if (request.getCity()        != null) record.setCity(request.getCity());
+        if (request.getState()       != null) record.setState(request.getState());
+        if (request.getCountry()     != null) record.setCountry(request.getCountry());
         if (request.getCountryCode() != null) record.setCountryCode(request.getCountryCode());
 
+        // Mark profile complete if all key fields are now populated
+        if (record.getFirstName() != null && record.getLastName() != null
+                && record.getPhoneNumber() != null && record.getDateOfBirth() != null) {
+            record.setProfileComplete(true);
+        }
+
         userRecordRepository.save(record);
+
+        // ── User entity: email update ─────────────────────────────────────────
+        if (request.getEmail() != null && !request.getEmail().equalsIgnoreCase(user.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail()))
+                throw new BadRequestException(
+                        "Email address is already in use by another account",
+                        ErrorCode.RESOURCE_ALREADY_EXISTS);
+            // Re-use the updatePassword method slot — update email directly via save
+            user.setEmail(request.getEmail());
+            user.setEmailVerified(false); // require re-verification on email change
+            userRepository.save(user);
+            log.info("Email updated for userId={} — verification required", userId);
+        }
+
         log.info("Profile updated: userId={}", userId);
         return toRecordDTO(record);
     }
@@ -197,6 +226,92 @@ public class UserService {
     public void toggleTwoFactor(Long userId, boolean enable) {
         userRepository.updateTwoFactorEnabled(userId, enable);
         log.info("2FA {} for userId={}", enable ? "enabled" : "disabled", userId);
+    }
+
+    // ── Password update ───────────────────────────────────────────────────────
+
+    /**
+     * PUT /user/settings/update-password
+     *
+     * Payload: { oldPassword, password, confirmPassword }
+     *
+     * Validates:
+     *   1. oldPassword matches the current bcrypt hash
+     *   2. password == confirmPassword
+     *   3. password differs from oldPassword (can't reuse same password)
+     *
+     * On success, hashes and stores the new password then sends a security alert.
+     */
+    @Transactional
+    public ResponseEntity<?> updateUserPassword(ChangePasswordRequest request,
+                                                 Authentication authentication) {
+        // Resolve user from authentication context
+        String username = authentication != null ? authentication.getName() : null;
+        if (username == null)
+            throw new BadRequestException("Authentication required", ErrorCode.UNAUTHORIZED_ACCESS);
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // 1. Verify old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword()))
+            throw new BadRequestException("Current password is incorrect",
+                    ErrorCode.INVALID_CREDENTIALS);
+
+        // 2. Confirm new passwords match
+        if (!request.getPassword().equals(request.getConfirmPassword()))
+            throw new BadRequestException("New passwords do not match", ErrorCode.INVALID_INPUT);
+
+        // 3. New password must differ from old
+        if (passwordEncoder.matches(request.getPassword(), user.getPassword()))
+            throw new BadRequestException(
+                    "New password must be different from your current password",
+                    ErrorCode.INVALID_INPUT);
+
+        // 4. Hash and persist
+        userRepository.updatePassword(user.getId(), passwordEncoder.encode(request.getPassword()));
+        log.info("Password updated: userId={}", user.getId());
+
+        // 5. Send security alert asynchronously
+        final Long userId  = user.getId();
+        final String email = user.getEmail();
+        userRecordRepository.findByUserId(userId).ifPresent(rec -> {
+            String fullName = rec.getFirstName() + " " + rec.getLastName();
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                try {
+                    notificationPublisher.publishAccountSecurityAlert(
+                            email, fullName, user.getUsername(),
+                            "PASSWORD_CHANGED",
+                            java.time.Instant.now().toString(),
+                            null, null, null, null);
+                } catch (Exception ex) {
+                    log.warn("[UserService] Password-change alert failed: {}", ex.getMessage());
+                }
+            });
+        });
+
+        return ResponseEntity.ok(
+                java.util.Map.of("success", true,
+                        "message", "Password updated successfully."));
+    }
+
+    // ── Account lock / block (admin) ──────────────────────────────────────────
+
+    @Transactional
+    public ResponseEntity<?> lockUserAccount(Long userId) {
+        userRepository.lockAccount(userId, LocalDateTime.now(),
+                "Account locked by administrator");
+        log.info("Account locked: userId={}", userId);
+        return ResponseEntity.ok(
+                java.util.Map.of("success", true, "message", "Account locked."));
+    }
+
+    @Transactional
+    public ResponseEntity<?> blockUserAccount(Long userId) {
+        userRepository.updateEnabled(userId, false);
+        log.info("Account blocked: userId={}", userId);
+        return ResponseEntity.ok(
+                java.util.Map.of("success", true, "message", "Account blocked."));
     }
 
     @Transactional
