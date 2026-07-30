@@ -52,7 +52,6 @@ public class UserRecord {
     private String photo;
     private boolean isProfileComplete;
 
-    // KYC documents
     private String passportDoc;
     private String utilityBillDoc;
 

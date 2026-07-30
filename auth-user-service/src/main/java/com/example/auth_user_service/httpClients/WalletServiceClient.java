@@ -9,14 +9,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
 import org.springframework.grpc.client.GrpcChannelFactory;
 import org.springframework.stereotype.Service;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.example.auth_user_service.dtos.WalletBalanceDTO;
 import com.example.auth_user_service.dtos.WalletSectionDTO;
 import com.example.auth_user_service.exceptions.WalletNotFoundException;
@@ -30,7 +27,6 @@ import com.example.auth_user_service.wallet.grpc.WalletDeductionRequest;
 import com.example.auth_user_service.wallet.grpc.WalletSectionResponse;
 import com.example.auth_user_service.wallet.grpc.WalletServiceGrpc;
 import com.example.auth_user_service.wallet.grpc.WithdrawResponse;
-
 import io.grpc.StatusRuntimeException;
 
 @Service
@@ -114,7 +110,6 @@ public class WalletServiceClient implements IWalletServiceClient {
         return walletServiceStub.withdrawIn(payloads);
     }
 
-    // Kept for balance WebSocket responses from other flows
     @Override
     public void onWebSocketMessage(String messageJson) {
         try {

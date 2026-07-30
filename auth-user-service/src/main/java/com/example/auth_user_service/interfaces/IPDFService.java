@@ -9,5 +9,4 @@ public interface IPDFService {
     byte[] generateBankStatementPDF(List<BankStatement> statements) throws IOException;
     void generateAndSendBankStatement(String email, String username, List<BankStatement> statements);
 
-
 }

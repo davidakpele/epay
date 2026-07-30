@@ -1,10 +1,8 @@
 package com.example.auth_user_service.dtos;
 
 import java.util.List;
-
 import com.example.auth_user_service.enums.AttemptType;
 import com.example.auth_user_service.models.Users;
-
 import lombok.Data;
 
 @Data

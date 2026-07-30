@@ -8,7 +8,6 @@ public class WalletDTO {
     private List<BalanceDTO> balances;
     private Long userId;
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

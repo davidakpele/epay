@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -165,7 +164,7 @@ public class UserController {
         }
 
         return ResponseEntity.ok(passwordResetTokenService.resetPassword(request, authentication));
-    }
+    } 
 
     @PreAuthorize("hasRole('USER')")
     @PutMapping("/{id}/updateUserRecord/transferPin/status")
@@ -282,12 +281,6 @@ public class UserController {
             "message", "User account successfully deleted!"));
     }
 
-    // ── Task 1: Send password-reset link to authenticated user's email ────────
-
-    /**
-     * POST /user/{id}/send-reset-link
-     * Sends a password-reset email to the authenticated user's registered email.
-     */
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/{id}/send-reset-link")
     public ResponseEntity<?> sendResetPasswordLink(
@@ -299,13 +292,6 @@ public class UserController {
         return userServices.sendPasswordResetLinkToSelf(id, authentication);
     }
 
-    // ── Task 2: Self-suspension endpoint ──────────────────────────────────────
-
-    /**
-     * POST /user/{id}/suspend
-     * Suspends the authenticated user's own account.
-     * Sets status=SUSPENDED, locked=true, enabled=false, sends email.
-     */
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/{id}/suspend")
     public ResponseEntity<?> suspendAccount(
@@ -317,13 +303,6 @@ public class UserController {
         return userServices.suspendAccount(id, authentication);
     }
 
-    // ── KYC Document endpoints ────────────────────────────────────────────────
-
-    /**
-     * Upload a KYC document (passport or utility bill) for a user.
-     * POST /user/{id}/kyc/upload?docType=passport|utility_bill
-     * Accepts multipart/form-data OR raw binary (application/octet-stream).
-     */
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/{id}/kyc/upload")
     public ResponseEntity<?> uploadKycDocument(
@@ -343,16 +322,12 @@ public class UserController {
 
         if (file == null || file.isEmpty()) {
             if (isMultipart) {
-                // Request WAS multipart but no part matched name "file".
-                // The body stream is already consumed by the multipart resolver,
-                // so we cannot fall back to raw bytes here — just report clearly.
                 return Error.createResponse(
                         "No file part found.",
                         HttpStatus.BAD_REQUEST,
                         "Expected a multipart field named 'file'. Check the field name in your form-data.");
             }
 
-            // Not multipart -> treat the whole body as raw binary
             try {
                 String ct = contentType != null ? contentType : "application/octet-stream";
                 byte[] bytes = httpRequest.getInputStream().readAllBytes();
@@ -388,10 +363,6 @@ public class UserController {
         return userRecordService.uploadKycDocument(id, docType, file);
     }
 
-    /**
-     * Retrieve (stream) a KYC document for a user.
-     * GET /user/{id}/kyc/document?docType=passport|utility_bill
-     */
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/{id}/kyc/document")
     public ResponseEntity<?> getKycDocument(
@@ -423,10 +394,5 @@ public class UserController {
     public ResponseEntity<?> deleteAttempt(@PathVariable Long userId) {
         return userAttemptService.deleteAttempt(userId);
     }
-    
-    // @PostMapping("/user/batch")
-    // public List<UserDTO> getUsers(@RequestBody List<Long> ids) {
-    //     return userServices.getUsersByIds(ids);
-    // }
-    
+
 }

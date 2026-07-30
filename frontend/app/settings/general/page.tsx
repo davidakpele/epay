@@ -24,10 +24,18 @@ import MobileNav from '@/components/MobileNav';
 import DepositModal from '@/components/DepositModal';
 import { UserSettings } from '../../types/utils';
 import LoadingScreen from '@/components/loader/Loadingscreen';
-import { capitalizeFirstLetter, getToken, getUserId, getUserIsSetTransfer, getUsername, getUserWalletId, updateProfileImageInStorage, userService, walletService, getUserDetails, formatDateToDDMMYYYY, updateProfileDetails, updateNotificationContainer, configService } from '../../api';
+import { getToken, getUserId, getUserIsSetTransfer, getUsername, getUserWalletId, updateProfileImageInStorage, userService, walletService, configService } from '../../api';
 import { Toast } from '@/app/types/auth';
 import { useRouter } from 'next/navigation';
 import SupportChatBot from '@/components/SupportChatBot';
+
+const formatEnumLabel = (value?: string) => {
+  if (!value) return '';
+  return value
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'preferences' | 'pin'>('profile');
@@ -52,14 +60,11 @@ const Settings = () => {
   const [updatingBiometric, setUpdatingBiometric] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const user_details = getUserDetails();
   const router = useRouter();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    gender: '',
-    telephone: '',
-    dob: '',
+    phoneNumber: '',
     email: ''
   });
 
@@ -126,7 +131,6 @@ const Settings = () => {
       if (response?.status === 'success' && response?.data) {
         const settingsData = response.data;
         
-        // Update settings state with fetched config data
         setSettings(prev => ({
           ...prev,
           security: {
@@ -160,52 +164,48 @@ const Settings = () => {
       const userId = getUserId();
       
       const response = await userService.getById(userId);
-      const API_BASE_URL = 'http://localhost:8187';  
-      setUserProfile(response);
-      const userRecord = response.records?.[0] || {};
-      
+      const profileData = response?.data ?? response;
+      setUserProfile(profileData);
+      const personal = profileData.personal || {};
+
       setFormData({
-        firstName: userRecord.firstName || '',
-        lastName: userRecord.lastName || '',
-        gender: userRecord.gender
-          ? capitalizeFirstLetter(userRecord.gender)
-          : '',
-        telephone: userRecord.telephone || '',
-        dob: userRecord.dob || user_details?.dob || '',
-        email: response.email || ''
+        firstName: personal.firstName || '',
+        lastName: personal.lastName || '',
+        phoneNumber: personal.phoneNumber || '',
+        email: profileData.email || ''
       });
 
-      console.log('User records:', response.records);
-      console.log('Photo path:', userRecord.photo);
-      
+      // If the API returns a profile photo URL, use it (prepend base URL for relative paths)
+      if (personal.profilePhotoUrl) {
+        const BASE = 'http://localhost:8029';
+        const photoUrl = personal.profilePhotoUrl.startsWith('http')
+          ? personal.profilePhotoUrl
+          : `${BASE}${personal.profilePhotoUrl}`;
+        setProfileImage(photoUrl);
+        setHasCustomImage(true);
+        updateProfileImageInStorage(photoUrl);
+      }
+
       // Update settings with fetched data
       setSettings(prev => ({
         ...prev,
         profile: {
-          fullName: `${userRecord.firstName || ''} ${userRecord.lastName || ''}`.trim(),
-          email: response.email || '',
-          phone: userRecord.telephone || '',
-          username: response.username || '',
-          profileImage: userRecord.photo 
-            ? `http://localhost:8292/api${userRecord.photo}` 
-            : '/assets/images/user-profile.jpg'
+          fullName: personal.fullName || `${personal.firstName || ''} ${personal.lastName || ''}`.trim(),
+          email: profileData.email || '',
+          phone: personal.phoneNumber || '',
+          username: profileData.username || '',
+          profileImage: prev.profile.profileImage
         },
         security: {
-          twoFactorEnabled: response.twoFactorAuth || false,
+          twoFactorEnabled: profileData.twoFactorEnabled || false,
           biometricEnabled: prev.security.biometricEnabled,
           sessionTimeout: prev.security.sessionTimeout
         },
         preferences: {
-          language: userRecord.language || 'English',
-          currency: userRecord.currency || 'NGN',
-          theme: prev.preferences.theme,
-          timezone: userRecord.timezone || 'Africa/Lagos'
+          ...prev.preferences
         }
       }));
 
-      if (userRecord.photo) {
-          setProfileImage(`http://localhost:8292/api${userRecord.photo}`);
-      }
       await fetchUserSettings();
 
     } catch (error) {
@@ -536,7 +536,7 @@ const Settings = () => {
       formData.append('image', file);
       const id = getUserId();
 
-      const response = await fetch(`http://localhost:8292/api/settings/upload-profile-image/${id}`, {
+      const response = await fetch(`http://localhost/api/v1/settings/upload-profile-image/${id}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${getToken()}`,
@@ -546,7 +546,7 @@ const Settings = () => {
 
       const data = await response.json();
       if (data.status === 'success' && data.imageUrl) {
-        const fullImageUrl = `http://localhost:8292/api${data.imageUrl}`;
+        const fullImageUrl = `http://localhost/api/v1${data.imageUrl}`;
         URL.revokeObjectURL(previewUrl);
         setProfileImage(fullImageUrl);
         updateProfileImageInStorage(fullImageUrl);
@@ -690,7 +690,7 @@ const Settings = () => {
     }
   };
 
-  const userRecord = userProfile?.records?.[0] || {};
+  const personal = userProfile?.personal || {};
 
   if (isPageLoading) {
       return <LoadingScreen />;
@@ -836,37 +836,23 @@ const Settings = () => {
                           <div className="info-item">
                             <span className="info-label">Full Name:</span>
                             <span className="info-value">
-                              {userRecord.firstName} {userRecord.lastName}
+                              {personal.fullName || `${personal.firstName || ''} ${personal.lastName || ''}`.trim() || 'Not provided'}
                             </span>
                           </div>
 
                           <div className="info-item">
                             <span className="info-label">Email:</span>
-                            <span className="info-value">{userProfile.email}</span>
-                          </div>
-
-                          <div className="info-item">
-                            <span className="info-label">Gender:</span>
                             <span className="info-value">
-                              {capitalizeFirstLetter(userRecord.gender) || 'Not specified'}
+                              {userProfile.email}
+                              {userProfile.emailVerified ? ' (Verified)' : ' (Unverified)'}
                             </span>
                           </div>
 
                           <div className="info-item">
                             <span className="info-label">Mobile:</span>
                             <span className="info-value">
-                              {userRecord.telephone || 'Not provided'}
-                            </span>
-                          </div>
-
-                          <div className="info-item">
-                            <span className="info-label">Date of Birth:</span>
-                            <span className="info-value">
-                              {userRecord.dob
-                                ? formatDateToDDMMYYYY(userRecord.dob)
-                                : (user_details?.dob
-                                    ? formatDateToDDMMYYYY(user_details.dob)
-                                    : 'Not provided')}
+                              {personal.phoneNumber || 'Not provided'}
+                              {personal.phoneNumber && (userProfile.phoneVerified ? ' (Verified)' : ' (Unverified)')}
                             </span>
                           </div>
 
@@ -874,6 +860,34 @@ const Settings = () => {
                             <span className="info-label">Username:</span>
                             <span className="info-value">
                               @{userProfile.username || 'username'}
+                            </span>
+                          </div>
+
+                          <div className="info-item">
+                            <span className="info-label">Account Type:</span>
+                            <span className="info-value">
+                              {formatEnumLabel(userProfile.accountType) || 'Not specified'}
+                            </span>
+                          </div>
+
+                          <div className="info-item">
+                            <span className="info-label">KYC Status:</span>
+                            <span className="info-value">
+                              {formatEnumLabel(userProfile.kycStatus)} ({formatEnumLabel(userProfile.kycTier)})
+                            </span>
+                          </div>
+
+                          <div className="info-item">
+                            <span className="info-label">Referral Code:</span>
+                            <span className="info-value">
+                              {personal.referralCode || 'Not available'}
+                            </span>
+                          </div>
+
+                          <div className="info-item">
+                            <span className="info-label">Total Referrals:</span>
+                            <span className="info-value">
+                              {personal.totalReferrals ?? 0}
                             </span>
                           </div>
 

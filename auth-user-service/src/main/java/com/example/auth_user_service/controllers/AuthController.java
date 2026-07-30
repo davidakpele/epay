@@ -23,18 +23,14 @@ import com.example.auth_user_service.exceptions.Error;
 import com.example.auth_user_service.enums.ContactMethod;
 import com.example.auth_user_service.interfaces.IAuthenticationService;
 import com.example.auth_user_service.interfaces.IMessagingService;
-import com.example.auth_user_service.interfaces.IPasswordResetTokenService;
 import com.example.auth_user_service.interfaces.ITwoFactorAuthenticationService;
 import com.example.auth_user_service.interfaces.IUserRecordService;
-import com.example.auth_user_service.interfaces.IUserService;
 import com.example.auth_user_service.interfaces.IUserTracerService;
 import com.example.auth_user_service.models.Users;
-import com.example.auth_user_service.payloads.ChangePasswordRequest;
 import com.example.auth_user_service.payloads.ConfirmResetPasswordRequest;
 import com.example.auth_user_service.payloads.ForgotPasswordRequest;
 import com.example.auth_user_service.payloads.ForgotUsernameRequest;
 import com.example.auth_user_service.payloads.OTPRequest;
-import com.example.auth_user_service.payloads.ResetPasswordRequest;
 import com.example.auth_user_service.payloads.UserSignInRequest;
 import com.example.auth_user_service.payloads.UserSignUpRequest;
 import com.example.auth_user_service.responses.AuthResponse;
@@ -50,27 +46,18 @@ public class AuthController {
 
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$";
     private final IAuthenticationService authenticationService; 
-    private final IUserService userServiceImplementation;
-    private final IPasswordResetTokenService passwordResetTokenServiceImplementation;
     private final ITwoFactorAuthenticationService twoFactorAuthenticationServiceImplementation;
     private final IUserTracerService userTracerService;
     private final IMessagingService messagingService;
     private final IUserRecordService userRecordService;
 
-
-    public AuthController(IAuthenticationService authenticationService, 
-        IUserService userServiceImplementation, IPasswordResetTokenService passwordResetTokenServiceImplementation, 
-        ITwoFactorAuthenticationService twoFactorAuthenticationServiceImplementation, IUserTracerService userTracerService, 
-        IMessagingService messagingService, IUserRecordService userRecordService) {
+    public AuthController(IAuthenticationService authenticationService, ITwoFactorAuthenticationService twoFactorAuthenticationServiceImplementation, IUserTracerService userTracerService, IMessagingService messagingService, IUserRecordService userRecordService) {
         this.authenticationService = authenticationService;
-        this.userServiceImplementation = userServiceImplementation;
-        this.passwordResetTokenServiceImplementation = passwordResetTokenServiceImplementation;
         this.twoFactorAuthenticationServiceImplementation = twoFactorAuthenticationServiceImplementation;
         this.userTracerService = userTracerService;
         this.messagingService = messagingService;
         this.userRecordService = userRecordService;
     }
-  
 
     @PostMapping("/create/wallet/{id}")
     public ResponseEntity<?> createWallet(@PathVariable Long id) {
@@ -100,16 +87,13 @@ public class AuthController {
                     HttpStatus.BAD_REQUEST, "This Username has been used.");
         }
 
-        // Validate registration mode
         if (request.getRegMode() == null || 
             (!request.getRegMode().equals("email") && !request.getRegMode().equals("phone"))) {
             return Error.createResponse("Invalid registration mode.*", HttpStatus.BAD_REQUEST,
                     "Registration mode must be either 'email' or 'phone'");
         }
 
-        // Validate based on registration mode
         if (request.getRegMode().equals("email")) {
-            // Email validation
             if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
                 return Error.createResponse("Email is required.*", HttpStatus.BAD_REQUEST,
                         "Email cannot be empty");
@@ -130,7 +114,6 @@ public class AuthController {
                         HttpStatus.BAD_REQUEST, "Verification method must be EMAIL");
             }
         } else {
-            // Phone validation
             if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
                 return Error.createResponse("Phone number is required.*", HttpStatus.BAD_REQUEST,
                         "Phone number cannot be empty");
@@ -148,7 +131,6 @@ public class AuthController {
             }
         }
 
-        // Validate password
         if (request.getPassword() == null || request.getPassword().isEmpty()) {
             return Error.createResponse("Password is required.*", HttpStatus.BAD_REQUEST, 
                     "Password cannot be empty");
@@ -252,13 +234,6 @@ public class AuthController {
         }
     }
 
-    // NOTE: The old link-based /forget-password, GET /reset-password, and
-    // /create-new-password endpoints have been removed and replaced by the
-    // OTP-based flow:
-    //   POST /auth/forgot-password   (step 1 — sends 4-digit OTP)
-    //   POST /auth/reset-password    (step 2 — verifies OTP + updates password)
-    //   POST /auth/forgot-username   (sends username to registered email)
-
     @GetMapping("/verify-otp-token")
     public ResponseEntity<?> verifyOtpToken(@RequestParam("token") String token) {
         if (token == null || token.isEmpty()) {
@@ -278,11 +253,6 @@ public class AuthController {
             return twoFactorAuthenticationServiceImplementation.verifyUserTwoFactorOtp(reqOtpPayload);
         }
     }
-
-    // NOTE: The old duplicate @PostMapping("/verify-otp") for forget-password
-    // has been removed. The new OTP-based password reset flow lives at:
-    //   POST /auth/forgot-password   — send OTP
-    //   POST /auth/reset-password    — verify OTP + set new password
 
     @GetMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(@RequestParam(name = "userId", required = false) Long userId) {
@@ -304,8 +274,6 @@ public class AuthController {
 
         return ResponseEntity.ok(response);    
     }
-
-    // ── Forgot Password — Step 1: send OTP ───────────────────────────────────
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(
@@ -330,8 +298,6 @@ public class AuthController {
         return authenticationService.forgotPassword(request);
     }
 
-    // ── Forgot Password — Step 2: confirm OTP + set new password ─────────────
-
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(
             @RequestBody ConfirmResetPasswordRequest request,
@@ -352,8 +318,6 @@ public class AuthController {
 
         return authenticationService.confirmResetPassword(request, httpRequest);
     }
-
-    // ── Forgot Username ───────────────────────────────────────────────────────
 
     @PostMapping("/forgot-username")
     public ResponseEntity<?> forgotUsername(

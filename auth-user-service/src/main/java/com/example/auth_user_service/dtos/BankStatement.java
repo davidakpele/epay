@@ -1,6 +1,5 @@
 package com.example.auth_user_service.dtos;
 
-
 public class BankStatement {
     private String id;
     private String date;
@@ -13,7 +12,6 @@ public class BankStatement {
 
     public BankStatement() {
     }
-
 
     public BankStatement(String id, String date, String description, String currencyType, String type, Double netAmount, Double balance, String reference) {
         this.id = id;

@@ -1,6 +1,5 @@
 package com.example.auth_user_service.dtos;
 
-
 public class ApiResponse<T> {
     private boolean success;
     private String message;

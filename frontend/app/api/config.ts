@@ -39,7 +39,7 @@ export const API_URLS = {
     BASE: `${SERVICE_URLS.USER}/user`,
     BY_ID: (id: string | number) => `${SERVICE_URLS.USER}/user/${id}`,
     PROFILE: (id: string | number) => `${SERVICE_URLS.USER}/user/profile/${id}`,
-    UPDATE_PASSWORD: `${SERVICE_URLS.USER}/user/settings/updatepassword`,
+    UPDATE_PASSWORD: `${SERVICE_URLS.USER}/user/settings/update-password`,
     PREFERENCES: `${SERVICE_URLS.USER}/user/preferences`,
     SENDACCOUNTSTATEMENT: (id: string | number) => `${SERVICE_URLS.USER}/receipt/generate-pdf/${id}`,
     UPDATE2FASTATUS: () => `${SERVICE_URLS.USER}/settings/enable-twofactor`,
@@ -81,6 +81,7 @@ export const API_URLS = {
     CREATEWITHDRAWPIN: `${SERVICE_URLS.WALLET}/wallet/create/pin`,
     VERIFYPIN: `${SERVICE_URLS.WALLET}/wallet/verify/pin`,
     UPDATE_DEFAULT_CURRENCY: (id: string) => `${SERVICE_URLS.WALLET}/wallet/${id}/default/currency`,
+    SWAP: (userId: string | number) => `${SERVICE_URLS.WALLET}/wallet/${userId}/swap`,
   },
 
   BANKCOLLECTIONLIST: {
@@ -92,7 +93,7 @@ export const API_URLS = {
     GET_BY_USER_ID: (userId: string | number) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/user/${userId}`,
     DELETE: (id: string | number) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/delete/${id}`,
     GET_BANK_LIST_API: `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/list`,
-    VERIFY_USER_BANK_DETAILS: (accountNumber: string, bankCode: string) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/verify-user-bank-details?accountNumber=${accountNumber}&bankCode=${bankCode}`,
+    VERIFY_USER_BANK_DETAILS: (accountNumber: string, bankCode: string) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/verify?accountNumber=${accountNumber}&bankCode=${bankCode}`,
     VERIFY: (accountNumber: string, bankCode: string) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/user/bank?accountNumber=${accountNumber}&bankCode=${bankCode}`,
     DEFAULT_HOME: `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/`,
     GET_VIRTUAL_CARD_LIST_BY_USER_ID: (id: string | number) => `${SERVICE_URLS.BANKCOLLECTIONLIST}/bank/${id}/cards`,

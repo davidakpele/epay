@@ -133,42 +133,57 @@ const UserProfile = () => {
       const userId = getUserId();
       const response = await userService.getById(userId);
 
-      setUserProfile(response);
-      const userRecord = response.records?.[0] || {};
+      // Support new API: { success, data: { personal: {...}, email, ... } }
+      // and legacy: { records: [...], email, ... }
+      const raw = response?.data ?? response;
+      setUserProfile(raw);
+
+      const personal = raw.personal || raw.records?.[0] || {};
+
+      const firstName  = personal.firstName  || '';
+      const lastName   = personal.lastName   || '';
+      const fullName   = personal.fullName   || `${firstName} ${lastName}`.trim();
+      const phone      = personal.phoneNumber || personal.telephone || '';
+      const dob        = personal.dateOfBirth || personal.dateofBirth || '';
+      const gender     = personal.gender || '';
+      const address    = personal.address || '';
+      const city       = personal.city || '';
+      const country    = personal.country || '';
 
       const mappedUserData: UserData = {
-        id: response.id || userId,
-        fullName: `${userRecord.firstName || ''} ${userRecord.lastName || ''}`.trim(),
-        email: response.email || '',
-        username: response.username || '',
-        phone: userRecord.telephone || '',
-        dateOfBirth: userRecord.dateofBirth || '',
-        gender: userRecord.gender || '',
-        address: userRecord.address || '',
-        city: userRecord.city || '',
-        country: userRecord.country || '',
-        referralName: response.referralName || response.username || '',
-        customerId: response.customerId || `#${userId}`,
-        status: response.status || 'Active',
-        kycLevel: response.kycLevel || 1
+        id: raw.id || userId,
+        fullName,
+        email: raw.email || '',
+        username: raw.username || '',
+        phone,
+        dateOfBirth: dob,
+        gender,
+        address,
+        city,
+        country,
+        referralName: personal.referralCode || raw.referralName || raw.username || '',
+        customerId: raw.customerId || `#${raw.id || userId}`,
+        status: raw.enabled === false ? 'Suspended' : (raw.status || 'Active'),
+        kycLevel: raw.kycTier === 'TIER_2' ? 2 : 1,
       };
 
       setUserData(mappedUserData);
 
-      const isProfileIncomplete = !userRecord.telephone
-        || !userRecord.gender
-        || !userRecord.dateofBirth
-        || !userRecord.country
-        || !userRecord.city;
+      // If API returns a profile photo, apply it
+      if (personal.profilePhotoUrl) {
+        const BASE = 'http://localhost:8029';
+        const photoUrl = personal.profilePhotoUrl.startsWith('http')
+          ? personal.profilePhotoUrl
+          : `${BASE}${personal.profilePhotoUrl}`;
+        setProfileImage(photoUrl);
+      }
 
+      const isProfileIncomplete = !phone || !gender || !dob || !country || !city;
       const hasSeenMetaMap = getHasSeenMetaMap();
-
       if (isProfileIncomplete && !hasSeenMetaMap) {
         setTimeout(() => setShowMetaMapModal(true), 1000);
       }
 
-      const firstName = userRecord.firstName || getUserFirstName() || '';
-      const lastName = userRecord.lastName || getUserLastName() || '';
       setMetaMapData(prev => ({ ...prev, firstName, lastName }));
 
     } catch (error) {
@@ -264,18 +279,23 @@ const UserProfile = () => {
 
   const handleEditProfile = () => {
     if (!userData) return;
-    
+
+    const nameParts = userData.fullName.trim().split(' ');
     setFormData({
-      firstName: userData.fullName.split(' ')[0] || '',
-      lastName: userData.fullName.split(' ').slice(1).join(' ') || '',
-      email: userData.email || '',
+      firstName: nameParts[0] || '',
+      lastName:  nameParts.slice(1).join(' ') || '',
+      email:     userData.email || '',
       telephone: userData.phone || '',
-      gender: userData.gender ? userData.gender.toLowerCase() : '',
-      dob: userData.dateOfBirth || '',
-      address: userData.address || '',
-      country: userData.country || '',
-      state: '',
-      city: userData.city || ''
+      gender:    userData.gender ? userData.gender.toLowerCase() : '',
+      dob:       userData.dateOfBirth || '',
+      address:   userData.address || '',
+      country:   userData.country || '',
+      state:     '',
+      city:      userData.city || '',
+    });
+    setFormErrors({
+      firstName: '', lastName: '', email: '', telephone: '',
+      gender: '', dob: '', address: '', country: '', state: '', city: ''
     });
     setIsEditUserProfileDetails(true);
   };
@@ -634,7 +654,7 @@ const UserProfile = () => {
     try {
       const token = getToken();
       // Use the same base URL the rest of the app uses
-      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8292/api'}/user/${userId}/kyc/upload?docType=${docType}`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8029/api/v1'}/user/${userId}/kyc/upload?docType=${docType}`;
 
       // Send the file as raw binary with its real MIME type.
       // The controller accepts both multipart/form-data and octet-stream.
@@ -676,7 +696,7 @@ const UserProfile = () => {
     // Build the authenticated URL — the backend streams the file inline.
     // We can't open a bearer-auth URL directly in a new tab, so we fetch
     // the blob and create a temporary object URL.
-    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8292/api'}/user/${userId}/kyc/document?docType=${docType}`;
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8029/api/v1/'}user/${userId}/kyc/document?docType=${docType}`;
 
     fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => {
@@ -765,12 +785,9 @@ const UserProfile = () => {
                   <button className="user-profile-btn-secondary" onClick={handleRequestDeactivation}>
                     Request Deactivation
                   </button>
-                  {!isEditUserProfileDetails && 
-                  ( <button className="user-profile-btn-primary" onClick={handleEditProfile}>
+                  <button className="user-profile-btn-primary" onClick={handleEditProfile}>
                     Edit Profile
-                  </button>)
-                  }
-                 
+                  </button>
                 </div>
               </div>
 
@@ -962,7 +979,7 @@ const UserProfile = () => {
                             { icon: 'fa-map-marker-alt', label: 'Address', value: capitalizeFirstLetter(userData.address) || '—', col: 2 },
                             { icon: 'fa-globe', label: 'Country',       value: capitalizeFirstLetter(userData.country) || '—', col: 1 },
                             { icon: 'fa-city', label: 'City / State',   value: capitalizeFirstLetter(userData.city) || '—',   col: 1 },
-                            { icon: 'fa-link', label: 'Referral Name',  value: userData.referralName || '—',                  col: 1 },
+                            { icon: 'fa-link', label: 'Referral Code',  value: userData.referralName || '—',                  col: 1 },
                           ].map((item, i) => (
                             <div
                               key={i}
@@ -1114,20 +1131,24 @@ const UserProfile = () => {
 
                           {/* ── KYC document upload/view cards (always visible) ── */}
                           {(() => {
-                            const rec = userProfile?.records?.[0] || {};
+                            // Support new API (kycDocuments array) and legacy (records[0])
+                            const rec  = userProfile?.personal || userProfile?.records?.[0] || {};
+                            const kycDocs: any[] = userProfile?.kycDocuments || [];
+                            const passportDoc    = kycDocs.find((d: any) => d.docType === 'passport' || d.type?.toLowerCase().includes('passport'));
+                            const utilityDoc     = kycDocs.find((d: any) => d.docType === 'utility_bill' || d.type?.toLowerCase().includes('utility'));
                             const docs = [
                               {
                                 docType:   'passport',
                                 label:     'Government Issued Passport',
                                 icon:      'fa-id-card',
-                                uploaded:  !!rec.passportDoc,
+                                uploaded:  !!(passportDoc || rec.passportDoc),
                                 fileUrl:   rec.passportDoc,
                               },
                               {
                                 docType:   'utility_bill',
                                 label:     'Proof of Address (Utility Bill)',
                                 icon:      'fa-file-alt',
-                                uploaded:  !!rec.utilityBillDoc,
+                                uploaded:  !!(utilityDoc || rec.utilityBillDoc),
                                 fileUrl:   rec.utilityBillDoc,
                               },
                             ];

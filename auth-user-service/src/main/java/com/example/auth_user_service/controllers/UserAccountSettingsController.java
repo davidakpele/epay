@@ -22,10 +22,6 @@ public class UserAccountSettingsController {
         this.settingsService = settingsService;
     }
 
-    /**
-     * Get user settings
-     * GET /api/user/settings/{userId}
-     */
     @GetMapping("/{userId}")
     public ResponseEntity<Map<String, Object>> getUserSettings(@PathVariable Long userId) {
         try {
@@ -45,10 +41,6 @@ public class UserAccountSettingsController {
         }
     }
 
-    /**
-     * Update biometric authentication status
-     * PUT /api/user/settings/{userId}/biometric
-     */
     @PutMapping("/{userId}/biometric")
     public ResponseEntity<Map<String, Object>> updateBiometricStatus(
             @PathVariable Long userId,
@@ -75,10 +67,7 @@ public class UserAccountSettingsController {
         }
     }
 
-    /**
-     * Update session timeout
-     * PUT /api/user/settings/{userId}/session-timeout
-     */
+
     @PutMapping("/{userId}/session-timeout")
     public ResponseEntity<Map<String, Object>> updateSessionTimeout(
             @PathVariable Long userId,
@@ -104,10 +93,6 @@ public class UserAccountSettingsController {
         }
     }
 
-    /**
-     * Update notification settings
-     * PUT /api/user/settings/{userId}/notifications
-     */
     @PutMapping("/{userId}/notifications")
     public ResponseEntity<Map<String, Object>> updateNotificationSettings(
             @PathVariable Long userId,
@@ -130,10 +115,6 @@ public class UserAccountSettingsController {
         }
     }
 
-    /**
-     * Update user preferences (language, timezone)
-     * PUT /api/user/settings/{userId}/preferences
-     */
     @PutMapping("/{userId}/preferences")
     public ResponseEntity<Map<String, Object>> updatePreferences(
             @PathVariable Long userId,

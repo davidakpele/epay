@@ -4,9 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import com.example.auth_user_service.models.Users;
-
 import lombok.Builder;
 import lombok.Data;
 
@@ -37,7 +35,6 @@ public class UserDTO {
         this.records = records;
     }
 
-    // Getters and setters remain the same
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getEmail() { return email; }
@@ -65,7 +62,6 @@ public class UserDTO {
         userDto.setUpdatedOn(user.getUpdatedOn());
         userDto.setTwoFactorAuth(user.isTwoFactorAuth());
         
-        // Convert records to DTOs
         if (user.getRecords() != null) {
             List<UserRecordDTO> recordsDTOs = user.getRecords()
                     .stream()

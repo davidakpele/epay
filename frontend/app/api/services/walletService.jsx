@@ -27,6 +27,10 @@ export const walletService = {
     updateDefaultCurrency: (data)=>{
         return makeAuthenticatedRequest(API_URLS.WALLET.UPDATE_DEFAULT_CURRENCY, 'PUT', data);
     },
+
+    swap: (userId, payload) => {
+        return makeAuthenticatedRequest(API_URLS.WALLET.SWAP(userId), 'POST', payload);
+    },
     
 };
 

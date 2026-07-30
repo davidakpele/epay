@@ -9,5 +9,4 @@ public interface IMessagingService {
     void invalidateOTP(String identifier);
     boolean verifyOTP(String identifier, String otpToVerify);
     void sendWelcomeMessage(String recipient, String username, ContactMethod method);
-
 }

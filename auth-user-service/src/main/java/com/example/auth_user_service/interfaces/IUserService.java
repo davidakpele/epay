@@ -40,22 +40,7 @@ public interface IUserService {
 
     UserStatisticsResponse getUserStatistics(String period);
 
-    /**
-     * Sends a password-reset link to the authenticated user's registered email.
-     * Reuses the existing forgetPassword flow internally.
-     *
-     * @param userId the authenticated user's ID
-     * @param authentication Spring Security context
-     */
     ResponseEntity<?> sendPasswordResetLinkToSelf(Long userId, Authentication authentication);
 
-    /**
-     * Self-suspension: user locks their own account.
-     * Sets status=SUSPENDED, locked=true, enabled=false.
-     * Sends security alert email.
-     *
-     * @param userId         the authenticated user's ID
-     * @param authentication Spring Security context
-     */
     ResponseEntity<?> suspendAccount(Long userId, Authentication authentication);
 }

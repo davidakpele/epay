@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { ChevronDown, ChevronRight, ArrowLeftRight, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import './Swap.css';
 import { Toast } from '@/app/types/auth';
-import { getToken, getUserId, getWalletList, setWalletContainer, updateNotificationContainer } from '@/app/api';
+import { getUserId, getWalletList, updateNotificationContainer, walletService } from '@/app/api';
 import SupportChatBot from '@/components/SupportChatBot';
 
 interface Currency {
@@ -23,16 +23,16 @@ interface Currency {
 }
 
 const currencies: Currency[] = [
-  { code: 'NGN', name: 'Nigerian Naira',    symbol: '₦',   flag: '🇳🇬' },
-  { code: 'USD', name: 'US Dollar',          symbol: '$',   flag: '🇺🇸' },
-  { code: 'EUR', name: 'Euro',               symbol: '€',   flag: '🇪🇺' },
-  { code: 'GBP', name: 'British Pound',      symbol: '£',   flag: '🇬🇧' },
-  { code: 'JPY', name: 'Japanese Yen',       symbol: '¥',   flag: '🇯🇵' },
-  { code: 'AUD', name: 'Australian Dollar',  symbol: '$',   flag: '🇦🇺' },
-  { code: 'CAD', name: 'Canadian Dollar',    symbol: '$',   flag: '🇨🇦' },
-  { code: 'CHF', name: 'Swiss Franc',        symbol: 'CHF', flag: '🇨🇭' },
-  { code: 'CNY', name: 'Chinese Yuan',       symbol: '¥',   flag: '🇨🇳' },
-  { code: 'INR', name: 'Indian Rupee',       symbol: '₹',   flag: '🇮🇳' },
+  { code: 'NGN', name: 'Nigerian Naira',   symbol: '₦',   flag: '🇳🇬' },
+  { code: 'USD', name: 'US Dollar',         symbol: '$',   flag: '🇺🇸' },
+  { code: 'EUR', name: 'Euro',              symbol: '€',   flag: '🇪🇺' },
+  { code: 'GBP', name: 'British Pound',     symbol: '£',   flag: '🇬🇧' },
+  { code: 'JPY', name: 'Japanese Yen',      symbol: '¥',   flag: '🇯🇵' },
+  { code: 'AUD', name: 'Australian Dollar', symbol: '$',   flag: '🇦🇺' },
+  { code: 'CAD', name: 'Canadian Dollar',   symbol: '$',   flag: '🇨🇦' },
+  { code: 'CHF', name: 'Swiss Franc',       symbol: 'CHF', flag: '🇨🇭' },
+  { code: 'CNY', name: 'Chinese Yuan',      symbol: '¥',   flag: '🇨🇳' },
+  { code: 'INR', name: 'Indian Rupee',      symbol: '₹',   flag: '🇮🇳' },
 ];
 
 const mockExchangeRates: Record<string, Record<string, number>> = {
@@ -49,15 +49,13 @@ const mockExchangeRates: Record<string, Record<string, number>> = {
 };
 
 const feePercentage = 0.015;
-const WS_RECONNECT_LIMIT = 3;
-const WS_RECONNECT_DELAY = 3000;
 
 const SwapPage = () => {
   const [isDepositOpen, setIsDepositOpen]       = useState(false);
   const [theme, setTheme]                       = useState<'light' | 'dark'>('light');
   const [isPageLoading, setIsPageLoading]       = useState(true);
   const [toasts, setToasts]                     = useState<Toast[]>([]);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen]             = useState(false);
   const [fromCurrency, setFromCurrency]         = useState<Currency>(currencies[0]);
   const [toCurrency, setToCurrency]             = useState<Currency>(currencies[1]);
   const [fromAmount, setFromAmount]             = useState('');
@@ -66,39 +64,39 @@ const SwapPage = () => {
   const [exchangeRate, setExchangeRate]         = useState<number>(0);
   const [isLoadingRate, setIsLoadingRate]       = useState(false);
   const [rateError, setRateError]               = useState<string | null>(null);
-
   const [isFromModalOpen, setIsFromModalOpen]   = useState(false);
   const [isToModalOpen, setIsToModalOpen]       = useState(false);
   const [fromSearch, setFromSearch]             = useState('');
   const [toSearch, setToSearch]                 = useState('');
-
   const [isProcessing, setIsProcessing]         = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showFailModal, setShowFailModal]       = useState(false);
   const [errorMessage, setErrorMessage]         = useState('');
   const [exchangeSnapshot, setExchangeSnapshot] = useState<any>(null);
-  const [wsStatus, setWsStatus]                 = useState<'connected' | 'disconnected' | 'reconnecting'>('disconnected');
-
   const [userWallets, setUserWallets]           = useState<any[]>([]);
-  const [websocket, setWebsocket]               = useState<WebSocket | null>(null);
   const [isScrolling, setIsScrolling]           = useState(false);
+
+  // PIN modal state
+  const [showPinModal, setShowPinModal]         = useState(false);
+  const [pin, setPin]                           = useState(['', '', '', '']);
+  const [isSubmittingPin, setIsSubmittingPin]   = useState(false);
+  const pinInputRefs                            = useRef<(HTMLInputElement | null)[]>([]);
+
+  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Snapshot refs so modal callbacks always have fresh values
   const fromAmountRef   = useRef(fromAmount);
   const toAmountRef     = useRef(toAmount);
   const feeAmountRef    = useRef(feeAmount);
   const exchangeRateRef = useRef(exchangeRate);
   const fromCurrencyRef = useRef(fromCurrency);
   const toCurrencyRef   = useRef(toCurrency);
-
   useEffect(() => { fromAmountRef.current   = fromAmount;   }, [fromAmount]);
   useEffect(() => { toAmountRef.current     = toAmount;     }, [toAmount]);
   useEffect(() => { feeAmountRef.current    = feeAmount;    }, [feeAmount]);
   useEffect(() => { exchangeRateRef.current = exchangeRate; }, [exchangeRate]);
   useEffect(() => { fromCurrencyRef.current = fromCurrency; }, [fromCurrency]);
   useEffect(() => { toCurrencyRef.current   = toCurrency;   }, [toCurrency]);
-    const scrollTimer      = useRef<NodeJS.Timeout | null>(null);
-  const reconnectCount   = useRef(0);
-  const reconnectTimer   = useRef<NodeJS.Timeout | null>(null);
-  const wsRef            = useRef<WebSocket | null>(null);
 
   const showToast = useCallback((msg: string, type: 'warning' | 'success' = 'warning') => {
     setToasts((prev) => {
@@ -113,11 +111,11 @@ const SwapPage = () => {
     });
   }, []);
 
+  // ── Exchange rate (mock) ──────────────────────────────────────────────────
   const getExchangeRateWithMargin = (from: string, to: string) => {
     const raw = mockExchangeRates[from]?.[to];
     return raw ? raw * (1 - 0.005) : null;
   };
-
   const getRawRate = (from: string, to: string) => mockExchangeRates[from]?.[to] || null;
 
   const fetchExchangeRate = async (from: string, to: string) => {
@@ -125,19 +123,17 @@ const SwapPage = () => {
     setIsLoadingRate(true);
     setRateError(null);
     try {
-      await new Promise((r) => setTimeout(r, 800));
+      await new Promise((r) => setTimeout(r, 600));
       const rate = getExchangeRateWithMargin(from, to);
       if (rate) {
         setExchangeRate(rate);
       } else {
         setExchangeRate(0);
         setRateError(`Exchange rate unavailable for ${from} → ${to}`);
-        showToast(`Rate unavailable for ${from} → ${to}`, 'warning');
       }
-    } catch (err) {
+    } catch {
       setExchangeRate(0);
       setRateError('Failed to fetch exchange rate. Please try again.');
-      showToast('Failed to fetch exchange rate.', 'warning');
     } finally {
       setIsLoadingRate(false);
     }
@@ -171,211 +167,143 @@ const SwapPage = () => {
 
   useEffect(() => { calculateSwapAmounts(fromAmount); }, [fromAmount, exchangeRate]);
 
-  // ── Wallets ────────────────────────────────────────────────────────────────
-  const fetchUserWallets = async () => {
+  // ── Wallets ───────────────────────────────────────────────────────────────
+  const fetchUserWallets = () => {
     try {
       const list = getWalletList();
-      if (!list) throw new Error('No wallet data returned');
-      setUserWallets(list);
-    } catch (err) {
+      setUserWallets(list || []);
+    } catch {
       setUserWallets([]);
-      showToast('Failed to load wallet balances.', 'warning');
     }
   };
 
   const getWalletBalance = (code: string) => {
     const w = userWallets.find((x: any) => x.currency_code === code);
-    return w ? parseFloat(w.balance.replace(/,/g, '')) : 0;
+    if (!w) return 0;
+    return parseFloat(String(w.balance).replace(/,/g, '')) || 0;
   };
 
-  const handleWebSocketMessage = useCallback((message: any) => {
-    if (message.type === 'swap_response') {
-      setIsProcessing(false);
-      if (message.status === 'COMPLETED') {
-
-        setExchangeSnapshot({
-          fromCurrency: fromCurrencyRef.current,
-          toCurrency:   toCurrencyRef.current,
-          fromAmount:   fromAmountRef.current,
-          toAmount:     toAmountRef.current,
-          exchangeRate: exchangeRateRef.current,
-          feeAmount:    feeAmountRef.current,
-        });
-
-        setShowSuccessModal(true);
-        updateNotificationContainer({ type: 'PAYMENTS', description: 'Currency swap completed successfully' });
-        showToast(`Swap complete! You received ${toCurrencyRef.current.symbol}${toAmountRef.current}`, 'success');
-        setFromAmount(''); setToAmount(''); setFeeAmount('0.00');
-        fetchUserWallets();
-      } else {
-        const errMsg = message.message || 'Swap failed. Please try again.';
-        setErrorMessage(errMsg);
-        setShowFailModal(true);
-        showToast(errMsg, 'warning');
-      }
-    }
-
-    if (message.type === 'error') {
-      setIsProcessing(false);
-      const errMsg = message.message || 'An error occurred during the swap.';
-      setErrorMessage(errMsg);
-      setShowFailModal(true);
-      showToast(errMsg, 'warning');
-    }
-
-    if (message.type === 'wallet_update' || message.type === 'wallet_update_response') {
-      try {
-        setWalletContainer(
-          message.data.wallet.wallet_balances,
-          message.data.wallet.hasTransferPin,
-          message.data.wallet.walletId
-        );
-        fetchUserWallets();
-      } catch {
-        showToast('Failed to update wallet data.', 'warning');
-      }
-    }
-  }, []); 
-
-  const connectWebSocket = useCallback(() => {
+  // ── Validation ────────────────────────────────────────────────────────────
+  const validateSwap = (): string | null => {
     const userId = getUserId();
-    if (!userId) {
-      showToast('Session expired. Please log in again.', 'warning');
-      return null;
+    if (!userId) return 'User session not found. Please log in again.';
+    if (!fromAmount || fromAmount.trim() === '') return 'Please enter an amount.';
+    const numericAmount = parseFloat(fromAmount.replace(/,/g, ''));
+    if (isNaN(numericAmount) || numericAmount <= 0) return 'Amount must be greater than zero.';
+    if (fromCurrency.code === toCurrency.code) return 'Please select two different currencies.';
+    if (!exchangeRate || exchangeRate <= 0) return `Exchange rate unavailable for ${fromCurrency.code} → ${toCurrency.code}.`;
+    if (rateError) return rateError;
+    const fromWallet = userWallets.find((w: any) => w.currency_code === fromCurrency.code);
+    if (!fromWallet) return `You don't have a ${fromCurrency.code} wallet. Please deposit first.`;
+    const balance = parseFloat(String(fromWallet.balance).replace(/,/g, ''));
+    if (numericAmount > balance) {
+      return `Insufficient ${fromCurrency.code} balance. Available: ${fromCurrency.symbol}${balance.toLocaleString()}`;
     }
+    return null;
+  };
+
+  // ── PIN handlers ──────────────────────────────────────────────────────────
+  const handlePinChange = (index: number, value: string) => {
+    if (!/^\d?$/.test(value)) return;
+    const newPin = [...pin];
+    newPin[index] = value;
+    setPin(newPin);
+    if (value && index < 3) {
+      setTimeout(() => pinInputRefs.current[index + 1]?.focus(), 10);
+    }
+  };
+
+  const handlePinKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !pin[index] && index > 0) {
+      pinInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePinPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const numbers = e.clipboardData.getData('text').replace(/\D/g, '').split('').slice(0, 4);
+    if (numbers.length === 4) {
+      setPin([...numbers, ...Array(4 - numbers.length).fill('')].slice(0, 4));
+      setTimeout(() => pinInputRefs.current[3]?.focus(), 0);
+    }
+  };
+
+  // Auto-submit when all 4 digits entered
+  useEffect(() => {
+    if (showPinModal && pin.every((d) => d !== '')) {
+      const t = setTimeout(() => handlePinSubmit(), 100);
+      return () => clearTimeout(t);
+    }
+  }, [pin, showPinModal]);
+
+  // ── REST swap call ────────────────────────────────────────────────────────
+  const handlePinSubmit = async () => {
+    const enteredPin = pin.join('');
+    if (enteredPin.length !== 4 || isSubmittingPin) return;
+
+    setIsSubmittingPin(true);
+    setIsProcessing(true);
 
     try {
-      const ws = new WebSocket(`ws://localhost:8292/api/ws/wallet?userId=${userId}&token=${getToken()}`);
+      const userId = getUserId();
+      const amount = parseFloat(fromAmountRef.current.replace(/,/g, ''));
 
-      ws.onopen = () => {
-        setWebsocket(ws);
-        wsRef.current = ws;
-        setWsStatus('connected');
-        reconnectCount.current = 0;
-        showToast('Connected to swap service.', 'success');
+      const payload = {
+        acceptRate:     true,
+        currency:       fromCurrencyRef.current.code,
+        targetWallet:   toCurrencyRef.current.code,
+        amount,
+        userId:         Number(userId),
+        transactionPin: enteredPin,
+        idempotencyKey: `swap-${userId}-${Date.now()}`,
       };
 
-      ws.onmessage = (e) => {
-        try {
-          const parsed = JSON.parse(e.data);
-          handleWebSocketMessage(parsed);
-        } catch {
-          showToast('Received malformed response from server.', 'warning');
-        }
+      const response = await walletService.swap(userId, payload);
+
+      // Success: backend returns 2xx
+      const snapshot = {
+        fromCurrency: fromCurrencyRef.current,
+        toCurrency:   toCurrencyRef.current,
+        fromAmount:   fromAmountRef.current,
+        toAmount:     toAmountRef.current,
+        exchangeRate: exchangeRateRef.current,
+        feeAmount:    feeAmountRef.current,
       };
+      setExchangeSnapshot(snapshot);
+      setShowPinModal(false);
+      setShowSuccessModal(true);
 
-      ws.onerror = () => {
-        showToast('WebSocket connection error.', 'warning');
-        setWsStatus('disconnected');
-      };
+      updateNotificationContainer({ type: 'PAYMENTS', description: 'Currency swap completed successfully' });
+      showToast(`Swap complete! You received ${toCurrencyRef.current.symbol}${toAmountRef.current}`, 'success');
 
-      ws.onclose = (event) => {
-        setWebsocket(null);
-        wsRef.current = null;
-        setWsStatus('disconnected');
+      setFromAmount('');
+      setToAmount('');
+      setFeeAmount('0.00');
+      fetchUserWallets();
 
-        // Auto-reconnect unless closed intentionally (code 1000)
-        if (event.code !== 1000 && reconnectCount.current < WS_RECONNECT_LIMIT) {
-          reconnectCount.current += 1;
-          setWsStatus('reconnecting');
-          showToast(`Connection lost. Reconnecting (${reconnectCount.current}/${WS_RECONNECT_LIMIT})...`, 'warning');
-          reconnectTimer.current = setTimeout(() => connectWebSocket(), WS_RECONNECT_DELAY);
-        } else if (reconnectCount.current >= WS_RECONNECT_LIMIT) {
-          showToast('Unable to reconnect. Please refresh the page.', 'warning');
-        }
-      };
-
-      return ws;
-    } catch (err) {
-      showToast('Failed to establish WebSocket connection.', 'warning');
-      setWsStatus('disconnected');
-      return null;
+    } catch (err: any) {
+      const msg = err?.message || err?.error || 'Swap failed. Please try again.';
+      setErrorMessage(msg);
+      setShowPinModal(false);
+      setShowFailModal(true);
+      showToast(msg, 'warning');
+    } finally {
+      setIsProcessing(false);
+      setIsSubmittingPin(false);
+      setPin(['', '', '', '']);
     }
-  }, [handleWebSocketMessage]);
-
-  // ── Swap validation & execution ────────────────────────────────────────────
-  const validateSwap = (): string | null => {
-    const token   = getToken();
-    const userId  = getUserId();
-
-    if (!token || token === 'null' || token.trim() === '') {
-      return 'Session expired. Please log in again.';
-    }
-    if (!userId) {
-      return 'User session not found. Please log in again.';
-    }
-    if (!fromAmount || fromAmount.trim() === '') {
-      return 'Please enter an amount.';
-    }
-
-    const numericAmount = parseFloat(fromAmount.replace(/,/g, ''));
-    if (isNaN(numericAmount)) {
-      return 'Invalid amount entered.';
-    }
-    if (numericAmount <= 0) {
-      return 'Amount must be greater than zero.';
-    }
-    if (fromCurrency.code === toCurrency.code) {
-      return 'Please select two different currencies.';
-    }
-    if (!exchangeRate || exchangeRate <= 0) {
-      return `Exchange rate unavailable for ${fromCurrency.code} → ${toCurrency.code}. Please try again.`;
-    }
-    if (rateError) {
-      return rateError;
-    }
-
-    const fromWallet = userWallets.find((w: any) => w.currency_code === fromCurrency.code);
-    if (fromWallet) {
-      const balance = parseFloat(fromWallet.balance.replace(/,/g, ''));
-      if (numericAmount > balance) {
-        return `Insufficient ${fromCurrency.code} balance. Available: ${fromCurrency.symbol}${balance.toLocaleString()}`;
-      }
-    } else {
-      return `You don't have a ${fromCurrency.code} wallet. Please deposit first.`;
-    }
-
-    return null; // all good
   };
 
-  const handleExchange = async () => {
+  // Called by the Swap Now button — validates then opens PIN modal
+  const handleExchange = () => {
     const validationError = validateSwap();
     if (validationError) {
       showToast(validationError, 'warning');
       return;
     }
-
-    setIsProcessing(true);
-    const token  = getToken();
-    const userId = getUserId();
-
-    const payload = JSON.stringify({
-      type:         'swap_currency',
-      fromCurrency: fromCurrency.code,
-      toCurrency:   toCurrency.code,
-      amount:       fromAmount.replace(/,/g, ''),
-      acceptRate:   true,
-      token,
-      userId,
-    });
-
-    const activeWs = wsRef.current;
-
-    if (activeWs && activeWs.readyState === WebSocket.OPEN) {
-      try {
-        activeWs.send(payload);
-      } catch (err) {
-        setIsProcessing(false);
-        showToast('Failed to send swap request. Please try again.', 'warning');
-      }
-    } else if (activeWs && activeWs.readyState === WebSocket.CONNECTING) {
-      setIsProcessing(false);
-      showToast('Still connecting to swap service. Please wait a moment.', 'warning');
-    } else {
-      // WebSocket not available — notify user
-      setIsProcessing(false);
-      showToast('Swap service is not connected. Please refresh the page.', 'warning');
-    }
+    setPin(['', '', '', '']);
+    setShowPinModal(true);
+    setTimeout(() => pinInputRefs.current[0]?.focus(), 100);
   };
 
   const handleSwapCurrencies = () => {
@@ -387,18 +315,11 @@ const SwapPage = () => {
     setToAmount('');
   };
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const t = setTimeout(() => setIsPageLoading(false), 2000);
     fetchUserWallets();
-    connectWebSocket();
-    return () => {
-      clearTimeout(t);
-      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.close(1000, 'Component unmounted');
-      }
-    };
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -437,13 +358,11 @@ const SwapPage = () => {
   return (
     <div className={`dashboard-container ${theme === 'dark' ? 'dark' : ''}`}>
       <Sidebar />
-
       <main className={`main-content ${isDepositOpen ? 'dashboard-blur' : ''}`}>
         <Header theme={theme} toggleTheme={toggleTheme} />
-
         <div className="scrollable-content">
 
-          {/* ── Toasts ── */}
+          {/* Toasts */}
           <div className="toastrs">
             {toasts.map((toast) => (
               <div key={toast.id} className={`toastr toastr--${toast.type} ${toast.exiting ? 'toast-exit' : ''}`}>
@@ -456,33 +375,20 @@ const SwapPage = () => {
           </div>
 
           <div className="main-container">
-
-            {/* ── Breadcrumb ── */}
+            {/* Breadcrumb */}
             <div className="airtime-breadcrumb">
               <Link href="/dashboard" className="breadcrumb-link">Dashboard</Link>
               <ChevronRight size={14} className="breadcrumb-sep" />
               <span className="breadcrumb-current">Swaps</span>
             </div>
 
-            {/* ── Page Title ── */}
             <h1 className="swap-page-title">
               <span className="title-green">Currency</span> Swap
             </h1>
 
-            {/* ── WS Status Banner ── */}
-            {wsStatus !== 'connected' && (
-              <div className={`ws-status-banner ws-status--${wsStatus}`}>
-                <AlertCircle size={14} />
-                {wsStatus === 'reconnecting'
-                  ? `Reconnecting to swap service... (${reconnectCount.current}/${WS_RECONNECT_LIMIT})`
-                  : 'Swap service disconnected. Swaps may not process.'}
-              </div>
-            )}
-
-            {/* ── Main Card ── */}
+            {/* Main Card */}
             <div className="swap-card">
-
-              {/* Left — Illustration */}
+              {/* Illustration */}
               <div className="swap-illustration-col">
                 <Image
                   src="/assets/images/swap-banner.png"
@@ -494,9 +400,8 @@ const SwapPage = () => {
                 />
               </div>
 
-              {/* Right — Form */}
+              {/* Form */}
               <div className="swap-form-col">
-
                 {/* Wallet Balances */}
                 <div className="swap-wallet-balances">
                   <div className="swap-wallet-item">
@@ -519,34 +424,19 @@ const SwapPage = () => {
                 {/* Live Rate Card */}
                 <div className="swap-rate-card">
                   <div className="swap-rate-top">
-                    <div className="swap-rate-left">
-                      <TrendingUp size={14} />
-                      <span>Exchange Rate</span>
-                    </div>
-                    <div className="swap-rate-right">
-                      <Clock size={13} />
-                      <span>Live</span>
-                    </div>
+                    <div className="swap-rate-left"><TrendingUp size={14} /><span>Exchange Rate</span></div>
+                    <div className="swap-rate-right"><Clock size={13} /><span>Live</span></div>
                   </div>
                   <div className="swap-rate-value-row">
                     {isLoadingRate ? (
-                      <span className="swap-rate-loading">
-                        <span className="rate-spinner" />
-                        Fetching rate...
-                      </span>
+                      <span className="swap-rate-loading"><span className="rate-spinner" />Fetching rate...</span>
                     ) : rateError ? (
-                      <span className="swap-rate-error">
-                        <AlertCircle size={13} /> {rateError}
-                      </span>
+                      <span className="swap-rate-error"><AlertCircle size={13} /> {rateError}</span>
                     ) : exchangeRate > 0 ? (
                       <>
-                        <span className="swap-rate-main">
-                          1 {fromCurrency.code} = {exchangeRate.toFixed(6)} {toCurrency.code}
-                        </span>
+                        <span className="swap-rate-main">1 {fromCurrency.code} = {exchangeRate.toFixed(6)} {toCurrency.code}</span>
                         {getRawRate(fromCurrency.code, toCurrency.code) && (
-                          <span className="swap-rate-market">
-                            Market: {getRawRate(fromCurrency.code, toCurrency.code)?.toFixed(6)}
-                          </span>
+                          <span className="swap-rate-market">Market: {getRawRate(fromCurrency.code, toCurrency.code)?.toFixed(6)}</span>
                         )}
                       </>
                     ) : (
@@ -554,11 +444,11 @@ const SwapPage = () => {
                     )}
                   </div>
                 </div>
-                  {fromAmount && parseFloat(fromAmount.replace(/,/g, '')) > getWalletBalance(fromCurrency.code) && (
-                    <span className="swap-field-error">
-                      <AlertCircle size={12} /> Insufficient {fromCurrency.code} balance
-                    </span>
-                  )}
+
+                {fromAmount && parseFloat(fromAmount.replace(/,/g, '')) > getWalletBalance(fromCurrency.code) && (
+                  <span className="swap-field-error"><AlertCircle size={12} /> Insufficient {fromCurrency.code} balance</span>
+                )}
+
                 {/* FROM */}
                 <div className="swap-section-label">From</div>
                 <div className="swap-field-group">
@@ -579,17 +469,11 @@ const SwapPage = () => {
                       disabled={isProcessing}
                     />
                   </div>
-                
                 </div>
 
                 {/* Swap Toggle */}
                 <div className="swap-toggle-row">
-                  <button
-                    className="swap-toggle-btn"
-                    onClick={handleSwapCurrencies}
-                    disabled={isProcessing}
-                    title="Swap currencies"
-                  >
+                  <button className="swap-toggle-btn" onClick={handleSwapCurrencies} disabled={isProcessing} title="Swap currencies">
                     <ArrowLeftRight size={16} />
                   </button>
                 </div>
@@ -605,19 +489,10 @@ const SwapPage = () => {
                   </div>
                   <div className="swap-amount-row swap-amount-readonly">
                     <span className="swap-symbol">{toCurrency.symbol}</span>
-                    <input
-                      type="text"
-                      className="swap-input"
-                      placeholder="Converted amount"
-                      value={toAmount}
-                      readOnly
-                    />
+                    <input type="text" className="swap-input" placeholder="Converted amount" value={toAmount} readOnly />
                   </div>
-                  {/* Same currency warning */}
                   {fromCurrency.code === toCurrency.code && (
-                    <span className="swap-field-error">
-                      <AlertCircle size={12} /> From and To currencies must be different
-                    </span>
+                    <span className="swap-field-error"><AlertCircle size={12} /> From and To currencies must be different</span>
                   )}
                 </div>
 
@@ -645,36 +520,20 @@ const SwapPage = () => {
                   className="swap-btn"
                   onClick={handleExchange}
                   disabled={
-                    isProcessing ||
-                    !fromAmount ||
-                    isLoadingRate ||
-                    !!rateError ||
-                    fromCurrency.code === toCurrency.code ||
-                    wsStatus === 'disconnected'
+                    isProcessing || !fromAmount || isLoadingRate ||
+                    !!rateError || fromCurrency.code === toCurrency.code
                   }
                 >
                   {isProcessing ? (
-                    <span className="btn-loader-row">
-                      <span className="btn-spinner" />
-                      Processing...
-                    </span>
-                  ) : wsStatus === 'reconnecting' ? (
-                    <span className="btn-loader-row">
-                      <span className="btn-spinner" />
-                      Reconnecting...
-                    </span>
+                    <span className="btn-loader-row"><span className="btn-spinner" />Processing...</span>
                   ) : (
-                    <span className="btn-loader-row">
-                      <ArrowLeftRight size={18} />
-                      Swap Now
-                    </span>
+                    <span className="btn-loader-row"><ArrowLeftRight size={18} />Swap Now</span>
                   )}
                 </button>
-
               </div>
             </div>
 
-            {/* ── From Modal ── */}
+            {/* From Modal */}
             {isFromModalOpen && (
               <div className="modal-overlay" onClick={() => setIsFromModalOpen(false)}>
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -684,9 +543,7 @@ const SwapPage = () => {
                     <input type="text" placeholder="Search currency..." value={fromSearch} onChange={(e) => setFromSearch(e.target.value)} />
                   </div>
                   <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
-                    {filteredFrom.length === 0 ? (
-                      <div className="empty-search">No currencies found</div>
-                    ) : filteredFrom.map((c) => (
+                    {filteredFrom.length === 0 ? <div className="empty-search">No currencies found</div> : filteredFrom.map((c) => (
                       <div key={c.code} className="country-item" onClick={() => { setFromCurrency(c); setIsFromModalOpen(false); setFromSearch(''); }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <span style={{ fontSize: '22px' }}>{c.flag}</span>
@@ -695,9 +552,7 @@ const SwapPage = () => {
                             <span style={{ fontSize: '11px', color: '#888' }}>{c.name}</span>
                           </div>
                         </div>
-                        <div className={`radio-outer ${fromCurrency.code === c.code ? 'checked' : ''}`}>
-                          <div className="radio-inner" />
-                        </div>
+                        <div className={`radio-outer ${fromCurrency.code === c.code ? 'checked' : ''}`}><div className="radio-inner" /></div>
                       </div>
                     ))}
                   </div>
@@ -705,7 +560,7 @@ const SwapPage = () => {
               </div>
             )}
 
-            {/* ── To Modal ── */}
+            {/* To Modal */}
             {isToModalOpen && (
               <div className="modal-overlay" onClick={() => setIsToModalOpen(false)}>
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -715,9 +570,7 @@ const SwapPage = () => {
                     <input type="text" placeholder="Search currency..." value={toSearch} onChange={(e) => setToSearch(e.target.value)} />
                   </div>
                   <div className={`country-list ${isScrolling ? 'is-scrolling' : ''}`} onScroll={handleScroll}>
-                    {filteredTo.length === 0 ? (
-                      <div className="empty-search">No currencies found</div>
-                    ) : filteredTo.map((c) => (
+                    {filteredTo.length === 0 ? <div className="empty-search">No currencies found</div> : filteredTo.map((c) => (
                       <div key={c.code} className="country-item" onClick={() => { setToCurrency(c); setIsToModalOpen(false); setToSearch(''); }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <span style={{ fontSize: '22px' }}>{c.flag}</span>
@@ -726,9 +579,7 @@ const SwapPage = () => {
                             <span style={{ fontSize: '11px', color: '#888' }}>{c.name}</span>
                           </div>
                         </div>
-                        <div className={`radio-outer ${toCurrency.code === c.code ? 'checked' : ''}`}>
-                          <div className="radio-inner" />
-                        </div>
+                        <div className={`radio-outer ${toCurrency.code === c.code ? 'checked' : ''}`}><div className="radio-inner" /></div>
                       </div>
                     ))}
                   </div>
@@ -736,35 +587,90 @@ const SwapPage = () => {
               </div>
             )}
 
-            {/* ── Success Modal ── */}
+            {/* PIN Modal */}
+            {showPinModal && (
+              <>
+                <div className="status-modal-overlay" onClick={() => { if (!isSubmittingPin) { setShowPinModal(false); setPin(['', '', '', '']); }}} />
+                <div className={`status-modal pin-modal ${theme}`}>
+                  <div className="status-modal-content">
+                    <h3 className="status-modal-title">Enter PIN</h3>
+                    <p className="status-modal-message">Enter your 4-digit transfer PIN to confirm the swap</p>
+
+                    {/* Swap summary inside PIN modal */}
+                    <div className="pin-summary" style={{ margin: '12px 0', padding: '10px 14px', background: '#f8fafc', borderRadius: 8, fontSize: 13 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ color: '#6b7280' }}>Swapping</span>
+                        <span style={{ fontWeight: 600 }}>{fromCurrency.symbol}{fromAmount} {fromCurrency.code}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280' }}>You receive</span>
+                        <span style={{ fontWeight: 600, color: 'var(--bg-main)' }}>{toCurrency.symbol}{toAmount} {toCurrency.code}</span>
+                      </div>
+                    </div>
+
+                    <div className="pin-inputs">
+                      {pin.map((digit, index) => (
+                        <input
+                          key={index}
+                          ref={(el) => { pinInputRefs.current[index] = el; }}
+                          type="password"
+                          inputMode="numeric"
+                          className="pin-input"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handlePinChange(index, e.target.value)}
+                          onKeyDown={(e) => handlePinKeyDown(index, e)}
+                          onPaste={handlePinPaste}
+                          disabled={isSubmittingPin}
+                          autoFocus={index === 0}
+                        />
+                      ))}
+                    </div>
+
+                    <div className="status-modal-actions">
+                      <button
+                        className="status-modal-btn secondary-btn"
+                        onClick={() => { setShowPinModal(false); setPin(['', '', '', '']); }}
+                        disabled={isSubmittingPin}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="status-modal-btn confirm-btn"
+                        onClick={handlePinSubmit}
+                        disabled={isSubmittingPin || pin.some((d) => d === '')}
+                      >
+                        {isSubmittingPin
+                          ? <><div className="spinner-small" /><span>Processing...</span></>
+                          : 'Confirm Swap'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Success Modal */}
             {showSuccessModal && exchangeSnapshot && (
               <>
                 <div className="status-modal-overlay" onClick={() => setShowSuccessModal(false)} />
                 <div className={`status-modal success-modal ${theme === 'dark' ? 'dark' : ''}`}>
                   <div className="status-modal-content">
-                    <div className="status-icon-wrapper success-icon">
-                      <CheckCircle size={48} />
-                    </div>
+                    <div className="status-icon-wrapper success-icon"><CheckCircle size={48} /></div>
                     <h3 className="status-modal-title">Swap Successful!</h3>
                     <p className="status-modal-message">Your currency swap has been completed.</p>
                     <div className="status-modal-details">
                       <div className="status-detail-row">
                         <span className="status-detail-label">From</span>
-                        <span className="status-detail-value">
-                          {exchangeSnapshot.fromCurrency.symbol}{exchangeSnapshot.fromAmount} {exchangeSnapshot.fromCurrency.code}
-                        </span>
+                        <span className="status-detail-value">{exchangeSnapshot.fromCurrency.symbol}{exchangeSnapshot.fromAmount} {exchangeSnapshot.fromCurrency.code}</span>
                       </div>
                       <div className="status-detail-row">
                         <span className="status-detail-label">Rate</span>
-                        <span className="status-detail-value">
-                          1 {exchangeSnapshot.fromCurrency.code} = {exchangeSnapshot.exchangeRate.toFixed(6)} {exchangeSnapshot.toCurrency.code}
-                        </span>
+                        <span className="status-detail-value">1 {exchangeSnapshot.fromCurrency.code} = {exchangeSnapshot.exchangeRate.toFixed(6)} {exchangeSnapshot.toCurrency.code}</span>
                       </div>
                       <div className="status-detail-row swap-summary-fee">
                         <span className="status-detail-label">Fee (1.5%)</span>
-                        <span className="status-detail-value">
-                          −{exchangeSnapshot.toCurrency.symbol}{exchangeSnapshot.feeAmount}
-                        </span>
+                        <span className="status-detail-value">−{exchangeSnapshot.toCurrency.symbol}{exchangeSnapshot.feeAmount}</span>
                       </div>
                       <div className="status-detail-row">
                         <span className="status-detail-label">You Received</span>
@@ -773,23 +679,19 @@ const SwapPage = () => {
                         </span>
                       </div>
                     </div>
-                    <button className="status-modal-btn success-btn" onClick={() => setShowSuccessModal(false)}>
-                      Done
-                    </button>
+                    <button className="status-modal-btn success-btn" onClick={() => setShowSuccessModal(false)}>Done</button>
                   </div>
                 </div>
               </>
             )}
 
-            {/* ── Fail Modal ── */}
+            {/* Fail Modal */}
             {showFailModal && (
               <>
                 <div className="status-modal-overlay" onClick={() => setShowFailModal(false)} />
                 <div className={`status-modal fail-modal ${theme === 'dark' ? 'dark' : ''}`}>
                   <div className="status-modal-content">
-                    <div className="status-icon-wrapper fail-icon">
-                      <AlertCircle size={48} />
-                    </div>
+                    <div className="status-icon-wrapper fail-icon"><AlertCircle size={48} /></div>
                     <h3 className="status-modal-title">Swap Failed</h3>
                     <p className="status-modal-message">{errorMessage}</p>
                     <div className="status-modal-actions">
@@ -810,15 +712,10 @@ const SwapPage = () => {
       <MobileNav activeTab="exchange" onPlusClick={() => setIsDepositOpen(true)} />
       <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} theme={theme} />
       {!isChatOpen && (
-        <button
-          className="chat-fab"
-          onClick={() => setIsChatOpen(true)}
-          aria-label="Open support chat"
-        >
+        <button className="chat-fab" onClick={() => setIsChatOpen(true)} aria-label="Open support chat">
           <i className="fa-solid fa-comment-dots"></i>
         </button>
       )}
-
       <SupportChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );

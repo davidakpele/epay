@@ -14,7 +14,7 @@ import pesco.example.virtual_card_service.enums.AuditAction;
     @Index(name = "idx_card_id", columnList = "card_id"),
     @Index(name = "idx_user_id", columnList = "user_id"),
     @Index(name = "idx_created_at", columnList = "created_at")
-})
+}) 
 public class CardAuditLog {
     
     @Id

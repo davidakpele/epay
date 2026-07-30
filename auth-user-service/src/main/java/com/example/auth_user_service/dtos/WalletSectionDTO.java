@@ -46,5 +46,4 @@ public class WalletSectionDTO {
         this.walletBalances = walletBalances;
     }
 
-
 }

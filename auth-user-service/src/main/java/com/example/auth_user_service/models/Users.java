@@ -27,7 +27,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-
 @Data
 @Builder
 @Entity
@@ -190,7 +189,6 @@ public class Users implements UserDetails {
     @PrePersist
     @PreUpdate
     protected void beforeSaveOrUpdate() {
-        // Sanitize inputs
         this.email = sanitizeInput(this.email);
         this.username = sanitizeInput(this.username);
         
@@ -200,7 +198,6 @@ public class Users implements UserDetails {
     private String sanitizeInput(String input) {
         if (input == null) return null;
         
-        // Remove script tags
         String sanitized = input.replaceAll("<script.*?>.*?</script>", "")
                                .replaceAll("javascript:", "")
                                .replaceAll("onerror=", "")
@@ -208,7 +205,6 @@ public class Users implements UserDetails {
                                .replaceAll("onclick=", "")
                                .replaceAll("eval\\(", "");
         
-        // Escape HTML entities
         sanitized = sanitized.replace("&", "&amp;")
                             .replace("<", "&lt;")
                             .replace(">", "&gt;")

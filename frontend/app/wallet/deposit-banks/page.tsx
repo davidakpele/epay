@@ -257,8 +257,8 @@ const Banks = () => {
   const fetchBankList = async () => {
     try {
       const response = await bankCollectionService.getBankList();
-      if (response && response.length > 0) {
-        const options = response.map((bank: any) => ({
+      if (response && response.data.data.length > 0) {
+        const options = response.data.data.map((bank: any) => ({
           value: bank.code,
           label: bank.name,
           code: bank.code
@@ -317,6 +317,7 @@ const Banks = () => {
       
       if (result?.status) {
         setVerify(true);
+        console.log(result)
         setNewBank({
           ...newBank,
           accountName: result.data.account_name

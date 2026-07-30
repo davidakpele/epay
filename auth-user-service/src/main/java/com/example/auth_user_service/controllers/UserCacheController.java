@@ -20,9 +20,6 @@ public class UserCacheController {
         this.userCacheService = userCacheService;
     }
 
-    /**
-     * Get all cached users
-     */
    @GetMapping("/all")
     public ResponseEntity<CacheResponse<List<UserDTO>>> getAllCachedUsers() {
         try {
@@ -64,9 +61,7 @@ public class UserCacheController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-    /**
-     * Get cached user by ID
-     */
+
     @GetMapping("/{userId}")
     public ResponseEntity<CacheResponse<UserDTO>> getCachedUserById(@PathVariable Long userId) {
         try {
@@ -108,9 +103,7 @@ public class UserCacheController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-    /**
-     * Manually refresh cache
-     */
+
     @PostMapping("/refresh")
     public ResponseEntity<CacheResponse<String>> refreshCache() {
         try {
@@ -137,9 +130,6 @@ public class UserCacheController {
         }
     }
 
-    /**
-     * Get cache statistics
-     */
     @GetMapping("/stats")
     public ResponseEntity<CacheResponse<CacheStats>> getCacheStats() {
         try {
@@ -165,9 +155,6 @@ public class UserCacheController {
         }
     }
 
-    /**
-     * Invalidate user cache
-     */
     @DeleteMapping("/{userId}")
     public ResponseEntity<CacheResponse<String>> invalidateUserCache(@PathVariable Long userId) {
         try {
@@ -194,9 +181,6 @@ public class UserCacheController {
         }
     }
 
-    /**
-     * Invalidate all cache
-     */
     @DeleteMapping("/all")
     public ResponseEntity<CacheResponse<String>> invalidateAllCache() {
         try {

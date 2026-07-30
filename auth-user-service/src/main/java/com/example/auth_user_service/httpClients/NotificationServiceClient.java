@@ -3,18 +3,15 @@ package com.example.auth_user_service.httpClients;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
-
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import com.example.auth_user_service.exceptions.Extraction;
 import com.example.auth_user_service.exceptions.UserClientNotFoundException;
 import com.example.auth_user_service.interfaces.INotificationServiceClient;
-
 import reactor.core.publisher.Mono;
 
 public class NotificationServiceClient implements INotificationServiceClient {

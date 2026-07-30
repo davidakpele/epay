@@ -31,7 +31,6 @@ public class JwtAuthenticationException extends RuntimeException {
         this.errorCode = "JWT_ERROR";
     }
 
-    // Explicit getters
     public HttpStatus getStatus() {
         return status;
     }

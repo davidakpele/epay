@@ -160,8 +160,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     private ResponseEntity<Map<String, Object>> buildError(
             HttpStatus status, String error, String message, HttpServletRequest request) {
         return ResponseEntity.status(status).body(buildErrorBody(status, error, message, request));

@@ -10,7 +10,6 @@ public class DeleteteAccountRequest {
     public DeleteteAccountRequest() {
     }
 
-
     public DeleteteAccountRequest(String reason, String username, Long userId, String email, String action) {
         this.reason = reason;
         this.username = username;

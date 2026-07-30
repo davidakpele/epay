@@ -2,11 +2,9 @@ package com.example.auth_user_service.interfaces;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-
 import com.example.auth_user_service.models.TwoFactorAuthentication;
 import com.example.auth_user_service.models.Users;
 import com.example.auth_user_service.payloads.OTPRequest;
-
 
 public interface ITwoFactorAuthenticationService {
 
