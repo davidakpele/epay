@@ -42,6 +42,7 @@ public class JwtService implements IJwtService{
         this.signingKey = getSigningKey();
     }
 
+    @SuppressWarnings("null")
     @Override
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -133,6 +134,7 @@ public class JwtService implements IJwtService{
     public String generateToken(UserDetails userDetails, Long userId) {
         try {
             Map<String, Object> claims = new HashMap<>();
+            @SuppressWarnings("null")
             List<String> roles = userDetails.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .map(role -> role.startsWith("ROLE_") ? role.substring(5) : role)
@@ -227,6 +229,7 @@ public class JwtService implements IJwtService{
         }
     }
 
+    @SuppressWarnings("null")
     @Override
     public Date getExpirationDate(String token) {
         return extractClaim(token, Claims::getExpiration);

@@ -65,7 +65,7 @@ public class WithdrawService {
         User initiator = initiatorOpt.get();
 
         if (initiator.isAccountLocked())
-            return errorHandler.error("Account is locked", HttpStatus.FORBIDDEN,
+            return errorHandler.error("Account is locked", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "This account has been locked. Please contact support.");
 
         if (!userLookupPort.existsActiveUser(userId))
@@ -85,7 +85,7 @@ public class WithdrawService {
                     "The sender and recipient accounts are the same.");
 
         if (blacklistPort.isAccountBlacklisted(userId))
-            return errorHandler.error("Account is blacklisted", HttpStatus.FORBIDDEN,
+            return errorHandler.error("Account is blacklisted", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "This account has been flagged. Please contact support.");
 
         String idemKey = "withdraw:internal:" + userId + ":" + request.getIdempotencyKey();
@@ -116,7 +116,7 @@ public class WithdrawService {
                             currency, previousBalance, currency, totalDebit, fee));
 
         if (!walletPort.verifyPin(userId, request.getTransferPin()))
-            return errorHandler.error("Invalid transaction PIN", HttpStatus.UNAUTHORIZED,
+            return errorHandler.error("Invalid transaction PIN", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "The transaction PIN you entered is incorrect.");
 
         Long   walletId  = walletPort.getWalletId(userId);
@@ -127,15 +127,15 @@ public class WithdrawService {
 
         if (transactionsAgent.isHighVolumeOrFrequentTransactions(
                 userId, email, firstName, lastName, walletId))
-            return errorHandler.error("Transaction blocked", HttpStatus.FORBIDDEN,
+            return errorHandler.error("Transaction blocked", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "Suspicious high-volume activity detected. Wallet temporarily blocked.");
 
         if (transactionsAgent.isNewAccountAndHighRisk(request.getUsername()))
-            return errorHandler.error("Transaction blocked", HttpStatus.FORBIDDEN,
+            return errorHandler.error("Transaction blocked", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "New accounts cannot perform withdrawals immediately after registration.");
 
         if (transactionsAgent.isFraudulentBehavior(userId, email, firstName, lastName, walletId))
-            return errorHandler.error("Transaction blocked", HttpStatus.FORBIDDEN,
+            return errorHandler.error("Transaction blocked", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "Fraudulent activity pattern detected. Account suspended pending review.");
 
         String reference     = generateReference(request.getWithdrawalType(), userId);
@@ -259,12 +259,12 @@ public class WithdrawService {
                     "The account does not exist or is inactive.");
 
         if (blacklistPort.isAccountBlacklisted(userId))
-            return errorHandler.error("Account is blacklisted", HttpStatus.FORBIDDEN,
+            return errorHandler.error("Account is blacklisted", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "This account has been flagged. Please contact support.");
 
         if (request.getAccountNumber() != null
                 && blacklistPort.isAccountNumberBlacklisted(request.getAccountNumber()))
-            return errorHandler.error("Recipient account is blacklisted", HttpStatus.FORBIDDEN,
+            return errorHandler.error("Recipient account is blacklisted", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "The destination account has been flagged. Please contact support.");
 
         String idemKey = "withdraw:bank:" + userId + ":" + request.getIdempotencyKey();
@@ -291,7 +291,7 @@ public class WithdrawService {
                             currency, previousBalance, currency, totalDebit, fee));
 
         if (!walletPort.verifyPin(userId, request.getTransferPin()))
-            return errorHandler.error("Invalid transaction PIN", HttpStatus.UNAUTHORIZED,
+            return errorHandler.error("Invalid transaction PIN", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "The transaction PIN you entered is incorrect.");
 
         Long   walletId  = walletPort.getWalletId(userId);
@@ -302,11 +302,11 @@ public class WithdrawService {
 
         if (transactionsAgent.isHighVolumeOrFrequentTransactions(
                 userId, email, firstName, lastName, walletId))
-            return errorHandler.error("Transaction blocked", HttpStatus.FORBIDDEN,
+            return errorHandler.error("Transaction blocked", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "Suspicious high-volume activity detected. Wallet temporarily blocked.");
 
         if (transactionsAgent.isFraudulentBehavior(userId, email, firstName, lastName, walletId))
-            return errorHandler.error("Transaction blocked", HttpStatus.FORBIDDEN,
+            return errorHandler.error("Transaction blocked", HttpStatus.NETWORK_AUTHENTICATION_REQUIRED,
                     "Fraudulent activity pattern detected. Account suspended pending review.");
 
         String reference     = generateReference(request.getWithdrawalType(), userId);

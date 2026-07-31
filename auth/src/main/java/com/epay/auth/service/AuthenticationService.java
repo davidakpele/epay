@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -253,38 +255,41 @@ public class AuthenticationService implements IAuthenticationService{
                 "Thanks for signing up! Your account has been created successfully.", null));
     }
 
-    @Override
-    public ResponseEntity<?> login(UserSignInRequest request, HttpServletResponse response, HttpServletRequest httpRequest) {
+  @Override
+    public ResponseEntity<?> login(UserSignInRequest request,
+                                HttpServletResponse response,
+                                HttpServletRequest httpRequest) {
+
         Map<String, Object> authResponse = new LinkedHashMap<>();
+
         User user = userRepository.findByUsername(request.getUsername()).orElse(null);
+
         if (user == null) {
-            return buildAuthError(authResponse, "Invalid user credentials.", HttpStatus.BAD_REQUEST);
+            return buildAuthError(authResponse,
+                    "Invalid user credentials.",
+                    HttpStatus.BAD_REQUEST);
         }
 
         if (!user.isEnabled()) {
-            return buildAuthError(authResponse, "This account has not been verified.", HttpStatus.UNAUTHORIZED);
+            return buildAuthError(authResponse,
+                    "This account has not been verified.",
+                    HttpStatus.UNAUTHORIZED);
         }
 
         if (userTracerService.hasActiveSession(user.getId())) {
-            return buildAuthError(authResponse, "This account is already logged in on another device.", HttpStatus.UNAUTHORIZED);
+            return buildAuthError(authResponse,
+                    "This account is already logged in on another device.",
+                    HttpStatus.UNAUTHORIZED);
         }
 
         userAttemptService.createFailAttempt(user.getId(), AttemptType.LOGIN);
 
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-            if (user.isAccountLocked()) {
-                return buildAuthError(authResponse,
-                        "Sorry, this account is currently locked. Please contact customer service.",
-                        HttpStatus.UNAUTHORIZED);
-            }
-
-            if (!user.isEnabled()) {
-                return buildAuthError(authResponse,
-                        "Sorry, this account is currently suspended. Please contact customer service to reactivate.",
-                        HttpStatus.UNAUTHORIZED);
-            }
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(),
+                            request.getPassword()));
 
             if (user.isTwoFactorEnabled()) {
                 return handleTwoFactorAuth(user, authResponse);
@@ -294,22 +299,30 @@ public class AuthenticationService implements IAuthenticationService{
             UserTracer session = userTracerService.createSession(user);
             userAttemptService.UpdateUserAccount(user.getId());
 
-            UserRecord rec = userRecordRepository.findByUserId(user.getId()).orElseThrow(() -> new RuntimeException("User record not found"));
+            UserRecord rec = userRecordRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new RuntimeException("User record not found"));
 
             final String loginTime = formatNow();
-            final String ipAddr    = extractClientIp(httpRequest);
-            final String device    = extractDevice(httpRequest);
-            final String fullName  = rec.getFirstName() + " " + rec.getLastName();
+            final String ipAddr = extractClientIp(httpRequest);
+            final String device = extractDevice(httpRequest);
+            final String fullName = rec.getFirstName() + " " + rec.getLastName();
 
             CompletableFuture.runAsync(() ->
-                notificationService.publishLoginAlert(
-                    user.getEmail(), fullName, user.getUsername(),
-                    loginTime, ipAddr, device,
-                    notificationProperties.getPhone(),
-                    notificationProperties.getEmail()
-                )
-            ).exceptionally(ex -> { System.err.println("[LoginAlert] " + ex.getMessage()); return null; });
-         
+                    notificationService.publishLoginAlert(
+                            user.getEmail(),
+                            fullName,
+                            user.getUsername(),
+                            loginTime,
+                            ipAddr,
+                            device,
+                            notificationProperties.getPhone(),
+                            notificationProperties.getEmail()
+                    )
+            ).exceptionally(ex -> {
+                System.err.println("[LoginAlert] " + ex.getMessage());
+                return null;
+            });
+
             authResponse.put("jwt", jwtToken);
             authResponse.put("email", user.getEmail());
             authResponse.put("userId", user.getId());
@@ -335,10 +348,33 @@ public class AuthenticationService implements IAuthenticationService{
                     .header("X-Session-Expires", session.getExpiresAt().toString())
                     .body(authResponse);
 
+        } catch (LockedException e) {
+
+            return buildAuthError(
+                    authResponse,
+                    "Sorry, this account is currently locked. Please contact customer service.",
+                    HttpStatus.UNAUTHORIZED);
+
+        } catch (DisabledException e) {
+
+            return buildAuthError(
+                    authResponse,
+                    "Sorry, this account is currently suspended. Please contact customer service to reactivate.",
+                    HttpStatus.UNAUTHORIZED);
+
         } catch (BadCredentialsException e) {
-            return buildAuthError(authResponse, "Invalid user credentials.", HttpStatus.BAD_REQUEST);
+
+            return buildAuthError(
+                    authResponse,
+                    "Invalid user credentials.",
+                    HttpStatus.BAD_REQUEST);
+
         } catch (AuthenticationException e) {
-            return buildAuthError(authResponse, e.getMessage(), HttpStatus.BAD_REQUEST);
+
+            return buildAuthError(
+                    authResponse,
+                    "Authentication failed.",
+                    HttpStatus.BAD_REQUEST);
         }
     }
 

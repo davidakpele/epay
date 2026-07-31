@@ -64,6 +64,7 @@ public class RateLimitService implements IRateLimitService {
 
     @Override
     public boolean tryConsume(String key, int capacity, Duration duration, int tokens) {
+        @SuppressWarnings("deprecation")
         Bandwidth bandwidth = Bandwidth.classic(capacity, Refill.intervally(capacity, duration));
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(bandwidth)
@@ -75,6 +76,7 @@ public class RateLimitService implements IRateLimitService {
 
     @Override
     public long getRemainingTokens(String key, int capacity, Duration duration) {
+        @SuppressWarnings("deprecation")
         Bandwidth bandwidth = Bandwidth.classic(capacity, Refill.intervally(capacity, duration));
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(bandwidth)

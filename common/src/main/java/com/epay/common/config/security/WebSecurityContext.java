@@ -22,6 +22,7 @@ public class WebSecurityContext {
         return Optional.of(auth);
     }
 
+    @SuppressWarnings("null")
     public Optional<UserDetails> getPrincipal() {
         return getAuthentication()
                 .map(Authentication::getPrincipal)
@@ -29,6 +30,7 @@ public class WebSecurityContext {
                 .map(p -> (UserDetails) p);
     }
 
+    @SuppressWarnings("null")
     public Optional<Long> getUserId() {
         return getPrincipal()
                 .map(UserDetails::getUsername)
@@ -40,10 +42,12 @@ public class WebSecurityContext {
                 new AuthenticationCredentialsNotFoundException("No authenticated user found"));
     }
 
+    @SuppressWarnings("null")
     public String getUsername() {
         return getPrincipal().map(UserDetails::getUsername).orElse("unknown");
     }
 
+    @SuppressWarnings("null")
     public String getRole() {
         return getPrincipal()
                 .map(u -> u.getAuthorities().stream()

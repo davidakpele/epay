@@ -84,4 +84,13 @@ public class ValidationFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         response.getWriter().write("{\"error\":\"" + message + "\"}");
     }
+
+    private boolean containsMaliciousBody(String input) {
+        if (input == null || input.isEmpty()) {
+            return false;
+        }
+        if (SQL_BODY_PATTERN.matcher(input).find()) return true;
+
+        return XSS_PATTERN.matcher(input).find();
+    }
 }

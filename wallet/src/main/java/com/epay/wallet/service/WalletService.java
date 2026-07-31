@@ -80,6 +80,7 @@ public class WalletService implements IWalletService {
         List<WalletBalanceDTO> balanceDTOs = wallet.getBalances().stream()
                 .map(this::toBalanceDTO).collect(Collectors.toList());
 
+        @SuppressWarnings("null")
         boolean pinSet = walletSettingsRepository.findByWalletId(wallet.getId())
                 .map(WalletSettings::isIsSecure).orElse(false);
 
@@ -146,6 +147,7 @@ public class WalletService implements IWalletService {
 
         walletRepository.save(wallet);
 
+        @SuppressWarnings("null")
         List<String> codes = activeCurrencies.stream()
                 .map(SupportedCurrency::getCode)
                 .toList();
@@ -310,6 +312,7 @@ public class WalletService implements IWalletService {
         if (!senderWallet.isActive())
             throw new WalletException("Sender wallet is locked", ErrorCode.WALLET_LOCKED);
 
+        @SuppressWarnings("null")
         boolean pinSet = walletSettingsRepository.findByWalletId(senderWallet.getId())
             .map(WalletSettings::isIsSecure).orElse(false);
 
@@ -727,9 +730,11 @@ public class WalletService implements IWalletService {
                             feePercentage.multiply(new BigDecimal("100")).doubleValue()),
                     ErrorCode.INSUFFICIENT_BALANCE);
 
+        @SuppressWarnings("null")
         String toSymbol = supportedCurrencyRepository.findByCodeIgnoreCase(toCode)
                 .map(SupportedCurrency::getSymbol)
                 .orElse(toCode);
+        @SuppressWarnings("null")
         String fromSymbol = supportedCurrencyRepository.findByCodeIgnoreCase(fromCode)
                 .map(SupportedCurrency::getSymbol)
                 .orElse(fromCode);
