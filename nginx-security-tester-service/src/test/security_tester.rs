@@ -43,9 +43,7 @@ impl SecurityTester {
         results.push(result);
     }
     
-    // Improved function to determine if a request was blocked with proper reasoning
     fn analyze_response(&self, status: u16, attack_type: &str, endpoint: &str) -> (bool, String) {
-        // Extract the attack category
         let attack_category = if attack_type.starts_with("SQLi:") {
             "SQLi"
         } else if attack_type.starts_with("XSS:") {

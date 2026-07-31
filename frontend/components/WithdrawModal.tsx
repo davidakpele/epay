@@ -303,11 +303,11 @@ const WithdrawModal = ({ isOpen, onClose, theme, onWithdrawReloadSuccess }: With
         setShowBeneficiaryModal(false);
         setTimeout(() => onClose(), 1000);
       } else {
-        showToast(response?.message || 'Failed to save beneficiary', 'warning');
+        showToast(response?.detail || 'Failed to save beneficiary', 'warning');
       }
     } catch (error: any) {
       console.error('Error saving beneficiary:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save beneficiary';
+      const errorMessage = error?.response?.data?.detail || error?.detail || 'Failed to save beneficiary';
       showToast(errorMessage, 'warning');
     } finally {
       setIsSavingBeneficiary(false);
@@ -557,33 +557,37 @@ const WithdrawModal = ({ isOpen, onClose, theme, onWithdrawReloadSuccess }: With
       const walletInfo = getWallet(selectedWallet.currency);
       const idempotencyKey = idempotencyKeyRef.current;
       let response;
+      let recipient = recipientUsername; 
 
       if (step === 'bank') {
         response = await withdrawService.withdrawToBank({
           accountNumber,
           bankCode: selectedBankOption.value,
           accountName,
+          withdrawalType: "BANK_TRANSFER",
           username: getUsername(),
           amount: bigDecimalString,
           currency: selectedWallet.currency,
           walletId: getUserWalletId(),
-          senderUserId: getUserId(), 
+          userId: getUserId(), 
           currencySymbol: walletInfo?.symbol || '',
           idempotencyKey: idempotencyKey,
-          password: enteredPin
+          transferPin: enteredPin
         });
       } else {
+        
         response = await withdrawService.transferToUser({
           username: getUsername(),
-          recipientUsername,
+          recipient,
+          withdrawalType: "INTERNAL",
           amount: bigDecimalString,
           currency: selectedWallet.currency,
           walletId: getUserWalletId(),
-          senderUserId: getUserId(),
+          userId: getUserId(),
           currencySymbol: walletInfo?.symbol || '',
-          password: enteredPin,
+          transferPin: enteredPin,
           idempotencyKey: idempotencyKey,
-          note: `Transfer to ${recipientUsername}`
+          narration: `Transfer to ${recipientUsername}`
         });
       }
 
@@ -632,7 +636,7 @@ const WithdrawModal = ({ isOpen, onClose, theme, onWithdrawReloadSuccess }: With
           });
 
         } else {
-          const errorMessage = response.message || 'Transaction failed';
+          const errorMessage = response.detail || 'Transaction failed';
           showToast(errorMessage, 'warning');
           setErrorMessage(errorMessage);
           setShowFailModal(true);

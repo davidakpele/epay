@@ -14,7 +14,7 @@ const xhrClient = <T = any>(
   options: XhrClientOptions = {}
 ): Promise<T> => {
   const {
-    maxRetries = 3,
+    maxRetries = 0,
     baseDelay = 1000,
     timeout = 10000,
     shouldRetry = (status: number) => status === 429 || (status >= 500 && status < 600),
