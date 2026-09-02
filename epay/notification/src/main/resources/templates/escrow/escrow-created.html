@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><title>Escrow Created</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+        .container{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden}
+        .header{background:#4a148c;padding:28px 32px;text-align:center}
+        .header h1{color:#fff;margin:0;font-size:22px}
+        .body{padding:32px}.body p{color:#333;font-size:15px;line-height:1.7}
+        .info-box{background:#f3e5f5;border-left:4px solid #4a148c;padding:16px 20px;border-radius:4px;margin:20px 0}
+        .info-box p{margin:5px 0;font-size:14px}
+        .footer{background:#f9f9f9;padding:18px;text-align:center;font-size:12px;color:#999;border-top:1px solid #eee}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header"><h1>ePay — Escrow Created</h1></div>
+    <div class="body">
+        <p>Dear <strong th:text="${fullName}">Customer</strong>,</p>
+        <p>An escrow transaction has been created on your account.</p>
+        <div class="info-box">
+            <p><strong>Escrow ID:</strong> <span th:text="${escrowId}">N/A</span></p>
+            <p><strong>Amount:</strong> <span th:text="${currency}">NGN</span> <span th:text="${amount}">0.00</span></p>
+            <p><strong>Counterparty:</strong> <span th:text="${counterparty}">N/A</span></p>
+            <p><strong>Expires:</strong> <span th:text="${expiresAt}">N/A</span></p>
+        </div>
+        <p>Funds will be held until the transaction conditions are met or the escrow expires.</p>
+    </div>
+    <div class="footer"><p>ePay — Secure Digital Payments</p></div>
+</div>
+</body>
+</html>

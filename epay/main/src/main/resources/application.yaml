@@ -1,0 +1,286 @@
+spring:
+  application:
+    name: epay-server
+  mvc:
+    contentnegotiation:
+      favor-parameter: false
+      favor-path-extension: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
+    whitelabel:
+      enabled: false
+  datasource:
+    url: jdbc:postgresql://postgres:5432/epay
+    username: ${DB_USERNAME:epay}
+    password: ${DB_PASSWORD:epay}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: false
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      connection-timeout: 20000
+      pool-name: HikariPool
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        order_inserts: true
+        order_updates: true
+        jdbc:
+          batch_size: 5000
+          batch_versioned_data: true
+          lob:
+            non_contextual_creation: true
+        connection:
+          provider_disables_autocommit: true
+  database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+
+  sql:
+    init:
+      mode: never
+  data:
+    rest:
+      base-path: /data-rest
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 1
+  cloud:
+    task:
+      initialize-enabled: false
+      table-prefix: TASK_
+
+  devtools:
+    restart:
+      enabled: false
+      exclude: "static/**,public/**"
+    livereload:
+      enabled: false
+
+  web:
+    resources:
+      add-mappings: false
+      static-locations:
+        - classpath:/static/
+        - file:/var/www/uploads/images/
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    filter:
+      dispatcher-types: REQUEST,ERROR,ASYNC
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 12MB
+      file-size-threshold: 0
+      location: /tmp
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME:akpeledavidprogress@gmail.com}
+    password: ${GMAIL_APP_PASSWORD:eruxeybiakedfjfp}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        transport:
+          protocol: smtp
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+
+pesco:
+  banking:
+    service:
+      email: artexnetworkservice@gmail.com
+
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:/var/www/uploads/images}
+  max-file-size: 50MB
+  allowed-file-types: image/jpeg,image/png,image/gif,image/webp
+
+server:
+  port: ${SERVER_PORT:8029}
+epay:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:dGhpcy1pcy1hLXNlY3VyZS1kZXYtb25seS1zZWNyZXQta2V5LTMyLWJ5dGVzLWxvbmchISE=}
+      expiration-ms: 3600000
+      expiration-minutes: 30
+      refresh-expiration-days: 7
+      issuer: "https://auth.epay.com"
+      audience: "Unified Dynamic Systems"
+      clock-skew-seconds: 30
+      algorithm: "HS256"
+      token-prefix: "Bearer"
+      authorization-header: "Authorization"
+      enable-token-blacklist: true
+      blacklist-cleanup-interval-minutes: 60
+      max-blacklist-size: 10000
+      cookie-name: "jwt-token"
+      http-only-cookie: true
+      secure-cookie: true
+      same-site-cookie: "Strict"
+      cors-allowed-origins: "http://localhost:3000,http://localhost:8000"
+      enable-multi-factor-support: false
+      max-tokens-per-user: 5
+      log-token-issuance: false
+      enable-token-rotation: true
+      rotation-grace-period-minutes: 5
+      access-token:
+        expiration: 900000
+      refresh-token:
+        expiration: 604800000
+  rate-limit:
+    global-ip-limit: 200
+    global-window-seconds: 60
+    auth-limit: 10
+    auth-window-seconds: 60
+    wallet-limit: 30
+    wallet-window-seconds: 60
+    user-limit: 50
+    user-window-seconds: 60
+    penalty-multiplier: 3
+    max-penalty-seconds: 3600
+    suspicious-threshold: 5
+  gateways:
+    paystack:
+      secret-key: ${PAYSTACK_SECRET_KEY:}
+
+      transfer-otp: ${PAYSTACK_TRANSFER_OTP:123456}
+    flutterwave:
+      secret-key: ${FLUTTERWAVE_SECRET_KEY:}
+  cards:
+    sudo:
+      api-key: ${SUDO_API_KEY:}
+  super-admin:
+    username: ${SUPER_ADMIN_USERNAME:superadmin}
+    email: ${SUPER_ADMIN_EMAIL:superadmin@epay.com}
+    password: ${SUPER_ADMIN_PASSWORD:ChangeMe@2026!}
+    first-name: ${SUPER_ADMIN_FIRST_NAME:Super}
+    last-name: ${SUPER_ADMIN_LAST_NAME:Admin}
+    phone: ${SUPER_ADMIN_PHONE:}
+  risk:
+    high-freq-count: 20
+    freq-window-minutes: 60
+    high-volume-threshold: 5000000
+    volume-window-minutes: 60
+    rapid-cycle-min-outbound: 3
+    rapid-cycle-window-minutes: 30
+    failed-tx-threshold: 10
+    new-account-hours: 24
+    min-account-age-minutes: 30
+    soft-block-score: 60
+    hard-block-score: 80
+  liquidity:
+    sync-interval-ms: 1800000 
+  webhooks:
+    retry-interval-ms: 60000 
+
+geolocation:
+  ip-api:
+    base-url: http://ip-api.com
+    timeout-seconds: 3
+  cache:
+    max-size: 5000
+    expire-hours: 24
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /docs
+    enabled: true
+    try-it-out-enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    persist-authorization: true
+    default-models-expand-depth: 1
+  show-actuator: false
+  packages-to-scan: com.epay
+
+datasource:
+  micrometer:
+    includes: all
+
+twilio:
+  account-sid: AC61c3c30fc7704566a6784eae73d604db
+  auth-token: a4bfe859dcdb8de1d4ea225db19d7f72
+  whatsapp-number: whatsapp:+14155238886
+
+flutterwave:
+  public-key: FLWPUBK_TEST-9f86808391a0bef01975c332a2782e5a-X
+  secret-key: FLWSECK_TEST-1eee27f63b4dc12394dbf5c7badaa39e-X
+  url: https://api.flutterwave.com/v3
+
+paystack:
+  api:
+    url: https://api.paystack.co
+    key: sk_test_aaa8ff310f15a0ad5f23950a584f8942cbdf02aa
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, loggers, env
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: when-authorized
+  health:
+    mail:
+      enabled: false
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
+
+logging:
+  level:
+    root: INFO
+    com.example.admin_api_service: DEBUG
+    org.springframework.web: INFO
+    org.springframework.web.servlet.mvc.method.annotation: WARN
+    org.springframework.security: INFO
+    org.springframework.security.web.FilterChainProxy: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

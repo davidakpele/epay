@@ -1,0 +1,105 @@
+.sms-loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    position: relative;
+    top: 50px; 
+}
+
+.loader-notification-sm {
+    width: 25px;
+    height: 55px;
+    background-repeat: no-repeat;
+    background-image:
+        linear-gradient(var(--bg-main) 50px, transparent 0),
+        linear-gradient(var(--bg-main) 50px, transparent 0),
+        linear-gradient(var(--bg-main) 50px, transparent 0),
+        linear-gradient(var(--bg-main) 50px, transparent 0),
+        linear-gradient(var(--bg-main) 50px, transparent 0),
+        linear-gradient(var(--bg-main) 50px, transparent 0);
+    background-size: 5px 40px;
+    background-position: 0px center, 10px center, 20px center, 30px center, 40px center, 50px center;
+    animation: spikeUp 1s linear infinite alternate;
+}
+
+/* For 10-second duration with completion indicator */
+.loader-notification-sm.loading-10s {
+    animation: spikeUp 1s linear infinite alternate, pulseComplete 10s linear forwards;
+    position: relative;
+}
+
+/* Add a completion indicator */
+.loader-notification-sm.loading-10s::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: #4CAF50;
+    animation: progressBar 10s linear forwards;
+}
+
+.sms-bank-container-loader-light .loader-notification-sm,
+.notification-drawer-light .loader-notification-sm {
+    --loader-color: var(--bg-main);
+}
+
+.sms-bank-container-loader-dark .loader-notification-sm,
+.notification-drawer-dark .loader-notification-sm {
+    --loader-color: var(--bg-main);
+}
+
+@keyframes spikeUp {
+    0% {
+        background-size: 5px 40px;
+    }
+    16% {
+        background-size: 5px 55px, 5px 40px, 5px 40px, 5px 40px, 5px 40px, 5px 40px;
+    }
+    33% {
+        background-size: 5px 40px, 5px 55px, 5px 40px, 5px 40px, 5px 40px, 5px 40px;
+    }
+    50% {
+        background-size: 5px 40px, 5px 40px, 5px 55px, 5px 40px, 5px 40px, 5px 40px;
+    }
+    66% {
+        background-size: 5px 40px, 5px 40px, 5px 40px, 5px 55px, 5px 40px, 5px 40px;
+    }
+    83% {
+        background-size: 5px 40px, 5px 40px, 5px 40px, 5px 40px, 5px 55px, 5px 40px;
+    }
+    100% {
+        background-size: 5px 40px, 5px 40px, 5px 40px, 5px 40px, 5px 40px, 5px 55px;
+    }
+}
+
+/* 10-second progress animation */
+@keyframes progressBar {
+    0% {
+        width: 0;
+    }
+    100% {
+        width: 100%;
+    }
+}
+
+/* Optional: Add a completion pulse */
+@keyframes pulseComplete {
+    0% {
+        opacity: 1;
+    }
+    99% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+}
+
+/* Alternative: Control duration with animation iteration count */
+.loader-notification-sm.duration-10s {
+    animation: spikeUp 1s linear 10 alternate; /* 10 iterations = 10 seconds */
+}
