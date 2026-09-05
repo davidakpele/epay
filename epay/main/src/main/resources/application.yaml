@@ -133,6 +133,13 @@ file:
 server:
   port: ${SERVER_PORT:8029}
 epay:
+  logging:
+    enabled: true
+    excluded-paths:
+      - /actuator/**
+      - /favicon.ico
+      - /static/**
+      - /uploads/**
   security:
     jwt:
       secret: ${JWT_SECRET:dGhpcy1pcy1hLXNlY3VyZS1kZXYtb25seS1zZWNyZXQta2V5LTMyLWJ5dGVzLWxvbmchISE=}
@@ -204,9 +211,9 @@ epay:
     soft-block-score: 60
     hard-block-score: 80
   liquidity:
-    sync-interval-ms: 1800000 
+    sync-interval-ms: 1800000
   webhooks:
-    retry-interval-ms: 60000 
+    retry-interval-ms: 60000
 
 geolocation:
   ip-api:

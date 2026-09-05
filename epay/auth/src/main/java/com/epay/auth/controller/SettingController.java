@@ -1,6 +1,7 @@
 package com.epay.auth.controller;
 
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import com.epay.common.exception.ApiResponse;
 import com.epay.common.exception.ResourceNotFoundException;
 import com.epay.domain.auth.dto.FullUserProfileDTO;
 
+@Slf4j
 @RestController
 @RequestMapping("/settings")
 public class SettingController {
@@ -69,6 +71,7 @@ public class SettingController {
         try {
             return ResponseEntity.ok(kycService.enableUserTwoFactorKey(enable2FA, authentication));
         } catch (Exception e) {
+            log.error("[Settings] Failed to update 2FA for user {}: {}", authentication.getName(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error updating Two-Factor Authentication");
         }

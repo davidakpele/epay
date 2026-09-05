@@ -1,107 +1,102 @@
 groups:
-
-  - name: java-service-availability
+  - name: epay-server-availability
     rules:
-
       - alert: ServiceDown
-        expr: up{language="java"} == 0
+        expr: up{job="epay-server"} == 0
         for: 1m
         labels:
           severity: critical
         annotations:
-          summary: "Java service {{ $labels.service }} is DOWN"
-          description: "Prometheus cannot scrape {{ $labels.service }}. It has been unreachable for more than 1 minute."
+          summary: "ePay server is DOWN"
+          description: "Prometheus cannot scrape epay-server. It has been unreachable for more than 1 minute."
 
       - alert: ActuatorHealthDegraded
         expr: |
           http_server_requests_seconds_count{
+            job="epay-server",
             uri="/actuator/health",
-            status=~"5..",
-            language="java"
+            status=~"5.."
           } > 0
         for: 2m
         labels:
           severity: warning
         annotations:
-          summary: "Actuator health check returning 5xx on {{ $labels.service }}"
-          description: "Service {{ $labels.service }} actuator health endpoint is returning errors."
+          summary: "Actuator health check returning 5xx"
+          description: "epay-server actuator health endpoint is returning errors."
 
-  - name: java-service-performance
+  - name: epay-server-performance
     rules:
-
       - alert: HighRequestLatencyP99
         expr: |
           histogram_quantile(0.99,
-            sum(rate(http_server_requests_seconds_bucket{language="java"}[5m])) by (le, service, uri)
+            sum(rate(http_server_requests_seconds_bucket{job="epay-server"}[5m])) by (le, uri)
           ) > 2
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "High P99 latency on {{ $labels.service }}"
-          description: "P99 request latency on {{ $labels.service }} ({{ $labels.uri }}) is above 2s."
+          summary: "High P99 latency on epay-server"
+          description: "P99 request latency on {{ $labels.uri }} is above 2s for 5 minutes."
 
       - alert: HighErrorRate
         expr: |
-          sum(rate(http_server_requests_seconds_count{status=~"5..",language="java"}[5m])) by (service)
+          sum(rate(http_server_requests_seconds_count{job="epay-server",status=~"5.."}[5m]))
           /
-          sum(rate(http_server_requests_seconds_count{language="java"}[5m])) by (service)
+          sum(rate(http_server_requests_seconds_count{job="epay-server"}[5m]))
           > 0.05
         for: 3m
         labels:
           severity: critical
         annotations:
-          summary: "High error rate on {{ $labels.service }}"
-          description: "More than 5% of requests on {{ $labels.service }} are returning 5xx errors."
+          summary: "High error rate on epay-server"
+          description: "More than 5% of requests are returning 5xx errors."
 
-  - name: java-jvm
+  - name: epay-server-jvm
     rules:
-
       - alert: JvmMemoryHighUsage
         expr: |
-          jvm_memory_used_bytes{area="heap",language="java"}
+          sum(jvm_memory_used_bytes{job="epay-server",area="heap"})
           /
-          jvm_memory_max_bytes{area="heap",language="java"}
+          sum(jvm_memory_max_bytes{job="epay-server",area="heap"})
           > 0.85
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "High JVM heap usage on {{ $labels.service }}"
-          description: "JVM heap usage on {{ $labels.service }} is above 85% for 5 minutes."
+          summary: "High JVM heap usage on epay-server"
+          description: "JVM heap usage is above 85% for 5 minutes."
 
       - alert: JvmGcPressureHigh
         expr: |
-          rate(jvm_gc_pause_seconds_sum{language="java"}[5m]) > 0.1
+          rate(jvm_gc_pause_seconds_sum{job="epay-server"}[5m]) > 0.1
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "High GC pause time on {{ $labels.service }}"
-          description: "GC pause time on {{ $labels.service }} is consuming over 10% of time."
+          summary: "High GC pause time on epay-server"
+          description: "GC pause time is consuming over 10% of time."
 
       - alert: TooManyOpenFiles
         expr: |
-          process_open_fds{language="java"}
+          process_open_fds{job="epay-server"}
           /
-          process_max_fds{language="java"}
+          process_max_fds{job="epay-server"}
           > 0.8
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "High open file descriptors on {{ $labels.service }}"
-          description: "{{ $labels.service }} is using more than 80% of allowed file descriptors."
+          summary: "High open file descriptors on epay-server"
+          description: "epay-server is using more than 80% of allowed file descriptors."
 
-  - name: java-connection-pools
+  - name: epay-server-db
     rules:
-
       - alert: HikariConnectionPoolExhausted
         expr: |
-          hikaricp_connections_pending{language="java"} > 5
+          hikaricp_connections_pending{job="epay-server"} > 5
         for: 2m
         labels:
           severity: critical
         annotations:
-          summary: "DB connection pool exhausted on {{ $labels.service }}"
-          description: "{{ $labels.service }} has {{ $value }} threads waiting for a DB connection."
+          summary: "DB connection pool exhausted on epay-server"
+          description: "{{ $value }} threads are waiting for a DB connection."

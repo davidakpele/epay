@@ -28,6 +28,10 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
 import jakarta.servlet.http.HttpServletResponse;
+import com.epay.common.config.components.IpExtractor;
+import com.epay.common.config.logging.RequestAuditFilter;
+import com.epay.common.config.services.GeoLocationService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 
 @Configuration
@@ -41,18 +45,28 @@ public class SecurityConfiguration {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final RateLimitingFilter rateLimitingFilter;
     private final BotDetectionFilter botDetectionFilter;
+    private final IpExtractor ipExtractor;
+    private final GeoLocationService geoLocationService;
+    private final ObjectMapper objectMapper;
 
     public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter,
                                   AuthenticationProvider authenticationProvider,
                                   JwtProperties jwtProperties,
                                   CustomAuthenticationEntryPoint authenticationEntryPoint,
-                                  RateLimitingFilter rateLimitingFilter, BotDetectionFilter botDetectionFilter) {
+                                  RateLimitingFilter rateLimitingFilter,
+                                  BotDetectionFilter botDetectionFilter,
+                                  IpExtractor ipExtractor,
+                                  GeoLocationService geoLocationService,
+                                  ObjectMapper objectMapper) {
         this.jwtAuthFilter            = jwtAuthFilter;
         this.authenticationProvider   = authenticationProvider;
         this.jwtProperties            = jwtProperties;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.rateLimitingFilter       = rateLimitingFilter;
-        this.botDetectionFilter = botDetectionFilter;
+        this.botDetectionFilter       = botDetectionFilter;
+        this.ipExtractor              = ipExtractor;
+        this.geoLocationService       = geoLocationService;
+        this.objectMapper             = objectMapper;
     }
     
     
@@ -144,6 +158,10 @@ public class SecurityConfiguration {
             )
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(
+                new RequestAuditFilter(ipExtractor, geoLocationService, objectMapper),
+                jwtAuthFilter.getClass()
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers(

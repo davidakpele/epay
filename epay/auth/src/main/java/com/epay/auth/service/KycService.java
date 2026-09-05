@@ -197,6 +197,7 @@ public class KycService {
         }
     }
 
+    @Transactional
     public ResponseEntity<?> enableUserTwoFactorKey(Boolean enable2fa, Authentication authentication) {
         String username = authentication.getName();
         Optional<User> optionalUser = userRepository.findByUsername(username);
@@ -206,7 +207,11 @@ public class KycService {
         User user = optionalUser.get();
         user.setTwoFactorEnabled(enable2fa);
         userRepository.save(user);
-        return ResponseEntity.ok().body("Two-Factor Authentication updated successfully");
+        return ResponseEntity.ok().body(Map.of(
+                "success", true,
+                "message", "Two-Factor Authentication updated successfully",
+                "twoFactorEnabled", enable2fa
+        ));
     }
 
     public ResponseEntity<?> removeUserProfileImage(Long id) {

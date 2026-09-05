@@ -1,0 +1,325 @@
+{
+  "title": "ePay — Request Audit Log",
+  "uid": "epay-request-audit",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-1h", "to": "now" },
+  "tags": ["epay", "audit", "requests", "security"],
+  "templating": {
+    "list": [
+      {
+        "name": "method",
+        "label": "Method",
+        "type": "custom",
+        "query": "GET,POST,PUT,DELETE,PATCH",
+        "multi": true,
+        "includeAll": true,
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "custom",
+        "query": "200,201,400,401,403,404,429,500",
+        "multi": true,
+        "includeAll": true,
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "authenticated",
+        "label": "Auth",
+        "type": "custom",
+        "query": "true,false",
+        "multi": true,
+        "includeAll": true,
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total Requests",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "count_over_time({job=\"epay-audit\"}[$__range])",
+          "refId": "A",
+          "instant": true
+        }
+      ]
+    },
+
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Blocked / Rejected",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 10 }
+            ]
+          }
+        }
+      },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "count_over_time({job=\"epay-audit\", blocked=\"true\"}[$__range])",
+          "refId": "A",
+          "instant": true
+        }
+      ]
+    },
+
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "5xx Errors",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "count_over_time({job=\"epay-audit\", status=~\"5..\"}[$__range])",
+          "refId": "A",
+          "instant": true
+        }
+      ]
+    },
+
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Unique IPs",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "options": { "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "count(count by (ip) (rate({job=\"epay-audit\"}[$__range])))",
+          "refId": "A",
+          "instant": true
+        }
+      ]
+    },
+
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Authenticated Requests",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "options": { "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "count_over_time({job=\"epay-audit\", authenticated=\"true\"}[$__range])",
+          "refId": "A",
+          "instant": true
+        }
+      ]
+    },
+
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Anonymous Requests",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "options": { "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "count_over_time({job=\"epay-audit\", authenticated=\"false\"}[$__range])",
+          "refId": "A",
+          "instant": true
+        }
+      ]
+    },
+
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Request Rate Over Time",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "rate({job=\"epay-audit\"}[1m])",
+          "refId": "A",
+          "legendFormat": "All requests"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "rate({job=\"epay-audit\", blocked=\"true\"}[1m])",
+          "refId": "B",
+          "legendFormat": "Blocked"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "rate({job=\"epay-audit\", status=~\"5..\"}[1m])",
+          "refId": "C",
+          "legendFormat": "5xx errors"
+        }
+      ]
+    },
+
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Requests by HTTP Status",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "rate({job=\"epay-audit\", status=~\"2..\"}[1m])",
+          "refId": "A",
+          "legendFormat": "2xx Success"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "rate({job=\"epay-audit\", status=~\"4..\"}[1m])",
+          "refId": "B",
+          "legendFormat": "4xx Client Error"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "rate({job=\"epay-audit\", status=~\"5..\"}[1m])",
+          "refId": "C",
+          "legendFormat": "5xx Server Error"
+        }
+      ]
+    },
+
+    {
+      "id": 9,
+      "type": "logs",
+      "title": "Live Request Log Stream",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 10 },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{job=\"epay-audit\", method=~\"$method\", status=~\"$status\", authenticated=~\"$authenticated\"}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "id": 10,
+      "type": "logs",
+      "title": "Blocked / Security Rejected Requests",
+      "gridPos": { "x": 0, "y": 22, "w": 24, "h": 8 },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending"
+      },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{job=\"epay-audit\", blocked=\"true\"}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "id": 11,
+      "type": "logs",
+      "title": "5xx Server Errors",
+      "gridPos": { "x": 0, "y": 30, "w": 24, "h": 8 },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending"
+      },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{job=\"epay-audit\", status=~\"5..\"}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "id": 12,
+      "type": "logs",
+      "title": "Application Log — WARN / ERROR",
+      "gridPos": { "x": 0, "y": 38, "w": 24, "h": 8 },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending"
+      },
+      "datasource": { "type": "loki", "uid": "loki-uid" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki-uid" },
+          "expr": "{job=\"epay-app\", level=~\"WARN|ERROR\"}",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

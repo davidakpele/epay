@@ -37,12 +37,13 @@ ingester:
 limits_config:
   allow_structured_metadata: true
   volume_enabled: true
-  retention_period: 336h   # 14 days
+  retention_period: 336h
 
 compactor:
   working_directory: /loki/compactor
   retention_enabled: true
   retention_delete_delay: 2h
+  delete_request_store: filesystem
 
 query_range:
   results_cache:

@@ -1,8 +1,4 @@
 services:
-  # ============================================================
-  # Infrastructure
-  # ============================================================
-
   postgres:
     image: postgres:16-alpine
     container_name: epay-postgres
@@ -72,10 +68,6 @@ services:
     networks:
       - epay-network
 
-  # ============================================================
-  # Backend — Spring Boot
-  # ============================================================
-
   epay-server:
     build:
       context: ./epay
@@ -124,6 +116,7 @@ services:
       - 8.8.4.4
     volumes:
       - app_uploads:/var/www/uploads
+      - epay_logs:/var/log/epay
     networks:
       - epay-network
     logging:
@@ -131,10 +124,6 @@ services:
       options:
         max-size: "50m"
         max-file: "5"
-
-  # ============================================================
-  # Frontend — Next.js
-  # ============================================================
 
   frontend:
     build:
@@ -146,8 +135,6 @@ services:
       - "3000"
     environment:
       NODE_ENV: production
-      # Point the Next.js app at the backend through the internal network.
-      # Override in .env if your app uses a different variable name.
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://epay-server:8029}
     depends_on:
       epay-server:
@@ -167,21 +154,17 @@ services:
         max-size: "20m"
         max-file: "3"
 
-  # ============================================================
-  # Nginx — reverse proxy for backend + frontend
-  # ============================================================
-
   nginx:
-    image: nginx:1.27-alpine
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: epay-nginx:latest
     container_name: epay-nginx
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./nginx/html:/etc/nginx/html:ro
       - nginx_logs:/var/log/nginx:rw
     depends_on:
       epay-server:
@@ -210,17 +193,45 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # ============================================================
-  # Observability (optional — comment out if not needed)
-  # ============================================================
+  # ── Loki (log storage) ──────────────────────────────────────────────────────
+  loki:
+    build:
+      context: ./epay/monitoring/loki
+      dockerfile: Dockerfile
+    image: epay-loki:latest
+    container_name: epay-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+    restart: unless-stopped
+    networks:
+      - epay-network
+
+  # ── Promtail (log shipper — tails epay_logs volume) ────────────────────────
+  promtail:
+    build:
+      context: ./epay/monitoring/promtail
+      dockerfile: Dockerfile
+    image: epay-promtail:latest
+    container_name: epay-promtail
+    volumes:
+      - epay_logs:/var/log/epay:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - epay-network
 
   prometheus:
-    image: prom/prometheus:v2.51.2
+    build:
+      context: ./epay/monitoring/prometheus
+      dockerfile: Dockerfile
+    image: epay-prometheus:latest
     container_name: epay-prometheus
     ports:
       - "9090:9090"
     volumes:
-      - ./epay/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -234,7 +245,10 @@ services:
       - epay-network
 
   grafana:
-    image: grafana/grafana:10.4.2
+    build:
+      context: ./epay/monitoring/grafana
+      dockerfile: Dockerfile
+    image: epay-grafana:latest
     container_name: epay-grafana
     ports:
       - "3001:3000"
@@ -250,22 +264,18 @@ services:
     networks:
       - epay-network
 
-# ============================================================
-# Volumes
-# ============================================================
 volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
   app_uploads:
+  epay_logs:
   prometheus_data:
   grafana_data:
+  loki_data:
   nginx_logs:
     driver: local
 
-# ============================================================
-# Networks
-# ============================================================
 networks:
   epay-network:
     driver: bridge

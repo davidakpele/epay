@@ -35,6 +35,7 @@ import {
   getUserIsSetTransfer,
   getUsername,
   getUserWalletId,
+  setUserTransferPin,
   updateProfileImageInStorage,
   userService,
   walletService,
@@ -175,50 +176,100 @@ const Settings = () => {
   };
 
   const fetchUserProfile = async () => {
+    // Seed immediately from localStorage so fields aren't blank while the
+    // network request is in-flight.
+    if (user_details) {
+      const cachedRecord = {
+        firstName: user_details.firstName || "",
+        lastName: user_details.lastName || "",
+        gender: user_details.gender || "",
+        telephone: user_details.telephone || "",
+        dob: user_details.dob || "",
+        photo: (user_details as any).photo || "",
+      };
+      setUserProfile((prev: any) =>
+        prev
+          ? prev
+          : {
+              email: user_details.email || "",
+              username: user_details.username || "",
+              twoFactorAuth: user_details.twoFactorAuthEnabled || false,
+              personal: cachedRecord,
+              // keep records shape so render-time userRecord also works
+              records: [cachedRecord],
+            },
+      );
+    }
+
     try {
       const userId = getUserId();
 
       const response = await userService.getById(userId);
-      setUserProfile(response);
-      const userRecord = response.records?.[0] || {};
+
+      // Support both API shapes:
+      //   New shape: { success, data: { email, username, personal: { firstName, … } } }
+      //   Old shape: { email, username, records: [{ firstName, … }] }
+      const payload = response?.data ?? response;
+      const personal = payload?.personal ?? payload?.records?.[0] ?? {};
+
+      // Normalise into a single flat record the rest of the component can use
+      const normalised = {
+        ...payload,
+        email: payload.email || "",
+        username: payload.username || "",
+        twoFactorAuth:
+          payload.twoFactorEnabled ?? payload.twoFactorAuth ?? false,
+        // expose personal fields at the top level so userRecord works unchanged
+        records: [
+          {
+            firstName: personal.firstName || "",
+            lastName: personal.lastName || "",
+            gender: personal.gender || "",
+            telephone: personal.phoneNumber || personal.telephone || "",
+            dob: personal.dateOfBirth || personal.dob || "",
+            photo: personal.photo || "",
+            language: personal.language || "English",
+            currency: personal.currency || "NGN",
+            timezone: personal.timezone || "Africa/Lagos",
+          },
+        ],
+      };
+
+      setUserProfile(normalised);
+      const userRecord = normalised.records[0];
 
       setFormData({
-        firstName: userRecord.firstName || "",
-        lastName: userRecord.lastName || "",
+        firstName: userRecord.firstName,
+        lastName: userRecord.lastName,
         gender: userRecord.gender
           ? capitalizeFirstLetter(userRecord.gender)
           : "",
-        telephone: userRecord.telephone || "",
+        telephone: userRecord.telephone,
         dob: userRecord.dob || user_details?.dob || "",
-        email: response.email || "",
+        email: normalised.email,
       });
 
-      console.log("User records:", response.records);
-      console.log("Photo path:", userRecord.photo);
-
-      // Update settings with fetched data
       setSettings((prev) => ({
         ...prev,
         profile: {
-          fullName:
-            `${userRecord.firstName || ""} ${userRecord.lastName || ""}`.trim(),
-          email: response.email || "",
-          phone: userRecord.telephone || "",
-          username: response.username || "",
+          fullName: `${userRecord.firstName} ${userRecord.lastName}`.trim(),
+          email: normalised.email,
+          phone: userRecord.telephone,
+          username: normalised.username,
           profileImage: userRecord.photo
             ? `http://localhost/api/v1${userRecord.photo}`
             : "/assets/images/user-profile.jpg",
         },
         security: {
-          twoFactorEnabled: response.twoFactorAuth || false,
+          twoFactorEnabled: normalised.twoFactorAuth,
           biometricEnabled: prev.security.biometricEnabled,
           sessionTimeout: prev.security.sessionTimeout,
         },
         preferences: {
-          language: userRecord.language || "English",
-          currency: userRecord.currency || "NGN",
+          language: userRecord.language,
+          currency: userRecord.currency,
           theme: prev.preferences.theme,
-          timezone: userRecord.timezone || "Africa/Lagos",
+          timezone: userRecord.timezone,
         },
       }));
 
@@ -709,13 +760,17 @@ const Settings = () => {
     };
 
     const response = await walletService.createTransferPin(payload);
-    if (response?.status === "success") {
+    const pinCreated =
+      response?.success === true || response?.status === "success";
+    if (pinCreated) {
+      setUserHasPin(true);
+      setPinMode("update");
+      setUserTransferPin(true);
       setPin(["", "", "", ""]);
       setConfirmPin(["", "", "", ""]);
       setCurrentPin(["", "", "", ""]);
       setShowCreatePinForm(false);
       setShowChangePinForm(false);
-      checkPinStatus();
       showToast("PIN Created Successfully!", "success");
     } else {
       showToast(response?.message || "Failed to create PIN. Please try again.");
@@ -754,12 +809,16 @@ const Settings = () => {
     };
 
     const response = await walletService.createTransferPin(payload);
-    if (response?.status === "success") {
+    const pinChanged =
+      response?.success === true || response?.status === "success";
+    if (pinChanged) {
+      setUserHasPin(true);
+      setPinMode("update");
+      setUserTransferPin(true);
       setPin(["", "", "", ""]);
       setConfirmPin(["", "", "", ""]);
       setCurrentPin(["", "", "", ""]);
       setShowChangePinForm(false);
-      checkPinStatus();
       showToast("PIN changed successfully!", "success");
     } else {
       showToast(
