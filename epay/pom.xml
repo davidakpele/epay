@@ -37,6 +37,7 @@
         <module>bank</module>
         <module>admin</module>
         <module>bills</module>
+        <module>support</module>
         <module>main</module>
     </modules>
 
@@ -348,6 +349,11 @@
             <dependency>
                 <groupId>com.epay</groupId>
                 <artifactId>epay-admin</artifactId>
+                <version>${epay.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.epay</groupId>
+                <artifactId>epay-support</artifactId>
                 <version>${epay.version}</version>
             </dependency>
             <dependency>

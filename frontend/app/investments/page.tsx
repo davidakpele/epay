@@ -10,6 +10,7 @@ import {
   ChevronDown,
   CheckCircle,
   Loader2,
+  Search,
   Link as LinkIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -27,6 +28,9 @@ import {
   getUserId,
   getUserWalletId,
   getWallet,
+  getWalletList,
+  setActiveWallet,
+  setFiat,
   setWalletContainer,
   walletService,
 } from "@/app/api";
@@ -35,6 +39,12 @@ import "./Investments.css";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 type Duration = "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY";
+
+interface Currency {
+  name: string;
+  code: string;
+  symbol: string;
+}
 
 interface ApiPlan {
   duration: Duration;
@@ -117,6 +127,18 @@ export default function InvestmentsPage() {
   const [isPlanDropdownOpen, setIsPlanDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  /* currency modal (same pattern as dashboard) */
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(
+    null,
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isScrolling, setIsScrolling] = useState(false);
+  const currencyPillRef = useRef<HTMLDivElement>(null);
+  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
+
   /* calculator */
   const [calcAmount, setCalcAmount] = useState("500,000");
   const [rawAmount, setRawAmount] = useState("500000");
@@ -170,7 +192,7 @@ export default function InvestmentsPage() {
     document.body.classList.toggle("dark-theme", next === "dark");
   };
 
-  /* ── close dropdown on outside click ── */
+  /* ── close dropdowns on outside click ── */
   useEffect(() => {
     const h = (e: MouseEvent) => {
       if (
@@ -178,6 +200,11 @@ export default function InvestmentsPage() {
         !dropdownRef.current.contains(e.target as Node)
       )
         setIsPlanDropdownOpen(false);
+      if (
+        currencyPillRef.current &&
+        !currencyPillRef.current.contains(e.target as Node)
+      )
+        setIsCurrencyDropdownOpen(false);
     };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
@@ -236,10 +263,41 @@ export default function InvestmentsPage() {
   useEffect(() => {
     document.title = "Investments – ePay Online Business Banking";
     try {
-      const fiat = getFiat();
-      const w = fiat ? getWallet(fiat) : null;
-      if (w?.symbol) setCurrencySymbol(w.symbol);
-      if (fiat) setCurrencyCode(fiat);
+      const list = getWalletList();
+      if (list && Array.isArray(list)) {
+        const apiCurrencies: Currency[] = list.map((w: any) => ({
+          name: w.currency_code,
+          code: w.currency_code,
+          symbol:
+            w.symbol || getWallet(w.currency_code)?.symbol || w.currency_code,
+        }));
+        setCurrencies(apiCurrencies);
+
+        const fiat = getFiat();
+        if (fiat) {
+          const active = apiCurrencies.find((c) => c.code === fiat);
+          if (active) {
+            setSelectedCurrency(active);
+            setCurrencySymbol(active.symbol);
+            setCurrencyCode(active.code);
+          } else if (apiCurrencies.length > 0) {
+            setSelectedCurrency(apiCurrencies[0]);
+            setCurrencySymbol(apiCurrencies[0].symbol);
+            setCurrencyCode(apiCurrencies[0].code);
+          }
+        } else if (apiCurrencies.length > 0) {
+          const def =
+            apiCurrencies.find((c) => c.code === "NGN") || apiCurrencies[0];
+          setSelectedCurrency(def);
+          setCurrencySymbol(def.symbol);
+          setCurrencyCode(def.code);
+        }
+      } else {
+        const fiat = getFiat();
+        const w = fiat ? getWallet(fiat) : null;
+        if (w?.symbol) setCurrencySymbol(w.symbol);
+        if (fiat) setCurrencyCode(fiat);
+      }
     } catch (_) {}
     const t = setTimeout(() => setIsPageLoading(false), 800);
     return () => clearTimeout(t);
@@ -300,6 +358,20 @@ export default function InvestmentsPage() {
     setRawAmount(String(val));
     setCalcAmount(val.toLocaleString("en-US"));
   };
+
+  /* ── scroll handler for currency list ── */
+  const handleScroll = () => {
+    setIsScrolling(true);
+    if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => setIsScrolling(false), 1000);
+  };
+
+  /* ── filtered currencies for search ── */
+  const filteredCurrencies = currencies.filter(
+    (c) =>
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.code.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   /* ── invest now ── */
   const handleInvestNow = async () => {
@@ -395,7 +467,6 @@ export default function InvestmentsPage() {
   return (
     <div className={`dashboard-container ${theme === "dark" ? "dark" : ""}`}>
       <Sidebar />
-
       <main className={`main-content ${isDepositOpen ? "dashboard-blur" : ""}`}>
         <Header theme={theme} toggleTheme={toggleTheme} />
 
@@ -501,6 +572,39 @@ export default function InvestmentsPage() {
                   </div>
 
                   <div className="inv-calc-body">
+                    {/* Currency selector pill */}
+                    {currencies.length > 0 && (
+                      <div className="inv-calc-wallet-row">
+                        <label className="inv-label">Select Wallet</label>
+                        <div
+                          ref={currencyPillRef}
+                          className="inv-currency-pill"
+                          onClick={() => {
+                            setIsModalOpen(true);
+                            setIsCurrencyDropdownOpen((p) => !p);
+                          }}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <span className="inv-currency-pill-inner">
+                            <span className="inv-currency-pill-code">
+                              {selectedCurrency?.code || currencyCode}
+                            </span>
+                            <span className="inv-currency-pill-name">
+                              {selectedCurrency?.name &&
+                              selectedCurrency.name !== selectedCurrency.code
+                                ? selectedCurrency.name
+                                : currencyCode}
+                            </span>
+                            <i
+                              className={`fa ${isCurrencyDropdownOpen ? "fa-caret-up" : "fa-caret-down"}`}
+                              aria-hidden="true"
+                              style={{ fontSize: "13px", marginLeft: "4px" }}
+                            />
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="inv-calc-row">
                       {/* Amount field */}
                       <div className="inv-calc-field">
@@ -860,14 +964,75 @@ export default function InvestmentsPage() {
           <Footer theme={theme} />
         </div>
       </main>
-
-      <MobileNav activeTab="none" onPlusClick={() => setIsDepositOpen(true)} />
+      {/* Currency selection modal — same pattern as dashboard */}
+      {isModalOpen && (
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setIsModalOpen(false);
+            setIsCurrencyDropdownOpen(false);
+          }}
+        >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Select Wallet</h3>
+            </div>
+            <div className="search-container">
+              <span className="search-icon-inside">
+                <Search size={16} />
+              </span>
+              <input
+                type="text"
+                placeholder="Search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div
+              className={`country-list ${isScrolling ? "is-scrolling" : ""}`}
+              onScroll={handleScroll}
+            >
+              {filteredCurrencies.length === 0 ? (
+                <p className="no-results">No wallets found</p>
+              ) : (
+                filteredCurrencies.map((c) => (
+                  <div
+                    key={c.code}
+                    className="country-item"
+                    onClick={() => {
+                      setSelectedCurrency(c);
+                      setCurrencyCode(c.code);
+                      setCurrencySymbol(c.symbol);
+                      setFiat(c.code);
+                      setActiveWallet(c.code);
+                      setCalcResult(null);
+                      setIsModalOpen(false);
+                      setIsCurrencyDropdownOpen(false);
+                      setSearchTerm("");
+                    }}
+                  >
+                    <span>
+                      {c.name} ({c.code})
+                    </span>
+                    <div
+                      className={`radio-outer ${selectedCurrency?.code === c.code ? "checked" : ""}`}
+                    >
+                      <div className="radio-inner" />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      <MobileNav activeTab="none" onPlusClick={() => setIsDepositOpen(true)} />{" "}
       <DepositModal
         isOpen={isDepositOpen}
         onClose={() => setIsDepositOpen(false)}
         theme={theme}
       />
-
       {!isChatOpen && (
         <button
           className="chat-fab"

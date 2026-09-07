@@ -10,14 +10,12 @@ export default function Logout() {
   useEffect(() => {
     const doLogout = async () => {
       const userId = getUserId();
-      try {
-        if (userId) await authService.logout(userId);
-      } catch (_) {
-        // ignore — clear session regardless
-      } finally {
-        removeAuthToken();
-        router.replace("/default");
-      }
+      const [result] = await Promise.allSettled([
+        userId ? authService.logout(userId) : Promise.resolve(),
+        new Promise((resolve) => setTimeout(resolve, 1500)), // minimum loader time
+      ]);
+      removeAuthToken();
+      router.replace("/default");
     };
 
     doLogout();

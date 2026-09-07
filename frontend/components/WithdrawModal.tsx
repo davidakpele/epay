@@ -329,7 +329,7 @@ const WithdrawModal = ({
       if (step === "bank") {
         beneficiaryData = {
           userId: userId,
-          beneficiaryType: "bank",
+          beneficiaryType: "BANK",
           beneficiaryName: accountName,
           accountNumber: accountNumber,
           accountName: accountName,
@@ -341,7 +341,7 @@ const WithdrawModal = ({
       } else {
         beneficiaryData = {
           userId: userId,
-          beneficiaryType: "user",
+          beneficiaryType: "USER",
           beneficiaryName: recipientUsername,
           recipientUsername: recipientUsername,
           currency: selectedWallet?.currency || "NGN",
@@ -668,7 +668,12 @@ const WithdrawModal = ({
 
       // Check if response exists and has status
       if (response) {
-        if (response.status === "success" || response.status === "OK") {
+        if (
+          response.success === true ||
+          response.status === "COMPLETED" ||
+          response.status === "success" ||
+          response.status === "OK"
+        ) {
           const token = getToken();
           const userId = getUserId();
 

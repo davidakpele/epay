@@ -3,6 +3,9 @@ package com.epay.common.config.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -112,8 +115,29 @@ public class SecurityConfiguration {
         return source;
     }
     
+    /**
+     * Priority-1 filter chain: completely open paths — no JWT, no resource server.
+     * Uses explicit AntPathRequestMatchers so Spring Security 6 matches correctly.
+     */
+    @Bean
+    @Order(1)
+    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher(new OrRequestMatcher(
+                PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET,  "/support/faqs"),
+                PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET,  "/support/articles/**"),
+                PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/support/chat")
+            ))
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        return http.build();
+    }
+
     @SuppressWarnings("removal")
     @Bean
+    @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -183,6 +207,12 @@ public class SecurityConfiguration {
                 ).permitAll() 
                 .requestMatchers("/static/**").permitAll()
                 .requestMatchers("/uploads/images/**").permitAll()
+                // ── Support: chat + content endpoints are public; tickets require auth ─
+                .requestMatchers(HttpMethod.POST, "/support/chat").permitAll()
+                .requestMatchers(HttpMethod.GET,  "/support/articles/**").permitAll()
+                .requestMatchers(HttpMethod.GET,  "/support/faqs").permitAll()
+                .requestMatchers(HttpMethod.POST, "/support/tickets/**").hasRole("USER")
+                .requestMatchers(HttpMethod.GET,  "/support/tickets/**").hasRole("USER")
                 .requestMatchers(HttpMethod.POST, "/user/{id}/block").hasAnyRole("ADMIN", "SUPER_USER", "CUSTOMER_SERVICE")
                 .requestMatchers(HttpMethod.POST, "/user/{id}/lock").hasAnyRole("ADMIN", "SUPER_USER")
                 .requestMatchers(HttpMethod.DELETE, "/user/{id}").hasRole("SUPER_USER")
@@ -216,6 +246,15 @@ public class SecurityConfiguration {
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
+                .bearerTokenResolver(request -> {
+                    // Only extract token if present — never reject missing tokens here.
+                    // permitAll() endpoints must be reachable without a Bearer header.
+                    String header = request.getHeader("Authorization");
+                    if (header != null && header.startsWith("Bearer ")) {
+                        return header.substring(7).trim();
+                    }
+                    return null;
+                })
                 .jwt(jwt -> jwt
                     .jwtAuthenticationConverter(jwtAuthenticationConverter())
                     .decoder(jwtDecoder())

@@ -25,7 +25,7 @@ interface Transaction {
 interface Beneficiary {
   id: number;
   userId: number;
-  beneficiaryType: "bank" | "user";
+  beneficiaryType: "BANK" | "USER";
   beneficiaryName: string;
   currency: string;
   accountNumber?: string;
@@ -65,7 +65,7 @@ const BeneficiaryManager = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   const formatBeneficiary = (apiBeneficiary: any): Beneficiary => {
-    const isEpay = apiBeneficiary.beneficiaryType === "user";
+    const isEpay = apiBeneficiary.beneficiaryType === "USER";
     const nameParts = apiBeneficiary.beneficiaryName.split(" ");
     const initial = nameParts
       .map((part: string) => part[0])
@@ -177,26 +177,42 @@ const BeneficiaryManager = () => {
       setSelectedBeneficiary({ ...beneficiary, transactions: [] });
       setShowHistoryModal(true);
       setIsLoadingTransactions(true);
-      const minimumDelay = new Promise((resolve) => setTimeout(resolve, 3000));
-      const fetchData = historyService.getHistoryByBeneficiaryId(
-        beneficiary.userId,
-      );
+      const minimumDelay = new Promise((resolve) => setTimeout(resolve, 1000));
+      const userId = getUserId();
+      const fetchData = historyService.getHistoryByBeneficiaryId(userId);
       const [_, response] = await Promise.all([minimumDelay, fetchData]);
-      if (response && Array.isArray(response)) {
-        const transactions: Transaction[] = response.map((t: any) => ({
-          id: t.id || t.transactionId,
-          date: t.timestamp || t.createdOn,
-          amount: t.amount ? `${t.amount}` : "0",
-          type: t.type || "TRANSFER",
-          status: mapTransactionStatus(t.status),
-          description: t.description || t.message || "",
-          reference: t.referenceNo || t.transactionId || "",
-          currencyType: t.currencyType || beneficiary.currency,
-        }));
-        setSelectedBeneficiary({ ...beneficiary, transactions });
-      } else {
-        setSelectedBeneficiary({ ...beneficiary, transactions: [] });
-      }
+
+      // Backend returns paginated shape: { success, data: { content: [...] } }
+      const allItems: any[] = Array.isArray(response)
+        ? response
+        : (response?.data?.content ?? response?.content ?? []);
+
+      // Filter to only transactions involving this beneficiary
+      const beneficiaryName = beneficiary.beneficiaryName.toUpperCase();
+      const filtered = allItems.filter((t: any) => {
+        const recipientHolder = (
+          t.recipient?.accountHolder || ""
+        ).toUpperCase();
+        const description = (t.description || "").toUpperCase();
+        return (
+          recipientHolder === beneficiaryName ||
+          description.includes(beneficiaryName)
+        );
+      });
+
+      const transactions: Transaction[] = filtered.map((t: any) => ({
+        id: t.transactionId || t.id || "",
+        date: t.completedAt || t.createdAt || t.timestamp || t.createdOn || "",
+        amount: t.amount?.net ?? t.amount?.gross ?? t.amount ?? "0",
+        type: t.transactionType || t.type || "TRANSFER",
+        status: mapTransactionStatus(t.currentStatus || t.status || ""),
+        description: t.description || t.message || "",
+        reference: t.reference || t.referenceNo || t.transactionId || "",
+        currencyType:
+          t.amount?.currency || t.currencyType || beneficiary.currency,
+      }));
+
+      setSelectedBeneficiary({ ...beneficiary, transactions });
     } catch (err: any) {
       setError(err.message || "Failed to load transaction history");
       setSelectedBeneficiary({ ...beneficiary, transactions: [] });
@@ -879,12 +895,12 @@ const BeneficiaryManager = () => {
                                 </div>
                               </div>
                               {transaction.description && (
-                                <p className="text-xs text-gray-600 mt-2 pl-13">
+                                <p className="text-xs text-gray-600 mt-2 ml-13">
                                   {transaction.description}
                                 </p>
                               )}
                               {transaction.reference && (
-                                <p className="text-xs text-gray-400 mt-1 pl-13 font-mono">
+                                <p className="text-xs text-gray-400 mt-1 ml-13 font-mono">
                                   Ref: {transaction.reference}
                                 </p>
                               )}

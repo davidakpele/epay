@@ -13,6 +13,7 @@ export const SERVICE_URLS = {
   HISTORY: BASE_URL,
   BENEFICIARY: BASE_URL,
   VIRTUALCARD: BASE_URL,
+  SUPPORT: BASE_URL,
 } as const;
 
 export const defaultHeaders: Record<string, string> = {
@@ -164,4 +165,17 @@ export const API_URLS = {
   },
 
   EXCHANGE: (id: string | number) => `${SERVICE_URLS.WALLET}/wallet/${id}/swap`,
+
+  SUPPORT: {
+    CHAT: `${SERVICE_URLS.SUPPORT}/support/chat`,
+    ARTICLES: `${SERVICE_URLS.SUPPORT}/support/articles`,
+    ARTICLE: (slug: string) =>
+      `${SERVICE_URLS.SUPPORT}/support/articles/${slug}`,
+    FAQS: `${SERVICE_URLS.SUPPORT}/support/faqs`,
+    CREATE_TICKET: `${SERVICE_URLS.SUPPORT}/support/tickets`,
+    USER_TICKETS: (userId: string | number) =>
+      `${SERVICE_URLS.SUPPORT}/support/tickets/user/${userId}`,
+    TICKET: (reference: string, userId: string | number) =>
+      `${SERVICE_URLS.SUPPORT}/support/tickets/${reference}?userId=${userId}`,
+  },
 };

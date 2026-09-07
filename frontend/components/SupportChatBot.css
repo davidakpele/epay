@@ -1,4 +1,3 @@
-
 .scb-wrapper {
   position: fixed;
   bottom: 28px;
@@ -10,11 +9,23 @@
   flex-direction: column;
   background: #ffffff;
   border-radius: 20px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   animation: scb-pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
 }
 
 @keyframes scb-pop-in {
@@ -185,7 +196,9 @@
   border-radius: 14px;
   cursor: pointer;
   text-align: left;
-  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
   width: 100%;
 }
 
@@ -361,7 +374,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
   padding: 0;
 }
 .scb-scroll-arrow:hover {
@@ -452,7 +467,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background 0.18s ease, transform 0.15s ease;
+  transition:
+    background 0.18s ease,
+    transform 0.15s ease;
 }
 .scb-send-btn:hover:not(.scb-send-disabled) {
   background: var(--bg-main);
@@ -531,7 +548,9 @@
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, transform 0.15s;
+  transition:
+    background 0.2s,
+    transform 0.15s;
   font-family: inherit;
   margin-top: 4px;
 }
@@ -624,7 +643,9 @@
   cursor: pointer;
   text-align: left;
   width: 100%;
-  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
 }
 .scb-list-item:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
@@ -688,7 +709,18 @@
 }
 .scb-article-dtitle {
   font-size: 16px;
-  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   font-weight: 600;
   color: #1e293b;
   margin: 0 0 14px;
@@ -712,7 +744,9 @@
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.2s, transform 0.15s;
+  transition:
+    background 0.2s,
+    transform 0.15s;
 }
 .scb-article-chat-btn:hover {
   background: #155826;
@@ -743,7 +777,9 @@
   cursor: pointer;
   padding: 4px 10px;
   border-radius: 10px;
-  transition: color 0.18s ease, background 0.18s ease;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease;
   font-family: inherit;
 }
 .scb-nav-item:hover {
@@ -753,7 +789,6 @@
 .scb-nav-active {
   color: var(--bg-main) !important;
 }
-
 
 @media (max-width: 480px) {
   .scb-wrapper {
@@ -807,7 +842,6 @@
   color: #64748b;
   font-weight: 500;
 }
-
 
 .scb-faq-meta {
   display: flex;
@@ -937,4 +971,77 @@
   font-weight: 600;
   white-space: nowrap;
   margin-left: 2px;
+}
+
+/* ── Wallet balance cards ─────────────────────────────────────────────────── */
+.scb-wallet-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.scb-wallet-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.scb-wallet-card-code {
+  font-weight: 700;
+  color: #166534;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  background: #dcfce7;
+  border-radius: 5px;
+  padding: 2px 8px;
+}
+
+.scb-wallet-card-bal {
+  font-weight: 600;
+  color: #15803d;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Option buttons (wallet picker, confirm/cancel) ──────────────────────── */
+.scb-option-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.scb-option-btn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1.5px solid var(--bg-main, #2b0f56);
+  border-radius: 10px;
+  color: var(--bg-main, #2b0f56);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  font-family: inherit;
+}
+
+.scb-option-btn:hover:not(:disabled) {
+  background: var(--bg-main, #2b0f56);
+  color: #fff;
+}
+
+.scb-option-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

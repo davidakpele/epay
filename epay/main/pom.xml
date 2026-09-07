@@ -86,6 +86,10 @@
             <artifactId>epay-admin</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.epay</groupId>
+            <artifactId>epay-support</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>

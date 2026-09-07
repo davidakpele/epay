@@ -925,3 +925,47 @@ a.inv-view-all-full-btn {
   text-align: center;
   text-decoration: none;
 }
+
+/* ── Currency Wallet Selector Pill ───────────────────────────────────────── */
+.inv-calc-wallet-row {
+  margin-bottom: 20px;
+}
+
+.inv-currency-pill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50px;
+  padding: 8px 16px;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+  user-select: none;
+}
+
+.inv-currency-pill:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.inv-currency-pill-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.inv-currency-pill-code {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.inv-currency-pill-name {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.75);
+}

@@ -12,10 +12,11 @@ import beneficiaryService from "./services/beneficiaryService";
 import virtualCardService from "./services/virtualCardService";
 import exchangeService from "./services/exchangeService";
 import investmentService from "./services/investmentService";
+import supportService from "./services/supportService";
+
 export * from "./utils";
 export * from "./config";
 
-// Export individual services
 export {
   xhrClient,
   authService,
@@ -31,9 +32,9 @@ export {
   virtualCardService,
   exchangeService,
   investmentService,
+  supportService,
 };
 
-// Default export as a grouped object
 const api = {
   xhrClient,
   authService,
@@ -49,6 +50,7 @@ const api = {
   virtualCardService,
   exchangeService,
   investmentService,
+  supportService,
 };
 
 export default api;

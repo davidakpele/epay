@@ -148,7 +148,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicEndpoint(HttpServletRequest request) {
-        String path = request.getRequestURI();
+        String path   = request.getRequestURI();
+        String method = request.getMethod();
         return path.startsWith("/auth/") ||
                path.startsWith("/error/") ||
                path.equals("/actuator/health") ||
@@ -163,10 +164,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                path.startsWith("/js/") ||
                path.startsWith("/images/") ||
                path.equals("/favicon.ico") ||
-               (path.startsWith("/user/username/") && request.getMethod().equals("GET")) ||
-               (path.matches("/user/\\d+") && request.getMethod().equals("GET")) ||
+               (path.startsWith("/user/username/") && method.equals("GET")) ||
+               (path.matches("/user/\\d+") && method.equals("GET")) ||
                path.startsWith("/cache/users/") ||
-               path.startsWith("/user/list");
+               path.startsWith("/user/list") ||
+               // Support: chat, articles and FAQs are public
+               (path.equals("/support/chat")         && method.equals("POST")) ||
+               (path.startsWith("/support/articles")  && method.equals("GET"))  ||
+               (path.equals("/support/faqs")          && method.equals("GET"));
     }
 
     private boolean isRefreshEndpoint(HttpServletRequest request) {
