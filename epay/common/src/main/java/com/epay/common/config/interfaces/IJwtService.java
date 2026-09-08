@@ -15,16 +15,12 @@ public interface IJwtService {
     Long extractUserId(String token);
     List<String> extractRoles(String token);
 
-    /** Returns the {@code permissions} list claim. */
     List<String> extractPermissions(String token);
 
-    /** Returns the {@code accountStatus} claim: ACTIVE, INACTIVE, or LOCKED. */
     String extractAccountStatus(String token);
 
-    /** Returns the {@code acr} claim (Authentication Context Class Reference). */
     String extractAcr(String token);
 
-    /** Returns the {@code amr} list claim (Authentication Methods References). */
     List<String> extractAmr(String token);
 
     String extractSessionId(String token);

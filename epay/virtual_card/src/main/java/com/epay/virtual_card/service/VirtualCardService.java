@@ -64,7 +64,6 @@ public class VirtualCardService {
                 ? request.getCurrency().toUpperCase()
                 : "NGN";
 
-        // ── Fee check & wallet debit ──────────────────────────────────────────
         CardFeeConfig feeConfig = feeConfigRepository
                 .findByCurrencyCodeIgnoreCaseAndCardType(currency, request.getCardType())
                 .orElse(null);
@@ -75,7 +74,6 @@ public class VirtualCardService {
             log.debug("[VirtualCard] No active fee config for {}/{} — issuing free",
                     currency, request.getCardType());
         }
-        // ─────────────────────────────────────────────────────────────────────
 
         String cardNumber = generateCardNumber(request.getCardType());
         String cvv = generateCVV();
@@ -338,26 +336,15 @@ public class VirtualCardService {
                 .orElseThrow(() -> new RuntimeException("Card limit not found for card: " + cardId));
     }
 
-    // ── Fee debit ─────────────────────────────────────────────────────────────
-
-    /**
-     * Checks that the user's wallet has enough balance to cover the issuance fee,
-     * then debits it atomically within the same transaction as card creation.
-     *
-     * @throws InsufficientBalanceException if the wallet balance is below the fee
-     * @throws IllegalStateException        if the wallet or currency balance is missing
-     */
     private void debitIssuanceFee(Long userId, String currency, CardFeeConfig feeConfig) {
         java.math.BigDecimal fee = feeConfig.getFeeAmount();
 
-        // Load the user's wallet
         com.epay.domain.wallet.entity.Wallet wallet = walletRepository
                 .findByUserId(userId)
                 .orElseThrow(() -> new IllegalStateException(
                         "No wallet found for userId=" + userId
                         + ". Create a wallet before issuing a card."));
 
-        // Find the currency balance row
         CurrencyBalance balance = currencyBalanceRepository
                 .findByWalletIdAndCurrencyCode(wallet.getId(), currency)
                 .orElseThrow(() -> new IllegalStateException(
@@ -375,8 +362,6 @@ public class VirtualCardService {
                             currency, fee,
                             currency, current));
         }
-
-        // Debit — single targeted UPDATE, no full entity reload
         java.math.BigDecimal newBalance = current.subtract(fee);
         currencyBalanceRepository.updateBalance(balance.getId(), newBalance);
 

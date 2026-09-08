@@ -23,13 +23,6 @@ public interface IAuthNotificationPublisher {
 
     void publishForgotUsername(String email, String username, String fullName);
 
-    /**
-     * Sends an account statement PDF to the user's email.
-     *
-     * @param email     recipient email
-     * @param username  recipient username (for greeting)
-     * @param pdfBytes  generated PDF bytes
-     * @param period    statement period string e.g. "01-Jan-2026 to 30-Jun-2026"
-     */
+  
     void publishAccountStatement(String email, String username, byte[] pdfBytes, String period);
 }

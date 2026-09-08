@@ -916,6 +916,22 @@ epay-app/
     └── middleware.ts               ← auth guard + redirect logic
 ```
 
+```docker
+docker compose up --build -d
+docker image prune -f 
+docker compose down -v --remove-orphans
+docker system prune -a --volumes -f 
+docker volume prune -a -f
+docker container prune -f
+docker compose up -d --no-build --force-recreate epay-server 2>&1 
+docker compose config --quiet 2>&1 
+docker compose up -d --build prometheus grafana 2>&1 
+docker run --rm alpine sh -c "ls /run/desktop/mnt/host/" 2>&1
+```
+```java build
+mvn clean:clean install
+mvn clean:clean install
+```
 ---
 
 ## Roadmap

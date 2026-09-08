@@ -18,23 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-/**
- * Runs once on every startup.
- *
- * Creates the default SUPER_USER account using credentials from
- * {@link SuperAdminProperties}.  If the username or email already
- * exists the seeder skips silently — no duplicate, no exception.
- *
- * The account is:
- *   - Enabled immediately (no email verification needed)
- *   - email + phone verified
- *   - KYC tier TIER_1, status NOT_SUBMITTED (admin doesn't go through KYC)
- *   - No wallet created (super admin doesn't need one)
- *
- * To change the credentials after first boot, update the database
- * directly or via the admin panel — the seeder will not overwrite
- * an existing account.
- */
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -55,7 +39,6 @@ public class SuperAdminSeeder implements ApplicationRunner {
         String username = props.getUsername().trim().toLowerCase();
         String email    = props.getEmail().trim().toLowerCase();
 
-        // ── Guard: skip entirely if username OR email already exists ─────────
         if (userRepository.existsByUsername(username)) {
             log.info("[Seeder] Super-admin '{}' already exists — skipping.", username);
             return;
@@ -65,7 +48,6 @@ public class SuperAdminSeeder implements ApplicationRunner {
             return;
         }
 
-        // ── Create User ───────────────────────────────────────────────────────
         User superAdmin = User.builder()
                 .username(username)
                 .email(email)
@@ -83,8 +65,6 @@ public class SuperAdminSeeder implements ApplicationRunner {
                 .build();
 
         userRepository.save(superAdmin);
-
-        // ── Create profile record ─────────────────────────────────────────────
         UserRecord record = UserRecord.builder()
                 .user(superAdmin)
                 .firstName(props.getFirstName())
@@ -101,6 +81,6 @@ public class SuperAdminSeeder implements ApplicationRunner {
         log.info("[Seeder]   Username : {}", username);
         log.info("[Seeder]   Email    : {}", email);
         log.info("[Seeder]   Role     : {}", Role.SUPER_USER);
-        log.warn("[Seeder]   ⚠ Change the default password immediately after first login!");
+        log.warn("[Seeder]   Change the default password immediately after first login!");
     }
 }

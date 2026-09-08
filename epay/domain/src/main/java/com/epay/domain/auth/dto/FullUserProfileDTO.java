@@ -13,16 +13,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Complete user profile — combines User, UserRecord, NextOfKin,
- * KycDocuments and UserAccountSettings in one response.
- */
+
 @Data
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FullUserProfileDTO {
 
-    // ── Account ──────────────────────────────────────────────────────────────
     private Long    id;
     private String  email;
     private String  username;
@@ -37,19 +33,12 @@ public class FullUserProfileDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // ── Personal record ───────────────────────────────────────────────────────
     private PersonalInfo personal;
-
-    // ── Next of kin ───────────────────────────────────────────────────────────
     private NextOfKinInfo nextOfKin;
 
-    // ── KYC documents ─────────────────────────────────────────────────────────
     private List<KycDocumentInfo> kycDocuments;
 
-    // ── Account settings ──────────────────────────────────────────────────────
     private AccountSettingsInfo settings;
-
-    // ── Nested types ─────────────────────────────────────────────────────────
 
     @Data
     @Builder

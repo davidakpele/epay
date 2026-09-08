@@ -158,7 +158,7 @@ public class DeveloperPortalController {
             @PathVariable Long appId,
             @PageableDefault(size = 50) Pageable pageable,
             Authentication auth) {
-        keyService.getApp(appId, extractUserId(auth), false); // ownership guard
+        keyService.getApp(appId, extractUserId(auth), false); 
         return ResponseEntity.ok(ApiResponse.success(null,
                 webhookService.getAppDeliveryLogs(appId, pageable)));
     }

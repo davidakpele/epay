@@ -16,10 +16,7 @@ public class DepositHistoryAdapter implements IDepositHistoryPort {
 
     private final HistoryService historyService;
 
-    /**
-     * Records a deposit that was accepted and validated but not yet confirmed.
-     * Timeline produced: INITIATED → PROCESSED → PENDING
-     */
+ 
     @Override
     public void recordDepositInitiated(Long userId, String reference,
                                         BigDecimal amount, String currency, String channel) {
@@ -29,7 +26,7 @@ public class DepositHistoryAdapter implements IDepositHistoryPort {
                     null, reference,
                     "INIT_" + reference,
                     "DEPOSIT", "CREDIT",
-                    channel, "PENDING",          // stops at PENDING — gateway not yet confirmed
+                    channel, "SETTLEMENT_PENDING",   
                     amount, BigDecimal.ZERO, amount,
                     null, null,
                     currency, currency,
@@ -42,10 +39,7 @@ public class DepositHistoryAdapter implements IDepositHistoryPort {
         }
     }
 
-    /**
-     * Records a fully completed deposit.
-     * Timeline produced: INITIATED → PROCESSED → PENDING → DELIVERED
-     */
+
     @Override
     public void recordDepositCompleted(Long userId, Long walletId,
                                         String reference, String gatewayReference,
@@ -63,7 +57,7 @@ public class DepositHistoryAdapter implements IDepositHistoryPort {
                     transactionId, reference,
                     "COMP_" + reference,
                     "DEPOSIT", "CREDIT",
-                    channel, "DELIVERED",        // full success: INITIATED→PROCESSED→PENDING→DELIVERED
+                    channel, "DELIVERED",      
                     grossAmount, safe(feeAmount), safe(netAmount),
                     previousBalance, newBalance,
                     currency, currencySymbol,
@@ -79,13 +73,7 @@ public class DepositHistoryAdapter implements IDepositHistoryPort {
         }
     }
 
-    /**
-     * Records a deposit that failed after being submitted to the gateway (i.e. after PENDING).
-     * Timeline produced: INITIATED → PROCESSED → PENDING → FAILED
-     *
-     * <p>Pass {@code channel = null} only if the failure occurred before gateway submission,
-     * in which case the timeline will be: INITIATED → PROCESSED → FAILED.
-     */
+  
     @Override
     public void recordDepositFailed(Long userId, String reference,
                                      BigDecimal amount, String currency, String reason) {
@@ -95,10 +83,8 @@ public class DepositHistoryAdapter implements IDepositHistoryPort {
                     null, reference,
                     "FAIL_" + reference,
                     "DEPOSIT", "CREDIT",
-                    // Channel is unknown at failure — use a non-INTERNAL sentinel so
-                    // HistoryService knows to include the PENDING step before FAILED.
-                    // Status "FAILED_AT_PENDING" stops the chain after PENDING.
-                    "GATEWAY", "FAILED_AT_PENDING",
+                    "CARD",             
+                    "FAILED_AT_PROCESSING", 
                     safe(amount), BigDecimal.ZERO, safe(amount),
                     null, null,
                     currency, currency,

@@ -20,28 +20,24 @@ import java.time.LocalDateTime;
 public class LiquidityConfig {
 
     @Id
-    private Long id;   // always 1 — singleton pattern
+    private Long id; 
 
     @Column(nullable = false, length = 30)
-    private String gateway;   // PAYSTACK | FLUTTERWAVE
+    private String gateway;
 
-    /** Alert when balance drops below this */
     @Column(name = "alert_threshold", nullable = false, precision = 20, scale = 2)
     private BigDecimal alertThreshold;
 
-    /** Block payouts when balance drops below this (harder floor) */
     @Column(name = "block_threshold", nullable = false, precision = 20, scale = 2)
     private BigDecimal blockThreshold;
 
-    /** Currency of the float account (usually NGN for Paystack NG) */
     @Column(nullable = false, length = 10)
     private String currency;
 
-    /** Emails to notify on low-balance alert (CSV) */
+
     @Column(name = "alert_emails", length = 500)
     private String alertEmails;
 
-    /** Last synced float balance from the gateway API */
     @Column(name = "last_known_balance", precision = 20, scale = 2)
     private BigDecimal lastKnownBalance;
 

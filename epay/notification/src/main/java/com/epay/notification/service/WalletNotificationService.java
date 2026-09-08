@@ -37,7 +37,6 @@ public class WalletNotificationService {
             BigDecimal recipientTotalBalance, String currency,
             String transactionId, BigDecimal previousBalance) {
 
-        // currency here is a code (e.g. "NGN"), not a symbol — format as "NGN 1,000.00"
         Context ctx = new Context();
         ctx.setVariable("receiverFullName",       receiverFullName);
         ctx.setVariable("senderFullName",         senderFullName);
@@ -56,7 +55,6 @@ public class WalletNotificationService {
             String currency, String transactionId,
             BigDecimal previousBalance) {
 
-        // currency here is a code (e.g. "NGN"), not a symbol — format as "NGN 1,000.00"
         Context ctx = new Context();
         ctx.setVariable("senderFullName",   senderFullName);
         ctx.setVariable("receiverFullName", receiverFullName);
@@ -76,7 +74,6 @@ public class WalletNotificationService {
             BigDecimal previousBalance, String terminalNumber,
             String currencySymbol) {
 
-        // currencySymbol is the actual symbol (e.g. "₦") — format as "₦1,000,000.00"
         Context ctx = new Context();
         ctx.setVariable("recipientName",     recipientName);
         ctx.setVariable("accountHolder",     accountHolder);
@@ -90,7 +87,6 @@ public class WalletNotificationService {
 
     @Async
     public CompletableFuture<Void> createMaintenanceNotification(MaintenanceDeductionNotification n) {
-        // currency here is a code (e.g. "NGN")
         String currency = n.getCurrency();
         Context ctx = new Context();
         ctx.setVariable("userFirstName",     n.getUserFirstName());
@@ -108,7 +104,6 @@ public class WalletNotificationService {
 
     @Async
     public CompletableFuture<Void> createSwapNotification(SwapCurrencyPayload p) {
-        // currencySymbol is the symbol of the target currency after swap (e.g. "₦")
         String sym = p.getCurrencySymbol();
         Context ctx = new Context();
         ctx.setVariable("accountHolder",    p.getAccountHolder());

@@ -37,15 +37,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WithdrawService {
 
-    private static final String TX_PREFIX    = "NX";
-    private static final long   IDEM_TTL_SEC = 86_400L;  // 24 hours
+    private static final long   IDEM_TTL_SEC = 86_400L; 
 
     private final IWithdrawWalletPort          walletPort;
     private final IBlacklistPort               blacklistPort;
     private final IHistoryPort                 historyPort;
     private final IWalletNotificationPublisher notificationPublisher;
     private final UserLookupPort               userLookupPort;
-    private final IIdempotencyPort             idempotencyPort;   // Redis-backed
+    private final IIdempotencyPort             idempotencyPort; 
     private final UserRepository               userRepository;
     private final UserTransactionsAgent        transactionsAgent;
     private final ErrorHandler                 errorHandler;
@@ -177,7 +176,7 @@ public class WithdrawService {
                 historyPort.record(
                         userId, walletId, transactionId, reference,
                         "TRANSFER_DEBIT", "DEBIT",
-                        "INTERNAL", "DELIVERED",     // INITIATED → PROCESSED → DELIVERED
+                        "INTERNAL", "DELIVERED",
                         request.getAmount(), fee, request.getAmount().subtract(fee),
                         finalPreviousBalance, finalNewBalance, currency, currencySymbol,
                         fullName.toUpperCase(),
@@ -197,7 +196,7 @@ public class WithdrawService {
                 historyPort.record(
                         recipient.getId(), recipientWalletId, creditTxnId, creditReference,
                         "TRANSFER_CREDIT", "CREDIT",
-                        "INTERNAL", "DELIVERED",     // INITIATED → PROCESSED → DELIVERED
+                        "INTERNAL", "DELIVERED",
                         request.getAmount(), BigDecimal.ZERO, request.getAmount(),
                         walletPort.getBalance(recipient.getId(), currency).subtract(request.getAmount()),
                         finalRecipientNewBalance, currency, currencySymbol,
@@ -311,8 +310,6 @@ public class WithdrawService {
         String transactionId  = generateTxnId();
         String currencySymbol = walletPort.getCurrencySymbol(currency);
 
-        // ── Initialize Paystack transaction (no wallet debit yet) ─────────────
-        // The wallet is debited only after the webhook confirms the payment.
         Map<String, Object> paystackData;
         try {
             Map<String, Object> metadata = new LinkedHashMap<>();
@@ -337,7 +334,6 @@ public class WithdrawService {
         String accessCode        = (String) paystackData.get("access_code");
         String paystackReference = (String) paystackData.getOrDefault("reference", reference);
 
-        // ── Record PENDING history entry asynchronously ───────────────────────
         final BigDecimal currentBalance = walletPort.getBalance(userId, currency);
         CompletableFuture.runAsync(() -> {
             try {
@@ -376,10 +372,6 @@ public class WithdrawService {
                         email));
     }
 
-    /**
-     * Builds the HTTP 202 response returned to the client after a bank withdrawal is initialized.
-     * The wallet has NOT been debited yet — debit happens via the charge.success webhook.
-     */
     private Map<String, Object> buildBankInitResponse(
             String transactionId, String reference, String paystackReference,
             BigDecimal currentBalance, BigDecimal amount, BigDecimal fee,
@@ -403,7 +395,7 @@ public class WithdrawService {
                 .accountName(accountName)
                 .narration(narration)
                 .previousBalance(currentBalance)
-                .newBalance(currentBalance)       // unchanged until webhook confirms
+                .newBalance(currentBalance) 
                 .createdAt(LocalDateTime.now())
                 .authorizationUrl(authorizationUrl)
                 .accessCode(accessCode)
@@ -453,8 +445,7 @@ public class WithdrawService {
     }
 
     private String generateTxnId() {
-        long hash = Math.abs(UUID.randomUUID().getMostSignificantBits());
-        return TX_PREFIX + String.valueOf(hash).substring(0, 9);
+        return UUID.randomUUID().toString();
     }
 
     private Map<String, Object> buildResponse(

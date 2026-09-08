@@ -14,11 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Runs once on every startup.
- * Seeds articles and FAQs into the database if they do not already exist.
- * Uses slug uniqueness for articles and category presence for FAQs as guards.
- */
+
 @Slf4j
 @Component
 @Order(10)
@@ -34,8 +30,6 @@ public class SupportDataSeeder implements ApplicationRunner {
         seedArticles();
         seedFaqs();
     }
-
-    // ── Articles ──────────────────────────────────────────────────────────────
 
     private void seedArticles() {
         List<ArticleSeed> seeds = List.of(
@@ -117,10 +111,7 @@ public class SupportDataSeeder implements ApplicationRunner {
         else            log.info("[SupportSeeder] Articles already seeded — skipping.");
     }
 
-    // ── FAQs ──────────────────────────────────────────────────────────────────
-
     private void seedFaqs() {
-        // Guard: if any FAQ row exists, skip entirely
         if (faqRepository.count() > 0) {
             log.info("[SupportSeeder] FAQs already seeded — skipping.");
             return;
@@ -128,7 +119,6 @@ public class SupportDataSeeder implements ApplicationRunner {
 
         List<SupportFaq> faqs = List.of(
 
-            // ── Account & Login ───────────────────────────────────────────────
             faq("Account & Login", 1, "How do I reset my password?",
                 "Go to the login page and click 'Forgot Password'. Enter your registered email address and we will " +
                 "send you a reset link valid for 15 minutes. If you do not receive the email, check your spam folder " +
@@ -144,7 +134,6 @@ public class SupportDataSeeder implements ApplicationRunner {
                 "Usernames cannot be changed once set, as they are used as your unique ePay identifier for receiving " +
                 "transfers. If you have a compelling reason, contact support and we will review your request."),
 
-            // ── Wallets & Balances ────────────────────────────────────────────
             faq("Wallets & Balances", 1, "How do I check my wallet balance?",
                 "Your wallet balance is displayed on your Dashboard. For each currency, the balance card shows " +
                 "available, pending, and total balance. Tap a wallet card to see a full breakdown and recent " +
@@ -162,7 +151,6 @@ public class SupportDataSeeder implements ApplicationRunner {
                 "CAD (Canadian Dollar), AUD (Australian Dollar), and several more. Check the Exchange page for the " +
                 "full up-to-date list."),
 
-            // ── Transfers & Withdrawals ───────────────────────────────────────
             faq("Transfers & Withdrawals", 1, "How long does a bank withdrawal take?",
                 "Bank withdrawals are processed within 1–3 business hours during weekdays (8AM–5PM WAT). Requests " +
                 "submitted after hours or on weekends are processed the next business day. You will receive an email " +
@@ -178,7 +166,6 @@ public class SupportDataSeeder implements ApplicationRunner {
                 "balance after fees, or a security hold on your account. Check the rejection reason in your History, " +
                 "correct the issue, and retry. Contact support if the problem persists."),
 
-            // ── Cards ─────────────────────────────────────────────────────────
             faq("Cards", 1, "How do I freeze my virtual card?",
                 "Go to Cards, select the card, and tap 'Freeze Card'. The card will be blocked immediately for new " +
                 "transactions. You can unfreeze it at any time from the same screen. Freezing does not cancel the card."),
@@ -191,7 +178,6 @@ public class SupportDataSeeder implements ApplicationRunner {
                 "Creating a second card for the same currency requires terminating the existing one first. A card " +
                 "creation fee applies for each new card."),
 
-            // ── KYC & Verification ────────────────────────────────────────────
             faq("KYC & Verification", 1, "What documents do I need for KYC?",
                 "Tier 1 KYC requires one of: National ID (NIN), Bank Verification Number (BVN), International " +
                 "Passport, or Driver's License. Tier 2 additionally requires a recent utility bill or bank " +
@@ -205,7 +191,6 @@ public class SupportDataSeeder implements ApplicationRunner {
                 "ePay profile. Review the rejection reason in Settings > KYC, correct the issue, and resubmit. " +
                 "Ensure photos are clear, well-lit, and show all four corners of the document."),
 
-            // ── Bills & Services ──────────────────────────────────────────────
             faq("Bills & Services", 1, "How do I pay electricity bills?",
                 "Go to Services > Electricity. Select your disco (EKEDC, IKEDC, etc.), enter your meter number, " +
                 "select prepaid or postpaid, enter the amount, and confirm with your Transfer PIN. Your token is " +
@@ -218,7 +203,6 @@ public class SupportDataSeeder implements ApplicationRunner {
                 "ePay supports DSTV, GOtv, and Startimes. Go to Services > Cable TV, select your provider, enter " +
                 "your decoder/smartcard number, choose a subscription plan, and confirm payment. Renewal is instant."),
 
-            // ── Security ──────────────────────────────────────────────────────
             faq("Security", 1, "I suspect my account has been compromised. What should I do?",
                 "Immediately: (1) Change your password in Settings > Security. (2) Enable 2FA if not already done. " +
                 "(3) Review recent transactions in History. (4) Contact support via live chat with subject 'Account " +
@@ -236,8 +220,6 @@ public class SupportDataSeeder implements ApplicationRunner {
         faqRepository.saveAll(faqs);
         log.info("[SupportSeeder] ✓ Seeded {} FAQ(s).", faqs.size());
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private SupportFaq faq(String category, int order, String question, String answer) {
         return SupportFaq.builder()

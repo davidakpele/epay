@@ -19,24 +19,14 @@ import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.Map;
 
-/**
- * Receives Paystack transfer (payout) webhook events.
- *
- * Public endpoint — HMAC-SHA512 authenticated, no JWT.
- * Nginx routes /webhook/ directly to Spring with no /api/v1 prefix.
- *
- * Handled events:
- *   transfer.success  — payout delivered to recipient bank
- *   transfer.failed   — payout rejected by bank (auto-refund)
- *   transfer.reversed — payout reversed by Paystack (auto-refund)
- */
+
 @Slf4j
 @RestController
 @RequestMapping("/webhook/withdraw")
 @RequiredArgsConstructor
 public class WithdrawWebhookController {
 
-    private static final long IDEM_TTL_SEC = 86_400L; // 24 h
+    private static final long IDEM_TTL_SEC = 86_400L;
 
     @Value("${epay.gateways.paystack.secret-key:}")
     private String paystackSecretKey;

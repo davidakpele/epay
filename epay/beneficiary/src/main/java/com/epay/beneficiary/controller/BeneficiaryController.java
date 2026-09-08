@@ -15,28 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
-/**
- * REST API for managing saved beneficiaries.
- *
- * <p>Base path: {@code /beneficiaries}
- *
- * <table border="1">
- *   <tr><th>Method</th><th>Path</th><th>Description</th></tr>
- *   <tr><td>POST</td>  <td>/beneficiaries/create</td>                           <td>Save a new beneficiary</td></tr>
- *   <tr><td>GET</td>   <td>/beneficiaries/{userId}/all</td>                     <td>List all beneficiaries for a user</td></tr>
- *   <tr><td>GET</td>   <td>/beneficiaries/{id}</td>                             <td>Get a beneficiary by its record id</td></tr>
- *   <tr><td>GET</td>   <td>/beneficiaries/{userId}/type?type=BANK|USER</td>     <td>Filter by type</td></tr>
- *   <tr><td>GET</td>   <td>/beneficiaries/{userId}/search?q=term</td>           <td>Search by name / account / username</td></tr>
- *   <tr><td>GET</td>   <td>/beneficiaries/{id}/verify?userId=</td>              <td>Verify a beneficiary record exists</td></tr>
- *   <tr><td>GET</td>   <td>/beneficiaries/{userId}/username/{username}</td>     <td>Look up a user-type beneficiary by username</td></tr>
- *   <tr><td>PUT</td>   <td>/beneficiaries/{id}</td>                             <td>Update a beneficiary</td></tr>
- *   <tr><td>DELETE</td><td>/beneficiaries/{id}?userId=</td>                     <td>Soft-delete a single beneficiary</td></tr>
- *   <tr><td>DELETE</td><td>/beneficiaries/bulk</td>                             <td>Soft-delete multiple beneficiaries</td></tr>
- * </table>
- */
 @Slf4j
 @RestController
 @RequestMapping("/beneficiaries")
@@ -45,12 +25,6 @@ public class BeneficiaryController {
 
     private final BeneficiaryService beneficiaryService;
 
-    // ── Create ────────────────────────────────────────────────────────────────
-
-    /**
-     * POST /beneficiaries/create
-     * Save a new beneficiary for a user.
-     */
     @PostMapping("/create")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<BeneficiaryDTO>> create(
@@ -62,12 +36,6 @@ public class BeneficiaryController {
                 .body(ApiResponse.success("Beneficiary created successfully", dto));
     }
 
-    // ── Read ──────────────────────────────────────────────────────────────────
-
-    /**
-     * GET /beneficiaries/{userId}/all
-     * List all active beneficiaries for a user.
-     */
     @GetMapping("/{userId}/all")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<List<BeneficiaryDTO>>> getAllByUserId(
@@ -77,10 +45,6 @@ public class BeneficiaryController {
         return ResponseEntity.ok(ApiResponse.success("Beneficiaries retrieved successfully", list));
     }
 
-    /**
-     * GET /beneficiaries/{id}?userId=
-     * Get a single beneficiary by its record id, scoped to the userId.
-     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<BeneficiaryDTO>> getById(
@@ -91,10 +55,6 @@ public class BeneficiaryController {
         return ResponseEntity.ok(ApiResponse.success("Beneficiary retrieved successfully", dto));
     }
 
-    /**
-     * GET /beneficiaries/{userId}/type?type=BANK|USER
-     * Return beneficiaries filtered by type.
-     */
     @GetMapping("/{userId}/type")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<List<BeneficiaryDTO>>> getByType(
@@ -112,10 +72,6 @@ public class BeneficiaryController {
         return ResponseEntity.ok(ApiResponse.success("Beneficiaries retrieved successfully", list));
     }
 
-    /**
-     * GET /beneficiaries/{userId}/search?q=term
-     * Search across beneficiary name, account number, and recipient username.
-     */
     @GetMapping("/{userId}/search")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<List<BeneficiaryDTO>>> search(
@@ -129,10 +85,6 @@ public class BeneficiaryController {
         return ResponseEntity.ok(ApiResponse.success("Search completed successfully", list));
     }
 
-    /**
-     * GET /beneficiaries/{id}/verify?userId=
-     * Verify that a beneficiary exists and belongs to the given user.
-     */
     @GetMapping("/{id}/verify")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<BeneficiaryDTO>> verify(
@@ -143,10 +95,6 @@ public class BeneficiaryController {
         return ResponseEntity.ok(ApiResponse.success("Beneficiary verified", dto));
     }
 
-    /**
-     * GET /beneficiaries/{userId}/username/{recipientUsername}
-     * Look up a user-type beneficiary by the recipient's ePay username.
-     */
     @GetMapping("/{userId}/username/{recipientUsername}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<BeneficiaryDTO>> getByUsername(
@@ -160,12 +108,6 @@ public class BeneficiaryController {
         return ResponseEntity.ok(ApiResponse.success("Beneficiary retrieved successfully", dto));
     }
 
-    // ── Update ────────────────────────────────────────────────────────────────
-
-    /**
-     * PUT /beneficiaries/{id}
-     * Update an existing beneficiary.
-     */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<BeneficiaryDTO>> update(
@@ -177,12 +119,6 @@ public class BeneficiaryController {
         return ResponseEntity.ok(ApiResponse.success("Beneficiary updated successfully", dto));
     }
 
-    // ── Delete ────────────────────────────────────────────────────────────────
-
-    /**
-     * DELETE /beneficiaries/{id}?userId=
-     * Soft-delete a single beneficiary.
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Void>> delete(
@@ -193,10 +129,6 @@ public class BeneficiaryController {
         return ResponseEntity.ok(ApiResponse.success("Beneficiary deleted successfully", null));
     }
 
-    /**
-     * DELETE /beneficiaries/bulk
-     * Soft-delete multiple beneficiaries in one call.
-     */
     @DeleteMapping("/bulk")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Void>> deleteByIds(
@@ -206,12 +138,6 @@ public class BeneficiaryController {
         return ResponseEntity.ok(ApiResponse.success("Beneficiaries deleted successfully", null));
     }
 
-    // ── Validation helper ─────────────────────────────────────────────────────
-
-    /**
-     * Type-specific field validation that cannot be expressed with annotations alone,
-     * matching the original .NET controller's explicit checks.
-     */
     private void validateCreateRequest(CreateBeneficiaryRequest req) {
         if (req.getBeneficiaryType() == BeneficiaryType.BANK) {
             if (req.getAccountNumber() == null || req.getAccountNumber().isBlank())

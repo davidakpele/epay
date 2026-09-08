@@ -38,8 +38,6 @@ public class SupportService {
     private final TicketReplyRepository    replyRepository;
     private final UserLookupPort           userLookupPort;
 
-    // ── Articles ──────────────────────────────────────────────────────────────
-
     @Transactional(readOnly = true)
     public List<ArticleDTO> getAllArticles() {
         return articleRepository.findByActiveTrueOrderByCreatedAtDesc()
@@ -53,13 +51,10 @@ public class SupportService {
                 .orElseThrow(() -> new ResourceNotFoundException("Article not found"));
     }
 
-    // ── FAQs ──────────────────────────────────────────────────────────────────
-
     @Transactional(readOnly = true)
     public List<FaqCategoryDTO> getAllFaqsGrouped() {
         List<SupportFaq> all = faqRepository.findByActiveTrueOrderByCategoryAscSortOrderAsc();
 
-        // Group by category preserving insertion order
         Map<String, List<FaqDTO>> grouped = new LinkedHashMap<>();
         for (SupportFaq faq : all) {
             grouped.computeIfAbsent(faq.getCategory(), k -> new ArrayList<>())
@@ -74,8 +69,6 @@ public class SupportService {
                 .collect(Collectors.toList());
     }
 
-    // ── Tickets ───────────────────────────────────────────────────────────────
-
     @Transactional
     public TicketDTO createTicket(CreateTicketRequest req) {
         if (!userLookupPort.existsActiveUser(req.getUserId())) {
@@ -83,8 +76,6 @@ public class SupportService {
         }
 
         String ref = generateReference();
-
-        // Auto-escalate FRAUD_REPORT to HIGH priority
         TicketPriority priority = req.getPriority() != null ? req.getPriority() : TicketPriority.MEDIUM;
         if (req.getCategory() != null && req.getCategory().name().equals("FRAUD_REPORT")) {
             priority = TicketPriority.HIGH;
@@ -133,8 +124,6 @@ public class SupportService {
         List<TicketReply> replies = replyRepository.findPublicByTicketId(ticket.getId());
         return toTicketDTO(ticket, replies);
     }
-
-    // ── Mapping ───────────────────────────────────────────────────────────────
 
     private ArticleDTO toArticleDTO(SupportArticle a) {
         return ArticleDTO.builder()

@@ -33,7 +33,6 @@ public class SupportArticle {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    /** Short summary used in list views (≤ 250 chars). */
     @Column(length = 250)
     private String summary;
 

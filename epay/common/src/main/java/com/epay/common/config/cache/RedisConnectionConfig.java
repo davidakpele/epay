@@ -16,13 +16,10 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class RedisConnectionConfig {
-
-
     @Bean
     @Primary
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -42,7 +39,6 @@ public class RedisConnectionConfig {
         log.info("RedisTemplate configured with JSON serializer");
         return template;
     }
-
 
     @Bean
     public RedisSerializer<Object> redisJsonSerializer() {

@@ -17,7 +17,7 @@ public class UpdateLiquidityConfigRequest {
     @DecimalMin("0.00")
     private BigDecimal blockThreshold;
 
-    private String alertEmails;   // CSV: admin@epay.com,ops@epay.com
+    private String alertEmails;   
 
     private Boolean alertsEnabled;
 }

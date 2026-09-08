@@ -5,16 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 
-/**
- * Redis-backed idempotency store.
- * Replaces Hazelcast for all modules — inject IIdempotencyPort, not this class directly.
- *
- * Key pattern: idem:{key}
- * TTL: configurable per call (typically 24h for financial transactions)
- */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -30,7 +23,7 @@ public class RedisIdempotencyService implements IIdempotencyPort {
             return Boolean.TRUE.equals(redisTemplate.hasKey(PREFIX + key));
         } catch (Exception e) {
             log.warn("[Idempotency] Redis check failed for key={}: {}", key, e.getMessage());
-            return false; // fail-open — don't block on Redis error
+            return false; 
         }
     }
 

@@ -18,10 +18,6 @@ public interface CurrencyBalanceRepository extends JpaRepository<CurrencyBalance
             @Param("walletId") Long walletId,
             @Param("code") String code);
 
-    /**
-     * Targeted single-row UPDATE — avoids the @ElementCollection DELETE + re-INSERT.
-     * Issues: UPDATE wallet_balances SET balance = ? WHERE id = ?
-     */
     @Modifying
     @Query("UPDATE CurrencyBalance cb SET cb.balance = :balance WHERE cb.id = :id")
     void updateBalance(@Param("id") Long id, @Param("balance") BigDecimal balance);

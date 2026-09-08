@@ -13,7 +13,7 @@ public class ChatMessageDTO {
     private Long id;
     private String sessionId;
     private Long userId;
-    private String role;       // "user" or "assistant"
+    private String role; 
     private String content;
     private LocalDateTime createdAt;
 }

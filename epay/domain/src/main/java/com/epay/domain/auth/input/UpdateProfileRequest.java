@@ -11,14 +11,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-/**
- * Partial-update request for user profile.
- * All fields are optional — only non-null values are applied.
- *
- * Frontend payload:
- *   { firstName, lastName, email, gender, address,
- *     dob, telephone, country, state, city }
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -31,15 +23,12 @@ public class UpdateProfileRequest {
     @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
     private String lastName;
 
-    /** Optional — updates the user's login email. */
     @Email(message = "Please enter a valid email address")
     private String email;
 
-    /** Maps to UserRecord.phoneNumber */
     @Pattern(regexp = "^\\+?[1-9]\\d{6,14}$", message = "Please enter a valid phone number with country code")
     private String telephone;
 
-    /** Date of birth — frontend sends ISO date string e.g. "2026-08-06" */
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dob;
 

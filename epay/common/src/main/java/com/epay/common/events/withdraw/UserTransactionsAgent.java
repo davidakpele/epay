@@ -141,7 +141,7 @@ public class UserTransactionsAgent {
         LocalDateTime freqCutoff = LocalDateTime.now().minusMinutes(freqWindowMinutes);
         long debitCount = recentAll.stream()
                 .filter(tx -> "DEBIT".equalsIgnoreCase(tx.getDebitCredit()))
-                .filter(tx -> tx.getCreatedAt() != null && tx.getCreatedAt().isAfter(freqCutoff))
+                .filter(tx -> txCreatedAt(tx) != null && txCreatedAt(tx).isAfter(freqCutoff))
                 .count();
 
         if (debitCount > highFreqCount) {
@@ -152,7 +152,7 @@ public class UserTransactionsAgent {
         LocalDateTime volCutoff = LocalDateTime.now().minusMinutes(volumeWindowMinutes);
         BigDecimal outboundTotal = recentAll.stream()
                 .filter(tx -> "DEBIT".equalsIgnoreCase(tx.getDebitCredit()))
-                .filter(tx -> tx.getCreatedAt() != null && tx.getCreatedAt().isAfter(volCutoff))
+                .filter(tx -> txCreatedAt(tx) != null && txCreatedAt(tx).isAfter(volCutoff))
                 .filter(tx -> tx.getAmount() != null && tx.getAmount().getGross() != null)
                 .map(tx -> tx.getAmount().getGross())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -165,7 +165,7 @@ public class UserTransactionsAgent {
 
         LocalDateTime cycleCutoff = LocalDateTime.now().minusMinutes(rapidCycleWindowMinutes);
         List<TransactionDTO> recentCycleWindow = recentAll.stream()
-                .filter(tx -> tx.getCreatedAt() != null && tx.getCreatedAt().isAfter(cycleCutoff))
+                .filter(tx -> txCreatedAt(tx) != null && txCreatedAt(tx).isAfter(cycleCutoff))
                 .toList();
 
         boolean hasRecentDeposit = recentCycleWindow.stream()
@@ -183,10 +183,10 @@ public class UserTransactionsAgent {
         }
 
         long failedCount = recentAll.stream()
-                .filter(tx -> tx.getCurrentStatus() != null
-                        && (tx.getCurrentStatus().name().equalsIgnoreCase("FAILED")
-                            || tx.getCurrentStatus().name().equalsIgnoreCase("CANCELLED")))
-                .filter(tx -> tx.getCreatedAt() != null && tx.getCreatedAt().isAfter(freqCutoff))
+                .filter(tx -> tx.getStatus() != null
+                        && (tx.getStatus().name().equalsIgnoreCase("FAILED")
+                            || tx.getStatus().name().equalsIgnoreCase("CANCELLED")))
+                .filter(tx -> txCreatedAt(tx) != null && txCreatedAt(tx).isAfter(freqCutoff))
                 .count();
 
         if (failedCount >= failedTxThreshold) {
@@ -241,13 +241,19 @@ public class UserTransactionsAgent {
     private List<TransactionDTO> fetchRecent(Long userId, int minutesBack) {
         try {
             return historyReadPort.findRecentByUserId(userId, FETCH_LIMIT).stream()
-                    .filter(tx -> tx.getCreatedAt() != null
-                            && tx.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(minutesBack)))
+                    .filter(tx -> txCreatedAt(tx) != null
+                            && txCreatedAt(tx).isAfter(LocalDateTime.now().minusMinutes(minutesBack)))
                     .toList();
         } catch (Exception e) {
             log.warn("[Risk] History fetch failed userId={}: {}", userId, e.getMessage());
             return List.of();
         }
+    }
+
+    private static LocalDateTime txCreatedAt(TransactionDTO tx) {
+        if (tx.getTimestamps() == null || tx.getTimestamps().getCreatedAt() == null) return null;
+        return java.time.LocalDateTime.ofInstant(
+                tx.getTimestamps().getCreatedAt(), java.time.ZoneOffset.UTC);
     }
 
     public static class RiskScore {

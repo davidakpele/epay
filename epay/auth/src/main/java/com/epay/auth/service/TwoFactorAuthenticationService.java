@@ -114,7 +114,6 @@ public class TwoFactorAuthenticationService implements ITwoFactorAuthenticationS
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User not found", ErrorCode.USER_NOT_FOUND));
 
-        // Create session so session.id is embedded in the JWT claims
         UserTracer session = userTracerService.createSession(principal);
         String tokenId = UUID.randomUUID().toString();
         String jwtToken = jwtService.generateToken(

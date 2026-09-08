@@ -12,25 +12,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-/**
- * Convenience accessor for the currently authenticated user.
- *
- * <p>Uses {@link JwtClaimsHolder} as the primary source for {@code userId} so that
- * the correct numeric DB id is always returned regardless of whether the principal
- * is a domain {@link User} entity, a synthetic admin {@code UserDetails}, or an
- * OAuth2 {@code Jwt} object.
- *
- * <p>The old implementation used {@code UserLookupPort.findUserIdByUsername(sub)}
- * where {@code sub} is now a UUID — causing a DB miss for every call.  The JWT
- * already contains the {@code userId} claim, so we read it directly from there.
- */
 @Component
 @RequiredArgsConstructor
 public class WebSecurityContext {
 
     private final JwtClaimsHolder claims;
-
-    // ── Authentication ────────────────────────────────────────────────────────
 
     public Optional<Authentication> getAuthentication() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -42,7 +28,6 @@ public class WebSecurityContext {
         return getAuthentication().isPresent();
     }
 
-    // ── Principal ─────────────────────────────────────────────────────────────
 
     @SuppressWarnings("null")
     public Optional<UserDetails> getPrincipal() {
@@ -52,24 +37,9 @@ public class WebSecurityContext {
                 .map(p -> (UserDetails) p);
     }
 
-    // ── User identity — JWT-first, multi-path fallback ────────────────────────
-
-    /**
-     * Returns the authenticated user's numeric DB id.
-     *
-     * <p>Resolution order:
-     * <ol>
-     *   <li>JWT {@code userId} claim via {@link JwtClaimsHolder} (fastest, no DB hit)</li>
-     *   <li>Domain {@link User} entity on the SecurityContext principal (regular user path)</li>
-     *   <li>OAuth2 {@code Jwt} principal {@code userId} claim (oauth2ResourceServer path)</li>
-     * </ol>
-     */
     public Optional<Long> getUserId() {
-        // 1 — JWT claim (works for both admin synthetic and user DB-loaded paths)
         Long fromToken = claims.getUserId();
         if (fromToken != null) return Optional.of(fromToken);
-
-        // 2 — domain User entity on the principal
         return getAuthentication()
                 .map(Authentication::getPrincipal)
                 .flatMap(principal -> {
@@ -89,16 +59,10 @@ public class WebSecurityContext {
                 new AuthenticationCredentialsNotFoundException("No authenticated user found"));
     }
 
-    /**
-     * Returns the raw JWT subject ({@code sub} claim) — a UUID string for new tokens.
-     * Use {@link #getUserId()} when you need the numeric DB id.
-     */
     @SuppressWarnings("null")
     public String getUsername() {
-        // Try JWT sub first
         String sub = claims.getSub();
         if (sub != null) return sub;
-        // Fallback to SecurityContext principal name
         return getPrincipal().map(UserDetails::getUsername).orElse("unknown");
     }
 
@@ -116,14 +80,9 @@ public class WebSecurityContext {
         return getUserId().map(String::valueOf).orElse("anonymous");
     }
 
-    // ── Convenience JWT claim accessors ───────────────────────────────────────
-
-    /** Returns the session ID ({@code sid} claim). */
     public String getSessionId() { return claims.getSessionId(); }
 
-    /** Returns the token unique ID ({@code jti} claim). */
     public String getTokenId()   { return claims.getTokenId(); }
 
-    /** Returns the account status ({@code accountStatus} claim). */
     public String getAccountStatus() { return claims.getAccountStatus(); }
 }

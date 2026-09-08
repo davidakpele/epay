@@ -7,13 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Append-only audit log — records WHO changed WHAT and WHEN.
- * Never updated or deleted — immutable for compliance.
- *
- * Separate from Transaction which answers "what is the current state?"
- * This answers "who changed it, when, and from where?"
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -30,20 +23,12 @@ public class TransactionAuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** References Transaction.transactionId (not the DB id). */
     @Column(name = "transaction_id", nullable = false, length = 50)
     private String transactionId;
 
-    /**
-     * Action type — e.g. CREATE, STATUS_CHANGE, MANUAL_ADJUSTMENT,
-     * DISPUTE_RAISED, REVERSAL_REQUESTED
-     */
     @Column(name = "action", nullable = false, length = 50)
     private String action;
 
-    /**
-     * Who triggered this action — userId, "SYSTEM", "PAYSTACK", "ADMIN:{id}", etc.
-     */
     @Column(name = "performed_by", nullable = false, length = 100)
     private String performedBy;
 

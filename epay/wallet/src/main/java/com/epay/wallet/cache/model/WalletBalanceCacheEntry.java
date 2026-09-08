@@ -20,8 +20,8 @@ public class WalletBalanceCacheEntry {
 
     private String walletId;
     private String currency;
-    private String walletType;       // PRIMARY, SECONDARY, SETTLEMENT
-    private String walletStatus;     // ACTIVE, FROZEN, CLOSED
+    private String walletType;      
+    private String walletStatus;   
 
     private BigDecimal availableBalance;
     private BigDecimal ledgerBalance;

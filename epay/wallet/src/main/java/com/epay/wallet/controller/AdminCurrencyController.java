@@ -11,15 +11,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Admin currency configuration management.
- *
- * Base: /admin/currencies
- *
- * Handles the SupportedCurrency catalogue — adding new currencies,
- * enabling/disabling them, and viewing current state.
- * Freeze/unfreeze is handled by the admin module AdminWalletController.
- */
 @RestController
 @RequestMapping("/admin/currencies")
 @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")

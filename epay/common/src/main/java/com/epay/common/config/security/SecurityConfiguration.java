@@ -115,10 +115,6 @@ public class SecurityConfiguration {
         return source;
     }
     
-    /**
-     * Priority-1 filter chain: completely open paths — no JWT, no resource server.
-     * Uses explicit AntPathRequestMatchers so Spring Security 6 matches correctly.
-     */
     @Bean
     @Order(1)
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
@@ -207,7 +203,6 @@ public class SecurityConfiguration {
                 ).permitAll() 
                 .requestMatchers("/static/**").permitAll()
                 .requestMatchers("/uploads/images/**").permitAll()
-                // ── Support: chat + content endpoints are public; tickets require auth ─
                 .requestMatchers(HttpMethod.POST, "/support/chat").permitAll()
                 .requestMatchers(HttpMethod.GET,  "/support/articles/**").permitAll()
                 .requestMatchers(HttpMethod.GET,  "/support/faqs").permitAll()
@@ -218,37 +213,27 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.DELETE, "/user/{id}").hasRole("SUPER_USER")
                 .requestMatchers(HttpMethod.GET, "/user/{id}/edit").hasAnyRole("ADMIN", "SUPER_USER")
                 .requestMatchers(HttpMethod.GET, "/user/{id}/view").hasAnyRole("ADMIN", "SUPER_USER")
-                // ── Super-admin endpoints (SUPER_USER only) ──────────────────────────
                 .requestMatchers("/admin/super/**").hasRole("SUPER_USER")
-                // ── Admin user management ─────────────────────────────────────────────
                 .requestMatchers(HttpMethod.GET,    "/admin/users/**").hasAnyRole("ADMIN", "SUPER_USER", "CUSTOMER_SERVICE")
                 .requestMatchers(HttpMethod.POST,   "/admin/users").hasAnyRole("ADMIN", "SUPER_USER")
                 .requestMatchers(HttpMethod.PUT,    "/admin/users/**").hasAnyRole("ADMIN", "SUPER_USER")
                 .requestMatchers(HttpMethod.DELETE, "/admin/users/**").hasRole("SUPER_USER")
                 .requestMatchers("/admin/users/**").hasAnyRole("ADMIN", "SUPER_USER", "CUSTOMER_SERVICE")
-                // ── Admin wallet management ───────────────────────────────────────────
                 .requestMatchers(HttpMethod.GET,    "/admin/wallets/**").hasAnyRole("ADMIN", "SUPER_USER", "CUSTOMER_SERVICE")
                 .requestMatchers("/admin/wallets/**").hasAnyRole("ADMIN", "SUPER_USER", "CUSTOMER_SERVICE")
-                // ── Admin transaction management ──────────────────────────────────────
                 .requestMatchers(HttpMethod.GET,    "/admin/transactions/**").hasAnyRole("ADMIN", "SUPER_USER", "CUSTOMER_SERVICE")
                 .requestMatchers(HttpMethod.PATCH,  "/admin/transactions/**").hasAnyRole("ADMIN", "SUPER_USER", "CUSTOMER_SERVICE")
                 .requestMatchers("/admin/transactions/**").hasAnyRole("ADMIN", "SUPER_USER", "CUSTOMER_SERVICE")
-                // ── Admin ticket management ───────────────────────────────────────────
                 .requestMatchers(HttpMethod.GET,    "/admin/tickets/**").hasAnyRole("ADMIN", "SUPER_USER", "CUSTOMER_SERVICE", "EDITOR")
                 .requestMatchers(HttpMethod.DELETE, "/admin/tickets/**").hasAnyRole("ADMIN", "SUPER_USER")
                 .requestMatchers("/admin/tickets/**").hasAnyRole("ADMIN", "SUPER_USER", "CUSTOMER_SERVICE")
-                // ── Catch-all admin ───────────────────────────────────────────────────
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_USER")
-                // ── User ticket self-service ──────────────────────────────────────────
                 .requestMatchers("/tickets/**").hasRole("USER")
-                // ── Beneficiary management ────────────────────────────────────────────
                 .requestMatchers("/beneficiaries/**").hasRole("USER")
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .bearerTokenResolver(request -> {
-                    // Only extract token if present — never reject missing tokens here.
-                    // permitAll() endpoints must be reachable without a Bearer header.
                     String header = request.getHeader("Authorization");
                     if (header != null && header.startsWith("Bearer ")) {
                         return header.substring(7).trim();

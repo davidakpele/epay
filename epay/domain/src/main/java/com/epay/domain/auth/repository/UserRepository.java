@@ -152,17 +152,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT MAX(u.id) FROM User u")
     Optional<Long> findMaxId();
 
-    // ── Staff / role-based queries ───────────────────────────────────────────
-
-    /** All staff accounts (everyone that is NOT a regular USER) */
     @Query("SELECT u FROM User u WHERE u.role <> com.epay.domain.auth.enums.Role.USER ORDER BY u.createdAt DESC")
     Page<User> findAllStaff(Pageable pageable);
 
-    /** Staff filtered by a specific role */
     @Query("SELECT u FROM User u WHERE u.role = :role ORDER BY u.createdAt DESC")
     Page<User> findStaffByRole(@Param("role") Role role, Pageable pageable);
 
-    /** Search users by username, email or id (admin search) */
     @Query("""
            SELECT u FROM User u
            WHERE (:keyword IS NULL
@@ -177,8 +172,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("role")    Role role,
             @Param("enabled") Boolean enabled,
             Pageable pageable);
-
-    /** Check whether a user with given role exists */
     boolean existsByIdAndRole(Long id, Role role);
 
     @Modifying

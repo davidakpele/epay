@@ -24,7 +24,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_txn_current_status",   columnList = "current_status"),
         @Index(name = "idx_txn_type",             columnList = "transaction_type"),
         @Index(name = "idx_txn_created_at",       columnList = "created_at"),
-        @Index(name = "idx_txn_idempotency",      columnList = "idempotency_key", unique = true)
+        @Index(name = "idx_txn_idempotency",      columnList = "idempotency_key", unique = true),
+        @Index(name = "idx_txn_publish_access",   columnList = "publish_access")
 })
 public class Transaction {
 
@@ -113,15 +114,11 @@ public class Transaction {
     @Builder.Default
     private StatusTimeline statusTimeline = new StatusTimeline();
 
-    // ---- Description ----
-
     @Column(length = 500)
     private String description;
 
     @Column(name = "failure_reason", length = 500)
     private String failureReason;
-
-    // ---- Device / IP ----
 
     @Column(name = "ip_address", length = 50)
     private String ipAddress;
@@ -132,12 +129,13 @@ public class Transaction {
     @Column(name = "user_agent", length = 500)
     private String userAgent;
 
-    // ---- Admin ----
+
+    @Column(name = "publish_access", nullable = false)
+    @Builder.Default
+    private boolean publishAccess = true;
 
     @Column(name = "admin_note", length = 1000)
     private String adminNote;
-
-    // ---- Timestamps ----
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
@@ -153,12 +151,6 @@ public class Transaction {
     @Version
     private Long version;
 
-    // ---- Convenience ----
-
-    /**
-     * Advances the status timeline and updates currentStatus.
-     * Call this instead of setCurrentStatus directly.
-     */
     public void advanceStatus(TransactionStatus newStatus, String actor, String message) {
         this.statusTimeline.add(newStatus, actor, message);
         this.currentStatus = newStatus;

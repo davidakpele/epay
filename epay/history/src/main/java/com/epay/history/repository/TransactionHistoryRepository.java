@@ -44,8 +44,6 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
     @Query("SELECT COUNT(h) FROM TransactionHistory h WHERE h.userId = :userId AND h.transactionType = :type")
     long countByUserIdAndType(@Param("userId") Long userId, @Param("type") String type);
 
-    // ── Admin queries ─────────────────────────────────────────────────────────
-
     Page<TransactionHistory> findByUserIdAndStatus(Long userId, String status, Pageable pageable);
 
     @Query("""

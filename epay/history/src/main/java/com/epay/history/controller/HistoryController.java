@@ -173,8 +173,12 @@ public class HistoryController {
     public ResponseEntity<ApiResponse<Object>> getTimeline(
             @PathVariable String transactionId) {
         return historyService.getByTransactionId(transactionId)
-                .map(dto -> ResponseEntity.ok(ApiResponse.success(null,
-                        (Object) dto.getStatusTimeline())))
+                .map(dto -> {
+                    java.util.Map<String, Object> timeline = new java.util.LinkedHashMap<>();
+                    timeline.put("stateMachine",   dto.getStateMachine());
+                    timeline.put("statusHistory",  dto.getStatusHistory());
+                    return ResponseEntity.ok(ApiResponse.success(null, (Object) timeline));
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -214,5 +218,96 @@ public class HistoryController {
         return historyService.getByReference(reference)
                 .map(dto -> ResponseEntity.ok(ApiResponse.success(null, dto)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{transactionId}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<Void>> hideTransaction(
+            @PathVariable String transactionId,
+            @RequestAttribute("userId") Long userId) {
+        try {
+            historyService.hideFromUser(transactionId, userId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @GetMapping("/admin/hidden")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getHiddenTransactions(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "50") int size) {
+        int safeSize = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, safeSize, Sort.by("createdAt").descending());
+        Page<TransactionDTO> result = historyService.getHiddenTransactions(pageable);
+
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("content",       result.getContent());
+        body.put("page",          result.getNumber());
+        body.put("size",          result.getSize());
+        body.put("totalElements", result.getTotalElements());
+        body.put("totalPages",    result.getTotalPages());
+        body.put("hasMore",       !result.isLast());
+
+        return ResponseEntity.ok(ApiResponse.success(null, body));
+    }
+
+
+    @GetMapping("/admin/hidden/user/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getHiddenByUser(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "50") int size) {
+        int safeSize = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, safeSize, Sort.by("createdAt").descending());
+        Page<TransactionDTO> result = historyService.getHiddenByUserId(userId, pageable);
+
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("content",       result.getContent());
+        body.put("page",          result.getNumber());
+        body.put("size",          result.getSize());
+        body.put("totalElements", result.getTotalElements());
+        body.put("totalPages",    result.getTotalPages());
+        body.put("hasMore",       !result.isLast());
+
+        return ResponseEntity.ok(ApiResponse.success(null, body));
+    }
+
+    @GetMapping("/admin/user/{userId}/all")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAllByUserAdmin(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "50") int size) {
+        int safeSize = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, safeSize, Sort.by("createdAt").descending());
+        Page<TransactionDTO> result = historyService.getByUserIdAdmin(userId, pageable);
+
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("content",       result.getContent());
+        body.put("page",          result.getNumber());
+        body.put("size",          result.getSize());
+        body.put("totalElements", result.getTotalElements());
+        body.put("totalPages",    result.getTotalPages());
+        body.put("hasMore",       !result.isLast());
+
+        return ResponseEntity.ok(ApiResponse.success(null, body));
+    }
+
+    @PatchMapping("/admin/{transactionId}/restore")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")
+    public ResponseEntity<ApiResponse<String>> restoreTransaction(
+            @PathVariable String transactionId) {
+        try {
+            historyService.restoreToUser(transactionId);
+            return ResponseEntity.ok(ApiResponse.success(null,
+                    "Transaction " + transactionId + " restored to user visibility."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
     }
 }

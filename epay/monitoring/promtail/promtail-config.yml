@@ -10,7 +10,6 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # ── ePay audit log (structured JSON, one object per line) ─────────────
   - job_name: epay-audit
     static_configs:
       - targets: [localhost]
@@ -21,7 +20,6 @@ scrape_configs:
           __path__: /var/log/epay/audit.log
 
     pipeline_stages:
-      # Each line is already a complete JSON object — parse it
       - json:
           expressions:
             requestId: requestId
@@ -39,26 +37,19 @@ scrape_configs:
             userAgent: userAgent
             blocked: blocked
 
-      # Promote fields to Loki labels (low-cardinality ones only)
       - labels:
           method:
           status:
           authenticated:
           blocked:
           device:
-
-      # Use the request's own timestamp as the log timestamp
       - timestamp:
           source: timestamp
           format: RFC3339Nano
           fallback_formats:
             - RFC3339
-
-      # Keep full JSON as the log line
       - output:
           source: _entry
-
-  # ── ePay application log (plain text) ─────────────────────────────────
   - job_name: epay-app
     static_configs:
       - targets: [localhost]

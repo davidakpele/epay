@@ -15,12 +15,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Handles authorization failures inside the Spring Security filter chain
- * for authenticated users who lack the required role/authority.
- *
- * Complements JwtExceptionHandler (which handles unauthenticated access).
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor

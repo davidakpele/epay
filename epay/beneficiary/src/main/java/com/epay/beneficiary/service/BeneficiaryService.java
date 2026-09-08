@@ -26,8 +26,6 @@ public class BeneficiaryService {
     private final UserLookupPort        userLookupPort;
     private final UserRepository        userRepository;
 
-    // ── Create ────────────────────────────────────────────────────────────────
-
     @Transactional
     public BeneficiaryDTO create(CreateBeneficiaryRequest req) {
         validateOwner(req.getUserId());
@@ -44,7 +42,6 @@ public class BeneficiaryService {
                 .build();
 
         if (req.getBeneficiaryType() == BeneficiaryType.BANK) {
-            // Duplicate check — same account number for this user
             beneficiaryRepository
                     .findByUserIdAndAccountNumberAndBeneficiaryTypeAndIsActiveTrue(
                             req.getUserId(), req.getAccountNumber(), BeneficiaryType.BANK)
@@ -59,14 +56,12 @@ public class BeneficiaryService {
             beneficiary.setRecipientUsername(null);
 
         } else {
-            // Verify the target ePay user actually exists
             if (!userRepository.existsByUsername(req.getRecipientUsername())) {
                 throw new BadRequestException(
                         "Recipient username '" + req.getRecipientUsername() + "' does not exist",
                         ErrorCode.USER_NOT_FOUND);
             }
 
-            // Duplicate check — same username for this user
             beneficiaryRepository
                     .findByUserIdAndRecipientUsernameAndBeneficiaryTypeAndIsActiveTrue(
                             req.getUserId(), req.getRecipientUsername(), BeneficiaryType.USER)
@@ -87,9 +82,6 @@ public class BeneficiaryService {
         return toDTO(saved);
     }
 
-    // ── Read ──────────────────────────────────────────────────────────────────
-
-    /** Returns the first active beneficiary record owned by this userId. */
     @Transactional(readOnly = true)
     public BeneficiaryDTO getByUserId(Long userId) {
         return beneficiaryRepository.findFirstByUserIdAndIsActiveTrue(userId)
@@ -97,7 +89,6 @@ public class BeneficiaryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Beneficiary not found"));
     }
 
-    /** Returns a single beneficiary by its own id, scoped to the userId. */
     @Transactional(readOnly = true)
     public BeneficiaryDTO getById(Long id, Long userId) {
         return beneficiaryRepository.findByIdAndUserIdAndIsActiveTrue(id, userId)
@@ -105,7 +96,6 @@ public class BeneficiaryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Beneficiary not found"));
     }
 
-    /** Returns all active beneficiaries for a user. */
     @Transactional(readOnly = true)
     public List<BeneficiaryDTO> getAllByUserId(Long userId) {
         return beneficiaryRepository
@@ -113,7 +103,6 @@ public class BeneficiaryService {
                 .stream().map(this::toDTO).toList();
     }
 
-    /** Returns active beneficiaries filtered by type. */
     @Transactional(readOnly = true)
     public List<BeneficiaryDTO> getByType(Long userId, BeneficiaryType type) {
         return beneficiaryRepository
@@ -121,14 +110,12 @@ public class BeneficiaryService {
                 .stream().map(this::toDTO).toList();
     }
 
-    /** Full-text search across name, account number, and recipient username. */
     @Transactional(readOnly = true)
     public List<BeneficiaryDTO> search(Long userId, String term) {
         return beneficiaryRepository.search(userId, term.trim())
                 .stream().map(this::toDTO).toList();
     }
 
-    /** Look up a user-type beneficiary by the recipient's username. */
     @Transactional(readOnly = true)
     public BeneficiaryDTO getByUsername(Long userId, String recipientUsername) {
         return beneficiaryRepository
@@ -136,8 +123,6 @@ public class BeneficiaryService {
                 .map(this::toDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Beneficiary not found"));
     }
-
-    // ── Update ────────────────────────────────────────────────────────────────
 
     @Transactional
     public BeneficiaryDTO update(Long id, CreateBeneficiaryRequest req) {
@@ -176,9 +161,6 @@ public class BeneficiaryService {
         return toDTO(saved);
     }
 
-    // ── Delete ────────────────────────────────────────────────────────────────
-
-    /** Soft-deletes a single beneficiary. */
     @Transactional
     public void delete(Long id, Long userId) {
         Beneficiary b = beneficiaryRepository
@@ -189,14 +171,11 @@ public class BeneficiaryService {
         log.info("[Beneficiary] Deleted id={} userId={}", id, userId);
     }
 
-    /** Bulk soft-delete by a list of ids. */
     @Transactional
     public void deleteByIds(List<Long> ids, Long userId) {
         beneficiaryRepository.softDeleteByIdsAndUserId(ids, userId);
         log.info("[Beneficiary] Bulk deleted ids={} userId={}", ids, userId);
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void validateOwner(Long userId) {
         if (!userLookupPort.existsActiveUser(userId))

@@ -58,8 +58,6 @@ public class WithdrawController {
             @Valid @RequestBody BankWithdrawRequest request,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
 
-        // ── Ownership guard: the authenticated user must own the userId in the request
-        // Uses JWT userId claim directly — avoids the broken auth.getName() UUID comparison.
         Long tokenUserId = jwtClaims.getUserId();
         if (tokenUserId != null && !tokenUserId.equals(request.getUserId())) {
             return errorHandler.error("FORBIDDEN", HttpStatus.FORBIDDEN,

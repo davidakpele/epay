@@ -44,8 +44,6 @@ public class BlacklistAdminController {
         return ResponseEntity.ok(blacklistService.isIpBlacklisted(ip));
     }
 
-    // ── Inner DTO ─────────────────────────────────────────────────────────────
-
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

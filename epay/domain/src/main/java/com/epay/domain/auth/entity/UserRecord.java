@@ -8,11 +8,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * Extended profile information for a user.
- * Separated from User to keep the auth/security entity lean.
- * One-to-one: every User has at most one UserRecord.
- */
 @Data
 @Builder
 @NoArgsConstructor

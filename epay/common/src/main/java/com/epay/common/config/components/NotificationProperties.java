@@ -3,16 +3,6 @@ package com.epay.common.config.components;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-/**
- * Binds notification support-contact values from application.yaml.
- *
- * <pre>
- * notification:
- *   support:
- *     phone: "070034335489"
- *     email: "support@epay.com"
- * </pre>
- */
 @Component
 @ConfigurationProperties(prefix = "notification.support")
 public class NotificationProperties {

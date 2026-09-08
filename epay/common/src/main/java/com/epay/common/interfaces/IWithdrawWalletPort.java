@@ -7,7 +7,6 @@ public interface IWithdrawWalletPort {
 
     void refundWallet(Long userId, String currency, BigDecimal amount, String reference);
 
-    /** Credits the recipient wallet for an internal transfer. */
     void creditWallet(Long userId, String currency, BigDecimal amount, String reference);
 
     BigDecimal getBalance(Long userId, String currency);

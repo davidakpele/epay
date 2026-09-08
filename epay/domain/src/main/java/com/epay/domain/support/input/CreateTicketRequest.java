@@ -25,6 +25,5 @@ public class CreateTicketRequest {
 
     private TicketPriority priority = TicketPriority.MEDIUM;
 
-    /** Optional — link a transaction reference to this ticket. */
     private String relatedTransactionId;
 }

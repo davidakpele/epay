@@ -6,11 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Persists each turn of a user ↔ AI support conversation.
- * Grouped by {@code sessionId} so the full history can be
- * replayed as context for the AI on the next message.
- */
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -28,15 +24,12 @@ public class ChatMessage {
     @SequenceGenerator(name = "chat_msg_seq", sequenceName = "chat_message_sequence", allocationSize = 1)
     private Long id;
 
-    /** UUID supplied by the frontend to group messages into one chat session. */
     @Column(name = "session_id", nullable = false, length = 64)
     private String sessionId;
 
-    /** Nullable — guest users (not logged in) will have null here. */
     @Column(name = "user_id")
     private Long userId;
 
-    /** "user" or "assistant" — mirrors the OpenAI / Anthropic convention. */
     @Column(nullable = false, length = 20)
     private String role;
 

@@ -35,14 +35,8 @@ public class AdminTicketService {
     private final UserRepository          userRepository;
     private final UserRecordRepository    userRecordRepository;
 
-    // Simple in-memory counter for ticket reference generation (survives restarts via DB MAX)
     private final AtomicLong ticketCounter = new AtomicLong(0L);
 
-    // ── Create ───────────────────────────────────────────────────────────────
-
-    /**
-     * Admin or customer-service opens a ticket on behalf of a user.
-     */
     @Transactional
     public TicketDTO createTicket(CreateTicketRequest request, Long staffId) {
         User user = userRepository.findById(request.getUserId())
@@ -70,9 +64,6 @@ public class AdminTicketService {
         return toDTO(ticket, true);
     }
 
-    /**
-     * User submits their own ticket (called from user-facing endpoint).
-     */
     @Transactional
     public TicketDTO submitUserTicket(CreateTicketRequest request) {
         User user = userRepository.findById(request.getUserId())
@@ -95,8 +86,6 @@ public class AdminTicketService {
         log.info("[Ticket] User submitted: ref={} userId={}", ticket.getTicketReference(), user.getId());
         return toDTO(ticket, false);
     }
-
-    // ── Read ─────────────────────────────────────────────────────────────────
 
     public Page<TicketDTO> listAll(Pageable pageable) {
         return ticketRepository.findAll(pageable).map(t -> toDTO(t, true));
@@ -136,8 +125,6 @@ public class AdminTicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
         return toDTO(ticket, includeInternal);
     }
-
-    // ── Update ───────────────────────────────────────────────────────────────
 
     @Transactional
     public TicketDTO updateTicket(Long ticketId, UpdateTicketRequest request, Long staffId) {
@@ -207,8 +194,6 @@ public class AdminTicketService {
         return toDTO(ticket, true);
     }
 
-    // ── Replies ──────────────────────────────────────────────────────────────
-
     @Transactional
     public TicketDTO addStaffReply(Long ticketId, TicketReplyRequest request, Long staffId) {
         SupportTicket ticket = requireTicket(ticketId);
@@ -216,11 +201,10 @@ public class AdminTicketService {
         if (ticket.getStatus() == TicketStatus.CLOSED)
             throw new BadRequestException("Cannot reply to a closed ticket", ErrorCode.INVALID_INPUT);
 
-        // Record first response time
         if (ticket.getFirstResponseAt() == null) {
             ticket.setFirstResponseAt(LocalDateTime.now());
         }
-        // Auto move to IN_PROGRESS when staff first replies
+
         if (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.REOPENED) {
             ticket.setStatus(TicketStatus.IN_PROGRESS);
         }
@@ -250,7 +234,6 @@ public class AdminTicketService {
         if (ticket.getStatus() == TicketStatus.CLOSED)
             throw new BadRequestException("Cannot reply to a closed ticket", ErrorCode.INVALID_INPUT);
 
-        // If pending user response, move back to open
         if (ticket.getStatus() == TicketStatus.PENDING_USER) {
             ticket.setStatus(TicketStatus.OPEN);
         }
@@ -275,16 +258,12 @@ public class AdminTicketService {
         return toDTO(ticket, false);
     }
 
-    // ── Delete ───────────────────────────────────────────────────────────────
-
     @Transactional
     public void deleteTicket(Long ticketId) {
         SupportTicket ticket = requireTicket(ticketId);
         ticketRepository.delete(ticket);
         log.info("[Ticket] Deleted: id={}", ticketId);
     }
-
-    // ── Stats ─────────────────────────────────────────────────────────────────
 
     public java.util.Map<String, Object> getTicketStats() {
         java.util.Map<String, Object> stats = new java.util.LinkedHashMap<>();
@@ -298,8 +277,6 @@ public class AdminTicketService {
         return stats;
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     private SupportTicket requireTicket(Long id) {
         return ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
@@ -311,7 +288,7 @@ public class AdminTicketService {
             case RESOLVED    -> ticket.setResolvedAt(LocalDateTime.now());
             case CLOSED      -> ticket.setClosedAt(LocalDateTime.now());
             case ESCALATED   -> { ticket.setEscalatedAt(LocalDateTime.now()); ticket.setEscalatedBy(staffId); }
-            default          -> { /* no additional timestamp */ }
+            default          -> { }
         }
     }
 

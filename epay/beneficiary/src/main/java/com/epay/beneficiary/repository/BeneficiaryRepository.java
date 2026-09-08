@@ -14,23 +14,15 @@ import java.util.Optional;
 @Repository
 public interface BeneficiaryRepository extends JpaRepository<Beneficiary, Long> {
 
-    /** Find a single active beneficiary owned by this user. */
     Optional<Beneficiary> findByIdAndUserIdAndIsActiveTrue(Long id, Long userId);
 
-    /** Find the first active beneficiary for a user (used by GetById endpoint). */
     Optional<Beneficiary> findFirstByUserIdAndIsActiveTrue(Long userId);
 
-    /** All active beneficiaries for a user, alphabetically sorted. */
     List<Beneficiary> findByUserIdAndIsActiveTrueOrderByBeneficiaryNameAsc(Long userId);
 
-    /** Active beneficiaries filtered by type, alphabetically sorted. */
     List<Beneficiary> findByUserIdAndBeneficiaryTypeAndIsActiveTrueOrderByBeneficiaryNameAsc(
             Long userId, BeneficiaryType type);
 
-    /**
-     * Full-text search across name, account number, and recipient username.
-     * Case-insensitive. Only returns active records.
-     */
     @Query("""
            SELECT b FROM Beneficiary b
            WHERE  b.userId   = :userId
@@ -42,21 +34,15 @@ public interface BeneficiaryRepository extends JpaRepository<Beneficiary, Long> 
            """)
     List<Beneficiary> search(@Param("userId") Long userId, @Param("term") String term);
 
-    /** Duplicate check: does an active BANK beneficiary with this account number already exist? */
     Optional<Beneficiary> findByUserIdAndAccountNumberAndBeneficiaryTypeAndIsActiveTrue(
             Long userId, String accountNumber, BeneficiaryType type);
 
-    /** Duplicate check: does an active USER beneficiary with this username already exist? */
     Optional<Beneficiary> findByUserIdAndRecipientUsernameAndBeneficiaryTypeAndIsActiveTrue(
             Long userId, String recipientUsername, BeneficiaryType type);
 
-    /** Look up a specific user beneficiary by username. */
     Optional<Beneficiary> findByUserIdAndRecipientUsernameAndIsActiveTrue(
             Long userId, String recipientUsername);
-
-    /**
-     * Bulk soft-delete: set isActive = false for all matching id + userId pairs.
-     */
+            
     @Modifying
     @Query("""
            UPDATE Beneficiary b

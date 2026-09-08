@@ -61,7 +61,6 @@ public class UserSignUpRequest {
         this.verificationCode = verificationCode;
     }
 
-    // Getters and setters
     public String getFirstname() {
         return this.firstname;
     }

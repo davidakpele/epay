@@ -79,7 +79,6 @@ public class AdminTransactionController {
             @PathVariable String txnId,
             @Valid @RequestBody AdminTransactionNoteRequest request,
             Authentication auth) {
-        // Use userId from JWT claims for audit reviewer name
         Long adminId = jwtClaims.getUserId();
         String reviewer = adminId != null ? "admin:" + adminId : "admin";
         return ResponseEntity.ok(ApiResponse.success("Note added.",

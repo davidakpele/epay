@@ -37,8 +37,7 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class DepositService {
 
-    private static final String TX_PREFIX    = "NX";
-    private static final long   WEBHOOK_IDEM_TTL = 86_400L;  // 24 h dedup window
+    private static final long   WEBHOOK_IDEM_TTL = 86_400L;  
 
     private final DepositGatewayFactory        gatewayFactory;
     private final IDepositWalletPort           walletPort;
@@ -94,7 +93,6 @@ public class DepositService {
 
     public void handleWebhook(String signature, String rawPayload,
                                String reference, String channel) {
-        // ── Idempotency guard — prevents double-credit on gateway retries ─────
         String idemKey = "webhook:deposit:" + reference;
         if (idempotencyPort.exists(idemKey)) {
             log.info("[Webhook] Duplicate delivery ignored: ref={} channel={}", reference, channel);
@@ -117,28 +115,36 @@ public class DepositService {
         DepositVerificationResult result = callGatewayVerify(gateway, reference);
         processVerificationResult(userId, reference, channel, result);
 
-        // Store idempotency key AFTER successful processing
         idempotencyPort.store(idemKey, WEBHOOK_IDEM_TTL);
         log.info("[Webhook] Processed ref={} success={}", reference, result.isSuccess());
     }
 
     private ResponseEntity<?> processDeposit(InitiateDepositRequest request, Long userId, String currency, String channel) {
-        Long walletId       = walletPort.getWalletId(userId);
+        Long walletId         = walletPort.getWalletId(userId);
         String currencySymbol = walletPort.getCurrencySymbol(currency);
         BigDecimal previousBalance = walletPort.getBalance(userId, currency);
 
-        boolean credited = creditWallet(userId, currency, request.getAmount(),
-                generateReference(request.getDepositSystem(), userId));
-        if (!credited)
-            return error("Failed to credit wallet. Transaction aborted.",
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Please try again or contact support.");
-
-        BigDecimal newBalance = walletPort.getBalance(userId, currency);
+        String reference     = generateReference(request.getDepositSystem(), userId);
         String transactionId = generateTransactionId();
         String fullName      = userLookupPort.findFullNameByUserId(userId).orElse("Account Holder");
         String email         = userLookupPort.findEmailByUserId(userId).orElse(null);
-        String reference     = generateReference(request.getDepositSystem(), userId);
-        String now           = Instant.now().toString();
+
+        boolean credited = creditWallet(userId, currency, request.getAmount(), reference);
+
+        if (!credited) {
+            historyPort.recordDepositFailed(userId, reference,
+                    request.getAmount(), currency,
+                    "Wallet credit failed — transaction aborted");
+
+            log.warn("[Deposit] Credit failed: userId={} channel={} currency={} amount={}",
+                    userId, channel, currency, request.getAmount());
+
+            return error("Failed to credit wallet. Transaction aborted.",
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Please try again or contact support.");
+        }
+
+        BigDecimal newBalance = walletPort.getBalance(userId, currency);
+        String now            = Instant.now().toString();
 
         historyPort.recordDepositCompleted(
                 userId, walletId,
@@ -305,8 +311,7 @@ public class DepositService {
     }
 
     private String generateTransactionId() {
-        long hash = Math.abs(UUID.randomUUID().getMostSignificantBits());
-        return TX_PREFIX + String.valueOf(hash).substring(0, 9);
+        return UUID.randomUUID().toString();
     }
 
     private ResponseEntity<Map<String, Object>> error(String message, HttpStatus status, String detail) {

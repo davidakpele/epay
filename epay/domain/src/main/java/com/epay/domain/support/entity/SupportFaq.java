@@ -35,7 +35,6 @@ public class SupportFaq {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String answer;
 
-    /** Who wrote the answer — shown in the answer card. */
     @Column(name = "author_name", length = 100)
     @Builder.Default
     private String authorName = "ePay Support Team";

@@ -142,7 +142,6 @@ public class UserService {
         UserRecord record = userRecordRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
 
-        // ── UserRecord fields ─────────────────────────────────────────────────
         if (request.getFirstName()   != null) record.setFirstName(request.getFirstName());
         if (request.getLastName()    != null) record.setLastName(request.getLastName());
         if (request.getTelephone()   != null) record.setPhoneNumber(request.getTelephone());
@@ -154,7 +153,6 @@ public class UserService {
         if (request.getCountry()     != null) record.setCountry(request.getCountry());
         if (request.getCountryCode() != null) record.setCountryCode(request.getCountryCode());
 
-        // Mark profile complete if all key fields are now populated
         if (record.getFirstName() != null && record.getLastName() != null
                 && record.getPhoneNumber() != null && record.getDateOfBirth() != null) {
             record.setProfileComplete(true);
@@ -162,15 +160,13 @@ public class UserService {
 
         userRecordRepository.save(record);
 
-        // ── User entity: email update ─────────────────────────────────────────
         if (request.getEmail() != null && !request.getEmail().equalsIgnoreCase(user.getEmail())) {
             if (userRepository.existsByEmail(request.getEmail()))
                 throw new BadRequestException(
                         "Email address is already in use by another account",
                         ErrorCode.RESOURCE_ALREADY_EXISTS);
-            // Re-use the updatePassword method slot — update email directly via save
             user.setEmail(request.getEmail());
-            user.setEmailVerified(false); // require re-verification on email change
+            user.setEmailVerified(false); 
             userRepository.save(user);
             log.info("Email updated for userId={} — verification required", userId);
         }
@@ -228,24 +224,10 @@ public class UserService {
         log.info("2FA {} for userId={}", enable ? "enabled" : "disabled", userId);
     }
 
-    // ── Password update ───────────────────────────────────────────────────────
-
-    /**
-     * PUT /user/settings/update-password
-     *
-     * Payload: { oldPassword, password, confirmPassword }
-     *
-     * Validates:
-     *   1. oldPassword matches the current bcrypt hash
-     *   2. password == confirmPassword
-     *   3. password differs from oldPassword (can't reuse same password)
-     *
-     * On success, hashes and stores the new password then sends a security alert.
-     */
     @Transactional
     public ResponseEntity<?> updateUserPassword(ChangePasswordRequest request,
                                                  Authentication authentication) {
-        // Resolve user from authentication context
+
         String username = authentication != null ? authentication.getName() : null;
         if (username == null)
             throw new BadRequestException("Authentication required", ErrorCode.UNAUTHORIZED_ACCESS);
@@ -253,26 +235,21 @@ public class UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // 1. Verify old password
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword()))
             throw new BadRequestException("Current password is incorrect",
                     ErrorCode.INVALID_CREDENTIALS);
 
-        // 2. Confirm new passwords match
         if (!request.getPassword().equals(request.getConfirmPassword()))
             throw new BadRequestException("New passwords do not match", ErrorCode.INVALID_INPUT);
 
-        // 3. New password must differ from old
         if (passwordEncoder.matches(request.getPassword(), user.getPassword()))
             throw new BadRequestException(
                     "New password must be different from your current password",
                     ErrorCode.INVALID_INPUT);
 
-        // 4. Hash and persist
         userRepository.updatePassword(user.getId(), passwordEncoder.encode(request.getPassword()));
         log.info("Password updated: userId={}", user.getId());
 
-        // 5. Send security alert asynchronously
         final Long userId  = user.getId();
         final String email = user.getEmail();
         userRecordRepository.findByUserId(userId).ifPresent(rec -> {
@@ -294,8 +271,6 @@ public class UserService {
                 java.util.Map.of("success", true,
                         "message", "Password updated successfully."));
     }
-
-    // ── Account lock / block (admin) ──────────────────────────────────────────
 
     @Transactional
     public ResponseEntity<?> lockUserAccount(Long userId) {

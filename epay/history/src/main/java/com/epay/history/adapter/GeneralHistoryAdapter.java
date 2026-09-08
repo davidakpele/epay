@@ -24,8 +24,6 @@ public class GeneralHistoryAdapter implements IHistoryPort, IHistoryReadPort {
 
     private final HistoryService historyService;
 
-    // ── IHistoryPort (write) ──────────────────────────────────────────────────
-
     @Override
     public void record(Long userId, Long walletId,
                        String transactionId, String reference,
@@ -68,12 +66,6 @@ public class GeneralHistoryAdapter implements IHistoryPort, IHistoryReadPort {
         }
     }
 
-    // ── IHistoryReadPort (read) ───────────────────────────────────────────────
-
-    /**
-     * Returns the most recent {@code limit} transactions for a user,
-     * ordered newest first. Used by UserTransactionsAgent for fraud detection.
-     */
     @Override
     public List<TransactionDTO> findRecentByUserId(Long userId, int limit) {
         try {

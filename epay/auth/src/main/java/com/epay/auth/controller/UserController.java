@@ -52,7 +52,6 @@ public class UserController {
                 userService.getFullProfile(userId)));
     }
 
-    /** PUT /user/profile — update own profile (authenticated user) */
     @PutMapping("/profile")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<UserRecordDTO>> updateProfile(
@@ -62,11 +61,6 @@ public class UserController {
                 userService.updateProfile(userId, request)));
     }
 
-    /**
-     * PUT /user/profile/{userId} — update profile by explicit userId.
-     * Accepts the frontend payload:
-     *   { firstName, lastName, email, gender, address, dob, telephone, country, state, city }
-     */
     @PutMapping("/profile/{userId}")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<ApiResponse<UserRecordDTO>> updateProfileById(

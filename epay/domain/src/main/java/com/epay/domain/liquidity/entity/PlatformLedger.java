@@ -7,10 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Immutable ledger entry for every liquidity event on the platform's
- * Paystack/gateway float account (top-ups, payouts deducted, alerts).
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -29,24 +25,15 @@ public class PlatformLedger {
     @SequenceGenerator(name = "platform_ledger_seq", sequenceName = "platform_ledger_sequence", allocationSize = 1)
     private Long id;
 
-    /** PAYSTACK, FLUTTERWAVE */
     @Column(nullable = false, length = 30)
     private String gateway;
 
-    /**
-     * PAYOUT_DEDUCTED — a bank withdrawal was debited from the float
-     * DEPOSIT_RECEIVED — a user deposit settled into the float
-     * MANUAL_TOPUP — admin manually recorded a float top-up
-     * BALANCE_SYNC — periodic balance check snapshot
-     * ALERT_SENT — low-balance alert was fired
-     */
     @Column(name = "entry_type", nullable = false, length = 30)
     private String entryType;
 
     @Column(nullable = false, precision = 20, scale = 2)
     private BigDecimal amount;
 
-    /** Snapshot of float balance after this entry */
     @Column(name = "balance_after", precision = 20, scale = 2)
     private BigDecimal balanceAfter;
 

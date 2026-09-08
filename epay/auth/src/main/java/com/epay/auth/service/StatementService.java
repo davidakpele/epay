@@ -374,7 +374,7 @@ public class StatementService implements IStatementService {
         table.addCell(new Cell()
                 .add(new Paragraph(currency).setFontSize(8))
                 .setBackgroundColor(rowColor)
-                .setPadding(5)  // Same as transaction row
+                .setPadding(5)  
                 .setBorder(new SolidBorder(new DeviceRgb(100, 100, 100), 0.2f))
                 .setTextAlignment(TextAlignment.CENTER));
         

@@ -32,7 +32,6 @@ public class PaystackDepositGateway implements DepositGateway {
     @Override
     public String initiate(String reference, String email, BigDecimal amount,
                            String currency, String callbackUrl) {
-        // Delegates to the shared PaystackClient; returns only the authorization_url.
         Map<String, Object> data = paystackClient.initializeTransaction(
                 reference, email, amount, currency, callbackUrl, null);
         Object url = data.get("authorization_url");

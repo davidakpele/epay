@@ -6,6 +6,8 @@ public enum TransactionStatus {
     VALIDATED,
     PROCESSING,
     PROCESSED,
+    AUTHORIZED,
+    SETTLEMENT_PENDING,
     SETTLED,
     DELIVERED,
     FAILED,

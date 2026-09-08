@@ -9,23 +9,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.Map;
-
-/**
- * Paystack payout gateway.
- *
- * Transfer status values returned by Paystack:
- *   success   — money sent and confirmed
- *   pending   — queued, will process soon (treat as success — webhook confirms later)
- *   otp       — Paystack dashboard OTP verification required (2FA on transfers).
- *               This is a Paystack account setting. Disable it in:
- *               Paystack Dashboard → Settings → Preferences → Transfer OTP
- *               OR enable the finalizeWithOtp flow to handle it programmatically.
- *   failed    — transfer rejected
- *   reversed  — transfer reversed by Paystack
- *
- * For TEST keys Paystack always requires OTP unless disabled in dashboard.
- * For LIVE keys the default can vary based on account configuration.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -38,12 +21,6 @@ public class PaystackPayoutGateway implements PayoutGateway {
     @Value("${epay.gateways.paystack.secret-key}")
     private String secretKey;
 
-    /**
-     * OTP to finalize transfers when Paystack requires it.
-     * For TEST mode Paystack always accepts "123456" as the OTP.
-     * For LIVE mode set this via env var PAYSTACK_TRANSFER_OTP.
-     * Set this to blank/empty if OTP is disabled on your Paystack account.
-     */
     @Value("${epay.gateways.paystack.transfer-otp:123456}")
     private String transferOtp;
 
@@ -55,8 +32,6 @@ public class PaystackPayoutGateway implements PayoutGateway {
                                 String narration) {
         try {
             HttpHeaders headers = bearerHeaders();
-
-            // ── Step 1: Create transfer recipient ─────────────────────────────
             Map<String, Object> recipientBody = Map.of(
                     "type",           "nuban",
                     "name",           accountName != null ? accountName : "Beneficiary",
@@ -76,7 +51,6 @@ public class PaystackPayoutGateway implements PayoutGateway {
                         .failureReason("Failed to create transfer recipient").build();
             }
 
-            // ── Step 2: Initiate transfer ─────────────────────────────────────
             Map<String, Object> transferBody = Map.of(
                     "source",    "balance",
                     "amount",    amount.multiply(BigDecimal.valueOf(100)).longValue(),
@@ -105,12 +79,8 @@ public class PaystackPayoutGateway implements PayoutGateway {
 
             log.info("[Paystack] Transfer initiated ref={} transferCode={} status={}",
                     reference, transferCode, status);
-
-            // ── Step 3: Handle OTP challenge ──────────────────────────────────
             if ("otp".equalsIgnoreCase(status)) {
                 if (transferOtp == null || transferOtp.isBlank()) {
-                    // OTP required but none configured — tell the admin to either
-                    // disable Transfer OTP in Paystack dashboard or configure the OTP env var
                     log.warn("[Paystack] OTP required for transfer but PAYSTACK_TRANSFER_OTP is not set. "
                             + "Disable Transfer OTP in Paystack Dashboard → Settings → Preferences, "
                             + "or set PAYSTACK_TRANSFER_OTP env var. ref={}", reference);
@@ -122,11 +92,9 @@ public class PaystackPayoutGateway implements PayoutGateway {
                                     + "or contact your platform administrator.")
                             .build();
                 }
-                // Finalize with the configured OTP
                 return finalizeTransfer(transferCode, reference);
             }
 
-            // ── Step 4: Evaluate final status ─────────────────────────────────
             boolean success = "success".equalsIgnoreCase(status)
                     || "pending".equalsIgnoreCase(status);
 
@@ -145,10 +113,6 @@ public class PaystackPayoutGateway implements PayoutGateway {
         }
     }
 
-    /**
-     * Finalize a transfer that is pending OTP verification.
-     * Paystack TEST mode always accepts "123456".
-     */
     private PayoutResult finalizeTransfer(String transferCode, String reference) {
         try {
             log.info("[Paystack] Finalizing OTP transfer ref={} code={}", reference, transferCode);

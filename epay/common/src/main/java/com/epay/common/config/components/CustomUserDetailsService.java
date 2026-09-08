@@ -12,13 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-/**
- * Primary {@link UserDetailsService} used by {@code JwtAuthenticationFilter}.
- *
- * The {@code sub} claim in new-format JWTs is a UUID (userUuid), not a username.
- * This service tries UUID-based lookup first, then falls back to username for
- * legacy tokens and synthetic admin principals built inside the filter.
- */
 @Slf4j
 @Service
 @Primary
@@ -30,7 +23,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String subject) {
-        // ── 1. Try UUID lookup (new token format: sub = userUuid) ─────────────
         try {
             UUID uuid = UUID.fromString(subject);
             return userLookupPort.findByUserUuid(uuid)
@@ -39,10 +31,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                         return new UsernameNotFoundException("User not found");
                     });
         } catch (IllegalArgumentException ignored) {
-            // subject is not a UUID — fall through to username lookup
         }
 
-        // ── 2. Fallback: plain username (admin synthetic principals, legacy tokens) ─
         return userLookupPort.findByUsername(subject)
                 .orElseThrow(() -> {
                     log.debug("[Auth] User not found by username: {}", subject);

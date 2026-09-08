@@ -296,7 +296,6 @@ public class AuthenticationService implements IAuthenticationService{
                 return handleTwoFactorAuth(user, authResponse);
             }
 
-            // Create the session first so its ID is available as a JWT claim
             UserTracer session = userTracerService.createSession(user);
             String tokenId = UUID.randomUUID().toString();
             String jwtToken = jwtService.generateToken(
@@ -665,11 +664,13 @@ public class AuthenticationService implements IAuthenticationService{
 
     private UserRecord buildUserRecord(UserSignUpRequest request, User user) {
         String referralCode = UUID.randomUUID().toString();
+        String phone = (request.getPhone() != null && !request.getPhone().isBlank())
+                ? request.getPhone().trim() : null;
         UserRecord record = new UserRecord();
         record.setUser(user);
         record.setFirstName(request.getFirstname());
         record.setLastName(request.getLastname());
-        record.setPhoneNumber(request.getPhone());
+        record.setPhoneNumber(phone);
         record.setProfileComplete(false);
         record.setTotalReferrals(0);
         record.setReferralCode(referralCode);
@@ -772,7 +773,8 @@ public class AuthenticationService implements IAuthenticationService{
     }
 
     private boolean phoneExists(String phone) {
-        return userRecordRepository.findByPhoneNumber(phone).isPresent();
+        if (phone == null || phone.isBlank()) return false;
+        return userRecordRepository.findByPhoneNumber(phone.trim()).isPresent();
     }
 
     private boolean existUsername(String username) {

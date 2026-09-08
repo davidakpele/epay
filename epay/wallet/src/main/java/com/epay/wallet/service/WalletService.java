@@ -141,7 +141,6 @@ public class WalletService implements IWalletService {
                 .active(true)
                 .build();
 
-        // Save wallet first to get its ID, then save balances with back-reference
         walletRepository.save(wallet);
 
         for (SupportedCurrency currency : activeCurrencies) {
@@ -215,7 +214,6 @@ public class WalletService implements IWalletService {
                 .findByWalletIdAndCurrencyCode(wallet.getId(), code)
                 .orElseThrow(() -> new ResourceNotFoundException(code + " not found in wallet"));
 
-        // Two targeted UPDATEs instead of full wallet save
         currencyBalanceRepository.clearDefaultForWallet(wallet.getId());
         currencyBalanceRepository.setDefault(newDefault.getId());
 
@@ -391,14 +389,14 @@ public class WalletService implements IWalletService {
         CompletableFuture.runAsync(() -> {
             try {
                 historyPort.record(senderUserId, senderWallet.getId(), txnId, request.getIdempotencyKey(),
-                        "TRANSFER_DEBIT", "DEBIT", "INTERNAL", "DELIVERED",   // INITIATED→PROCESSED→DELIVERED
+                        "TRANSFER_DEBIT", "DEBIT", "INTERNAL", "DELIVERED",
                         request.getAmount(), BigDecimal.ZERO, request.getAmount(),
                         prevSenderBal, newSenderBal, code, symbol,
                         senderFullName, "TRANSFER TO " + recipientFullName,
                         recipientFullName, recipientUserId, recipientWallet.getId(),
                         null, null, null, null, java.time.LocalDateTime.now());
                 historyPort.record(recipientUserId, recipientWallet.getId(), txnId + "_CR", request.getIdempotencyKey() + "_CR",
-                        "TRANSFER_CREDIT", "CREDIT", "INTERNAL", "DELIVERED", // INITIATED→PROCESSED→DELIVERED
+                        "TRANSFER_CREDIT", "CREDIT", "INTERNAL", "DELIVERED",
                         request.getAmount(), BigDecimal.ZERO, request.getAmount(),
                         prevRecipientBal, newRecipientBal, code, symbol,
                         recipientFullName, "TRANSFER FROM " + senderFullName,
@@ -464,7 +462,6 @@ public class WalletService implements IWalletService {
         if (newBalance.compareTo(BigDecimal.ZERO) < 0)
             throw new WalletException("Insufficient balance", ErrorCode.INSUFFICIENT_BALANCE);
 
-        // Single targeted UPDATE — no DELETE + re-INSERT of all currencies
         currencyBalanceRepository.updateBalance(balance.getId(), newBalance);
 
         walletCacheService.updateBalance(userId, code, newBalance, newBalance, newTxnId());
@@ -809,7 +806,7 @@ public class WalletService implements IWalletService {
                 historyPort.record(
                         userId, wallet.getId(),
                         txnId, request.getIdempotencyKey(),
-                        "SWAP", "DEBIT", "INTERNAL", "DELIVERED",    // INITIATED→PROCESSED→DELIVERED
+                        "SWAP", "DEBIT", "INTERNAL", "DELIVERED",  
                         request.getAmount(), finalSourceFee, request.getAmount(),
                         prevFromBalance, newFromBalance, fromCode, fromSymbol,
                         fullName,
@@ -820,7 +817,7 @@ public class WalletService implements IWalletService {
                 historyPort.record(
                         userId, wallet.getId(),
                         txnId + "_CR", request.getIdempotencyKey() + "_CR",
-                        "SWAP", "CREDIT", "INTERNAL", "DELIVERED",   // INITIATED→PROCESSED→DELIVERED
+                        "SWAP", "CREDIT", "INTERNAL", "DELIVERED",
                         finalConverted, BigDecimal.ZERO, finalConverted,
                         finalPrevToBalance, finalNewToBalance, toCode, toSymbol,
                         fullName,
@@ -864,22 +861,6 @@ public class WalletService implements IWalletService {
         return ResponseEntity.status(201).body(response);
     }
 
-
-    /**
-     * Derives a cross-exchange rate from the {@code SupportedCurrency} table.
-     *
-     * <p>Each currency row stores its rate relative to USD (i.e. how many USD = 1 unit of that
-     * currency, or equivalently the admin stores "1 USD = X units" — either convention works as
-     * long as it is consistent).  The cross-rate is computed as:
-     * <pre>
-     *   fromRate = exchangeRate of fromCurrency  (units-per-USD, e.g. NGN = 1500)
-     *   toRate   = exchangeRate of toCurrency    (units-per-USD, e.g. INR = 83)
-     *   crossRate = toRate / fromRate            (e.g. 1 NGN = 83/1500 INR ≈ 0.0553)
-     * </pre>
-     *
-     * <p>Both currencies must be active and have a non-zero exchange rate configured by the admin.
-     * A 0.5 % spread margin is applied on top of the raw cross rate.
-     */
     private BigDecimal getExchangeRate(String fromCurrency, String toCurrency) {
         SupportedCurrency from = supportedCurrencyRepository
                 .findByCodeIgnoreCase(fromCurrency)
@@ -903,10 +884,8 @@ public class WalletService implements IWalletService {
             throw new RuntimeException(
                     "Exchange rate not configured for " + toCurrency + ". Contact support.");
 
-        // Cross-rate: 1 fromCurrency = (toRate / fromRate) toCurrency
         BigDecimal crossRate = toRate.divide(fromRate, 10, java.math.RoundingMode.HALF_UP);
 
-        // Apply 0.5% spread margin
         BigDecimal margin = new BigDecimal("0.005");
         return crossRate.multiply(BigDecimal.ONE.subtract(margin))
                         .setScale(8, java.math.RoundingMode.HALF_UP);
@@ -984,7 +963,7 @@ public class WalletService implements IWalletService {
     }
 
     private String newTxnId() {
-        return "TXN_" + UUID.randomUUID().toString().replace("-", "").substring(0, 10).toUpperCase();
+        return UUID.randomUUID().toString();
     }
 
     private WalletBalanceDTO toBalanceDTO(CurrencyBalance b) {
