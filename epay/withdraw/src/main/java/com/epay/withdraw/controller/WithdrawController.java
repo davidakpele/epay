@@ -6,6 +6,8 @@ import com.epay.domain.common.exception.ErrorHandler;
 import com.epay.domain.withdraw.input.BankWithdrawRequest;
 import com.epay.domain.withdraw.input.InternalWithdrawRequest;
 import com.epay.withdraw.service.WithdrawService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.TimeUnit;
 
+@Tag(name = "Withdrawals", description = "Internal wallet-to-wallet and external bank withdrawal operations")
 @RestController
 @RequestMapping("/withdrawals")
 @RequiredArgsConstructor
@@ -25,6 +28,10 @@ public class WithdrawController {
     private final ErrorHandler    errorHandler;
     private final JwtClaimsHolder jwtClaims;
 
+    @Operation(
+        summary     = "Internal wallet withdrawal",
+        description = "Deducts funds from a user's wallet for an internal platform payout. Rate-limited to 5 per minute."
+    )
     @RateLimited(
         keyPrefix      = "in_house_transfer",
         capacity       = 5,
@@ -45,6 +52,10 @@ public class WithdrawController {
         return withdrawService.internalWithdrawProcess(request);
     }
 
+    @Operation(
+        summary     = "Withdraw to an external bank account",
+        description = "Initiates a bank transfer via the configured payment gateway (Paystack). Rate-limited to 10 per minute."
+    )
     @RateLimited(
         keyPrefix      = "bank_transfer",
         capacity       = 10,
@@ -63,7 +74,6 @@ public class WithdrawController {
             return errorHandler.error("FORBIDDEN", HttpStatus.FORBIDDEN,
                     "You are not authorized to operate this wallet.");
         }
-
         return withdrawService.bankWithdrawProcess(request);
     }
 }

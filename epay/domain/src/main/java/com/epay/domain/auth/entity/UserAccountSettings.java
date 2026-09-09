@@ -8,7 +8,8 @@ import jakarta.persistence.*;
 public class UserAccountSettings {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "uas_seq")
+    @SequenceGenerator(name = "uas_seq", sequenceName = "user_account_settings_seq", allocationSize = 1)
     private Long id;
     
     @ManyToOne

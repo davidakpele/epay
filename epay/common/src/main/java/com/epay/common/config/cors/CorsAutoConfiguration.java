@@ -17,7 +17,7 @@ public class CorsAutoConfiguration implements WebMvcConfigurer {
                         "Accept", "Origin", "X-Request-ID", "X-API-Version",
                         "Cache-Control", "X-Forwarded-For")
                 .exposedHeaders(
-                        "Authorization", "X-Request-ID",
+                        "Authorization", "X-Request-ID", "X-Instance-ID",
                         "X-Rate-Limit-Limit", "X-Rate-Limit-Remaining", "X-Rate-Limit-Reset")
                 .allowCredentials(true)
                 .maxAge(3600);

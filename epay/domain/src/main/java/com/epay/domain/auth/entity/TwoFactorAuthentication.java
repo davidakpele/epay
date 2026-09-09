@@ -12,7 +12,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Entity
 public class TwoFactorAuthentication {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tfa_seq")
+    @SequenceGenerator(name = "tfa_seq", sequenceName = "two_factor_authentication_seq", allocationSize = 1)
     private Long id;
     private String otp;
 

@@ -5,6 +5,7 @@ import com.epay.domain.notification.input.BlockUserWallet;
 import com.epay.domain.notification.input.CreditWalletNotification;
 import com.epay.domain.notification.input.DebitWalletNotification;
 import com.epay.domain.notification.input.DepositWalletNotification;
+import com.epay.domain.notification.input.MaintenanceDebtNotification;
 import com.epay.domain.notification.input.MaintenanceDeductionNotification;
 import com.epay.domain.notification.input.StatementPayload;
 import com.epay.domain.notification.input.SwapCurrencyPayload;
@@ -58,6 +59,12 @@ public class WalletNotificationListener {
     public void onMaintenanceDeduction(MaintenanceDeductionNotification payload) {
         if (payload == null) { log.warn("[WalletListener] Null payload on maintenance queue"); return; }
         walletNotificationService.createMaintenanceNotification(payload);
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.MAINTENANCE_DEBT_QUEUE)
+    public void onMaintenanceDebt(MaintenanceDebtNotification payload) {
+        if (payload == null) { log.warn("[WalletListener] Null payload on maintenance-debt queue"); return; }
+        walletNotificationService.createMaintenanceDebtNotification(payload);
     }
 
     @RabbitListener(queues = RabbitMQConfig.SWAP_WALLET_QUEUE)

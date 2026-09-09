@@ -19,7 +19,8 @@ import java.time.LocalDateTime;
 public class SupportedCurrency {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sc_seq")
+    @SequenceGenerator(name = "sc_seq", sequenceName = "supported_currency_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false, unique = true, length = 10)

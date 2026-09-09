@@ -20,7 +20,8 @@ import java.time.LocalDateTime;
 public class PasswordResetToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "prt_seq")
+    @SequenceGenerator(name = "prt_seq", sequenceName = "password_reset_token_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

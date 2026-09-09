@@ -5,6 +5,8 @@ import com.epay.common.interfaces.IIdempotencyPort;
 import com.epay.common.interfaces.IWithdrawWalletPort;
 import com.epay.common.interfaces.UserLookupPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +22,7 @@ import java.util.HexFormat;
 import java.util.Map;
 
 
+@Tag(name = "Withdrawal Webhooks", description = "Receive Paystack callbacks for withdrawal transfer events")
 @Slf4j
 @RestController
 @RequestMapping("/webhook/withdraw")
@@ -37,6 +40,10 @@ public class WithdrawWebhookController {
     private final UserLookupPort      userLookupPort;
     private final ObjectMapper        objectMapper;
 
+    @Operation(
+        summary     = "Paystack withdrawal webhook",
+        description = "Receives HMAC-verified Paystack events for transfer.success, transfer.failed, transfer.reversed and charge.success. Handles wallet debits and auto-refunds."
+    )
     @PostMapping("/paystack")
     public ResponseEntity<Void> paystackTransferWebhook(
             @RequestHeader(value = "X-Paystack-Signature", required = false) String signature,

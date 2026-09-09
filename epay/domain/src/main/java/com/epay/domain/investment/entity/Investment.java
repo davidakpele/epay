@@ -18,7 +18,8 @@ import com.epay.domain.investment.enums.InvestmentStatus;
 public class Investment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "inv_seq")
+    @SequenceGenerator(name = "inv_seq", sequenceName = "investment_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "user_id", nullable = false)

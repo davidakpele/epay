@@ -10,7 +10,8 @@ import java.util.Date;
 @Entity
 public class VerificationToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "vt_seq")
+    @SequenceGenerator(name = "vt_seq", sequenceName = "verification_token_seq", allocationSize = 1)
     private Long id;
     private Long userId;
     private String token;
