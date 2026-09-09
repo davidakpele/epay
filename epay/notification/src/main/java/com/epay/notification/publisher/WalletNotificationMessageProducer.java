@@ -6,6 +6,7 @@ import com.epay.domain.notification.input.BlockUserWallet;
 import com.epay.domain.notification.input.CreditWalletNotification;
 import com.epay.domain.notification.input.DebitWalletNotification;
 import com.epay.domain.notification.input.DepositWalletNotification;
+import com.epay.domain.notification.input.MaintenanceDebtNotification;
 import com.epay.domain.notification.input.MaintenanceDeductionNotification;
 import com.epay.domain.notification.input.StatementPayload;
 import com.epay.domain.notification.input.SwapCurrencyPayload;
@@ -108,6 +109,45 @@ public class WalletNotificationMessageProducer implements IWalletNotificationPub
         payload.setIpAddress(ipAddress);
         payload.setDeviceInfo(deviceInfo);
         send(RabbitMQConfig.WALLET_EXCHANGE, RabbitMQConfig.ROUTING_KEY_WALLET_PIN_ALERT, payload);
+    }
+
+    @Override
+    public void publishDebtCreatedNotification(String userEmail, String userFirstName, String userLastName,
+                                               Long userId, String currency, BigDecimal feeAmount,
+                                               BigDecimal deductedAmount, BigDecimal debtAmount,
+                                               BigDecimal walletBalance, String billingMonth) {
+        MaintenanceDebtNotification payload = new MaintenanceDebtNotification();
+        payload.setEventType("DEBT_CREATED");
+        payload.setUserEmail(userEmail);
+        payload.setUserFirstName(userFirstName);
+        payload.setUserLastName(userLastName);
+        payload.setUserId(userId);
+        payload.setCurrency(currency);
+        payload.setFeeAmount(feeAmount);
+        payload.setDeductedAmount(deductedAmount);
+        payload.setDebtAmount(debtAmount);
+        payload.setWalletBalance(walletBalance);
+        payload.setBillingMonth(billingMonth);
+        send(RabbitMQConfig.WALLET_EXCHANGE, RabbitMQConfig.ROUTING_KEY_MAINTENANCE_DEBT, payload);
+    }
+
+    @Override
+    public void publishDebtRepaidNotification(String userEmail, String userFirstName, String userLastName,
+                                              Long userId, String currency, BigDecimal repaidAmount,
+                                              BigDecimal remainingDebt, BigDecimal newWalletBalance,
+                                              boolean fullySettled) {
+        MaintenanceDebtNotification payload = new MaintenanceDebtNotification();
+        payload.setEventType("DEBT_REPAID");
+        payload.setUserEmail(userEmail);
+        payload.setUserFirstName(userFirstName);
+        payload.setUserLastName(userLastName);
+        payload.setUserId(userId);
+        payload.setCurrency(currency);
+        payload.setRepaidAmount(repaidAmount);
+        payload.setRemainingDebt(remainingDebt);
+        payload.setNewWalletBalance(newWalletBalance);
+        payload.setFullySettled(fullySettled);
+        send(RabbitMQConfig.WALLET_EXCHANGE, RabbitMQConfig.ROUTING_KEY_MAINTENANCE_DEBT, payload);
     }
 
     public void sendAccountStatement(String email, String period, String username, byte[] pdfBytes) {

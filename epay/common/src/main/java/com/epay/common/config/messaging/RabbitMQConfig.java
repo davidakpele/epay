@@ -25,6 +25,7 @@ public class RabbitMQConfig {
     public static final String DEBIT_WALLET_QUEUE = "debit.wallet";
     public static final String DEPOSIT_WALLET_QUEUE = "wallet.deposit";
     public static final String MAINTENANCE_DEDUCTION_QUEUE = "maintenance.wallet";
+    public static final String MAINTENANCE_DEBT_QUEUE      = "maintenance.debt";
     public static final String SWAP_WALLET_QUEUE = "swap.wallet";
     public static final String ACCOUNT_STATEMENT_QUEUE = "account.statement"; 
     public static final String BLOCK_USER_WALLET_QUEUE = "block.user.wallet";
@@ -43,6 +44,7 @@ public class RabbitMQConfig {
     public static final String ROUTING_KEY_DEBIT_WALLET = "wallet.debit";
     public static final String ROUTING_KEY_DEPOSIT_WALLET = "wallet.deposit";
     public static final String ROUTING_KEY_WALLET_MAINTENANCE_SERVICE_DEDUCTION = "wallet.deduction-fee";
+    public static final String ROUTING_KEY_MAINTENANCE_DEBT                     = "wallet.maintenance-debt";
     public static final String ROUTING_KEY_ACCOUNT_STATEMENT = "account.statement";
     public static final String ROUTING_KEY_SWAP_WALLET = "wallet.swap";
     public static final String ROUTING_KEY_BLOCK_USER_WALLET = "wallet.block-user";
@@ -118,6 +120,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue walletMaintenanceDeductionQueue() {
         return new Queue(MAINTENANCE_DEDUCTION_QUEUE);
+    }
+
+    @Bean
+    public Queue maintenanceDebtQueue() {
+        return new Queue(MAINTENANCE_DEBT_QUEUE);
     }
 
     @Bean
@@ -213,6 +220,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding walletMaintenanceBinding(Queue walletMaintenanceDeductionQueue, TopicExchange walletExchange) {
         return BindingBuilder.bind(walletMaintenanceDeductionQueue).to(walletExchange).with(ROUTING_KEY_WALLET_MAINTENANCE_SERVICE_DEDUCTION);
+    }
+
+    @Bean
+    public Binding maintenanceDebtBinding(Queue maintenanceDebtQueue, TopicExchange walletExchange) {
+        return BindingBuilder.bind(maintenanceDebtQueue).to(walletExchange).with(ROUTING_KEY_MAINTENANCE_DEBT);
     }
 
     @Bean

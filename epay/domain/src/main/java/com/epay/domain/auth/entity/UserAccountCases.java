@@ -18,7 +18,8 @@ import jakarta.persistence.*;
 @Table(name = "user_account_cases_report")
 public class UserAccountCases {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "uac_seq")
+    @SequenceGenerator(name = "uac_seq", sequenceName = "user_account_cases_seq", allocationSize = 1)
     private Long id;
     private String username;
     private Long userId;

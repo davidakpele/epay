@@ -24,7 +24,8 @@ import java.time.LocalDateTime;
 public class Beneficiary {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ben_seq")
+    @SequenceGenerator(name = "ben_seq", sequenceName = "beneficiary_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "user_id", nullable = false)

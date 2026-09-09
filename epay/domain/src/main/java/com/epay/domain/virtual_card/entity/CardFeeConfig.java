@@ -29,7 +29,8 @@ import java.time.LocalDateTime;
 public class CardFeeConfig {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "cfc_seq")
+    @SequenceGenerator(name = "cfc_seq", sequenceName = "card_fee_config_seq", allocationSize = 1)
     private Long id;
     @Column(name = "currency_code", nullable = false, length = 10)
     private String currencyCode;

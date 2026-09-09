@@ -13,6 +13,8 @@ import com.epay.domain.auth.enums.KycTier;
 import com.epay.domain.auth.repository.KycDocumentRepository;
 import com.epay.domain.auth.repository.KycVerificationRepository;
 import com.epay.domain.auth.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,15 +28,20 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Tag(name = "KYC", description = "Know-Your-Customer document upload, submission and review")
 @RestController
 @RequestMapping("/kyc")
 @RequiredArgsConstructor
 public class KycController {
 
-    private final KycDocumentRepository      kycDocumentRepository;
-    private final KycVerificationRepository  kycVerificationRepository;
-    private final UserRepository             userRepository;
+    private final KycDocumentRepository     kycDocumentRepository;
+    private final KycVerificationRepository kycVerificationRepository;
+    private final UserRepository            userRepository;
 
+    @Operation(
+        summary     = "Upload a KYC document",
+        description = "Accepts a file upload for the specified document type (e.g. NATIONAL_ID, PASSPORT) and stores a reference to it."
+    )
     @PostMapping("/documents")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Void>> uploadDocument(
@@ -63,6 +70,10 @@ public class KycController {
         return ResponseEntity.ok(ApiResponse.success("Document uploaded successfully.", null));
     }
 
+    @Operation(
+        summary     = "List own KYC documents",
+        description = "Returns all KYC documents previously uploaded by the authenticated user."
+    )
     @GetMapping("/documents")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<List<KycDocument>>> getDocuments(
@@ -71,6 +82,10 @@ public class KycController {
                 kycDocumentRepository.findByUserId(userId)));
     }
 
+    @Operation(
+        summary     = "Submit KYC for review",
+        description = "Marks the user's uploaded documents as ready for admin review for the specified KYC tier (TIER_1, TIER_2, TIER_3)."
+    )
     @PostMapping("/submit/{tier}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Void>> submitForReview(
@@ -82,8 +97,8 @@ public class KycController {
 
         List<KycDocument> docs = kycDocumentRepository.findByUserId(userId);
         if (docs.isEmpty())
-            throw new BadRequestException("Please upload at least one document before submitting",
-                    ErrorCode.INVALID_INPUT);
+            throw new BadRequestException(
+                    "Please upload at least one document before submitting", ErrorCode.INVALID_INPUT);
 
         KycVerification verification = KycVerification.builder()
                 .user(user)
@@ -95,12 +110,15 @@ public class KycController {
                 .build();
 
         kycVerificationRepository.save(verification);
-
         userRepository.updateKycStatus(userId, KycStatus.SUBMITTED);
 
         return ResponseEntity.ok(ApiResponse.success("KYC submission received. Under review.", null));
     }
 
+    @Operation(
+        summary     = "List pending KYC submissions (admin)",
+        description = "Returns all KYC verification requests with status SUBMITTED, paginated."
+    )
     @GetMapping("/admin/pending")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")
     public ResponseEntity<ApiResponse<Page<KycVerification>>> getPending(
@@ -110,6 +128,10 @@ public class KycController {
         return ResponseEntity.ok(ApiResponse.success(null, page));
     }
 
+    @Operation(
+        summary     = "Approve a KYC verification (admin)",
+        description = "Approves a pending KYC submission and upgrades the user's KYC tier accordingly."
+    )
     @PostMapping("/admin/{verificationId}/approve")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")
     public ResponseEntity<ApiResponse<Void>> approve(
@@ -129,6 +151,10 @@ public class KycController {
         return ResponseEntity.ok(ApiResponse.success("KYC approved.", null));
     }
 
+    @Operation(
+        summary     = "Reject a KYC verification (admin)",
+        description = "Rejects a pending KYC submission with a mandatory rejection reason."
+    )
     @PostMapping("/admin/{verificationId}/reject")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_USER')")
     public ResponseEntity<ApiResponse<Void>> reject(
@@ -149,6 +175,10 @@ public class KycController {
         return ResponseEntity.ok(ApiResponse.success("KYC rejected.", null));
     }
 
+    @Operation(
+        summary     = "Get own KYC status",
+        description = "Returns the authenticated user's current KYC status and tier."
+    )
     @GetMapping("/status")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Object>> getStatus(

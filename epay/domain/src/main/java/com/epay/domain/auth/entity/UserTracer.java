@@ -22,7 +22,8 @@ import java.time.LocalDateTime;
 public class UserTracer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ut_seq")
+    @SequenceGenerator(name = "ut_seq", sequenceName = "user_tracer_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

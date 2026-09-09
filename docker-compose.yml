@@ -1,4 +1,8 @@
 services:
+  # ============================================
+  #  CORE INFRASTRUCTURE SERVICES
+  # ============================================
+
   postgres:
     image: postgres:16-alpine
     container_name: epay-postgres
@@ -19,11 +23,73 @@ services:
     restart: unless-stopped
     networks:
       - epay-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: epay-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${DB_USERNAME:-epay}:${DB_PASSWORD:-epay}@postgres:5432/epay?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - epay-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.62.0
+    container_name: epay-redis-exporter
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+    ports:
+      - "9121:9121"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - epay-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.1.0
+    container_name: epay-nginx-exporter
+    command:
+      - "--nginx.scrape-uri=http://nginx/nginx_status"
+    ports:
+      - "9113:9113"
+    depends_on:
+      nginx:
+        condition: service_healthy
+    networks:
+      - epay-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
 
   redis:
     image: redis:7-alpine
     container_name: epay-redis
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
     volumes:
@@ -36,6 +102,11 @@ services:
     restart: unless-stopped
     networks:
       - epay-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
@@ -57,6 +128,11 @@ services:
     restart: unless-stopped
     networks:
       - epay-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
   zipkin:
     image: openzipkin/zipkin:latest
@@ -67,15 +143,18 @@ services:
       - STORAGE_TYPE=mem
     networks:
       - epay-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
 
-  epay-server:
+  epay-server-base: &server-base
     build:
       context: ./epay
       dockerfile: Dockerfile
-    container_name: epay-server
     image: epay-server:latest
-    ports:
-      - "8029:8029"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_USERNAME: ${DB_USERNAME:-epay}
@@ -93,6 +172,18 @@ services:
       FLUTTERWAVE_SECRET_KEY: ${FLUTTERWAVE_SECRET_KEY:-}
       GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
       GMAIL_USERNAME: ${GMAIL_USERNAME:-}
+      INSTANCE_ID: ${HOSTNAME:-unknown}
+      SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE: 10
+      SPRING_DATASOURCE_HIKARI_MINIMUM-IDLE: 5
+      SPRING_DATASOURCE_HIKARI_IDLE-TIMEOUT: 300000
+      SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT: 30000
+      SPRING_DATASOURCE_HIKARI_MAX-LIFETIME: 1800000
+      SPRING_REDIS_LETTUCE_POOL_MAX-ACTIVE: 20
+      SPRING_REDIS_LETTUCE_POOL_MAX-IDLE: 10
+      SPRING_REDIS_LETTUCE_POOL_MIN-IDLE: 5
+      SPRING_RABBITMQ_LISTENER_SIMPLE_CONCURRENCY: 3
+      SPRING_RABBITMQ_LISTENER_SIMPLE_MAX-CONCURRENCY: 10
+      SPRING_RABBITMQ_LISTENER_SIMPLE_PREFETCH: 5
     depends_on:
       postgres:
         condition: service_healthy
@@ -125,19 +216,52 @@ services:
         max-size: "50m"
         max-file: "5"
 
-  frontend:
+  epay-server-1:
+    <<: *server-base
+    container_name: epay-server-1
+    ports:
+      - "8021:8029"
+    environment:
+      INSTANCE_ID: epay-server-1
+
+  epay-server-2:
+    <<: *server-base
+    container_name: epay-server-2
+    ports:
+      - "8022:8029"
+    environment:
+      INSTANCE_ID: epay-server-2
+
+  epay-server-3:
+    <<: *server-base
+    container_name: epay-server-3
+    ports:
+      - "8023:8029"
+    environment:
+      INSTANCE_ID: epay-server-3
+
+  # Backend Instance 4 (Optional - for high load)
+  # epay-server-4:
+  #   <<: *server-base
+  #   container_name: epay-server-4
+  #   ports:
+  #     - "8024:8029"
+
+  frontend-base: &frontend-base
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: epay-frontend
     image: epay-frontend:latest
-    expose:
-      - "3000"
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://epay-server:8029}
+      INSTANCE_ID: ${HOSTNAME:-unknown}
     depends_on:
-      epay-server:
+      epay-server-1:
+        condition: service_healthy
+      epay-server-2:
+        condition: service_healthy
+      epay-server-3:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1"]
@@ -154,6 +278,24 @@ services:
         max-size: "20m"
         max-file: "3"
 
+  frontend-1:
+    <<: *frontend-base
+    container_name: epay-frontend-1
+    ports:
+      - "3001:3000"
+
+  frontend-2:
+    <<: *frontend-base
+    container_name: epay-frontend-2
+    ports:
+      - "3002:3000"
+
+  frontend-3:
+    <<: *frontend-base
+    container_name: epay-frontend-3
+    ports:
+      - "3003:3000"
+
   nginx:
     build:
       context: ./nginx
@@ -166,10 +308,22 @@ services:
       - "443:443"
     volumes:
       - nginx_logs:/var/log/nginx:rw
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
-      epay-server:
+      epay-server-1:
         condition: service_healthy
-      frontend:
+      epay-server-2:
+        condition: service_healthy
+      epay-server-3:
+        condition: service_healthy
+      frontend-1:
+        condition: service_healthy
+      frontend-2:
+        condition: service_healthy
+      frontend-3:
         condition: service_healthy
     healthcheck:
       test:
@@ -179,7 +333,7 @@ services:
           "--quiet",
           "--tries=1",
           "--spider",
-          "http://localhost/health",
+          "http://localhost/nginx-health",
         ]
       interval: 30s
       timeout: 10s
@@ -191,9 +345,8 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "3"
+        max-file: "5"
 
-  # ── Loki (log storage) ──────────────────────────────────────────────────────
   loki:
     build:
       context: ./epay/monitoring/loki
@@ -207,8 +360,12 @@ services:
     restart: unless-stopped
     networks:
       - epay-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
 
-  # ── Promtail (log shipper — tails epay_logs volume) ────────────────────────
   promtail:
     build:
       context: ./epay/monitoring/promtail
@@ -217,11 +374,17 @@ services:
     container_name: epay-promtail
     volumes:
       - epay_logs:/var/log/epay:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
     depends_on:
       - loki
     restart: unless-stopped
     networks:
       - epay-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   prometheus:
     build:
@@ -233,16 +396,26 @@ services:
       - "9090:9090"
     volumes:
       - prometheus_data:/prometheus
+      - ./epay/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./epay/monitoring/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
       - "--storage.tsdb.retention.time=15d"
       - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
     depends_on:
-      - epay-server
+      - epay-server-1
+      - epay-server-2
+      - epay-server-3
     restart: unless-stopped
     networks:
       - epay-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
 
   grafana:
     build:
@@ -251,28 +424,44 @@ services:
     image: epay-grafana:latest
     container_name: epay-grafana
     ports:
-      - "3001:3000"
+      - "3010:3000"
     environment:
       GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD:-admin}
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./epay/monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./epay/monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
     depends_on:
       - prometheus
     restart: unless-stopped
     networks:
       - epay-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
   rabbitmq_data:
+    driver: local
   app_uploads:
+    driver: local
   epay_logs:
+    driver: local
   prometheus_data:
+    driver: local
   grafana_data:
+    driver: local
   loki_data:
+    driver: local
   nginx_logs:
     driver: local
 

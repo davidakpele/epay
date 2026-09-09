@@ -1,0 +1,51 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Maintenance Fee Debt Created</title>
+    <style>
+      body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+      .container { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 8px; overflow: hidden; }
+      .header { background: #b71c1c; padding: 28px 32px; text-align: center; }
+      .header h1 { color: #fff; margin: 0; font-size: 22px; }
+      .body { padding: 32px; }
+      .body p { color: #333; font-size: 15px; line-height: 1.7; }
+      .info-box { background: #fff3f3; border-left: 4px solid #b71c1c; padding: 16px 20px; border-radius: 4px; margin: 20px 0; }
+      .info-box p { margin: 6px 0; font-size: 14px; }
+      .alert { background: #ffebee; border: 1px solid #ef9a9a; padding: 14px 18px; border-radius: 4px; margin: 16px 0; color: #c62828; font-size: 14px; }
+      .footer { background: #f9f9f9; padding: 18px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header"><h1>⚠ Maintenance Fee Debt — Action Required</h1></div>
+      <div class="body">
+        <p>Dear <strong th:text="${userFirstName}">Customer</strong>,</p>
+        <p>
+          Your <strong th:text="${currency}">USD</strong> wallet had insufficient balance to cover the
+          monthly maintenance fee for <strong th:text="${billingMonth}">this month</strong>.
+          The outstanding amount has been recorded as a debt against your wallet.
+        </p>
+
+        <div class="info-box">
+          <p><strong>Billing Period:</strong> <span th:text="${billingMonth}">Month Year</span></p>
+          <p><strong>Total Fee Due:</strong> <span th:text="${feeAmount}">0.00</span></p>
+          <p><strong>Amount Deducted:</strong> <span th:text="${deductedAmount}">0.00</span></p>
+          <p><strong>Debt Recorded:</strong> <span th:text="${debtAmount}">0.00</span></p>
+          <p><strong>Current Wallet Balance:</strong> <span th:text="${walletBalance}">0.00</span></p>
+        </div>
+
+        <div class="alert">
+          <strong>Important:</strong> When you next fund your <span th:text="${currency}">USD</span> wallet,
+          the outstanding debt will be automatically deducted before the remaining balance is credited to you.
+        </div>
+
+        <p>
+          To avoid service restrictions, please fund your wallet at your earliest convenience.
+          If you believe this charge is in error, please contact our support team.
+        </p>
+      </div>
+      <div class="footer"><p>ePay — Secure Digital Payments &nbsp;|&nbsp; This is an automated notification.</p></div>
+    </div>
+  </body>
+</html>

@@ -26,6 +26,8 @@ import com.epay.common.exception.ResourceNotFoundException;
 import com.epay.common.exception.WalletException;
 import com.epay.common.interfaces.IHistoryPort;
 import com.epay.common.interfaces.IWalletNotificationPublisher;
+import com.epay.common.interfaces.IMaintenanceUsagePort;
+import com.epay.common.interfaces.IDebtRecoveryPort;
 import com.epay.common.interfaces.UserLookupPort;
 import com.epay.domain.wallet.dto.WalletBalanceDTO;
 import com.epay.domain.wallet.dto.WalletSection;
@@ -69,6 +71,8 @@ public class WalletService implements IWalletService {
     private final PasswordEncoder              passwordEncoder;
     private final IWalletNotificationPublisher notificationPublisher;
     private final IHistoryPort                 historyPort;
+    private final IMaintenanceUsagePort        maintenanceUsagePort;
+    private final IDebtRecoveryPort            debtRecoveryPort;
 
     private static final DateTimeFormatter EVT_FMT = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy hh:mm:ss a");
 
@@ -381,6 +385,16 @@ public class WalletService implements IWalletService {
         walletCacheService.updateBalance(senderUserId, code, newSenderBal, newSenderBal, txnId);
         walletCacheService.updateBalance(recipientUserId, code, newRecipientBal, newRecipientBal, txnId);
 
+        // Track monthly activity for maintenance fee calculation (fire-and-forget)
+        CompletableFuture.runAsync(() -> {
+            try {
+                maintenanceUsagePort.recordActivity(senderUserId, code, request.getAmount(), "TRANSFER_DEBIT");
+                maintenanceUsagePort.recordActivity(recipientUserId, code, request.getAmount(), "TRANSFER_CREDIT");
+            } catch (Exception ex) {
+                log.warn("[MaintenanceUsage] Transfer tracking failed: {}", ex.getMessage());
+            }
+        });
+
         final BigDecimal prevSenderBal = senderBalance.getBalance().add(request.getAmount());
         final BigDecimal prevRecipientBal = recipientBalance.getBalance().subtract(request.getAmount());
         final String senderFullName   = userLookupPort.findFullNameByUserId(senderUserId).orElse("Sender");
@@ -462,11 +476,31 @@ public class WalletService implements IWalletService {
         if (newBalance.compareTo(BigDecimal.ZERO) < 0)
             throw new WalletException("Insufficient balance", ErrorCode.INSUFFICIENT_BALANCE);
 
-        currencyBalanceRepository.updateBalance(balance.getId(), newBalance);
+        // ── Debt recovery intercept ────────────────────────────────────────────
+        // If this is an incoming credit (amount > 0) and the user has an outstanding
+        // maintenance fee debt on this currency, deduct the debt first and only credit
+        // the net remainder to the wallet.  Both operations are in the same transaction.
+        BigDecimal creditAmount = amount;
+        if (amount.compareTo(BigDecimal.ZERO) > 0 && maintenanceUsagePort.hasActiveDebt(userId, code)) {
+            creditAmount = debtRecoveryPort.recoverOnCredit(userId, code, amount, walletId);
+        }
+        BigDecimal finalBalance = balance.getBalance().add(creditAmount);
+        // ──────────────────────────────────────────────────────────────────────
 
-        walletCacheService.updateBalance(userId, code, newBalance, newBalance, newTxnId());
+        currencyBalanceRepository.updateBalance(balance.getId(), finalBalance);
+
+        walletCacheService.updateBalance(userId, code, finalBalance, finalBalance, newTxnId());
         log.info("Balance updated: userId={} walletId={} currency={} delta={} new={}",
-                userId, walletId, code, amount, newBalance);
+                userId, walletId, code, creditAmount, finalBalance);
+
+        // Track usage for maintenance fee (any balance touch counts)
+        CompletableFuture.runAsync(() -> {
+            try {
+                maintenanceUsagePort.recordActivity(userId, code, amount.abs(), "BALANCE_UPDATE");
+            } catch (Exception ex) {
+                log.warn("[MaintenanceUsage] updateBalance tracking failed: {}", ex.getMessage());
+            }
+        });
         return ResponseEntity.ok().build();
     }
 
@@ -789,6 +823,16 @@ public class WalletService implements IWalletService {
         String txnId = newTxnId();
         walletCacheService.updateBalance(userId, fromCode, newFromBalance, newFromBalance, txnId);
         walletCacheService.updateBalance(userId, toCode,   newToBalance,  newToBalance,  txnId);
+
+        // Track both currencies as active this month (fire-and-forget)
+        CompletableFuture.runAsync(() -> {
+            try {
+                maintenanceUsagePort.recordActivity(userId, fromCode, request.getAmount(), "SWAP");
+                maintenanceUsagePort.recordActivity(userId, toCode,   convertedAmount,     "SWAP");
+            } catch (Exception ex) {
+                log.warn("[MaintenanceUsage] Swap tracking failed: {}", ex.getMessage());
+            }
+        });
 
         final String fullName  = userLookupPort.findFullNameByUserId(userId).orElse("Account Holder");
         final String email     = userLookupPort.findEmailByUserId(userId).orElse(null);

@@ -12,7 +12,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Table(name = "authorize_user_verification")
 public class AuthorizeUserVerification {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "auv_seq")
+    @SequenceGenerator(name = "auv_seq", sequenceName = "authorize_user_verification_seq", allocationSize = 1)
     private Long id;
     private Long userId;
     @CreationTimestamp

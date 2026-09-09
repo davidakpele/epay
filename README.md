@@ -927,6 +927,37 @@ docker compose up -d --no-build --force-recreate epay-server 2>&1
 docker compose config --quiet 2>&1 
 docker compose up -d --build prometheus grafana 2>&1 
 docker run --rm alpine sh -c "ls /run/desktop/mnt/host/" 2>&1
+
+
+# Start with 3 instances
+docker compose up -d --scale epay-server=3
+
+# Scale to 5 instances
+docker compose up -d --scale epay-server=5
+
+# Scale down to 2 instances
+docker compose up -d --scale epay-server=2
+
+# Check status of all instances
+docker compose ps
+
+# View logs from specific instance
+docker compose logs epay-server-1 -f
+
+# View logs from all backend instances
+docker compose logs epay-server-1 epay-server-2 epay-server-3 -f
+
+# Test load balancing
+for i in {1..20}; do
+    curl -s http://localhost/api/v1/health | jq '.instance'
+done
+
+# Reload NGINX after scaling
+docker compose exec nginx nginx -s reload
+
+# Gracefully stop specific instance
+docker compose stop epay-server-2
+docker compose start epay-server-2
 ```
 ```java build
 mvn clean:clean install

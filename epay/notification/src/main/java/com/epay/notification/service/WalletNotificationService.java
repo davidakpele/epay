@@ -12,6 +12,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import com.epay.common.util.MoneyFormatter;
+import com.epay.domain.notification.input.MaintenanceDebtNotification;
 import com.epay.domain.notification.input.MaintenanceDeductionNotification;
 import com.epay.domain.notification.input.StatementPayload;
 import com.epay.domain.notification.input.SwapCurrencyPayload;
@@ -100,6 +101,41 @@ public class WalletNotificationService {
         ctx.setVariable("success",           n.getSuccess());
         return send(n.getUserEmail(), "ePay — Maintenance Fee Deducted",
                 "maintenance/maintenance-fee-deducted", ctx);
+    }
+
+    /**
+     * Handles both DEBT_CREATED and DEBT_REPAID events from the maintenance.debt queue.
+     */
+    @Async
+    public CompletableFuture<Void> createMaintenanceDebtNotification(MaintenanceDebtNotification n) {
+        String currency = n.getCurrency();
+        Context ctx = new Context();
+        ctx.setVariable("userFirstName",  n.getUserFirstName());
+        ctx.setVariable("userLastName",   n.getUserLastName());
+        ctx.setVariable("currency",       currency);
+        ctx.setVariable("eventType",      n.getEventType());
+
+        if ("DEBT_CREATED".equals(n.getEventType())) {
+            ctx.setVariable("feeAmount",      MoneyFormatter.formatWithCode(currency, n.getFeeAmount()));
+            ctx.setVariable("deductedAmount", MoneyFormatter.formatWithCode(currency, n.getDeductedAmount()));
+            ctx.setVariable("debtAmount",     MoneyFormatter.formatWithCode(currency, n.getDebtAmount()));
+            ctx.setVariable("walletBalance",  MoneyFormatter.formatWithCode(currency, n.getWalletBalance()));
+            ctx.setVariable("billingMonth",   n.getBillingMonth());
+            return send(n.getUserEmail(),
+                    "ePay — Maintenance Fee Debt Created (" + currency + ")",
+                    "maintenance/maintenance-debt-created", ctx);
+        } else {
+            // DEBT_REPAID
+            ctx.setVariable("repaidAmount",      MoneyFormatter.formatWithCode(currency, n.getRepaidAmount()));
+            ctx.setVariable("remainingDebt",     MoneyFormatter.formatWithCode(currency, n.getRemainingDebt()));
+            ctx.setVariable("newWalletBalance",  MoneyFormatter.formatWithCode(currency, n.getNewWalletBalance()));
+            ctx.setVariable("fullySettled",      n.getFullySettled());
+            String subject = Boolean.TRUE.equals(n.getFullySettled())
+                    ? "ePay — Maintenance Debt Fully Settled (" + currency + ")"
+                    : "ePay — Partial Debt Repayment (" + currency + ")";
+            return send(n.getUserEmail(), subject,
+                    "maintenance/maintenance-debt-repaid", ctx);
+        }
     }
 
     @Async

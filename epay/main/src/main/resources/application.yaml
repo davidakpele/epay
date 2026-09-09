@@ -1,6 +1,8 @@
 spring:
   application:
     name: epay-server
+  instance:
+    id: ${INSTANCE_ID:unknown}
   mvc:
     contentnegotiation:
       favor-parameter: false
@@ -184,7 +186,6 @@ epay:
   gateways:
     paystack:
       secret-key: ${PAYSTACK_SECRET_KEY:}
-
       transfer-otp: ${PAYSTACK_TRANSFER_OTP:123456}
     flutterwave:
       secret-key: ${FLUTTERWAVE_SECRET_KEY:}
@@ -212,6 +213,9 @@ epay:
     hard-block-score: 80
   liquidity:
     sync-interval-ms: 1800000
+  maintenance:
+    cron: "0 30 0 1 * *"
+    batch-size: 500
   webhooks:
     retry-interval-ms: 60000
 

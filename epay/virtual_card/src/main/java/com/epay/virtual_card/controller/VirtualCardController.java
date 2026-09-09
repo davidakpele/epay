@@ -43,7 +43,7 @@ public class VirtualCardController {
 
         @PostMapping
         @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.hasPermission('payment:create') and @security.hasValidSession()")
-        @Operation(summary = "Create a new virtual card", description = "Creates a new virtual card for a user")
+        @Operation(summary = "Create a new virtual card", description = "Creates a new virtual card for the user, charges the applicable issuance fee, and returns the card details.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "201", description = "Card created successfully",
                         content = @Content(schema = @Schema(implementation = VirtualCardResponse.class))),
@@ -57,7 +57,7 @@ public class VirtualCardController {
         }
 
         @GetMapping("/{cardId}")
-        @Operation(summary = "Get card by ID", description = "Retrieves a virtual card by its ID (masked data)")
+        @Operation(summary = "Get card by ID", description = "Retrieves a virtual card by its UUID. Card number and CVV are masked — use /details for full sensitive data.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Card found",
                         content = @Content(schema = @Schema(implementation = VirtualCardResponse.class))),
@@ -71,8 +71,7 @@ public class VirtualCardController {
 
         @GetMapping("/{cardId}/details")
         @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.hasValidSession()")
-        @Operation(summary = "Get full card details", 
-                description = "Retrieves full card details including sensitive data (requires authorization)")
+        @Operation(summary = "Get full card details", description = "Returns the unmasked card number, expiry, and CVV. Requires the user to be the card owner and to have a valid session.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Card details found",
                         content = @Content(schema = @Schema(implementation = VirtualCardDetailsResponse.class))),
@@ -87,7 +86,7 @@ public class VirtualCardController {
 
         @GetMapping("/user/{userId}")
         @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.isOwner(#userId)")
-        @Operation(summary = "Get all cards for a user", description = "Retrieves all virtual cards for a specific user")
+        @Operation(summary = "Get all cards for a user", description = "Returns all virtual cards for the specified user as a flat list.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Cards retrieved successfully")
         })
@@ -99,8 +98,7 @@ public class VirtualCardController {
 
         @GetMapping("/user/{userId}/paginated")
         @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.isOwner(#userId)")
-        @Operation(summary = "Get cards for a user with pagination", 
-                description = "Retrieves virtual cards for a user with pagination support")
+        @Operation(summary = "Get cards for a user with pagination", description = "Returns virtual cards for the specified user with pagination and sorting support.")
         public ResponseEntity<Page<VirtualCardResponse>> getCardsByUserIdPaginated(
                 @Parameter(description = "User ID") @PathVariable Long userId,
                 @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
@@ -116,8 +114,7 @@ public class VirtualCardController {
 
         @GetMapping("/user/{userId}/active")
         @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.isOwner(#userId)")
-        @Operation(summary = "Get active cards for a user", 
-                description = "Retrieves only active virtual cards for a specific user")
+        @Operation(summary = "Get active cards for a user", description = "Returns only ACTIVE (non-frozen, non-cancelled) virtual cards for the specified user.")
         public ResponseEntity<List<VirtualCardResponse>> getActiveCardsByUserId(
                 @Parameter(description = "User ID") @PathVariable Long userId) {
                 List<VirtualCardResponse> response = virtualCardService.getActiveCardsByUserId(userId);
@@ -125,7 +122,7 @@ public class VirtualCardController {
         }
 
         @PutMapping("/{cardId}")
-        @Operation(summary = "Update card", description = "Updates a virtual card's details")
+        @Operation(summary = "Update card", description = "Updates editable card metadata such as the card label or spending controls.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Card updated successfully",
                         content = @Content(schema = @Schema(implementation = VirtualCardResponse.class))),
@@ -140,7 +137,7 @@ public class VirtualCardController {
         }
         
         @PutMapping("/{cardId}/status")
-        @Operation(summary = "Update card status", description = "Updates the status of a virtual card")
+        @Operation(summary = "Update card status", description = "Transitions the card to a new status. Valid transitions: ACTIVE → FROZEN, FROZEN → ACTIVE, ACTIVE → CANCELLED.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Status updated successfully"),
                 @ApiResponse(responseCode = "400", description = "Invalid status transition"),
@@ -154,7 +151,7 @@ public class VirtualCardController {
         }
 
         @PatchMapping("/{cardId}/balance")
-        @Operation(summary = "Update card balance", description = "Adds or deducts balance from a virtual card")
+        @Operation(summary = "Update card balance", description = "Credits or debits the card balance. Use BalanceOperation.ADD to top-up and BalanceOperation.DEDUCT to deduct funds.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Balance updated successfully"),
                 @ApiResponse(responseCode = "400", description = "Insufficient balance or invalid operation"),
@@ -168,8 +165,7 @@ public class VirtualCardController {
         }
 
         @DeleteMapping("/{cardId}")
-        @Operation(summary = "Delete card (soft delete)", 
-                description = "Soft deletes a virtual card by marking it as deleted")
+        @Operation(summary = "Delete card (soft delete)", description = "Marks the card as deleted and prevents all future transactions. The card record is retained for audit purposes.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "204", description = "Card deleted successfully"),
                 @ApiResponse(responseCode = "404", description = "Card not found")
@@ -182,7 +178,7 @@ public class VirtualCardController {
 
         @PostMapping("/{cardId}/freeze")
         @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.hasValidSession()")
-        @Operation(summary = "Freeze card", description = "Freezes a virtual card to prevent transactions")
+        @Operation(summary = "Freeze card", description = "Suspends a card temporarily. All transactions will be declined until the card is unfrozen.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Card frozen successfully"),
                 @ApiResponse(responseCode = "400", description = "Invalid operation"),
@@ -196,7 +192,7 @@ public class VirtualCardController {
 
         @PostMapping("/{cardId}/unfreeze")
         @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.hasValidSession()")
-        @Operation(summary = "Unfreeze card", description = "Unfreezes a virtual card to allow transactions")
+        @Operation(summary = "Unfreeze card", description = "Restores a frozen card to ACTIVE status so transactions are permitted again.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Card unfrozen successfully"),
                 @ApiResponse(responseCode = "400", description = "Invalid operation"),
@@ -210,7 +206,7 @@ public class VirtualCardController {
 
         @PostMapping("/{cardId}/cancel")
         @PreAuthorize("hasAnyRole('USER','ADMIN') and @security.hasValidSession()")
-        @Operation(summary = "Cancel card", description = "Cancels a virtual card permanently")
+        @Operation(summary = "Cancel card", description = "Permanently cancels a virtual card. This action cannot be reversed — the user must create a new card.")
         @ApiResponses(value = {
                 @ApiResponse(responseCode = "200", description = "Card cancelled successfully"),
                 @ApiResponse(responseCode = "400", description = "Invalid operation"),
@@ -223,7 +219,7 @@ public class VirtualCardController {
         }
 
         @GetMapping("/count")
-        @Operation(summary = "Get total virtual cards count", description = "Returns total number of non-deleted virtual cards")
+        @Operation(summary = "Get total virtual cards count", description = "Returns the total number of non-deleted virtual cards across the entire platform.")
         @ApiResponse(responseCode = "200", description = "Count retrieved successfully")
         public ResponseEntity<Long> getTotalCards() {
                 return ResponseEntity.ok(virtualCardService.getTotalCards());

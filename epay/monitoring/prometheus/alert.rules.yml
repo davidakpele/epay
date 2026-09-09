@@ -1,102 +1,275 @@
 groups:
-  - name: epay-server-availability
+  - name: epay-alerts
+    interval: 30s
     rules:
-      - alert: ServiceDown
+      
+      # ============================================
+      #  BACKEND ALERTS
+      # ============================================
+      
+      - alert: BackendInstanceDown
         expr: up{job="epay-server"} == 0
         for: 1m
         labels:
           severity: critical
+          service: epay-backend
         annotations:
-          summary: "ePay server is DOWN"
-          description: "Prometheus cannot scrape epay-server. It has been unreachable for more than 1 minute."
+          summary: "Backend instance {{ $labels.instance }} is down"
+          description: "{{ $labels.instance }} has been down for more than 1 minute"
+          action: "Check service logs and restart if needed"
 
-      - alert: ActuatorHealthDegraded
-        expr: |
-          http_server_requests_seconds_count{
-            job="epay-server",
-            uri="/actuator/health",
-            status=~"5.."
-          } > 0
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Actuator health check returning 5xx"
-          description: "epay-server actuator health endpoint is returning errors."
-
-  - name: epay-server-performance
-    rules:
-      - alert: HighRequestLatencyP99
-        expr: |
-          histogram_quantile(0.99,
-            sum(rate(http_server_requests_seconds_bucket{job="epay-server"}[5m])) by (le, uri)
-          ) > 2
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High P99 latency on epay-server"
-          description: "P99 request latency on {{ $labels.uri }} is above 2s for 5 minutes."
-
-      - alert: HighErrorRate
-        expr: |
-          sum(rate(http_server_requests_seconds_count{job="epay-server",status=~"5.."}[5m]))
-          /
-          sum(rate(http_server_requests_seconds_count{job="epay-server"}[5m]))
-          > 0.05
-        for: 3m
-        labels:
-          severity: critical
-        annotations:
-          summary: "High error rate on epay-server"
-          description: "More than 5% of requests are returning 5xx errors."
-
-  - name: epay-server-jvm
-    rules:
-      - alert: JvmMemoryHighUsage
-        expr: |
-          sum(jvm_memory_used_bytes{job="epay-server",area="heap"})
-          /
-          sum(jvm_memory_max_bytes{job="epay-server",area="heap"})
-          > 0.85
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High JVM heap usage on epay-server"
-          description: "JVM heap usage is above 85% for 5 minutes."
-
-      - alert: JvmGcPressureHigh
-        expr: |
-          rate(jvm_gc_pause_seconds_sum{job="epay-server"}[5m]) > 0.1
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High GC pause time on epay-server"
-          description: "GC pause time is consuming over 10% of time."
-
-      - alert: TooManyOpenFiles
-        expr: |
-          process_open_fds{job="epay-server"}
-          /
-          process_max_fds{job="epay-server"}
-          > 0.8
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High open file descriptors on epay-server"
-          description: "epay-server is using more than 80% of allowed file descriptors."
-
-  - name: epay-server-db
-    rules:
-      - alert: HikariConnectionPoolExhausted
-        expr: |
-          hikaricp_connections_pending{job="epay-server"} > 5
+      - alert: MultipleBackendInstancesDown
+        expr: count(up{job="epay-server"} == 0) > 1
         for: 2m
         labels:
           severity: critical
+          service: epay-backend
         annotations:
-          summary: "DB connection pool exhausted on epay-server"
-          description: "{{ $value }} threads are waiting for a DB connection."
+          summary: "Multiple backend instances are down"
+          description: "{{ $value }} backend instances are down. Check load balancer and instances."
+          action: "Immediate investigation required"
+
+      - alert: BackendHighCPU
+        expr: rate(process_cpu_seconds_total{job="epay-server"}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: epay-backend
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}%"
+          action: "Consider scaling up or investigating high load"
+
+      - alert: BackendHighMemory
+        expr: (jvm_memory_max_bytes{job="epay-server"} - jvm_memory_used_bytes{job="epay-server"}) / jvm_memory_max_bytes{job="epay-server"} * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+          service: epay-backend
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}%"
+          action: "Consider increasing memory limits"
+
+      - alert: BackendSlowResponse
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="epay-server"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: epay-backend
+        annotations:
+          summary: "Slow response time on {{ $labels.instance }}"
+          description: "95th percentile response time is {{ $value }}s"
+          action: "Check database queries and external API calls"
+
+      - alert: BackendHighErrorRate
+        expr: rate(http_server_requests_seconds_count{job="epay-server", status=~"5.."}[5m]) / rate(http_server_requests_seconds_count{job="epay-server"}[5m]) * 100 > 5
+        for: 5m
+        labels:
+          severity: critical
+          service: epay-backend
+        annotations:
+          summary: "High error rate on {{ $labels.instance }}"
+          description: "Error rate is {{ $value }}%"
+          action: "Check application logs for exceptions"
+
+      - alert: BackendConnectionPoolExhausted
+        expr: hikaricp_connections_active{job="epay-server"} / hikaricp_connections_max{job="epay-server"} * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: epay-backend
+        annotations:
+          summary: "Database connection pool nearing exhaustion on {{ $labels.instance }}"
+          description: "{{ $value }}% of connections are active"
+          action: "Check for connection leaks or increase pool size"
+
+      # ============================================
+      #  LOAD BALANCER ALERTS
+      # ============================================
+      
+      - alert: LoadBalancerDown
+        expr: up{job="nginx"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: nginx
+        annotations:
+          summary: "NGINX load balancer is down"
+          description: "The load balancer is not responding"
+          action: "Immediate investigation required - service is unavailable"
+
+      - alert: LoadBalancerHighErrorRate
+        expr: rate(nginx_http_requests_total{job="nginx", status=~"5.."}[5m]) / rate(nginx_http_requests_total{job="nginx"}[5m]) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: nginx
+        annotations:
+          summary: "High error rate on load balancer"
+          description: "{{ $value }}% of requests are returning 5xx errors"
+          action: "Check backend health and network connectivity"
+
+      # ============================================
+      #  FRONTEND ALERTS
+      # ============================================
+      
+      - alert: FrontendInstanceDown
+        expr: up{job="epay-frontend"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          service: epay-frontend
+        annotations:
+          summary: "Frontend instance {{ $labels.instance }} is down"
+          description: "{{ $labels.instance }} has been down for more than 1 minute"
+          action: "Check frontend service logs"
+
+      - alert: FrontendHighErrorRate
+        expr: rate(http_requests_total{job="epay-frontend", status=~"5.."}[5m]) / rate(http_requests_total{job="epay-frontend"}[5m]) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: epay-frontend
+        annotations:
+          summary: "High error rate on frontend"
+          description: "{{ $value }}% of frontend requests are failing"
+          action: "Check frontend application and API connectivity"
+
+      # ============================================
+      #  DATABASE ALERTS
+      # ============================================
+      
+      - alert: PostgreSQLDown
+        expr: up{job="postgresql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: postgresql
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "The database is not responding"
+          action: "Immediate investigation - critical service"
+
+      - alert: PostgreSQLHighConnections
+        expr: pg_stat_database_numbackends > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: postgresql
+        annotations:
+          summary: "High number of database connections"
+          description: "{{ $value }} connections are open"
+          action: "Check for connection leaks or increase max connections"
+
+      # ============================================
+      #  REDIS ALERTS
+      # ============================================
+      
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis is down"
+          description: "The cache service is not responding"
+          action: "Immediate investigation - session handling affected"
+
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "{{ $value }}% of memory is used"
+          action: "Consider increasing memory limit or clearing old keys"
+
+      # ============================================
+      #  RABBITMQ ALERTS
+      # ============================================
+      
+      - alert: RabbitMQDown
+        expr: up{job="rabbitmq"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: rabbitmq
+        annotations:
+          summary: "RabbitMQ is down"
+          description: "The message broker is not responding"
+          action: "Immediate investigation - event processing affected"
+
+      - alert: RabbitMQQueueHigh
+        expr: rabbitmq_queue_messages_ready > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: rabbitmq
+        annotations:
+          summary: "High message queue length"
+          description: "{{ $value }} messages are waiting in queue"
+          action: "Check consumer processing speed"
+
+      # ============================================
+      #  DISK SPACE ALERTS
+      # ============================================
+      
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: storage
+        annotations:
+          summary: "High disk usage on {{ $labels.instance }}"
+          description: "{{ $value }}% of disk space is used"
+          action: "Clean up old logs or increase disk space"
+
+      # ============================================
+      #  SSL EXPIRY ALERT
+      # ============================================
+      
+      - alert: SSLCertExpiringSoon
+        expr: ssl_certificate_expiry_days < 30
+        for: 5m
+        labels:
+          severity: warning
+          service: ssl
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "Certificate expires in {{ $value }} days"
+          action: "Renew SSL certificate"
+
+      # ============================================
+      #  RATE LIMITING ALERTS
+      # ============================================
+      
+      - alert: RateLimitingHigh
+        expr: rate(nginx_http_requests_total{job="nginx", status=~"429"}[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: rate-limiting
+        annotations:
+          summary: "High rate limiting activity"
+          description: "{{ $value }} requests/sec are being rate limited"
+          action: "Check for DDoS attacks or misconfigured clients"
+
+      # ============================================
+      #  BUSINESS METRICS ALERTS
+      # ============================================
+      
+      - alert: HighFailedTransactions
+        expr: rate(transactions_failed_total{job="epay-server"}[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: transactions
+        annotations:
+          summary: "High transaction failure rate"
+          description: "{{ $value }} transactions are failing per minute"
+          action: "Check payment gateway integrations"

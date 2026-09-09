@@ -9,7 +9,8 @@ import lombok.Data;
 public class WalletSettings {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ws_seq")
+    @SequenceGenerator(name = "ws_seq", sequenceName = "wallet_settings_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne

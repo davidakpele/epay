@@ -4,19 +4,183 @@ global:
   external_labels:
     environment: production
     project: epay
+    version: "2.0"
 
+# Alert rules file
 rule_files:
   - /etc/prometheus/alert.rules.yml
 
 scrape_configs:
+  # ============================================
+  #  BACKEND INSTANCES (Spring Boot Actuator)
+  # ============================================
   - job_name: epay-server
     metrics_path: /actuator/prometheus
+    scrape_interval: 15s
+    scrape_timeout: 10s
     static_configs:
-      - targets: ["epay-server:8029"]
+      - targets:
+          - "epay-server-1:8029"
+          - "epay-server-2:8029"
+          - "epay-server-3:8029"
         labels:
           service: epay-server
           language: java
+          tier: backend
+          cluster: epay-prod
+    relabel_configs:
+      # Friendly instance label: epay-server-1, epay-server-2, epay-server-3
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "([^:]+):.*"
+        replacement: "${1}"
+      # Extract the replica number
+      - source_labels: [instance]
+        target_label: instance_number
+        regex: "epay-server-([0-9]+)"
+        replacement: "${1}"
 
+  # ============================================
+  #  FRONTEND INSTANCES
+  #  Requires a /metrics endpoint in your Next.js
+  #  app (e.g. using prom-client).  Remove if not
+  #  instrumented.
+  # ============================================
+  - job_name: epay-frontend
+    scrape_interval: 30s
+    scrape_timeout: 20s
+    static_configs:
+      - targets:
+          - "frontend-1:3000"
+          - "frontend-2:3000"
+          - "frontend-3:3000"
+        labels:
+          service: epay-frontend
+          language: nodejs
+          tier: frontend
+          cluster: epay-prod
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "([^:]+):.*"
+        replacement: "${1}"
+
+  # ============================================
+  #  NGINX — via nginx-prometheus-exporter
+  #
+  #  Add this to docker-compose.yml if not present:
+  #
+  #  nginx-exporter:
+  #    image: nginx/nginx-prometheus-exporter:1.1.0
+  #    container_name: epay-nginx-exporter
+  #    command: --nginx.scrape-uri=http://nginx/nginx_status
+  #    ports:
+  #      - "9113:9113"
+  #    depends_on: [nginx]
+  #    networks: [epay-network]
+  #
+  #  Also add to nginx config (internal location):
+  #    location = /nginx_status { stub_status; allow 172.0.0.0/8; deny all; }
+  # ============================================
+  - job_name: nginx
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ["nginx-exporter:9113"]
+        labels:
+          service: nginx
+          tier: load-balancer
+          cluster: epay-prod
+
+  # ============================================
+  #  PROMETHEUS SELF-SCRAPE
+  # ============================================
   - job_name: prometheus
     static_configs:
       - targets: ["localhost:9090"]
+        labels:
+          service: prometheus
+          tier: monitoring
+          cluster: epay-prod
+
+  # ============================================
+  #  REDIS — via redis_exporter (port 9121)
+  #
+  #  Add to docker-compose.yml:
+  #
+  #  redis-exporter:
+  #    image: oliver006/redis_exporter:v1.62.0
+  #    container_name: epay-redis-exporter
+  #    environment:
+  #      REDIS_ADDR: "redis://redis:6379"
+  #    ports:
+  #      - "9121:9121"
+  #    depends_on: [redis]
+  #    networks: [epay-network]
+  # ============================================
+  - job_name: redis
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+        labels:
+          service: redis
+          tier: cache
+          cluster: epay-prod
+
+  # ============================================
+  #  RABBITMQ — via rabbitmq_prometheus plugin
+  #  (ships with RabbitMQ 3.8+, enabled by default
+  #   in the management image; exposes port 15692)
+  # ============================================
+  - job_name: rabbitmq
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ["rabbitmq:15692"]
+        labels:
+          service: rabbitmq
+          tier: messaging
+          cluster: epay-prod
+    metrics_path: /metrics
+
+  # ============================================
+  #  POSTGRESQL — via postgres-exporter (port 9187)
+  # ============================================
+  - job_name: postgresql
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+        labels:
+          service: postgresql
+          tier: database
+          cluster: epay-prod
+
+  # ============================================
+  #  cADVISOR — container-level resource metrics
+  #
+  #  Add to docker-compose.yml:
+  #
+  #  cadvisor:
+  #    image: gcr.io/cadvisor/cadvisor:v0.49.1
+  #    container_name: epay-cadvisor
+  #    volumes:
+  #      - /:/rootfs:ro
+  #      - /var/run:/var/run:ro
+  #      - /sys:/sys:ro
+  #      - /var/lib/docker/:/var/lib/docker:ro
+  #    ports:
+  #      - "8080:8080"
+  #    networks: [epay-network]
+  #    restart: unless-stopped
+  # ============================================
+  - job_name: cadvisor
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ["cadvisor:8080"]
+        labels:
+          service: cadvisor
+          tier: container
+          cluster: epay-prod

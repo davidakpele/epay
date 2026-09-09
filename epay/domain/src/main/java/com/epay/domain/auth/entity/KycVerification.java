@@ -21,7 +21,8 @@ import java.time.LocalDateTime;
 public class KycVerification {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "kyc_ver_seq")
+    @SequenceGenerator(name = "kyc_ver_seq", sequenceName = "kyc_verification_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

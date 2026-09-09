@@ -21,7 +21,8 @@ import java.time.LocalDateTime;
 public class KycDocument {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "kyc_doc_seq")
+    @SequenceGenerator(name = "kyc_doc_seq", sequenceName = "kyc_document_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

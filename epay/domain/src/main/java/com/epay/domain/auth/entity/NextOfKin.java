@@ -17,7 +17,8 @@ import java.time.LocalDateTime;
 public class NextOfKin {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "nok_seq")
+    @SequenceGenerator(name = "nok_seq", sequenceName = "next_of_kin_seq", allocationSize = 1)
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)

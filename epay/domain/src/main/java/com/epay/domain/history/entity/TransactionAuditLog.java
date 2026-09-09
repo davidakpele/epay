@@ -20,7 +20,8 @@ import java.time.LocalDateTime;
 public class TransactionAuditLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tal_seq")
+    @SequenceGenerator(name = "tal_seq", sequenceName = "transaction_audit_log_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "transaction_id", nullable = false, length = 50)

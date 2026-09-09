@@ -18,7 +18,8 @@ import java.time.LocalDateTime;
 public class BlacklistEntry {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bl_seq")
+    @SequenceGenerator(name = "bl_seq", sequenceName = "blacklist_entry_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false, length = 30)
