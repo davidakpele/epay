@@ -918,14 +918,14 @@ epay-app/
 
 ```docker
 docker compose up --build -d
-docker image prune -f 
+docker image prune -f
 docker compose down -v --remove-orphans
-docker system prune -a --volumes -f 
+docker system prune -a --volumes -f
 docker volume prune -a -f
 docker container prune -f
-docker compose up -d --no-build --force-recreate epay-server 2>&1 
-docker compose config --quiet 2>&1 
-docker compose up -d --build prometheus grafana 2>&1 
+docker compose up -d --no-build --force-recreate epay-server 2>&1
+docker compose config --quiet 2>&1
+docker compose up -d --build prometheus grafana 2>&1
 docker run --rm alpine sh -c "ls /run/desktop/mnt/host/" 2>&1
 
 
@@ -959,38 +959,230 @@ docker compose exec nginx nginx -s reload
 docker compose stop epay-server-2
 docker compose start epay-server-2
 ```
+
 ```java build
 mvn clean:clean install
 mvn clean:clean install
 ```
+
 ---
+
 ## Roadmap
 
-| Feature                                                 | Status      |
-| ------------------------------------------------------- | ----------- |
-| User registration, login, 2FA                           | Done        |
-| KYC with document upload and review                     | Done        |
-| Multi-currency wallet                                   | Done        |
-| Peer-to-peer transfers                                  | Done        |
-| Currency swap                                           | Done        |
-| Paystack + Flutterwave deposits                         | Done        |
-| Bank withdrawals                                        | Done        |
-| Airtime, data, cable TV, electricity, betting, shopping | Done        |
-| Virtual cards with spending controls                    | Done        |
-| Investment plans (4 tiers)                              | Done        |
-| Beneficiary management                                  | Done        |
-| Transaction history with filtering                      | Done        |
-| Bank statement PDF (emailed)                            | Done        |
-| Admin user/wallet/transaction management                | Done        |
-| Admin support ticket workflow                           | Done        |
-| Liquidity management (Paystack + Flutterwave floats)    | Done        |
-| Developer portal with API keys and webhooks             | Done        |
-| Async notifications via RabbitMQ                        | Done        |
-| Observability (Prometheus + Grafana + Zipkin)           | Done        |
-| Savings plans                                           | In Progress |
-| Escrow                                                  | In Progress |
-| Referral program                                        | In Progress |
+| Feature                                                  | Status      |
+| -------------------------------------------------------- | ----------- |
+| User registration, login, 2FA                            | Done        |
+| KYC with document upload and review                      | Done        |
+| Multi-currency wallet                                    | Done        |
+| Peer-to-peer transfers                                   | Done        |
+| Currency swap                                            | Done        |
+| Paystack + Flutterwave deposits                          | Done        |
+| Bank withdrawals                                         | Done        |
+| Airtime, data, cable TV, electricity, betting, shopping  | Done        |
+| Virtual cards with spending controls                     | Done        |
+| Investment plans (4 tiers)                               | Done        |
+| Beneficiary management                                   | Done        |
+| Transaction history with filtering                       | Done        |
+| Bank statement PDF (emailed)                             | Done        |
+| Admin user/wallet/transaction management                 | Done        |
+| Admin support ticket workflow                            | Done        |
+| Liquidity management (Paystack + Flutterwave floats)     | Done        |
+| Developer portal with API keys and webhooks              | Done        |
+| Async notifications via RabbitMQ                         | Done        |
+| Observability (Prometheus + Grafana + Zipkin)            | Done        |
+| Savings plans                                            | In Progress |
+| Escrow                                                   | In Progress |
+| Referral program                                         | In Progress |
+| **Maintenance fee service**                              | **Done**    |
+| **Load-balanced multi-instance deployment (3 replicas)** | **Done**    |
+| **Nginx load balancer + exporters**                      | **Done**    |
+| **@Operation Swagger docs on all endpoints**             | **Done**    |
 
+---
+
+## Changelog
+
+### September 9, 2026
+
+---
+
+#### Maintenance Fee Service (New Module — `epay-maintenance`)
+
+A fully automated, bank-style monthly maintenance fee system was designed and implemented from scratch.
+
+**How it works:**
+
+- Every time a user touches a currency (transfer, deposit, swap, bill payment) the system silently records that currency as "active" for the current calendar month.
+- On the 1st of every month at 00:30, the scheduler charges a fee only for the currencies each user actually used — if you only used USD that month, only USD is charged. Unused currencies are never charged.
+- If the wallet has enough balance, the fee is deducted immediately and the user is notified.
+- If the wallet is empty or has less than the fee, the shortfall is recorded as a **debt** against that wallet. The next time the user deposits into that currency, the debt is automatically recovered first before the remaining balance is credited.
+
+**New domain entities (`epay-domain`):**
+
+| Entity                      | Table                          | Purpose                                           |
+| --------------------------- | ------------------------------ | ------------------------------------------------- |
+| `MaintenanceFeeConfig`      | `maintenance_fee_config`       | Per-currency fee rules (FIXED or PERCENTAGE)      |
+| `UserMonthlyActivity`       | `user_monthly_activity`        | Tracks which currencies each user used each month |
+| `MaintenanceFeeTransaction` | `maintenance_fee_transactions` | One charge record per user/currency/month         |
+| `UserDebt`                  | `user_debts`                   | Running debt ledger per user/currency             |
+| `MaintenanceFeeAuditLog`    | `maintenance_fee_audit_log`    | Immutable audit trail for every action            |
+
+**New enums:** `FeeType` (FIXED / PERCENTAGE), `MaintenanceFeeStatus` (PENDING / DEDUCTED / PARTIAL / DEBT / REPAID / WAIVED / FAILED), `DebtStatus` (ACTIVE / PARTIAL / SETTLED), `MaintenanceAuditAction`.
+
+**Core services (`epay-maintenance`):**
+
+- **`MaintenanceFeeEngine`** — calculates and applies one fee charge: deducts from wallet, records history, updates the debt ledger, writes an audit entry, and sends a user notification. Every user is processed in its own `REQUIRES_NEW` transaction so a single failure never rolls back the rest of the batch.
+- **`MaintenanceFeeScheduler`** — chunked cron job (default 00:30 on 1st of every month, configurable via `epay.maintenance.cron`). Processes users in pages of 500 (configurable via `epay.maintenance.batch-size`). **Distributed Redis lock** (`SETNX` with 2-hour TTL scoped per billing month) prevents double-processing across the 3 backend instances.
+- **`DebtRecoveryService`** — triggered synchronously inside the wallet credit transaction whenever a deposit or incoming transfer arrives. Deducts outstanding debt FIFO (oldest charge first), notifies the user, and returns the net amount to credit.
+- **`MaintenanceFeeConfigService`** — admin CRUD for fee configurations. Supports FIXED (flat fee) and PERCENTAGE (% of volume, with optional min/max clamps).
+- **`MaintenanceAdminService`** — rich read views for the admin dashboard: debt aging report (0-30/31-60/61-90/90+ day brackets), monthly status breakdowns, per-user full maintenance profile.
+- **`MaintenanceUsageAdapter`** — implements `IMaintenanceUsagePort`. Records activity asynchronously using a JPQL bulk-increment upsert with a concurrent-insert retry to avoid race conditions.
+
+**Wallet service integration (`epay-wallet`):**
+
+Two new port interfaces were added to `epay-common` to avoid circular module dependencies:
+
+- `IMaintenanceUsagePort` — called after every transfer, deposit credit, and swap to record currency activity.
+- `IDebtRecoveryPort` — called before crediting any incoming deposit if an active debt exists, to recover the debt atomically in the same transaction.
+
+**Notifications — three new email templates:**
+
+| Event                       | Template                                    | Subject                                                          |
+| --------------------------- | ------------------------------------------- | ---------------------------------------------------------------- |
+| Fee successfully deducted   | `maintenance/maintenance-fee-deducted.html` | `ePay — Maintenance Fee Deducted`                                |
+| Debt created (empty wallet) | `maintenance/maintenance-debt-created.html` | `ePay — Maintenance Fee Debt Created (currency)`                 |
+| Debt repaid via deposit     | `maintenance/maintenance-debt-repaid.html`  | `ePay — Maintenance Debt Fully Settled / Partial Debt Repayment` |
+
+Two new RabbitMQ queues wired end-to-end:
+
+- `maintenance.wallet` → fee-deducted notification
+- `maintenance.debt` → debt-created and debt-repaid notifications (dispatched on `eventType` field)
+
+**Admin REST API (`/admin/maintenance`):**
+
+| Section              | Endpoints                                                                                               | Who               |
+| -------------------- | ------------------------------------------------------------------------------------------------------- | ----------------- |
+| Dashboard overview   | `GET /overview`                                                                                         | ADMIN, SUPER_USER |
+| Fee config CRUD      | `GET/POST/PUT/DELETE /fee-configs/**`                                                                   | ADMIN, SUPER_USER |
+| Charge history       | `GET /transactions/**` (filter by status, month, user, reference)                                       | ADMIN+, CS        |
+| Waive a fee          | `POST /transactions/waive`                                                                              | ADMIN, SUPER_USER |
+| Debt ledger          | `GET /debts`, `/debts/summary`, `/debts/aging`, `/debts/aging/threshold/{days}`, `/debts/user/{userId}` | ADMIN+, CS        |
+| User full profile    | `GET /users/{userId}/profile`                                                                           | ADMIN+, CS        |
+| Monthly report       | `GET /reports/month/{YYYY-MM-01}`                                                                       | ADMIN+, CS        |
+| Activity tracking    | `GET /activity/user/**`                                                                                 | ADMIN+, CS        |
+| Audit log            | `GET /audit` (filter by batchId or userId)                                                              | ADMIN, SUPER_USER |
+| Manual batch trigger | `POST /batch/trigger`                                                                                   | SUPER_USER only   |
+
+---
+
+#### Load-Balanced Multi-Instance Deployment
+
+The application was upgraded from a single-instance deployment to a **3-replica load-balanced cluster**.
+
+**`docker-compose.yml` changes:**
+
+- `epay-server-base` YAML anchor (`&server-base`) declared once; `epay-server-1`, `epay-server-2`, `epay-server-3` inherit via `<<: *server-base` and each override a unique `INSTANCE_ID` and host port (`8021`, `8022`, `8023`). This ensures distributed tracing labels are unique per replica.
+- Frontend replicated to 3 instances (`frontend-1/2/3` on ports `3001/3002/3003`).
+- Grafana port moved from `3001` to `3010` to eliminate the conflict with `frontend-1`.
+- Three new monitoring exporters added:
+  - `redis-exporter` (`oliver006/redis_exporter:v1.62.0`) on port `9121`
+  - `nginx-exporter` (`nginx/nginx-prometheus-exporter:1.1.0`) on port `9113`
+  - `postgres-exporter` was already present on port `9187`
+- Prometheus volume paths corrected from `./prometheus/...` to `./epay/monitoring/prometheus/...`.
+- Grafana provisioning paths corrected from `./grafana/...` to `./epay/monitoring/grafana/provisioning/...`.
+
+**`nginx/conf.d/04-upstreams.conf` — load balancer config:**
+
+```nginx
+upstream epay_backend {
+    least_conn;
+    server epay-server-1:8029 max_fails=3 fail_timeout=30s weight=1;
+    server epay-server-2:8029 max_fails=3 fail_timeout=30s weight=1;
+    server epay-server-3:8029 max_fails=3 fail_timeout=30s weight=1;
+    keepalive 32;
+}
+
+upstream epay_frontend { /* same pattern */ }
+upstream epay_websocket { ip_hash; /* sticky sessions for WebSocket */ }
+upstream epay_admin { least_conn; /* weight=2 on server-1 */ }
+```
+
+**`nginx/conf.d/10-health-checks.conf` (new file):**
+
+- `/nginx-health` — returns 200 immediately (used by docker-compose healthcheck)
+- `/backend-health` — proxies to `/actuator/health`; restricted to internal subnets only
+- `/metrics` — proxies to `/actuator/prometheus`; restricted to internal subnets only
+
+**`nginx/conf.d/06-server-https.conf` — fixes:**
+
+- Renamed `/health` proxy path to `/backend-health` to avoid conflict with the existing static `/health` exact-match.
+
+**`SecurityHeadersFilter` update:**
+
+- Added `X-Instance-ID` response header (populated from `${INSTANCE_ID}`) so clients can see which replica served a request without modifying response bodies.
+
+**`CorsAutoConfiguration` update:**
+
+- `X-Instance-ID` added to `exposedHeaders` so browsers can read it.
+
+---
+
+#### Prometheus Monitoring Fixes
+
+All broken scrape targets in `prometheus.yml` were corrected:
+
+| Target   | Before (broken)                          | After (correct)                               |
+| -------- | ---------------------------------------- | --------------------------------------------- |
+| Redis    | `redis:6379` (Redis protocol)            | `redis-exporter:9121` (HTTP metrics)          |
+| RabbitMQ | `rabbitmq:15672/metrics` (management UI) | `rabbitmq:15692` (built-in prometheus plugin) |
+| Nginx    | `nginx:80/nginx_status` (plain text)     | `nginx-exporter:9113` (Prometheus format)     |
+| Zipkin   | `zipkin:9411/metrics` (no endpoint)      | Removed                                       |
+| cAdvisor | Listed but missing service               | Kept with docker-compose snippet in comment   |
+
+`stub_status` was already correctly configured in `06-server-https.conf` for the nginx exporter to scrape.
+
+---
+
+#### `@Operation` Swagger Documentation
+
+Every REST endpoint across all **30 controllers** (~185 methods) was annotated with:
+
+- `@Tag` at class level (groups endpoints in Swagger UI)
+- `@Operation(summary = "...", description = "...")` on every method
+
+Controllers annotated: `AuthController`, `UserController`, `SettingController`, `KycController`, `StatementController`, `WalletController`, `AdminCurrencyController`, `DepositController`, `DepositWebhookController`, `WithdrawController`, `WithdrawWebhookController`, `BeneficiaryController`, `UserBankController`, `BlacklistAdminController`, `HistoryController`, `InvestmentController`, `AdminTransactionController`, `AdminWalletController`, `AdminUserController`, `AdminLiquidityController`, `AdminTicketController`, `UserTicketController`, `SupportController`, `SuperAdminController`, `DeveloperPortalController`, `AdminDeveloperController`, `AdminCardFeeController`, `VirtualCardController`, `AdminMaintenanceFeeController`.
+
+---
+
+#### `@SequenceGenerator` Entity Migration
+
+All 19 entities that previously used `GenerationType.IDENTITY` were migrated to `SEQUENCE` + `@SequenceGenerator` for consistency with PostgreSQL best practices and the rest of the project:
+
+`AuthorizeUserVerification`, `VerificationToken`, `PasswordResetToken`, `TwoFactorAuthentication`, `UserAttempt`, `UserAccountCases`, `UserAccountSettings`, `UserTracer`, `NextOfKin`, `KycDocument`, `KycVerification`, `UserBankList`, `Beneficiary`, `BlacklistEntry`, `TransactionAuditLog`, `Investment`, `CardFeeConfig`, `SupportedCurrency`, `WalletSettings`.
+
+Sequence names follow the `{table_name}_seq` convention with `allocationSize = 1`.
+
+---
+
+#### `InstanceConfig` and Response Interceptor (Rejected)
+
+A proposed `InstanceConfig` bean and `ResponseBodyAdvice` wrapper were reviewed and rejected:
+
+- `InstanceConfig` was duplicate — `spring.instance.id` already handles this in `application.yaml`.
+- The `ResponseBodyAdvice` pattern was broken by design (wraps `ResponseEntity` inside another `ResponseEntity`, causing double-serialization).
+- Instance identity is now surfaced via the `X-Instance-ID` response header instead, which is invisible to client code and requires zero API contract changes.
+
+---
+
+#### Distributed Lock for Maintenance Scheduler
+
+The in-memory `volatile boolean running` guard in `MaintenanceFeeScheduler` was replaced with a Redis distributed lock:
+
+- Key: `epay:lock:maintenance-batch:{billingMonth}` (month-scoped to prevent August from blocking September)
+- Lock value: the instance ID, so `redis-cli GET` shows which node holds the lock
+- TTL: 2 hours (auto-expires even if a node crashes without releasing)
+- Release: checks the lock still belongs to this instance before deleting (prevents a slow node from releasing a lock re-acquired by another)
+- Fail-open: if Redis is unreachable, the scheduler proceeds rather than silently skipping an entire billing cycle
 
 Copyright (c) 2026 Willstone Strategic Industries Limited
 
