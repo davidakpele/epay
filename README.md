@@ -1535,7 +1535,7 @@ mvn clean:clean install
 | Developer portal with API keys and webhooks              | Done        |
 | Async notifications via RabbitMQ                         | Done        |
 | Observability (Prometheus + Grafana + Zipkin)            | Done        |
-| Savings plans                                            | In Progress |
+| Savings plans                                            | Done |
 | Escrow                                                   | In Progress |
 | Referral program                                         | In Progress |
 | **Maintenance fee service**                              | **Done**    |
