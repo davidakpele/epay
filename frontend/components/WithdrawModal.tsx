@@ -829,8 +829,8 @@ const WithdrawModal = ({
                 {step === "selection"
                   ? "Withdraw Funds"
                   : step === "bank"
-                    ? "Transfer to Bank"
-                    : "Transfer to Epay Account"}
+                    ? "Transfer to other bank"
+                    : "Transfer to epay account"}
               </h2>
               <p className="drawer-subtitle">
                 {step === "selection"
@@ -859,7 +859,7 @@ const WithdrawModal = ({
                     <Landmark size={24} />
                   </div>
                   <div className="option-content">
-                    <h4 className="option-title">Transfer to Bank</h4>
+                    <h4 className="option-title">Transfer to other bank</h4>
                     <p className="option-desc">
                       Withdraw funds to your bank account
                     </p>
@@ -874,7 +874,7 @@ const WithdrawModal = ({
                     <User size={24} />
                   </div>
                   <div className="option-content">
-                    <h4 className="option-title">Transfer to Epay Account</h4>
+                    <h4 className="option-title">Transfer to epay account</h4>
                     <p className="option-desc">
                       Send funds to another epay user
                     </p>
