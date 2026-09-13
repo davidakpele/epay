@@ -71,7 +71,7 @@ services:
     image: nginx/nginx-prometheus-exporter:1.1.0
     container_name: epay-nginx-exporter
     command:
-      - "--nginx.scrape-uri=http://nginx/nginx_status"
+      - "--nginx.scrape-uri=http://nginx:8080/nginx_status"
     ports:
       - "9113:9113"
     depends_on:
@@ -306,6 +306,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "8080:8080"
     volumes:
       - nginx_logs:/var/log/nginx:rw
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
