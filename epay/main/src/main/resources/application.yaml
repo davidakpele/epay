@@ -264,7 +264,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, prometheus, loggers, env
+        include: health, info, metrics, prometheus, loggers, env, zipkin
   endpoint:
     prometheus:
       enabled: true
@@ -278,20 +278,34 @@ management:
       application: ${spring.application.name}
   tracing:
     sampling:
+      # 1.0 = 100% of requests traced. Fine for dev/staging.
+      # Lower to 0.1 (10%) in production to reduce overhead.
       probability: 1.0
-  zipkin:
-    tracing:
-      endpoint: http://zipkin:9411/api/v2/spans
+    # Spring Boot 4.x Zipkin export config namespace.
+    # The old management.zipkin.tracing.* was Boot 3.x only.
+    # Ref: https://docs.spring.io/spring-boot/4.1/reference/actuator/tracing.html
+    export:
+      zipkin:
+        endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT:http://zipkin:9411/api/v2/spans}
+        connect-timeout: 5s
+        read-timeout: 10s
 
+# Spring Boot 4.x injects traceId/spanId into logs automatically when
+# Micrometer Tracing is on the classpath. logging.pattern.correlation
+# controls the format. This produces: [epay-server,traceId,spanId]
+# before the logger name on every log line that is part of a trace.
 logging:
+  include-application-name: false
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}] "
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   level:
     root: INFO
-    com.example.admin_api_service: DEBUG
     org.springframework.web: INFO
     org.springframework.web.servlet.mvc.method.annotation: WARN
     org.springframework.security: INFO
-    org.springframework.security.web.FilterChainProxy: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    org.springframework.security.web.FilterChainProxy: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    zipkin2.reporter: WARN
+    io.micrometer.tracing: WARN

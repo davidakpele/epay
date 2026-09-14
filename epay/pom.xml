@@ -141,6 +141,17 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-tracing-bridge-brave</artifactId>
         </dependency>
+        <!--
+            Spring Boot 4.x Zipkin starter.
+            This is the single dependency needed for Brave + Zipkin in Boot 4.x.
+            It bundles zipkin-reporter-brave and all required autoconfiguration.
+            The old io.zipkin.reporter2:zipkin-reporter-brave was the Boot 3.x approach.
+            Ref: https://docs.spring.io/spring-boot/4.1/reference/actuator/tracing.html
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-zipkin</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>

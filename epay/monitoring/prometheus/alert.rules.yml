@@ -2,11 +2,10 @@ groups:
   - name: epay-alerts
     interval: 30s
     rules:
-      
       # ============================================
       #  BACKEND ALERTS
       # ============================================
-      
+
       - alert: BackendInstanceDown
         expr: up{job="epay-server"} == 0
         for: 1m
@@ -87,7 +86,7 @@ groups:
       # ============================================
       #  LOAD BALANCER ALERTS
       # ============================================
-      
+
       - alert: LoadBalancerDown
         expr: up{job="nginx"} == 0
         for: 1m
@@ -112,34 +111,36 @@ groups:
 
       # ============================================
       #  FRONTEND ALERTS
+      #  Disabled — frontend metrics require prom-client in Next.js.
+      #  Re-enable once /metrics is exposed on the frontend containers.
       # ============================================
-      
-      - alert: FrontendInstanceDown
-        expr: up{job="epay-frontend"} == 0
-        for: 1m
-        labels:
-          severity: warning
-          service: epay-frontend
-        annotations:
-          summary: "Frontend instance {{ $labels.instance }} is down"
-          description: "{{ $labels.instance }} has been down for more than 1 minute"
-          action: "Check frontend service logs"
 
-      - alert: FrontendHighErrorRate
-        expr: rate(http_requests_total{job="epay-frontend", status=~"5.."}[5m]) / rate(http_requests_total{job="epay-frontend"}[5m]) * 100 > 5
-        for: 5m
-        labels:
-          severity: warning
-          service: epay-frontend
-        annotations:
-          summary: "High error rate on frontend"
-          description: "{{ $value }}% of frontend requests are failing"
-          action: "Check frontend application and API connectivity"
+      # - alert: FrontendInstanceDown
+      #   expr: up{job="epay-frontend"} == 0
+      #   for: 1m
+      #   labels:
+      #     severity: warning
+      #     service: epay-frontend
+      #   annotations:
+      #     summary: "Frontend instance {{ $labels.instance }} is down"
+      #     description: "{{ $labels.instance }} has been down for more than 1 minute"
+      #     action: "Check frontend service logs"
+
+      # - alert: FrontendHighErrorRate
+      #   expr: rate(http_requests_total{job="epay-frontend", status=~"5.."}[5m]) / rate(http_requests_total{job="epay-frontend"}[5m]) * 100 > 5
+      #   for: 5m
+      #   labels:
+      #     severity: warning
+      #     service: epay-frontend
+      #   annotations:
+      #     summary: "High error rate on frontend"
+      #     description: "{{ $value }}% of frontend requests are failing"
+      #     action: "Check frontend application and API connectivity"
 
       # ============================================
       #  DATABASE ALERTS
       # ============================================
-      
+
       - alert: PostgreSQLDown
         expr: up{job="postgresql"} == 0
         for: 1m
@@ -165,7 +166,7 @@ groups:
       # ============================================
       #  REDIS ALERTS
       # ============================================
-      
+
       - alert: RedisDown
         expr: up{job="redis"} == 0
         for: 1m
@@ -191,7 +192,7 @@ groups:
       # ============================================
       #  RABBITMQ ALERTS
       # ============================================
-      
+
       - alert: RabbitMQDown
         expr: up{job="rabbitmq"} == 0
         for: 1m
@@ -217,7 +218,7 @@ groups:
       # ============================================
       #  DISK SPACE ALERTS
       # ============================================
-      
+
       - alert: HighDiskUsage
         expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
         for: 5m
@@ -232,7 +233,7 @@ groups:
       # ============================================
       #  SSL EXPIRY ALERT
       # ============================================
-      
+
       - alert: SSLCertExpiringSoon
         expr: ssl_certificate_expiry_days < 30
         for: 5m
@@ -247,7 +248,7 @@ groups:
       # ============================================
       #  RATE LIMITING ALERTS
       # ============================================
-      
+
       - alert: RateLimitingHigh
         expr: rate(nginx_http_requests_total{job="nginx", status=~"429"}[5m]) > 10
         for: 5m
@@ -262,7 +263,7 @@ groups:
       # ============================================
       #  BUSINESS METRICS ALERTS
       # ============================================
-      
+
       - alert: HighFailedTransactions
         expr: rate(transactions_failed_total{job="epay-server"}[5m]) > 5
         for: 5m

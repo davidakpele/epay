@@ -9,10 +9,30 @@
   <property name="AUDIT_LOG_FILE" value="${LOG_DIR}/audit.log"/>
   <property name="APP_LOG_FILE"   value="${LOG_DIR}/app.log"/>
 
+  <!--
+    Trace correlation in Spring Boot 4.x works differently from Boot 3.x:
+      - Boot 4.x auto-prepends a correlation ID to every log line when
+        micrometer-tracing is on the classpath.
+      - The format is controlled by logging.pattern.correlation in application.yaml,
+        set to "[appName,traceId,spanId] ".
+      - Spring Boot injects this BEFORE the logger name automatically — we do NOT
+        need %X{traceId} in this pattern. Adding it would duplicate the IDs.
+
+    Log line format with tracing active:
+      2026-09-14 08:12:34 [http-nio-8029-exec-3] INFO  [epay-server,4f3a1b2c,2b3c4d5e] c.e.w.WalletService - msg
+      └── this part ──────────────────────────────────────────────────────────────────────────────────────────┘
+                                                       └── auto-injected by Boot 4.x ──┘
+
+    Without an active trace (e.g. actuator health checks):
+      2026-09-14 08:12:34 [http-nio-8029-exec-1] INFO  [epay-server,-,-] c.e.a.HealthController - msg
+  -->
+  <property name="LOG_PATTERN"
+            value="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"/>
+
   <!-- ── Console (human-readable for dev) ────────────────────────────── -->
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+      <pattern>${LOG_PATTERN}</pattern>
     </encoder>
   </appender>
 
@@ -26,11 +46,15 @@
       <totalSizeCap>500MB</totalSizeCap>
     </rollingPolicy>
     <encoder>
-      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+      <pattern>${LOG_PATTERN}</pattern>
     </encoder>
   </appender>
 
   <!-- ── Audit log (one JSON object per line — parsed by Promtail) ──── -->
+  <!--
+    Raw passthrough — the audit filter writes a complete JSON string per line.
+    traceId/spanId should be embedded in the JSON by the audit filter itself.
+  -->
   <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${AUDIT_LOG_FILE}</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -39,7 +63,6 @@
       <maxHistory>30</maxHistory>
       <totalSizeCap>2GB</totalSizeCap>
     </rollingPolicy>
-    <!-- Raw passthrough: the filter already writes a complete JSON string -->
     <encoder>
       <pattern>%msg%n</pattern>
     </encoder>
@@ -59,6 +82,11 @@
   <logger name="org.springframework.web.servlet.mvc.method.annotation"          level="WARN"/>
   <logger name="io.lettuce"                                                      level="WARN"/>
   <logger name="com.zaxxer.hikari"                                               level="WARN"/>
+
+  <!-- Silence Zipkin reporter INFO noise (logs every span batch dispatch).
+       Set to DEBUG only when troubleshooting why spans are not arriving. -->
+  <logger name="zipkin2.reporter"                                               level="WARN"/>
+  <logger name="io.micrometer.tracing"                                          level="WARN"/>
 
   <!-- Root -->
   <root level="${logLevel}">

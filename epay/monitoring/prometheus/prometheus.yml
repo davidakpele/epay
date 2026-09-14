@@ -42,28 +42,37 @@ scrape_configs:
 
   # ============================================
   #  FRONTEND INSTANCES
-  #  Requires a /metrics endpoint in your Next.js
-  #  app (e.g. using prom-client).  Remove if not
-  #  instrumented.
+  #  Next.js does not expose a Prometheus /metrics endpoint by default.
+  #  Scraping frontend-1/2/3:3000 causes up==0 and fires false alerts.
+  #
+  #  To enable real frontend metrics, add prom-client to the Next.js app:
+  #    npm install prom-client
+  #  Then expose a /metrics route in pages/api/metrics.ts and uncomment
+  #  the job below.
+  #
+  #  Until then, frontend health is inferred from:
+  #    - nginx upstream health (nginx job)
+  #    - the epay-server job (backend is the source of truth for data)
+  #
+  # - job_name: epay-frontend
+  #   scrape_interval: 30s
+  #   scrape_timeout: 20s
+  #   static_configs:
+  #     - targets:
+  #         - "frontend-1:3000"
+  #         - "frontend-2:3000"
+  #         - "frontend-3:3000"
+  #       labels:
+  #         service: epay-frontend
+  #         language: nodejs
+  #         tier: frontend
+  #         cluster: epay-prod
+  #   relabel_configs:
+  #     - source_labels: [__address__]
+  #       target_label: instance
+  #       regex: "([^:]+):.*"
+  #       replacement: "${1}"
   # ============================================
-  - job_name: epay-frontend
-    scrape_interval: 30s
-    scrape_timeout: 20s
-    static_configs:
-      - targets:
-          - "frontend-1:3000"
-          - "frontend-2:3000"
-          - "frontend-3:3000"
-        labels:
-          service: epay-frontend
-          language: nodejs
-          tier: frontend
-          cluster: epay-prod
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        regex: "([^:]+):.*"
-        replacement: "${1}"
 
   # ============================================
   #  NGINX — via nginx-prometheus-exporter
