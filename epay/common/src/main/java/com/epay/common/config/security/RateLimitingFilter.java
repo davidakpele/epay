@@ -1,14 +1,11 @@
 package com.epay.common.config.security;
 
-import com.epay.common.exception.ErrorCode;
-import com.epay.common.exception.ErrorResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,10 +13,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.UUID;
+
+import com.epay.common.exception.ErrorCode;
+import com.epay.common.exception.ErrorResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -36,12 +40,30 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
     private final RateLimitConfig config;
 
+    private static final class Tightest {
+        private String key;
+        private int limit;
+        private long remaining = Long.MAX_VALUE;
+        private long windowSeconds;
+
+        void offer(String key, int limit, long count, long windowSeconds) {
+            long left = Math.max(0L, limit - count);
+            if (left < remaining) {
+                this.key = key;
+                this.limit = limit;
+                this.remaining = left;
+                this.windowSeconds = windowSeconds;
+            }
+        }
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
         String ip    = extractIp(request);
         String group = resolveGroup(request.getRequestURI());
+        Tightest tightest = new Tightest();
 
         try {
             if (isBlocked(ip)) {
@@ -50,31 +72,38 @@ public class RateLimitingFilter extends OncePerRequestFilter {
                 return;
             }
 
-            if (exceeds(ip, "global", config.getGlobalIpLimit(), config.getGlobalWindowSeconds())) {
+            if (exceeds(String.format(KEY_IP_GLOBAL, ip),
+                    config.getGlobalIpLimit(), config.getGlobalWindowSeconds(), tightest)) {
+                writeRateLimitHeaders(response, tightest);
                 recordViolation(ip, group, request, response);
                 return;
             }
 
             if (group != null) {
                 GroupLimit gl = groupLimit(group);
-                if (exceeds(ipGroupKey(ip, group), group, gl.limit, gl.windowSeconds)) {
+                if (exceeds(ipGroupKey(ip, group), gl.limit(), gl.windowSeconds(), tightest)) {
+                    writeRateLimitHeaders(response, tightest);
                     recordViolation(ip, group, request, response);
                     return;
                 }
             }
+
             String userId = resolveUserId();
             if (userId != null && group != null) {
                 GroupLimit gl = groupLimit(group);
                 String userKey = String.format(KEY_USER_GROUP, userId, group);
-                Long userCount = increment(userKey, gl.windowSeconds);
-                addRateLimitHeaders(response, gl.limit, userCount);
+                long userCount = increment(userKey, gl.windowSeconds());
+                tightest.offer(userKey, gl.limit(), userCount, gl.windowSeconds());
 
-                if (userCount > gl.limit) {
+                if (userCount > gl.limit()) {
                     log.warn("[RATE] User {} exceeded {} limit on {} - count={}", userId, group, request.getRequestURI(), userCount);
-                    reject(request, response, "Request rate limit exceeded. Please wait before retrying.", gl.windowSeconds);
+                    writeRateLimitHeaders(response, tightest);
+                    reject(request, response, "Request rate limit exceeded. Please wait before retrying.", gl.windowSeconds());
                     return;
                 }
             }
+
+            writeRateLimitHeaders(response, tightest);
 
         } catch (Exception e) {
             log.error("[RATE] Redis error for IP={} path={}: {}", ip, request.getRequestURI(), e.getMessage());
@@ -83,7 +112,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 
-    private Long increment(String key, long windowSeconds) {
+    private long increment(String key, long windowSeconds) {
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count == 1L) {
             redisTemplate.expire(key, Duration.ofSeconds(windowSeconds));
@@ -91,11 +120,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         return count != null ? count : 0L;
     }
 
-    private boolean exceeds(String identifier, String group, int limit, long windowSeconds) {
-        String key = identifier.contains(":") ? identifier
-                : String.format(KEY_IP_GLOBAL, identifier);
-        Long count = increment(key, windowSeconds);
-        addRateLimitHeaders(null, limit, count);
+    private boolean exceeds(String key, int limit, long windowSeconds, Tightest tightest) {
+        long count = increment(key, windowSeconds);
+        tightest.offer(key, limit, count, windowSeconds);
         return count > limit;
     }
 
@@ -179,10 +206,16 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         objectMapper.writeValue(response.getWriter(), body);
     }
 
-    private void addRateLimitHeaders(HttpServletResponse response, int limit, Long count) {
-        if (response == null) return;
-        response.setHeader("X-Rate-Limit-Limit",     String.valueOf(limit));
-        response.setHeader("X-Rate-Limit-Remaining", String.valueOf(Math.max(0, limit - count)));
+    /** Same header names/semantics as express-rate-limit: Reset is an epoch timestamp in seconds. */
+    private void writeRateLimitHeaders(HttpServletResponse response, Tightest tightest) {
+        if (tightest.key == null) return;
+
+        Long ttl = redisTemplate.getExpire(tightest.key, TimeUnit.SECONDS);
+        long secondsToReset = (ttl != null && ttl > 0) ? ttl : tightest.windowSeconds;
+
+        response.setHeader("X-RateLimit-Limit",     String.valueOf(tightest.limit));
+        response.setHeader("X-RateLimit-Remaining", String.valueOf(tightest.remaining));
+        response.setHeader("X-RateLimit-Reset",     String.valueOf(Instant.now().getEpochSecond() + secondsToReset));
     }
 
     private String extractIp(HttpServletRequest request) {

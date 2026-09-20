@@ -1,13 +1,18 @@
 package com.epay.common.config.security;
 
+import java.util.Arrays;
+import java.util.List;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
-import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -22,20 +27,21 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
-import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import com.epay.common.config.components.JwtProperties;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import javax.crypto.SecretKey;
-import jakarta.servlet.http.HttpServletResponse;
+
 import com.epay.common.config.components.IpExtractor;
+import com.epay.common.config.components.JwtProperties;
 import com.epay.common.config.logging.RequestAuditFilter;
 import com.epay.common.config.services.GeoLocationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Arrays;
+
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -51,6 +57,9 @@ public class SecurityConfiguration {
     private final IpExtractor ipExtractor;
     private final GeoLocationService geoLocationService;
     private final ObjectMapper objectMapper;
+    
+    @Value("${epay.cors.allowed-origins:http://localhost:3000}")
+    private List<String> allowedOrigins;
 
     public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter,
                                   AuthenticationProvider authenticationProvider,
@@ -103,10 +112,11 @@ public class SecurityConfiguration {
             "Content-Type",
             "X-Request-ID",
             "X-API-Version",
-            "X-Rate-Limit-Limit",
-            "X-Rate-Limit-Remaining",
-            "X-Rate-Limit-Reset"
+            "X-RateLimit-Limit",
+            "X-RateLimit-Remaining",
+            "X-RateLimit-Reset"
         ));
+
         
         configuration.setMaxAge(3600L);
 
@@ -131,35 +141,13 @@ public class SecurityConfiguration {
         return http.build();
     }
 
-    @SuppressWarnings("removal")
     @Bean
     @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
-            .headers(headers -> headers
-                .contentSecurityPolicy(csp -> csp
-                    .policyDirectives("default-src 'self'; " +
-                                    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-                                    "style-src 'self' 'unsafe-inline'; " +
-                                    "img-src 'self' data: https:; " +
-                                    "font-src 'self' data:; " +
-                                    "connect-src 'self'; " +
-                                    "frame-ancestors 'none'")
-                )
-                .frameOptions(frame -> frame.deny())
-                .xssProtection(xss -> xss
-                    .headerValue(org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
-                )
-                .contentTypeOptions(contentType -> {}) 
-                .referrerPolicy(referrer -> referrer
-                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-                )
-                .permissionsPolicy(permissions -> permissions
-                    .policy("geolocation=(self), microphone=(), camera=()")
-                )
-            )
+            .headers(headers -> headers.defaultsDisabled().cacheControl(Customizer.withDefaults()))
             .addFilterBefore(
                 new FirewallExceptionFilter(),
                 UsernamePasswordAuthenticationFilter.class
@@ -170,10 +158,6 @@ public class SecurityConfiguration {
             )
             .addFilterBefore(
                 new InputValidationFilter(),
-                UsernamePasswordAuthenticationFilter.class
-            )
-            .addFilterBefore(
-                new SecurityHeadersFilter(),
                 UsernamePasswordAuthenticationFilter.class
             )
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
