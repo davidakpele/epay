@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><title>Card Funded</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+        .container{max-width:600px;margin:30px auto;background:#fff;border-radius:8px;overflow:hidden}
+        .header{background:#1b5e20;padding:28px 32px;text-align:center}
+        .header h1{color:#fff;margin:0;font-size:22px}
+        .body{padding:32px}.body p{color:#333;font-size:15px;line-height:1.7}
+        .info-box{background:#e8f5e9;border-left:4px solid #1b5e20;padding:16px 20px;border-radius:4px;margin:20px 0}
+        .info-box p{margin:5px 0;font-size:14px}
+        .footer{background:#f9f9f9;padding:18px;text-align:center;font-size:12px;color:#999;border-top:1px solid #eee}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header"><h1>ePay — Card Funded</h1></div>
+    <div class="body">
+        <p>Dear <strong th:text="${fullName}">Customer</strong>,</p>
+        <p>Your virtual card has been funded successfully.</p>
+        <div class="info-box">
+            <p><strong>Card (last 4):</strong> **** **** **** <span th:text="${last4}">0000</span></p>
+            <p><strong>Amount Added:</strong> <span th:text="${currency}">USD</span> <span th:text="${amount}">0.00</span></p>
+            <p><strong>New Card Balance:</strong> <span th:text="${currency}">USD</span> <span th:text="${newBalance}">0.00</span></p>
+            <p><strong>Transaction ID:</strong> <span th:text="${transactionId}">N/A</span></p>
+        </div>
+    </div>
+    <div class="footer"><p>ePay — Secure Digital Payments</p></div>
+</div>
+</body>
+</html>

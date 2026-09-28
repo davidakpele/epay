@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Login Alert</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .header { background: #1a237e; padding: 28px 32px; text-align: center; }
+        .header h1 { color: #fff; margin: 0; font-size: 22px; }
+        .body { padding: 32px; }
+        .body p { color: #333; font-size: 15px; line-height: 1.7; }
+        .info-box { background: #fff8e1; border-left: 4px solid #ffa000; padding: 16px 20px; border-radius: 4px; margin: 20px 0; }
+        .info-box p { margin: 5px 0; font-size: 14px; color: #444; }
+        .footer { background: #f9f9f9; padding: 18px 32px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header"><h1>ePay — Login Alert</h1></div>
+    <div class="body">
+        <p>Dear <strong th:text="${fullName}">Customer</strong>,</p>
+        <p>A login to your ePay account (<strong th:text="${username}">username</strong>) was detected.</p>
+        <div class="info-box">
+            <p><strong>Time:</strong> <span th:text="${loginTime}">N/A</span></p>
+            <p><strong>IP Address:</strong> <span th:text="${ipAddress}">N/A</span></p>
+            <p><strong>Device:</strong> <span th:text="${deviceInfo}">N/A</span></p>
+        </div>
+        <p>If this was you, no action is needed. If you did not authorise this login, please change your password immediately and contact support.</p>
+        <p>Support: <span th:text="${supportEmail}">support@epay.com</span> | <span th:text="${supportPhone}">N/A</span></p>
+    </div>
+    <div class="footer"><p>This is an automated security alert from ePay.</p></div>
+</div>
+</body>
+</html>

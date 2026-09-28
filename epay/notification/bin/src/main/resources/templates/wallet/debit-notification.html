@@ -1,0 +1,94 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Transfer Sent</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 30px auto;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .header {
+        background: #b71c1c;
+        padding: 28px 32px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #fff;
+        margin: 0;
+        font-size: 22px;
+      }
+      .body {
+        padding: 32px;
+      }
+      .body p {
+        color: #333;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+      .amount-box {
+        background: #fce4ec;
+        border-left: 4px solid #b71c1c;
+        padding: 16px 20px;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+      .amount-box p {
+        margin: 5px 0;
+        font-size: 14px;
+      }
+      .footer {
+        background: #f9f9f9;
+        padding: 18px;
+        text-align: center;
+        font-size: 12px;
+        color: #999;
+        border-top: 1px solid #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header"><h1>ePay — Transfer Sent</h1></div>
+      <div class="body">
+        <p>Dear <strong th:text="${senderFullName}">Customer</strong>,</p>
+        <p>Your transfer has been processed successfully.</p>
+        <div class="amount-box">
+          <p>
+            <strong>Amount:</strong>
+            <span th:text="${transferAmount}">NGN 0.00</span>
+          </p>
+          <p>
+            <strong>Fee:</strong> <span th:text="${feeAmount}">NGN 0.00</span>
+          </p>
+          <p>
+            <strong>To:</strong>
+            <span th:text="${receiverFullName}">Recipient</span>
+          </p>
+          <p>
+            <strong>Previous Balance:</strong>
+            <span th:text="${previousBalance}">NGN 0.00</span>
+          </p>
+          <p>
+            <strong>New Balance:</strong>
+            <span th:text="${balance}">NGN 0.00</span>
+          </p>
+          <p>
+            <strong>Transaction ID:</strong>
+            <span th:text="${transactionId}">N/A</span>
+          </p>
+        </div>
+      </div>
+      <div class="footer"><p>ePay — Secure Digital Payments</p></div>
+    </div>
+  </body>
+</html>

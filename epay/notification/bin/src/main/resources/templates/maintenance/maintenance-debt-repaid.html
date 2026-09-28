@@ -1,0 +1,64 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Maintenance Debt Repaid</title>
+    <style>
+      body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+      .container { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 8px; overflow: hidden; }
+      .header { background: #1b5e20; padding: 28px 32px; text-align: center; }
+      .header h1 { color: #fff; margin: 0; font-size: 22px; }
+      .body { padding: 32px; }
+      .body p { color: #333; font-size: 15px; line-height: 1.7; }
+      .info-box { background: #f1f8e9; border-left: 4px solid #388e3c; padding: 16px 20px; border-radius: 4px; margin: 20px 0; }
+      .info-box p { margin: 6px 0; font-size: 14px; }
+      .pending-box { background: #fff8e1; border-left: 4px solid #f9a825; padding: 14px 18px; border-radius: 4px; margin: 16px 0; font-size: 14px; }
+      .footer { background: #f9f9f9; padding: 18px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+
+      <!-- Fully settled header -->
+      <div class="header" th:if="${fullySettled}">
+        <h1>✓ Maintenance Debt Fully Settled</h1>
+      </div>
+      <!-- Partial repayment header -->
+      <div class="header" th:unless="${fullySettled}" style="background:#e65100;">
+        <h1>↓ Partial Debt Repayment Applied</h1>
+      </div>
+
+      <div class="body">
+        <p>Dear <strong th:text="${userFirstName}">Customer</strong>,</p>
+
+        <!-- Fully settled message -->
+        <p th:if="${fullySettled}">
+          Your outstanding maintenance fee debt for your
+          <strong th:text="${currency}">USD</strong> wallet has been <strong>fully settled</strong>.
+          Your account is now in good standing. Thank you!
+        </p>
+
+        <!-- Partial repayment message -->
+        <p th:unless="${fullySettled}">
+          A portion of your outstanding maintenance fee debt for your
+          <strong th:text="${currency}">USD</strong> wallet has been recovered from your recent deposit.
+        </p>
+
+        <div class="info-box">
+          <p><strong>Currency:</strong> <span th:text="${currency}">USD</span></p>
+          <p><strong>Amount Recovered:</strong> <span th:text="${repaidAmount}">0.00</span></p>
+          <p><strong>Remaining Debt:</strong> <span th:text="${remainingDebt}">0.00</span></p>
+          <p><strong>New Wallet Balance:</strong> <span th:text="${newWalletBalance}">0.00</span></p>
+        </div>
+
+        <div class="pending-box" th:unless="${fullySettled}">
+          You still have a remaining debt of <strong th:text="${remainingDebt}">0.00</strong>.
+          This will be automatically deducted on your next deposit to this wallet.
+        </div>
+
+        <p>If you have any questions, please contact our support team.</p>
+      </div>
+      <div class="footer"><p>ePay — Secure Digital Payments &nbsp;|&nbsp; This is an automated notification.</p></div>
+    </div>
+  </body>
+</html>
