@@ -46,8 +46,6 @@ jobs:
 
       - name: Build with Maven
         working-directory: epay
-        # -DskipTests skips test execution but still compiles test sources.
-        # Switch to 'verify' (remove -DskipTests) once test classes are added.
         run: ./mvnw -B clean package -DskipTests --no-transfer-progress
 
       - name: Upload test reports
