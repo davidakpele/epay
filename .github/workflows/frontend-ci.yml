@@ -78,7 +78,6 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          # Placeholder — override with your real API URL in production
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:8029' }}
 
       - name: Upload build artifact
@@ -96,7 +95,6 @@ jobs:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
     needs: build
-    # Only push images on pushes to main or develop (not on PRs)
     if: github.event_name == 'push'
 
     permissions:

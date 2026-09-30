@@ -5,18 +5,16 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
-  # Run every Monday at 08:00 UTC to catch newly disclosed CVEs
   schedule:
     - cron: '0 8 * * 1'
   workflow_dispatch:
 
 permissions:
   contents: read
-  security-events: write  # Required to upload SARIF results to GitHub Security tab
+  security-events: write 
   actions: read
 
 jobs:
-  # ── 1. Maven dependency check (OWASP) ─────────────────────────────────────
   owasp-dependency-check:
     name: OWASP Dependency Check (Backend)
     runs-on: ubuntu-latest
@@ -50,7 +48,6 @@ jobs:
 
       - name: Run OWASP Dependency-Check
         working-directory: epay
-        # Fail the build if any dependency has a CVSS score >= 7 (HIGH or CRITICAL)
         run: |
           ./mvnw -B org.owasp:dependency-check-maven:check \
             -DfailBuildOnCVSS=7 \
@@ -68,7 +65,6 @@ jobs:
           path: epay/**/target/dependency-check-report.*
           retention-days: 30
 
-  # ── 2. npm audit (Frontend) ────────────────────────────────────────────────
   npm-audit:
     name: npm Audit (Frontend)
     runs-on: ubuntu-latest
@@ -90,15 +86,10 @@ jobs:
 
       - name: Run npm audit
         working-directory: frontend
-        # Fail on HIGH or CRITICAL vulnerabilities
         run: npm audit --audit-level=high
-
-  # ── 3. CodeQL static analysis ─────────────────────────────────────────────
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
-    # CodeQL is resource-heavy; skip on every PR push to keep it fast.
-    # It still runs on push to main/develop and on the weekly schedule.
     if: >
       github.event_name == 'push' ||
       github.event_name == 'schedule' ||
@@ -125,7 +116,6 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          # Enable security-extended queries for broader coverage
           queries: security-extended
 
       - name: Build Java sources for CodeQL
@@ -143,11 +133,9 @@ jobs:
           category: '/language:${{ matrix.language }}'
           upload: true
 
-  # ── 4. Trivy container image scan ─────────────────────────────────────────
   trivy-image-scan:
     name: Trivy Image Scan
     runs-on: ubuntu-latest
-    # Only scan images that were just built (push events) or on schedule
     if: >
       github.event_name == 'push' ||
       github.event_name == 'schedule' ||
