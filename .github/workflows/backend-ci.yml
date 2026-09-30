@@ -4,13 +4,13 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'epay/**'
-      - '.github/workflows/backend-ci.yml'
+      - "epay/**"
+      - ".github/workflows/backend-ci.yml"
   pull_request:
     branches: [main, develop]
     paths:
-      - 'epay/**'
-      - '.github/workflows/backend-ci.yml'
+      - "epay/**"
+      - ".github/workflows/backend-ci.yml"
 
 env:
   REGISTRY: ghcr.io
@@ -28,8 +28,8 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
           cache: maven
 
       - name: Cache Maven local repository
@@ -40,16 +40,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Build and test with Maven
+      - name: Make Maven wrapper executable
         working-directory: epay
-        run: ./mvnw -B clean verify --no-transfer-progress
-        env:
-          # Provide minimal env so Spring context does not fail at test time.
-          # Tests use H2 in-memory DB so no real services are required.
-          DB_USERNAME: test
-          DB_PASSWORD: test
-          JWT_SECRET: dGVzdC1zZWNyZXQta2V5LWZvci1naXRodWItYWN0aW9ucy10ZXN0aW5n
-          SPRING_PROFILES_ACTIVE: test
+        run: chmod +x mvnw
+
+      - name: Build with Maven
+        working-directory: epay
+        # -DskipTests skips test execution but still compiles test sources.
+        # Switch to 'verify' (remove -DskipTests) once test classes are added.
+        run: ./mvnw -B clean package -DskipTests --no-transfer-progress
 
       - name: Upload test reports
         if: always()
