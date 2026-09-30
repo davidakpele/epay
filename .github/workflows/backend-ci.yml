@@ -70,7 +70,7 @@ jobs:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
     needs: build-and-test
-    # Only push images on pushes to main or develop (not on PRs)
+
     if: github.event_name == 'push'
 
     permissions:
